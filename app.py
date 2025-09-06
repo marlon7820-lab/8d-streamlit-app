@@ -3,12 +3,13 @@ from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Font
 from datetime import date
 import os
+import csv
 
 st.set_page_config(page_title="NPQP 8D Training App", layout="wide")
-st.title("📋 Nissan NPQP 8D Training App - iPhone Compatible")
-st.write("Step-by-step guided 8D form. Excel will open correctly on iPhone.")
+st.title("📋 Nissan NPQP 8D Training App")
+st.write("Step-by-step guided 8D form. Download XLSX for desktop or CSV for iPhone users.")
 
-# Initialize session state
+# Session state initialization
 if "step_index" not in st.session_state:
     st.session_state.step_index = 0
 if "answers" not in st.session_state:
@@ -26,29 +27,21 @@ st.session_state.prepared_by = st.text_input("Prepared By", value=st.session_sta
 
 # NPQP 8D steps with guidance
 npqp_steps = [
-    ("Concern Details",
-     "Amplifier unit fails functional testing due to intermittent signal loss. Image: amp_fail_01.jpg",
+    ("Concern Details", "Amplifier unit fails functional testing due to intermittent signal loss. Image: amp_fail_01.jpg",
      "Describe the issue, affected parts, symptoms. Optional: attach image filename."),
-    ("Similar Part Consideration",
-     "Other Models: No, Generic Parts: Yes, Other Colors: No, Opposite Hand: No, Front/Rear: No",
+    ("Similar Part Consideration", "Other Models: No, Generic Parts: Yes, Other Colors: No, Opposite Hand: No, Front/Rear: No",
      "Indicate if other parts/models/colors/sides may be affected."),
-    ("Initial Analysis",
-     "Detected during process: Yes, Final inspection: No, Prior to dispatch: No, Other: Functional test not performed.",
+    ("Initial Analysis", "Detected during process: Yes, Final inspection: No, Prior to dispatch: No, Other: Functional test not performed.",
      "Identify where defect could have been detected."),
-    ("Temporary Countermeasures",
-     "Segregated defective units, stopped shipment. Date: 08/01/2025",
+    ("Temporary Countermeasures", "Segregated defective units, stopped shipment. Date: 08/01/2025",
      "List immediate containment actions and implementation date."),
-    ("Root Cause Analysis",
-     "Capacitor C23 on amplifier PCB defective due to supplier batch #A23",
+    ("Root Cause Analysis", "Capacitor C23 on amplifier PCB defective due to supplier batch #A23",
      "Describe the fundamental cause clearly."),
-    ("Permanent Corrective Actions",
-     "Replaced defective capacitors, updated inspection process, revised SOP",
+    ("Permanent Corrective Actions", "Replaced defective capacitors, updated inspection process, revised SOP",
      "List long-term fixes to prevent recurrence."),
-    ("Effectiveness Verification",
-     "Functional test on 50 units passed, no customer complaints",
+    ("Effectiveness Verification", "Functional test on 50 units passed, no customer complaints",
      "Describe verification tests/audits."),
-    ("Standardization",
-     "Updated assembly SOP, added capacitor check to QA checklist, trained staff",
+    ("Standardization", "Updated assembly SOP, added capacitor check to QA checklist, trained staff",
      "Document procedure changes and training.")
 ]
 
@@ -101,58 +94,41 @@ with col2:
 
 # Save button
 if st.button("Save Full 8D Report"):
-    file_name = "NPQP_8D_Reports.xlsx"
-
-    # Use default sheet
-    if os.path.exists(file_name):
-        wb = load_workbook(file_name)
+    # XLSX file
+    xlsx_file = "NPQP_8D_Reports.xlsx"
+    if os.path.exists(xlsx_file):
+        wb = load_workbook(xlsx_file)
         ws = wb.active
     else:
         wb = Workbook()
         ws = wb.active
-
-    # **Dummy title in A1** ensures iPhone Excel shows sheet
     ws["A1"] = "NPQP 8D Report"
-    row = 2  # Start actual data at row 2
-
+    row = 2
     ws[f"A{row}"] = "Report Date"
     ws[f"B{row}"] = str(st.session_state.report_date)
     row += 1
     ws[f"A{row}"] = "Prepared By"
     ws[f"B{row}"] = st.session_state.prepared_by
     row += 1
-
-    # Write steps
     for step, *_ in npqp_steps:
         ws[f"A{row}"] = step
         ws[f"B{row}"] = st.session_state.answers.get(step,"")
         ws[f"C{row}"] = str(st.session_state.extra_info.get(step,""))
         row += 1
+    wb.save(xlsx_file)
 
-    # Set column widths
-    ws.column_dimensions["A"].width = 35
-    ws.column_dimensions["B"].width = 80
-    ws.column_dimensions["C"].width = 30
+    # CSV file (iPhone-friendly)
+    csv_file = "NPQP_8D_Report.csv"
+    with open(csv_file, "w", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow(["NPQP 8D Report"])
+        writer.writerow(["Report Date", st.session_state.report_date])
+        writer.writerow(["Prepared By", st.session_state.prepared_by])
+        writer.writerow([])
+        writer.writerow(["Step","Answer","Extra Info"])
+        for step, *_ in npqp_steps:
+            writer.writerow([step, st.session_state.answers.get(step,""), st.session_state.extra_info.get(step,"")])
 
-    # Optional Summary sheet
-    if "Summary" not in wb.sheetnames:
-        summary_ws = wb.create_sheet("Summary")
-        headers = ["Report Date","Prepared By"] + [step for step, *_ in npqp_steps]
-        summary_ws.append(headers)
-        summary_ws.freeze_panes = summary_ws["A2"]
-        for col, header in enumerate(headers,1):
-            summary_ws.cell(row=1,column=col).font = Font(bold=True)
-    else:
-        summary_ws = wb["Summary"]
-
-    summary_row = [str(st.session_state.report_date), st.session_state.prepared_by] + \
-        [ (st.session_state.answers.get(step,"")[:20]+("..." if len(st.session_state.answers.get(step,""))>20 else "")) for step,_ ,_ in npqp_steps ]
-
-    summary_ws.append(summary_row)
-    for col in range(1,len(summary_row)+1):
-        summary_ws.column_dimensions[summary_ws.cell(row=1,column=col).column_letter].width=30
-
-    # Save workbook
-    wb.save(file_name)
-    st.success(f"✅ NPQP 8D Report saved in {file_name}")
-    st.download_button("Download Excel Workbook", file_name, file_name) 
+    st.success("✅ NPQP 8D Report saved successfully.")
+    st.download_button("Download XLSX (desktop)", xlsx_file, xlsx_file)
+    st.download_button("Download CSV (iPhone-friendly)", csv_file, csv_file)
