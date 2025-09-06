@@ -5,8 +5,8 @@ from datetime import date
 import os
 
 st.set_page_config(page_title="NPQP 8D Training App", layout="wide")
-st.title("📋 Nissan NPQP 8D Training App - iPhone-Friendly")
-st.write("Step-by-step guided 8D form. The Excel file will always open correctly on iPhone.")
+st.title("📋 Nissan NPQP 8D Training App - iPhone Compatible")
+st.write("Step-by-step guided 8D form. Excel will open correctly on iPhone.")
 
 # Session state initialization
 if "step_index" not in st.session_state:
@@ -111,8 +111,8 @@ if st.button("Save Full 8D Report"):
         wb = Workbook()
         ws = wb.active  # Default sheet will be used
 
-    # Start writing 8D data
-    row = ws.max_row + 2
+    # Start writing at row 1
+    row = 1
     ws[f"A{row}"] = "Report Date"
     ws[f"B{row}"] = str(st.session_state.report_date)
     row += 1
@@ -120,12 +120,14 @@ if st.button("Save Full 8D Report"):
     ws[f"B{row}"] = st.session_state.prepared_by
     row += 1
 
+    # Write steps starting from row 3
     for step, *_ in npqp_steps:
         ws[f"A{row}"] = step
         ws[f"B{row}"] = st.session_state.answers.get(step,"")
         ws[f"C{row}"] = str(st.session_state.extra_info.get(step,""))
         row += 1
 
+    # Set column widths
     ws.column_dimensions["A"].width = 35
     ws.column_dimensions["B"].width = 80
     ws.column_dimensions["C"].width = 30
