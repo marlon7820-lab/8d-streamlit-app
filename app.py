@@ -1,93 +1,88 @@
 import streamlit as st
 from openpyxl import Workbook, load_workbook
-from openpyxl.styles import Font, Alignment, PatternFill
+from openpyxl.styles import Font
 from datetime import date
 import os
 
 st.set_page_config(page_title="NPQP 8D Training App", layout="wide")
-st.title("📋 Nissan NPQP 8D Training App")
-st.write("Guided 8D form with instructions, meaning, samples, and summary tracking for training beginners.")
+st.title("📋 Nissan NPQP 8D Training App (iPhone Stable Version)")
+st.write("Step-by-step guided 8D form for beginners. Save to Excel, see all answers immediately.")
 
 # Report info
 report_date = st.date_input("Report Date", value=date.today())
 prepared_by = st.text_input("Prepared By")
 
-# --- Define NPQP steps with training guidance ---
+# NPQP steps: (step_name, sample, instructions)
 npqp_steps = [
     ("Concern Details",
-     "💡 Meaning: Describe the issue in detail, include affected parts, symptoms, and context.",
-     "Instructions: Write exactly what went wrong, where, and when. Attach image filename if available.",
-     "Sample: Amplifier unit fails functional testing due to intermittent signal loss. Image: amp_fail_01.jpg"),
+     "Amplifier unit fails functional testing due to intermittent signal loss. Image: amp_fail_01.jpg",
+     "Describe the issue, affected parts, symptoms. Optional: attach image filename."),
     ("Similar Part Consideration",
-     "💡 Meaning: Determine if other parts may have the same problem.",
-     "Instructions: Use the dropdowns to indicate if other models, generic parts, colors, or sides are affected.",
-     "Sample: Other Models: No, Generic Parts: Yes, Other Colors: No, Opposite Hand: No, Front/Rear: No"),
+     "Other Models: No, Generic Parts: Yes, Other Colors: No, Opposite Hand: No, Front/Rear: No",
+     "Indicate if other parts/models/colors/sides may be affected."),
     ("Initial Analysis",
-     "💡 Meaning: Identify where the defect could have been detected during manufacturing or inspection.",
-     "Instructions: Use dropdowns and input any other detection points.",
-     "Sample: Detected during process: Yes, Final inspection: No, Prior to dispatch: No, Other: Functional test not performed."),
+     "Detected during process: Yes, Final inspection: No, Prior to dispatch: No, Other: Functional test not performed.",
+     "Identify where defect could have been detected. Use dropdowns."),
     ("Temporary Countermeasures",
-     "💡 Meaning: Actions to stop the problem from spreading until permanent solution is applied.",
-     "Instructions: List immediate containment actions and date implemented.",
-     "Sample: Segregated defective amplifier units, stopped shipment, informed production team. Date: 08/01/2025"),
+     "Segregated defective units, stopped shipment. Date: 08/01/2025",
+     "List immediate containment actions and implementation date."),
     ("Root Cause Analysis",
-     "💡 Meaning: Determine the fundamental cause of the defect.",
-     "Instructions: Describe the investigation and findings clearly.",
-     "Sample: Capacitor C23 on amplifier PCB defective due to supplier batch #A23"),
+     "Capacitor C23 on amplifier PCB defective due to supplier batch #A23",
+     "Describe the fundamental cause clearly."),
     ("Permanent Corrective Actions",
-     "💡 Meaning: Implement long-term fixes to prevent recurrence.",
-     "Instructions: Explain what changes are made in design, process, or supplier.",
-     "Sample: Replaced all defective capacitors, updated supplier inspection process, revised assembly SOP"),
+     "Replaced defective capacitors, updated inspection process, revised SOP",
+     "List long-term fixes to prevent recurrence."),
     ("Effectiveness Verification",
-     "💡 Meaning: Confirm corrective actions work and problem is resolved.",
-     "Instructions: Describe tests or audits performed to verify effectiveness.",
-     "Sample: Functional test on 50 units passed, no complaints reported in customer feedback."),
+     "Functional test on 50 units passed, no customer complaints",
+     "Describe verification tests/audits."),
     ("Standardization",
-     "💡 Meaning: Update procedures to ensure lessons learned are applied.",
-     "Instructions: Document changes to SOPs, quality checks, and training.",
-     "Sample: Updated assembly SOP, added capacitor check to QA checklist, trained staff")
+     "Updated assembly SOP, added capacitor check to QA checklist, trained staff",
+     "Document procedure changes and training.")
 ]
 
-# Collect answers
+# Dictionary to store answers
 answers = {}
-extra_info = {}  # for image filename or date
-st.subheader("Fill NPQP 8D Sections")
+extra_info = {}
 
-with st.form("8D_Form"):
-    for step, meaning, instructions, sample in npqp_steps:
-        with st.expander(step):
-            st.write(f"**Meaning:** {meaning}")
-            st.write(f"**Instructions:** {instructions}")
-            st.write(f"**Sample:** {sample}")
-            # Special input for Concern Details and Temporary Countermeasures
-            if step == "Concern Details":
-                answers[step] = st.text_area("Your answer:", height=100, placeholder=sample)
-                extra_info[step] = st.text_input("Image filename or URL (optional)")
-            elif step == "Temporary Countermeasures":
-                answers[step] = st.text_area("Your answer:", height=80, placeholder=sample)
-                extra_info[step] = st.date_input("Implementation Date", value=date.today())
-            elif step == "Similar Part Consideration":
-                other_models = st.selectbox("Other Models Affected?", ["No","Yes"], key=step+"1")
-                generic_parts = st.selectbox("Generic Parts Affected?", ["No","Yes"], key=step+"2")
-                other_colors = st.selectbox("Other Colors?", ["No","Yes"], key=step+"3")
-                opposite_hand = st.selectbox("Opposite Hand?", ["No","Yes"], key=step+"4")
-                front_rear = st.selectbox("Front/Rear?", ["No","Yes"], key=step+"5")
-                answers[step] = f"Other Models: {other_models}\nGeneric Parts: {generic_parts}\nOther Colors: {other_colors}\nOpposite Hand: {opposite_hand}\nFront/Rear: {front_rear}"
-                extra_info[step] = ""
-            elif step == "Initial Analysis":
-                detect_process = st.selectbox("Detected during process?", ["No","Yes"], key=step+"1")
-                detect_final = st.selectbox("Detected at final inspection?", ["No","Yes"], key=step+"2")
-                detect_prior = st.selectbox("Detected prior to dispatch?", ["No","Yes"], key=step+"3")
-                detect_other = st.text_input("Other detection points", key=step+"4")
-                answers[step] = f"Detected during process: {detect_process}\nDetected at final inspection: {detect_final}\nDetected prior to dispatch: {detect_prior}\nOther: {detect_other}"
-                extra_info[step] = ""
-            else:
-                answers[step] = st.text_area("Your answer:", height=80, placeholder=sample)
-                extra_info[step] = ""
+st.subheader("Step-by-Step 8D Sections")
 
-    submitted = st.form_submit_button("Save 8D Report")
+# Step selector
+step_index = st.number_input("Select 8D Step (1-8)", min_value=1, max_value=8, value=1)
+step_name, sample, instructions = npqp_steps[step_index-1]
 
-if submitted:
+st.markdown(f"### Step {step_index}: {step_name}")
+if st.checkbox("Show guidance for this step?"):
+    st.write(f"**Instructions:** {instructions}")
+    st.write(f"**Sample Answer:** {sample}")
+
+# Input fields
+if step_name == "Concern Details":
+    answers[step_name] = st.text_area("Your answer:", height=100, placeholder=sample)
+    extra_info[step_name] = st.text_input("Image filename or URL (optional)")
+elif step_name == "Temporary Countermeasures":
+    answers[step_name] = st.text_area("Your answer:", height=80, placeholder=sample)
+    extra_info[step_name] = st.date_input("Implementation Date", value=date.today())
+elif step_name == "Similar Part Consideration":
+    other_models = st.selectbox("Other Models Affected?", ["No","Yes"], key="sim1")
+    generic_parts = st.selectbox("Generic Parts Affected?", ["No","Yes"], key="sim2")
+    other_colors = st.selectbox("Other Colors?", ["No","Yes"], key="sim3")
+    opposite_hand = st.selectbox("Opposite Hand?", ["No","Yes"], key="sim4")
+    front_rear = st.selectbox("Front/Rear?", ["No","Yes"], key="sim5")
+    answers[step_name] = f"Other Models: {other_models}\nGeneric Parts: {generic_parts}\nOther Colors: {other_colors}\nOpposite Hand: {opposite_hand}\nFront/Rear: {front_rear}"
+    extra_info[step_name] = ""
+elif step_name == "Initial Analysis":
+    detect_process = st.selectbox("Detected during process?", ["No","Yes"], key="init1")
+    detect_final = st.selectbox("Detected at final inspection?", ["No","Yes"], key="init2")
+    detect_prior = st.selectbox("Detected prior to dispatch?", ["No","Yes"], key="init3")
+    detect_other = st.text_input("Other detection points", key="init4")
+    answers[step_name] = f"Detected during process: {detect_process}\nDetected final: {detect_final}\nDetected prior: {detect_prior}\nOther: {detect_other}"
+    extra_info[step_name] = ""
+else:
+    answers[step_name] = st.text_area("Your answer:", height=80, placeholder=sample)
+    extra_info[step_name] = ""
+
+# Submit button to save all answers
+if st.button("Save 8D Report"):
     file_name = "NPQP_8D_Reports.xlsx"
 
     if os.path.exists(file_name):
@@ -106,32 +101,18 @@ if submitted:
     row += 1
     ws[f"A{row}"] = "Prepared By"
     ws[f"B{row}"] = prepared_by
-    row += 2
+    row += 1
 
-    colors = ["FFF2CC", "D9EAD3"]
-
-    # Write NPQP steps with guidance
+    # Write all answers consecutively
     for idx, (step, *_ ) in enumerate(npqp_steps):
-        fill_color = colors[idx % 2]
-        fill = PatternFill(start_color=fill_color, end_color=fill_color, fill_type="solid")
-
         ws[f"A{row}"] = step
         ws[f"A{row}"].font = Font(bold=True)
-        ws[f"A{row}"].fill = fill
-        ws[f"A{row}"].alignment = Alignment(wrap_text=True, vertical="top")
-
         ws[f"B{row}"] = answers.get(step,"")
         ws[f"B{row}"].font = Font(italic=True)
-        ws[f"B{row}"].fill = fill
-        ws[f"B{row}"].alignment = Alignment(wrap_text=True, vertical="top")
-
         ws[f"C{row}"] = str(extra_info.get(step,""))
-        ws[f"C{row}"].fill = fill
-        ws[f"C{row}"].alignment = Alignment(wrap_text=True, vertical="top")
+        row += 1
 
-        row += 4
-
-    # Column widths
+    # Adjust column widths
     ws.column_dimensions["A"].width = 35
     ws.column_dimensions["B"].width = 80
     ws.column_dimensions["C"].width = 30
@@ -141,12 +122,13 @@ if submitted:
         summary_ws = wb.create_sheet("Summary")
         headers = ["Report Date","Prepared By"] + [step for step, *_ in npqp_steps]
         summary_ws.append(headers)
+        summary_ws.freeze_panes = summary_ws["A2"]
         for col, header in enumerate(headers,1):
             summary_ws.cell(row=1,column=col).font=Font(bold=True)
     else:
         summary_ws = wb["Summary"]
 
-    summary_row = [str(report_date), prepared_by] + [answers[step][:20]+("..." if len(answers[step])>20 else "") for step,_ ,_,_ in npqp_steps]
+    summary_row = [str(report_date), prepared_by] + [answers[step][:20]+("..." if len(answers[step])>20 else "") for step,_ ,_ in npqp_steps]
     summary_ws.append(summary_row)
     for col in range(1,len(summary_row)+1):
         summary_ws.column_dimensions[summary_ws.cell(row=1,column=col).column_letter].width=30
