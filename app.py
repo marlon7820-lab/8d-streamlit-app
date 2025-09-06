@@ -8,24 +8,23 @@ st.set_page_config(page_title="NPQP 8D Training App", layout="wide")
 st.title("📋 Nissan NPQP 8D Training App - Guided Training Version")
 st.write("Step-by-step guided 8D form for beginners. The app automatically moves to the next step.")
 
-# Initialize session state for step and answers
+# Initialize session state
 if "step_index" not in st.session_state:
     st.session_state.step_index = 0
 if "answers" not in st.session_state:
     st.session_state.answers = {}
 if "extra_info" not in st.session_state:
     st.session_state.extra_info = {}
-
-# Report info
 if "report_date" not in st.session_state:
     st.session_state.report_date = date.today()
 if "prepared_by" not in st.session_state:
     st.session_state.prepared_by = ""
 
+# Report info
 st.session_state.report_date = st.date_input("Report Date", value=st.session_state.report_date)
 st.session_state.prepared_by = st.text_input("Prepared By", value=st.session_state.prepared_by)
 
-# NPQP steps
+# NPQP 8D steps
 npqp_steps = [
     ("Concern Details",
      "Amplifier unit fails functional testing due to intermittent signal loss. Image: amp_fail_01.jpg",
@@ -87,7 +86,7 @@ else:
     answer = st.text_area("Your answer:", height=80, placeholder=sample)
     extra = ""
 
-# Store input in session state
+# Save current step answers
 st.session_state.answers[step_name] = answer
 st.session_state.extra_info[step_name] = extra
 
@@ -104,19 +103,19 @@ with col2:
 if st.button("Save Full 8D Report"):
     file_name = "NPQP_8D_Reports.xlsx"
 
+    # Load or create workbook
     if os.path.exists(file_name):
         wb = load_workbook(file_name)
         if "8D Reports" in wb.sheetnames:
             ws = wb["8D Reports"]
-            # Move 8D Reports to first sheet
             wb._sheets.insert(0, wb._sheets.pop(wb._sheets.index(ws)))
         else:
-            ws = wb.create_sheet("8D Reports", 0)  # insert as first sheet
+            ws = wb.create_sheet("8D Reports", 0)
     else:
         wb = Workbook()
         default_sheet = wb.active
         wb.remove(default_sheet)
-        ws = wb.create_sheet("8D Reports", 0)  # first sheet
+        ws = wb.create_sheet("8D Reports", 0)
 
     row = ws.max_row + 2
     ws[f"A{row}"] = "Report Date"
@@ -126,6 +125,7 @@ if st.button("Save Full 8D Report"):
     ws[f"B{row}"] = st.session_state.prepared_by
     row += 1
 
+    # Write all answers safely
     for idx, (step, *_ ) in enumerate(npqp_steps):
         ws[f"A{row}"] = step
         ws[f"A{row}"].font = Font(bold=True)
@@ -150,7 +150,8 @@ if st.button("Save Full 8D Report"):
         summary_ws = wb["Summary"]
 
     summary_row = [str(st.session_state.report_date), st.session_state.prepared_by] + \
-                  [st.session_state.answers[step][:20]+("..." if len(st.session_state.answers[step])>20 else "") for step,_ ,_ in npqp_steps]
+        [ (st.session_state.answers.get(step,"")[:20]+("..." if len(st.session_state.answers.get(step,""))>20 else "")) for step,_ ,_ in npqp_steps ]
+
     summary_ws.append(summary_row)
     for col in range(1,len(summary_row)+1):
         summary_ws.column_dimensions[summary_ws.cell(row=1,column=col).column_letter].width=30
