@@ -5,14 +5,27 @@ from datetime import date
 import os
 
 st.set_page_config(page_title="NPQP 8D Training App", layout="wide")
-st.title("📋 Nissan NPQP 8D Training App (iPhone Stable Version)")
-st.write("Step-by-step guided 8D form for beginners. Save to Excel, see all answers immediately.")
+st.title("📋 Nissan NPQP 8D Training App - Guided Training Version")
+st.write("Step-by-step guided 8D form for beginners. The app automatically moves to the next step.")
+
+# Initialize session state for step and answers
+if "step_index" not in st.session_state:
+    st.session_state.step_index = 0
+if "answers" not in st.session_state:
+    st.session_state.answers = {}
+if "extra_info" not in st.session_state:
+    st.session_state.extra_info = {}
 
 # Report info
-report_date = st.date_input("Report Date", value=date.today())
-prepared_by = st.text_input("Prepared By")
+if "report_date" not in st.session_state:
+    st.session_state.report_date = date.today()
+if "prepared_by" not in st.session_state:
+    st.session_state.prepared_by = ""
 
-# NPQP steps: (step_name, sample, instructions)
+st.session_state.report_date = st.date_input("Report Date", value=st.session_state.report_date)
+st.session_state.prepared_by = st.text_input("Prepared By", value=st.session_state.prepared_by)
+
+# NPQP steps
 npqp_steps = [
     ("Concern Details",
      "Amplifier unit fails functional testing due to intermittent signal loss. Image: amp_fail_01.jpg",
@@ -40,49 +53,55 @@ npqp_steps = [
      "Document procedure changes and training.")
 ]
 
-# Dictionary to store answers
-answers = {}
-extra_info = {}
+# Current step
+step_name, sample, instructions = npqp_steps[st.session_state.step_index]
+st.markdown(f"### Step {st.session_state.step_index + 1}: {step_name}")
 
-st.subheader("Step-by-Step 8D Sections")
-
-# Step selector
-step_index = st.number_input("Select 8D Step (1-8)", min_value=1, max_value=8, value=1)
-step_name, sample, instructions = npqp_steps[step_index-1]
-
-st.markdown(f"### Step {step_index}: {step_name}")
 if st.checkbox("Show guidance for this step?"):
     st.write(f"**Instructions:** {instructions}")
     st.write(f"**Sample Answer:** {sample}")
 
-# Input fields
+# Input for current step
 if step_name == "Concern Details":
-    answers[step_name] = st.text_area("Your answer:", height=100, placeholder=sample)
-    extra_info[step_name] = st.text_input("Image filename or URL (optional)")
+    answer = st.text_area("Your answer:", height=100, placeholder=sample)
+    extra = st.text_input("Image filename or URL (optional)")
 elif step_name == "Temporary Countermeasures":
-    answers[step_name] = st.text_area("Your answer:", height=80, placeholder=sample)
-    extra_info[step_name] = st.date_input("Implementation Date", value=date.today())
+    answer = st.text_area("Your answer:", height=80, placeholder=sample)
+    extra = st.date_input("Implementation Date", value=date.today())
 elif step_name == "Similar Part Consideration":
     other_models = st.selectbox("Other Models Affected?", ["No","Yes"], key="sim1")
     generic_parts = st.selectbox("Generic Parts Affected?", ["No","Yes"], key="sim2")
     other_colors = st.selectbox("Other Colors?", ["No","Yes"], key="sim3")
     opposite_hand = st.selectbox("Opposite Hand?", ["No","Yes"], key="sim4")
     front_rear = st.selectbox("Front/Rear?", ["No","Yes"], key="sim5")
-    answers[step_name] = f"Other Models: {other_models}\nGeneric Parts: {generic_parts}\nOther Colors: {other_colors}\nOpposite Hand: {opposite_hand}\nFront/Rear: {front_rear}"
-    extra_info[step_name] = ""
+    answer = f"Other Models: {other_models}\nGeneric Parts: {generic_parts}\nOther Colors: {other_colors}\nOpposite Hand: {opposite_hand}\nFront/Rear: {front_rear}"
+    extra = ""
 elif step_name == "Initial Analysis":
     detect_process = st.selectbox("Detected during process?", ["No","Yes"], key="init1")
     detect_final = st.selectbox("Detected at final inspection?", ["No","Yes"], key="init2")
     detect_prior = st.selectbox("Detected prior to dispatch?", ["No","Yes"], key="init3")
     detect_other = st.text_input("Other detection points", key="init4")
-    answers[step_name] = f"Detected during process: {detect_process}\nDetected final: {detect_final}\nDetected prior: {detect_prior}\nOther: {detect_other}"
-    extra_info[step_name] = ""
+    answer = f"Detected during process: {detect_process}\nDetected final: {detect_final}\nDetected prior: {detect_prior}\nOther: {detect_other}"
+    extra = ""
 else:
-    answers[step_name] = st.text_area("Your answer:", height=80, placeholder=sample)
-    extra_info[step_name] = ""
+    answer = st.text_area("Your answer:", height=80, placeholder=sample)
+    extra = ""
 
-# Submit button to save all answers
-if st.button("Save 8D Report"):
+# Store input in session state
+st.session_state.answers[step_name] = answer
+st.session_state.extra_info[step_name] = extra
+
+# Navigation buttons
+col1, col2 = st.columns(2)
+with col1:
+    if st.button("Previous Step") and st.session_state.step_index > 0:
+        st.session_state.step_index -= 1
+with col2:
+    if st.button("Next Step") and st.session_state.step_index < len(npqp_steps)-1:
+        st.session_state.step_index += 1
+
+# Save report button
+if st.button("Save Full 8D Report"):
     file_name = "NPQP_8D_Reports.xlsx"
 
     if os.path.exists(file_name):
@@ -90,34 +109,30 @@ if st.button("Save 8D Report"):
         ws = wb["8D Reports"] if "8D Reports" in wb.sheetnames else wb.create_sheet("8D Reports")
     else:
         wb = Workbook()
-        ws = wb.active
-        ws.title = "8D Reports"
+        default_sheet = wb.active
+        wb.remove(default_sheet)
+        ws = wb.create_sheet("8D Reports")
 
     row = ws.max_row + 2
-
-    # Report info
     ws[f"A{row}"] = "Report Date"
-    ws[f"B{row}"] = str(report_date)
+    ws[f"B{row}"] = str(st.session_state.report_date)
     row += 1
     ws[f"A{row}"] = "Prepared By"
-    ws[f"B{row}"] = prepared_by
+    ws[f"B{row}"] = st.session_state.prepared_by
     row += 1
 
-    # Write all answers consecutively
     for idx, (step, *_ ) in enumerate(npqp_steps):
         ws[f"A{row}"] = step
         ws[f"A{row}"].font = Font(bold=True)
-        ws[f"B{row}"] = answers.get(step,"")
+        ws[f"B{row}"] = st.session_state.answers.get(step,"")
         ws[f"B{row}"].font = Font(italic=True)
-        ws[f"C{row}"] = str(extra_info.get(step,""))
+        ws[f"C{row}"] = str(st.session_state.extra_info.get(step,""))
         row += 1
 
-    # Adjust column widths
     ws.column_dimensions["A"].width = 35
     ws.column_dimensions["B"].width = 80
     ws.column_dimensions["C"].width = 30
 
-    # Summary sheet
     if "Summary" not in wb.sheetnames:
         summary_ws = wb.create_sheet("Summary")
         headers = ["Report Date","Prepared By"] + [step for step, *_ in npqp_steps]
@@ -128,7 +143,8 @@ if st.button("Save 8D Report"):
     else:
         summary_ws = wb["Summary"]
 
-    summary_row = [str(report_date), prepared_by] + [answers[step][:20]+("..." if len(answers[step])>20 else "") for step,_ ,_ in npqp_steps]
+    summary_row = [str(st.session_state.report_date), st.session_state.prepared_by] + \
+                  [st.session_state.answers[step][:20]+("..." if len(st.session_state.answers[step])>20 else "") for step,_ ,_ in npqp_steps]
     summary_ws.append(summary_row)
     for col in range(1,len(summary_row)+1):
         summary_ws.column_dimensions[summary_ws.cell(row=1,column=col).column_letter].width=30
