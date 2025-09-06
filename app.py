@@ -8,7 +8,7 @@ st.set_page_config(page_title="NPQP 8D Training App", layout="wide")
 st.title("📋 Nissan NPQP 8D Training App - iPhone Compatible")
 st.write("Step-by-step guided 8D form. Excel will open correctly on iPhone.")
 
-# Session state initialization
+# Initialize session state
 if "step_index" not in st.session_state:
     st.session_state.step_index = 0
 if "answers" not in st.session_state:
@@ -24,7 +24,7 @@ if "prepared_by" not in st.session_state:
 st.session_state.report_date = st.date_input("Report Date", value=st.session_state.report_date)
 st.session_state.prepared_by = st.text_input("Prepared By", value=st.session_state.prepared_by)
 
-# NPQP 8D steps
+# NPQP 8D steps with guidance
 npqp_steps = [
     ("Concern Details",
      "Amplifier unit fails functional testing due to intermittent signal loss. Image: amp_fail_01.jpg",
@@ -103,16 +103,18 @@ with col2:
 if st.button("Save Full 8D Report"):
     file_name = "NPQP_8D_Reports.xlsx"
 
-    # Use default sheet for iPhone compatibility
+    # Use default sheet
     if os.path.exists(file_name):
         wb = load_workbook(file_name)
-        ws = wb.active  # Always use first sheet
+        ws = wb.active
     else:
         wb = Workbook()
-        ws = wb.active  # Default sheet will be used
+        ws = wb.active
 
-    # Start writing at row 1
-    row = 1
+    # **Dummy title in A1** ensures iPhone Excel shows sheet
+    ws["A1"] = "NPQP 8D Report"
+    row = 2  # Start actual data at row 2
+
     ws[f"A{row}"] = "Report Date"
     ws[f"B{row}"] = str(st.session_state.report_date)
     row += 1
@@ -120,7 +122,7 @@ if st.button("Save Full 8D Report"):
     ws[f"B{row}"] = st.session_state.prepared_by
     row += 1
 
-    # Write steps starting from row 3
+    # Write steps
     for step, *_ in npqp_steps:
         ws[f"A{row}"] = step
         ws[f"B{row}"] = st.session_state.answers.get(step,"")
@@ -150,6 +152,7 @@ if st.button("Save Full 8D Report"):
     for col in range(1,len(summary_row)+1):
         summary_ws.column_dimensions[summary_ws.cell(row=1,column=col).column_letter].width=30
 
+    # Save workbook
     wb.save(file_name)
     st.success(f"✅ NPQP 8D Report saved in {file_name}")
-    st.download_button("Download Excel Workbook", file_name, file_name)
+    st.download_button("Download Excel Workbook", file_name, file_name) 
