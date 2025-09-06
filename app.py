@@ -1,75 +1,132 @@
 import streamlit as st
-from openpyxl import Workbook
+from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Font, Alignment, PatternFill
 from datetime import date
+import os
 
-st.set_page_config(page_title="Step-by-Step 8D App", layout="wide")
-st.title("📋 Step-by-Step Guided 8D Problem Solving App")
-st.write("Follow each step carefully. Click on a step to expand and fill it out.")
+st.set_page_config(page_title="NPQP 8D App", layout="wide")
+st.title("📋 Nissan NPQP 8D App")
+st.write("Text-based NPQP 8D format with Summary sheet tracking.")
 
-# Auto-fill report info
-st.subheader("Report Info")
+# Report info
 report_date = st.date_input("Report Date", value=date.today())
-prepared_by = st.text_input("Prepared By (your name)")
+prepared_by = st.text_input("Prepared By")
 
-# 8D Steps with instructions and placeholders
-steps = [
-    ("D1 - Establish the Team", "List all team members involved in solving this problem. Include roles.", "e.g., John Doe – QA, Jane Smith – Production"),
-    ("D2 - Describe the Problem", "Provide a clear description of the problem (what, where, when).", "e.g., PCB failed test on 08/01/2025 due to voltage drop."),
-    ("D3 - Containment Actions", "Describe immediate actions to contain the problem.", "e.g., Isolated affected units, notified production."),
-    ("D4 - Root Cause", "Identify the root cause using data and analysis.", "e.g., Faulty resistor R23 from supplier."),
-    ("D5 - Corrective Actions", "List planned actions to fix the problem.", "e.g., Replace components, retrain team."),
-    ("D6 - Permanent Corrective Actions", "Explain how this problem will be permanently solved.", "e.g., Change supplier, add inspection step."),
-    ("D7 - Prevent Recurrence", "List steps to prevent similar issues in the future.", "e.g., Update SOP, monthly audits."),
-    ("D8 - Congratulate the Team", "Add final remarks or acknowledgment for the team.", "e.g., Thanks to QA and Production teams for swift action.")
-]
+# --- NPQP Sections ---
+concern_desc = st.text_area("Concern Details", height=100)
+concern_image_name = st.text_input("Concern Image Filename or URL (optional)")
 
-answers = {}
+# Similar Part Consideration
+st.subheader("Similar Part Consideration")
+other_models = st.selectbox("Other Models Affected?", ["No","Yes"])
+generic_parts = st.selectbox("Generic Parts Affected?", ["No","Yes"])
+other_colors = st.selectbox("Other Colors?", ["No","Yes"])
+opposite_hand = st.selectbox("Opposite Hand?", ["No","Yes"])
+front_rear = st.selectbox("Front/Rear?", ["No","Yes"])
 
-# Use collapsible sections for each step
-with st.form("8D_Form"):
-    for step, guide, placeholder in steps:
-        with st.expander(step):
-            st.write(guide)
-            answers[step] = st.text_area("Your answer:", placeholder=placeholder, height=80)
-    submitted = st.form_submit_button("Generate 8D Report")
+# Initial Analysis
+st.subheader("Initial Analysis")
+detect_process = st.selectbox("Detected during process?", ["No","Yes"])
+detect_final = st.selectbox("Detected at final inspection?", ["No","Yes"])
+detect_prior = st.selectbox("Detected prior to dispatch?", ["No","Yes"])
+detect_other = st.text_input("Other detection points")
+
+# Temporary Countermeasures
+temp_actions = st.text_area("Temporary Countermeasures", height=80)
+temp_date = st.date_input("Implementation Date", value=date.today())
+
+# Root Cause Analysis
+root_cause = st.text_area("Root Cause Analysis", height=80)
+
+# Permanent Corrective Actions
+perm_actions = st.text_area("Permanent Corrective Actions", height=80)
+
+# Effectiveness Verification
+effect_verif = st.text_area("Effectiveness Verification", height=80)
+
+# Standardization
+standardization = st.text_area("Standardization / Procedure Updates", height=80)
+
+# --- Submit ---
+submitted = st.button("Save 8D Report")
 
 if submitted:
-    file_name = f"8D_Report_{report_date}.xlsx"
-    wb = Workbook()
-    ws = wb.active
-    ws.title = "8D Report"
+    file_name = "NPQP_8D_Reports.xlsx"
 
-    # Title formatting
-    ws["A1"] = "Step-by-Step Guided 8D Problem Solving Report"
-    ws["A1"].font = Font(size=16, bold=True, color="FFFFFF")
-    ws.merge_cells("A1:C1")
-    ws["A1"].alignment = Alignment(horizontal="center")
-    ws["A1"].fill = PatternFill(start_color="4F81BD", end_color="4F81BD", fill_type="solid")
+    if os.path.exists(file_name):
+        wb = load_workbook(file_name)
+        if "8D Reports" not in wb.sheetnames:
+            ws = wb.create_sheet("8D Reports")
+        else:
+            ws = wb["8D Reports"]
+    else:
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "8D Reports"
 
-    # Report info
-    ws["A3"] = "Report Date"
-    ws["B3"] = str(report_date)
-    ws["A4"] = "Prepared By"
-    ws["B4"] = prepared_by
+    row = ws.max_row + 2
 
-    # Fill in 8D steps
-    row = 6
-    for step, guide, placeholder in steps:
+    # Report Info
+    ws[f"A{row}"] = "Report Date"
+    ws[f"B{row}"] = str(report_date)
+    row += 1
+    ws[f"A{row}"] = "Prepared By"
+    ws[f"B{row}"] = prepared_by
+    row += 2
+
+    npqp_steps = [
+        ("Concern Details", concern_desc, concern_image_name),
+        ("Similar Part Consideration",
+         f"Other Models: {other_models}\nGeneric Parts: {generic_parts}\nOther Colors: {other_colors}\nOpposite Hand: {opposite_hand}\nFront/Rear: {front_rear}", ""),
+        ("Initial Analysis",
+         f"Detected during process: {detect_process}\nDetected final: {detect_final}\nDetected prior: {detect_prior}\nOther: {detect_other}", ""),
+        ("Temporary Countermeasures", temp_actions, str(temp_date)),
+        ("Root Cause Analysis", root_cause, ""),
+        ("Permanent Corrective Actions", perm_actions, ""),
+        ("Effectiveness Verification", effect_verif, ""),
+        ("Standardization", standardization, "")
+    ]
+
+    colors = ["FFF2CC", "D9EAD3"]
+
+    for idx, (step, answer, extra) in enumerate(npqp_steps):
+        fill_color = colors[idx % len(colors)]
+        fill = PatternFill(start_color=fill_color, end_color=fill_color, fill_type="solid")
+
         ws[f"A{row}"] = step
         ws[f"A{row}"].font = Font(bold=True)
-        ws[f"B{row}"] = guide
-        ws[f"B{row}"].font = Font(italic=True)
-        ws[f"C{row}"] = answers.get(step, "")
-        ws[f"C{row}"].alignment = Alignment(wrap_text=True)
-        row += 3
+        ws[f"A{row}"].fill = fill
+        ws[f"A{row}"].alignment = Alignment(wrap_text=True, vertical="top")
 
-    # Adjust column widths
-    ws.column_dimensions["A"].width = 40
-    ws.column_dimensions["B"].width = 60
-    ws.column_dimensions["C"].width = 80
+        ws[f"B{row}"] = answer
+        ws[f"B{row}"].font = Font(italic=True)
+        ws[f"B{row}"].fill = fill
+        ws[f"B{row}"].alignment = Alignment(wrap_text=True, vertical="top")
+
+        ws[f"C{row}"] = extra
+        ws[f"C{row}"].fill = fill
+        ws[f"C{row}"].alignment = Alignment(wrap_text=True, vertical="top")
+        row += 4
+
+    ws.column_dimensions["A"].width = 35
+    ws.column_dimensions["B"].width = 80
+    ws.column_dimensions["C"].width = 30
+
+    # Summary sheet
+    if "Summary" not in wb.sheetnames:
+        summary_ws = wb.create_sheet("Summary")
+        headers = ["Report Date","Prepared By"] + [step for step, _, _ in npqp_steps]
+        summary_ws.append(headers)
+        for col, header in enumerate(headers, 1):
+            summary_ws.cell(row=1, column=col).font = Font(bold=True)
+    else:
+        summary_ws = wb["Summary"]
+
+    summary_row = [str(report_date), prepared_by] + [answer[:20]+("..." if len(answer)>20 else "") for step, answer, extra in npqp_steps]
+    summary_ws.append(summary_row)
+    for col in range(1, len(summary_row)+1):
+        summary_ws.column_dimensions[summary_ws.cell(row=1,column=col).column_letter].width=30
 
     wb.save(file_name)
-    st.success(f"✅ 8D Report generated: {file_name}")
-    st.download_button("Download Excel Report", file_name, file_name)
-        
+    st.success(f"✅ NPQP 8D Report saved in {file_name}")
+    st.download_button("Download Excel Workbook", file_name, file_name)
