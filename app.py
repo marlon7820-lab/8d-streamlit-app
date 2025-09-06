@@ -106,12 +106,17 @@ if st.button("Save Full 8D Report"):
 
     if os.path.exists(file_name):
         wb = load_workbook(file_name)
-        ws = wb["8D Reports"] if "8D Reports" in wb.sheetnames else wb.create_sheet("8D Reports")
+        if "8D Reports" in wb.sheetnames:
+            ws = wb["8D Reports"]
+            # Move 8D Reports to first sheet
+            wb._sheets.insert(0, wb._sheets.pop(wb._sheets.index(ws)))
+        else:
+            ws = wb.create_sheet("8D Reports", 0)  # insert as first sheet
     else:
         wb = Workbook()
         default_sheet = wb.active
         wb.remove(default_sheet)
-        ws = wb.create_sheet("8D Reports")
+        ws = wb.create_sheet("8D Reports", 0)  # first sheet
 
     row = ws.max_row + 2
     ws[f"A{row}"] = "Report Date"
@@ -133,13 +138,14 @@ if st.button("Save Full 8D Report"):
     ws.column_dimensions["B"].width = 80
     ws.column_dimensions["C"].width = 30
 
+    # Summary sheet
     if "Summary" not in wb.sheetnames:
         summary_ws = wb.create_sheet("Summary")
         headers = ["Report Date","Prepared By"] + [step for step, *_ in npqp_steps]
         summary_ws.append(headers)
         summary_ws.freeze_panes = summary_ws["A2"]
         for col, header in enumerate(headers,1):
-            summary_ws.cell(row=1,column=col).font=Font(bold=True)
+            summary_ws.cell(row=1,column=col).font = Font(bold=True)
     else:
         summary_ws = wb["Summary"]
 
