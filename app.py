@@ -5,10 +5,10 @@ from datetime import date
 import os
 
 st.set_page_config(page_title="NPQP 8D Training App", layout="wide")
-st.title("📋 Nissan NPQP 8D Training App - Guided Training Version")
-st.write("Step-by-step guided 8D form for beginners. The app automatically moves to the next step.")
+st.title("📋 Nissan NPQP 8D Training App - iPhone-Friendly")
+st.write("Step-by-step guided 8D form. The Excel file will always open correctly on iPhone.")
 
-# Initialize session state
+# Session state initialization
 if "step_index" not in st.session_state:
     st.session_state.step_index = 0
 if "answers" not in st.session_state:
@@ -34,7 +34,7 @@ npqp_steps = [
      "Indicate if other parts/models/colors/sides may be affected."),
     ("Initial Analysis",
      "Detected during process: Yes, Final inspection: No, Prior to dispatch: No, Other: Functional test not performed.",
-     "Identify where defect could have been detected. Use dropdowns."),
+     "Identify where defect could have been detected."),
     ("Temporary Countermeasures",
      "Segregated defective units, stopped shipment. Date: 08/01/2025",
      "List immediate containment actions and implementation date."),
@@ -60,7 +60,7 @@ if st.checkbox("Show guidance for this step?"):
     st.write(f"**Instructions:** {instructions}")
     st.write(f"**Sample Answer:** {sample}")
 
-# Input for current step
+# Input handling per step
 if step_name == "Concern Details":
     answer = st.text_area("Your answer:", height=100, placeholder=sample)
     extra = st.text_input("Image filename or URL (optional)")
@@ -86,7 +86,7 @@ else:
     answer = st.text_area("Your answer:", height=80, placeholder=sample)
     extra = ""
 
-# Save current step answers
+# Store input
 st.session_state.answers[step_name] = answer
 st.session_state.extra_info[step_name] = extra
 
@@ -99,24 +99,19 @@ with col2:
     if st.button("Next Step") and st.session_state.step_index < len(npqp_steps)-1:
         st.session_state.step_index += 1
 
-# Save report button
+# Save button
 if st.button("Save Full 8D Report"):
     file_name = "NPQP_8D_Reports.xlsx"
 
-    # Load or create workbook
+    # Use default sheet for iPhone compatibility
     if os.path.exists(file_name):
         wb = load_workbook(file_name)
-        if "8D Reports" in wb.sheetnames:
-            ws = wb["8D Reports"]
-            wb._sheets.insert(0, wb._sheets.pop(wb._sheets.index(ws)))
-        else:
-            ws = wb.create_sheet("8D Reports", 0)
+        ws = wb.active  # Always use first sheet
     else:
         wb = Workbook()
-        default_sheet = wb.active
-        wb.remove(default_sheet)
-        ws = wb.create_sheet("8D Reports", 0)
+        ws = wb.active  # Default sheet will be used
 
+    # Start writing 8D data
     row = ws.max_row + 2
     ws[f"A{row}"] = "Report Date"
     ws[f"B{row}"] = str(st.session_state.report_date)
@@ -125,12 +120,9 @@ if st.button("Save Full 8D Report"):
     ws[f"B{row}"] = st.session_state.prepared_by
     row += 1
 
-    # Write all answers safely
-    for idx, (step, *_ ) in enumerate(npqp_steps):
+    for step, *_ in npqp_steps:
         ws[f"A{row}"] = step
-        ws[f"A{row}"].font = Font(bold=True)
         ws[f"B{row}"] = st.session_state.answers.get(step,"")
-        ws[f"B{row}"].font = Font(italic=True)
         ws[f"C{row}"] = str(st.session_state.extra_info.get(step,""))
         row += 1
 
@@ -138,7 +130,7 @@ if st.button("Save Full 8D Report"):
     ws.column_dimensions["B"].width = 80
     ws.column_dimensions["C"].width = 30
 
-    # Summary sheet
+    # Optional Summary sheet
     if "Summary" not in wb.sheetnames:
         summary_ws = wb.create_sheet("Summary")
         headers = ["Report Date","Prepared By"] + [step for step, *_ in npqp_steps]
