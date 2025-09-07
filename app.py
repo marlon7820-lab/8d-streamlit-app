@@ -1,6 +1,8 @@
 import streamlit as st
 import csv
 from openpyxl import Workbook
+from openpyxl.styles import Font, Alignment, PatternFill
+from openpyxl.utils import get_column_letter
 
 st.title("📑 Nissan NPQP 8D Report Trainer")
 
@@ -89,16 +91,16 @@ for step, desc, example in npqp_steps:
 # Collect answers safely
 # -------------------------------------------------------------------
 data_rows = []
-for step, _, _ in npqp_steps:
+for step, desc, _ in npqp_steps:
     ans = st.session_state.answers.get(step, "")
     extra = st.session_state.extra_info.get(step, "")
-    data_rows.append((step, ans, extra))
+    data_rows.append((step, desc, ans, extra))
 
 # -------------------------------------------------------------------
-# Save button
+# Save button with styled NPQP Excel + CSV
 # -------------------------------------------------------------------
 if st.button("💾 Save Full 8D Report"):
-    if not any(ans for _, ans, _ in data_rows):
+    if not any(ans for _, _, ans, _ in data_rows):
         st.error("⚠️ No answers filled in yet. Please complete some fields before saving.")
     else:
         # --- XLSX file ---
@@ -107,39 +109,55 @@ if st.button("💾 Save Full 8D Report"):
         ws = wb.active
         ws.title = "NPQP 8D Report"
 
-        row = 1
-        ws[f"A{row}"] = "NPQP 8D Report"
-        row += 2
-        ws[f"A{row}"] = "Report Date"
-        ws[f"B{row}"] = str(st.session_state.report_date)
-        row += 1
-        ws[f"A{row}"] = "Prepared By"
-        ws[f"B{row}"] = st.session_state.prepared_by
-        row += 2
+        # Title
+        ws.merge_cells("A1:D1")
+        ws["A1"] = "Nissan NPQP 8D Report"
+        ws["A1"].font = Font(size=14, bold=True)
+        ws["A1"].alignment = Alignment(horizontal="center", vertical="center")
+        ws.row_dimensions[1].height = 25
 
-        ws[f"A{row}"] = "Step"
-        ws[f"B{row}"] = "Answer"
-        ws[f"C{row}"] = "Extra Info"
-        row += 1
+        # Metadata
+        ws["A3"] = "Report Date"
+        ws["B3"] = str(st.session_state.report_date)
+        ws["A4"] = "Prepared By"
+        ws["B4"] = st.session_state.prepared_by
 
-        for step, ans, extra in data_rows:
-            ws[f"A{row}"] = step
-            ws[f"B{row}"] = ans
-            ws[f"C{row}"] = str(extra)
+        # Headers
+        headers = ["Step", "Training Description", "Your Answer", "Extra Info"]
+        header_fill = PatternFill(start_color="C0C0C0", end_color="C0C0C0", fill_type="solid")
+        row = 6
+        for col, header in enumerate(headers, start=1):
+            cell = ws.cell(row=row, column=col, value=header)
+            cell.font = Font(bold=True)
+            cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+            cell.fill = header_fill
+
+        # Content
+        row = 7
+        for step, desc, ans, extra in data_rows:
+            ws.cell(row=row, column=1, value=step)
+            ws.cell(row=row, column=2, value=desc)
+            ws.cell(row=row, column=3, value=ans)
+            ws.cell(row=row, column=4, value=extra)
             row += 1
+
+        # Auto column widths
+        for col in range(1, 5):
+            ws.column_dimensions[get_column_letter(col)].width = 30
 
         wb.save(xlsx_file)
 
-        # --- CSV file ---
+        # --- CSV file (simpler, iPhone-friendly) ---
         csv_file = "NPQP_8D_Report.csv"
         with open(csv_file, "w", newline="") as f:
             writer = csv.writer(f)
-            writer.writerow(["NPQP 8D Report"])
+            writer.writerow(["Nissan NPQP 8D Report"])
             writer.writerow(["Report Date", st.session_state.report_date])
             writer.writerow(["Prepared By", st.session_state.prepared_by])
             writer.writerow([])
-            writer.writerow(["Step", "Answer", "Extra Info"])
-            writer.writerows(data_rows)
+            writer.writerow(headers)
+            for step, desc, ans, extra in data_rows:
+                writer.writerow([step, desc, ans, extra])
 
         # --- Downloads ---
         st.success("✅ NPQP 8D Report saved successfully.")
