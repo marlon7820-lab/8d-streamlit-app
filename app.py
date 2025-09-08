@@ -9,7 +9,7 @@ import datetime
 # ---------------------------
 st.set_page_config(
     page_title="8D Training App",
-    page_icon="📑",  # Replace with URL of your logo if desired
+    page_icon="https://www.google.com/imgres?imgurl=https%3A%2F%2Fthebrc.ca%2Fwp-content%2Fuploads%2F8D-Problem-Solving-Image-500x500-White-Background-.jpg&imgrefurl=https%3A%2F%2Fthebrc.ca%2Fproduct%2F8d-problem-solving-2%2F&h=500&w=500&tbnid=Mhizmy8ewjltpM&source=sh%2Fx%2Fsaves%2Fuv%2Fm1%2F5&tbnh=500&tbnw=500&usg=AI4_-kTO6Dmpw4ktpRqK635tIAvpZV5N2g&vet=1&docid=qBcELRrwebXOfM&kgs=31bed2db14b477af",  # Replace with URL of your logo if desired
     layout="wide"
 )
 
