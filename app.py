@@ -3,31 +3,48 @@ from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, PatternFill
 from openpyxl.utils import get_column_letter
 
-st.title("📑 Nissan NPQP 8D Report")
+st.title("📑 Nissan NPQP 8D Report Trainer")
 
 # -------------------------------------------------------------------
-# NPQP 8D Steps
+# NPQP 8D Steps with training notes/examples (for guidance only)
 # -------------------------------------------------------------------
 npqp_steps = [
-    ("D1: Concern Details", ""),
-    ("D2: Similar Part Considerations", ""),
-    ("D3: Initial Analysis", ""),
-    ("D4: Implement Containment", ""),
-    ("D5: Root Cause", ""),  # Only step with extra info / 5-Why
-    ("D6: Permanent Corrective Actions", ""),
-    ("D7: Countermeasure Confirmation", ""),
-    ("D8: Follow-up Activities (Lessons Learned / Recurrence Prevention)", "")
+    ("D1: Concern Details",
+     "Describe the customer concerns clearly. Include what the issue is, where it occurred, when, and any supporting data.",
+     "Example: Customer reported static noise in amplifier during end-of-line test at Plant A."),
+    ("D2: Similar Part Considerations",
+     "Check for similar parts, models, generic parts, other colors, opposite hand, front/rear, etc. to see if issue is recurring or isolated.",
+     "Example: Same speaker type used in another radio model; different amplifier colors; front vs. rear audio units."),
+    ("D3: Initial Analysis",
+     "Perform an initial investigation to identify obvious issues, collect data, and document initial findings.",
+     "Example: Visual inspection of solder joints, initial functional tests, checking connectors."),
+    ("D4: Implement Containment",
+     "Define temporary containment actions to prevent the customer from seeing the problem while permanent actions are developed.",
+     "Example: 100% inspection of amplifiers before shipment; use of temporary shielding; quarantine of affected batches."),
+    ("D5: Root Cause",
+     "Use 5-Why analysis to determine the root cause. Separate by Occurrence (why it happened) and Detection (why it wasn’t detected). Add more Whys if needed.",
+     "Example:\nOccurrence:\n1. Cold solder joint on DSP chip\n2. Soldering temperature too low\n3. Operator didn’t follow profile\n...\nDetection:\n1. Visual inspection not detailed enough\n2. QA checklist incomplete"),
+    ("D6: Permanent Corrective Actions",
+     "Define corrective actions that eliminate the root cause permanently and prevent recurrence.",
+     "Example: Update soldering process, retrain operators, update work instructions, and add automated inspection."),
+    ("D7: Countermeasure Confirmation",
+     "Verify that corrective actions effectively resolve the issue long-term.",
+     "Example: Functional tests on corrected amplifiers, accelerated life testing, and monitoring of first production runs."),
+    ("D8: Follow-up Activities (Lessons Learned / Recurrence Prevention)",
+     "Document lessons learned, update standards, procedures, FMEAs, and training to prevent recurrence.",
+     "Example: Update SOPs, PFMEA, work instructions, and employee training to prevent the same issue in future.")
 ]
 
 # -------------------------------------------------------------------
 # Initialize session state
 # -------------------------------------------------------------------
-for step, _ in npqp_steps:
+for step, _, _ in npqp_steps:
     if step not in st.session_state:
         st.session_state[step] = {"answer": "", "extra": ""}
 st.session_state.setdefault("report_date", "")
 st.session_state.setdefault("prepared_by", "")
-st.session_state.setdefault("d5_whys", [""] * 5)  # dynamic 5-Why for D5
+st.session_state.setdefault("d5_occ_whys", [""] * 5)
+st.session_state.setdefault("d5_det_whys", [""] * 5)
 
 # Color dictionary for Excel
 step_colors = {
@@ -51,21 +68,30 @@ st.session_state.prepared_by = st.text_input("✍️ Prepared By", st.session_st
 # -------------------------------------------------------------------
 # Tabs for each step
 # -------------------------------------------------------------------
-tabs = st.tabs([step for step, _ in npqp_steps])
-for i, (step, _) in enumerate(npqp_steps):
+tabs = st.tabs([step for step, _, _ in npqp_steps])
+for i, (step, note, example) in enumerate(npqp_steps):
     with tabs[i]:
         st.markdown(f"### {step}")
+        st.info(f"**Training Guidance:** {note}\n\n💡 **Example:** {example}")
 
-        # D5 Root Cause with dynamic 5-Why
+        # D5 Root Cause dynamic 5-Why
         if step.startswith("D5"):
-            st.markdown("#### Root Cause 5-Why Analysis")
-            for idx, val in enumerate(st.session_state.d5_whys):
-                st.session_state.d5_whys[idx] = st.text_input(f"Why {idx+1}", value=val, key=f"{step}_why_{idx}")
-            if st.button("➕ Add another Why", key=f"add_why_{step}"):
-                st.session_state.d5_whys.append("")
+            st.markdown("#### Occurrence Analysis")
+            for idx, val in enumerate(st.session_state.d5_occ_whys):
+                st.session_state.d5_occ_whys[idx] = st.text_input(f"Occurrence Why {idx+1}", value=val, key=f"{step}_occ_{idx}")
+            if st.button("➕ Add another Occurrence Why", key=f"add_occ_{step}"):
+                st.session_state.d5_occ_whys.append("")
 
-            # Combine 5-Why answers + extra info
-            st.session_state[step]["answer"] = "\n".join([w for w in st.session_state.d5_whys if w.strip()])
+            st.markdown("#### Detection Analysis")
+            for idx, val in enumerate(st.session_state.d5_det_whys):
+                st.session_state.d5_det_whys[idx] = st.text_input(f"Detection Why {idx+1}", value=val, key=f"{step}_det_{idx}")
+            if st.button("➕ Add another Detection Why", key=f"add_det_{step}"):
+                st.session_state.d5_det_whys.append("")
+
+            st.session_state[step]["answer"] = (
+                "Occurrence Analysis:\n" + "\n".join([w for w in st.session_state.d5_occ_whys if w.strip()]) +
+                "\n\nDetection Analysis:\n" + "\n".join([w for w in st.session_state.d5_det_whys if w.strip()])
+            )
             st.session_state[step]["extra"] = st.text_area("Additional Root Cause Details (optional)", value=st.session_state[step]["extra"], key="extra_rootcause")
         else:
             st.session_state[step]["answer"] = st.text_area(f"Your Answer for {step}", value=st.session_state[step]["answer"], key=f"ans_{step}")
@@ -73,7 +99,7 @@ for i, (step, _) in enumerate(npqp_steps):
 # -------------------------------------------------------------------
 # Collect answers
 # -------------------------------------------------------------------
-data_rows = [(step, st.session_state[step]["answer"], st.session_state[step]["extra"]) for step, _ in npqp_steps]
+data_rows = [(step, st.session_state[step]["answer"], st.session_state[step]["extra"]) for step, _, _ in npqp_steps]
 
 # -------------------------------------------------------------------
 # Save button with styled Excel
@@ -82,7 +108,6 @@ if st.button("💾 Save 8D Report"):
     if not any(ans for _, ans, _ in data_rows):
         st.error("⚠️ No answers filled in yet. Please complete some fields before saving.")
     else:
-        # --- XLSX ---
         xlsx_file = "NPQP_8D_Report.xlsx"
         wb = Workbook()
         ws = wb.active
