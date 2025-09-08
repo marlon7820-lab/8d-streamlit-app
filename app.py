@@ -2,8 +2,29 @@ import streamlit as st
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, PatternFill
 from openpyxl.utils import get_column_letter
+import datetime
 
-st.title("📑 Nissan NPQP 8D Report Trainer")
+# ---------------------------
+# Page config and branding
+# ---------------------------
+st.set_page_config(
+    page_title="8D Training App",
+    page_icon="📑",  # Replace with URL of your logo if desired
+    layout="wide"
+)
+
+# Hide Streamlit default menu, header, and footer
+hide_streamlit_style = """
+            <style>
+            #MainMenu {visibility: hidden;}
+            footer {visibility: hidden;}
+            header {visibility: hidden;}
+            </style>
+            """
+st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+
+# Add custom app header
+st.markdown("<h1 style='text-align: center; color: #1E90FF;'>📑 8D Training App</h1>", unsafe_allow_html=True)
 
 # -------------------------------------------------------------------
 # NPQP 8D Steps with training notes/examples (for guidance only)
@@ -23,7 +44,7 @@ npqp_steps = [
      "Example: 100% inspection of amplifiers before shipment; use of temporary shielding; quarantine of affected batches."),
     ("D5: Final Analysis",
      "Use 5-Why analysis to determine the root cause. Separate by Occurrence (why it happened) and Detection (why it wasn’t detected). Add more Whys if needed.",
-     "Example:\nOccurrence:\n1. Cold solder joint on DSP chip\n2. Soldering temperature too low\n...\nDetection:\n1. Visual inspection not detailed enough\n2. QA checklist incomplete"),
+     ""),  # D5 training guidance will be added dynamically
     ("D6: Permanent Corrective Actions",
      "Define corrective actions that eliminate the root cause permanently and prevent recurrence.",
      "Example: Update soldering process, retrain operators, update work instructions, and add automated inspection."),
@@ -59,10 +80,11 @@ step_colors = {
 }
 
 # -------------------------------------------------------------------
-# Report info
+# Report info with formatted date
 # -------------------------------------------------------------------
 st.subheader("Report Information")
-st.session_state.report_date = st.text_input("📅 Report Date (YYYY-MM-DD)", st.session_state.report_date)
+today_str = datetime.datetime.today().strftime("%B %d, %Y")
+st.session_state.report_date = st.text_input("📅 Report Date", value=today_str)
 st.session_state.prepared_by = st.text_input("✍️ Prepared By", st.session_state.prepared_by)
 
 # -------------------------------------------------------------------
@@ -72,9 +94,34 @@ tabs = st.tabs([step for step, _, _ in npqp_steps])
 for i, (step, note, example) in enumerate(npqp_steps):
     with tabs[i]:
         st.markdown(f"### {step}")
-        st.info(f"**Training Guidance:** {note}\n\n💡 **Example:** {example}")
 
-        # D5 Final Analysis dynamic 5-Why
+        # D5: Final Analysis enhanced training guidance
+        if step.startswith("D5"):
+            full_training_note = (
+                "**Training Guidance:** Use 5-Why analysis to determine the root cause.\n\n"
+                "**Occurrence Example (5-Whys):**\n"
+                "1. Cold solder joint on DSP chip\n"
+                "2. Soldering temperature too low\n"
+                "3. Operator didn’t follow profile\n"
+                "4. Work instructions were unclear\n"
+                "5. No visual confirmation step\n\n"
+                "**Detection Example (5-Whys):**\n"
+                "1. QA inspection missed cold joint\n"
+                "2. Inspection checklist incomplete\n"
+                "3. No automated test step\n"
+                "4. Batch testing not performed\n"
+                "5. Early warning signal not tracked\n\n"
+                "**Root Cause Example:**\n"
+                "Insufficient process control on soldering operation, combined with inadequate QA checklist, "
+                "allowed defective DSP soldering to pass undetected."
+            )
+            st.info(full_training_note)
+        else:
+            st.info(f"**Training Guidance:** {note}\n\n💡 **Example:** {example}")
+
+        # -------------------------------------------------------------------
+        # Input fields
+        # -------------------------------------------------------------------
         if step.startswith("D5"):
             st.markdown("#### Occurrence Analysis")
             for idx, val in enumerate(st.session_state.d5_occ_whys):
@@ -94,9 +141,8 @@ for i, (step, note, example) in enumerate(npqp_steps):
                 "\n\nDetection Analysis:\n" + "\n".join([w for w in st.session_state.d5_det_whys if w.strip()])
             )
 
-            # Extra field now called Root Cause
+            # Extra field renamed to Root Cause
             st.session_state[step]["extra"] = st.text_area("Root Cause (summary after 5-Whys)", value=st.session_state[step]["extra"], key="root_cause")
-
         else:
             st.session_state[step]["answer"] = st.text_area(f"Your Answer for {step}", value=st.session_state[step]["answer"], key=f"ans_{step}")
 
