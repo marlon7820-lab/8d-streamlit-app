@@ -7,7 +7,7 @@ from openpyxl.utils import get_column_letter
 st.title("📑 Nissan NPQP 8D Report Trainer")
 
 # -------------------------------------------------------------------
-# Define NPQP 8D steps: (Step Title, Description, Sample Example)
+# Define NPQP 8D steps with training notes and examples
 # -------------------------------------------------------------------
 npqp_steps = [
     ("D0: Prepare and Plan",
@@ -27,8 +27,15 @@ npqp_steps = [
      "Example: Implement 100% inspection of amplifier boards before shipment."),
     
     ("D4: Identify Root Cause",
-     "Use root cause analysis tools (5-Why, Fishbone, data analysis). Identify both Occurrence and Detection causes.",
-     "Example: Root cause traced to cold solder joint on DSP chip caused by insufficient heating profile."),
+     "Focus on the 5-Why method to identify the root cause. Start with the problem, then ask 'Why?' repeatedly (usually 5 times). Record each Why in order.",
+     "Training Example for Electronics:\n"
+     "Problem: 100 radios fail functional test due to distorted audio.\n"
+     "Why 1: Cold solder joint on DSP chip.\n"
+     "Why 2: Soldering process temperature too low.\n"
+     "Why 3: Operator did not follow soldering profile.\n"
+     "Why 4: Work instructions were unclear.\n"
+     "Why 5: SOP not updated after process change.\n"
+     "Root Cause: SOP not updated after process change."),
     
     ("D5: Choose Permanent Actions",
      "Define corrective actions that eliminate the root cause permanently.",
@@ -75,11 +82,24 @@ for step, desc, example in npqp_steps:
     st.info(f"**Training Note:** {desc}")
     st.write(f"💡 **Example:** {example}")
 
-    st.session_state.answers[step] = st.text_area(
-        f"Your Answer for {step}",
-        value=st.session_state.answers.get(step, ""),
-        key=f"ans_{step}"
-    )
+    # Special handling for D4 5-Why step
+    if step.startswith("D4"):
+        st.markdown("#### Fill out the 5-Why Analysis")
+        for i in range(1, 6):
+            st.session_state.answers[f"{step}_why{i}"] = st.text_input(
+                f"Why {i}:", value=st.session_state.answers.get(f"{step}_why{i}", "")
+            )
+        # Combine into one answer for saving
+        combined_ans = "\n".join(
+            st.session_state.answers.get(f"{step}_why{i}", "") for i in range(1, 6)
+        )
+        st.session_state.answers[step] = combined_ans
+    else:
+        st.session_state.answers[step] = st.text_area(
+            f"Your Answer for {step}",
+            value=st.session_state.answers.get(step, ""),
+            key=f"ans_{step}"
+        )
 
     st.session_state.extra_info[step] = st.text_area(
         f"Extra Information (optional) for {step}",
