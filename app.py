@@ -9,8 +9,9 @@ import datetime
 # ---------------------------
 st.set_page_config(
     page_title="8D Training App",
-    page_icon="https://github.com/marlon7820-lab/8d-streamlit-app/blob/main/IMG_7771%20Small.png",  # Replace with URL of your logo if desired
+    page_icon="https://raw.githubusercontent.com/yourusername/8d-training-app/main/assets/8d_icon.png",
     layout="wide"
+)
 )
 
 # Hide Streamlit default menu, header, and footer
