@@ -9,7 +9,7 @@ import datetime
 # ---------------------------
 st.set_page_config(
     page_title="8D Training App",
-    page_icon="",  # Replace with URL of your logo if desired
+    page_icon="https://github.com/marlon7820-lab/8d-streamlit-app/blob/main/IMG_7771%20Small.png",  # Replace with URL of your logo if desired
     layout="wide"
 )
 
