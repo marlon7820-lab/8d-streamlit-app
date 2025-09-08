@@ -21,9 +21,9 @@ npqp_steps = [
     ("D4: Implement Containment",
      "Define temporary containment actions to prevent the customer from seeing the problem while permanent actions are developed.",
      "Example: 100% inspection of amplifiers before shipment; use of temporary shielding; quarantine of affected batches."),
-    ("D5: Root Cause",
+    ("D5: Final Analysis",
      "Use 5-Why analysis to determine the root cause. Separate by Occurrence (why it happened) and Detection (why it wasn’t detected). Add more Whys if needed.",
-     "Example:\nOccurrence:\n1. Cold solder joint on DSP chip\n2. Soldering temperature too low\n3. Operator didn’t follow profile\n...\nDetection:\n1. Visual inspection not detailed enough\n2. QA checklist incomplete"),
+     "Example:\nOccurrence:\n1. Cold solder joint on DSP chip\n2. Soldering temperature too low\n...\nDetection:\n1. Visual inspection not detailed enough\n2. QA checklist incomplete"),
     ("D6: Permanent Corrective Actions",
      "Define corrective actions that eliminate the root cause permanently and prevent recurrence.",
      "Example: Update soldering process, retrain operators, update work instructions, and add automated inspection."),
@@ -52,7 +52,7 @@ step_colors = {
     "D2: Similar Part Considerations": "90EE90",
     "D3: Initial Analysis": "FFFF99",
     "D4: Implement Containment": "FFD580",
-    "D5: Root Cause": "FF9999",
+    "D5: Final Analysis": "FF9999",
     "D6: Permanent Corrective Actions": "D8BFD8",
     "D7: Countermeasure Confirmation": "E0FFFF",
     "D8: Follow-up Activities (Lessons Learned / Recurrence Prevention)": "D3D3D3"
@@ -74,7 +74,7 @@ for i, (step, note, example) in enumerate(npqp_steps):
         st.markdown(f"### {step}")
         st.info(f"**Training Guidance:** {note}\n\n💡 **Example:** {example}")
 
-        # D5 Root Cause dynamic 5-Why
+        # D5 Final Analysis dynamic 5-Why
         if step.startswith("D5"):
             st.markdown("#### Occurrence Analysis")
             for idx, val in enumerate(st.session_state.d5_occ_whys):
@@ -88,11 +88,15 @@ for i, (step, note, example) in enumerate(npqp_steps):
             if st.button("➕ Add another Detection Why", key=f"add_det_{step}"):
                 st.session_state.d5_det_whys.append("")
 
+            # Combine Occurrence & Detection into answer
             st.session_state[step]["answer"] = (
                 "Occurrence Analysis:\n" + "\n".join([w for w in st.session_state.d5_occ_whys if w.strip()]) +
                 "\n\nDetection Analysis:\n" + "\n".join([w for w in st.session_state.d5_det_whys if w.strip()])
             )
-            st.session_state[step]["extra"] = st.text_area("Additional Root Cause Details (optional)", value=st.session_state[step]["extra"], key="extra_rootcause")
+
+            # Extra field now called Root Cause
+            st.session_state[step]["extra"] = st.text_area("Root Cause (summary after 5-Whys)", value=st.session_state[step]["extra"], key="root_cause")
+
         else:
             st.session_state[step]["answer"] = st.text_area(f"Your Answer for {step}", value=st.session_state[step]["answer"], key=f"ans_{step}")
 
@@ -127,7 +131,7 @@ if st.button("💾 Save 8D Report"):
         ws["B4"] = st.session_state.prepared_by
 
         # Headers
-        headers = ["Step", "Your Answer", "Extra Info"]
+        headers = ["Step", "Your Answer", "Root Cause"]
         header_fill = PatternFill(start_color="C0C0C0", end_color="C0C0C0", fill_type="solid")
         row = 6
         for col, header in enumerate(headers, start=1):
