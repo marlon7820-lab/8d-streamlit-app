@@ -1,4 +1,3 @@
-streamlit>=1.25
-openpyxl
+streamlit
 transformers
 torch
