@@ -14,6 +14,7 @@ st.set_page_config(
     layout="wide"
 )
 
+# Hide default menu/footer
 st.markdown("""
 <style>
 #MainMenu {visibility: hidden;}
@@ -28,7 +29,7 @@ header {visibility: hidden;}
 lang_choice = st.selectbox("Select Language / Seleccione Idioma", ["English", "Español"])
 lang = "en" if lang_choice == "English" else "es"
 prev_lang = st.session_state.get("prev_lang", lang)
-st.session_state["prev_lang"] = lang  # track previous language
+st.session_state["prev_lang"] = lang
 
 # ---------------------------
 # UI Texts
@@ -44,7 +45,9 @@ ui_texts = {
         "no_answers": "⚠️ No answers filled in yet. Please complete some fields before saving.",
         "ai_helper": "💡 AI Helper Suggestions",
         "interactive_5why_tab": "Interactive 5-Why",
-        "ai_tab": "AI Helper"
+        "ai_tab": "AI Helper",
+        "add_occ": "➕ Add another Occurrence Why",
+        "add_det": "➕ Add another Detection Why"
     },
     "es": {
         "header": "📑 Aplicación de Entrenamiento 8D",
@@ -56,7 +59,9 @@ ui_texts = {
         "no_answers": "⚠️ No se han completado respuestas. Por favor complete algunos campos antes de guardar.",
         "ai_helper": "💡 Sugerencias del Asistente AI",
         "interactive_5why_tab": "5-Why Interactivo",
-        "ai_tab": "Asistente AI"
+        "ai_tab": "Asistente AI",
+        "add_occ": "➕ Agregar otro Porqué de Ocurrencia",
+        "add_det": "➕ Agregar otro Porqué de Detección"
     }
 }
 t = ui_texts[lang]
@@ -64,7 +69,7 @@ t = ui_texts[lang]
 st.markdown(f"<h1 style='text-align: center; color: #1E90FF;'>{t['header']}</h1>", unsafe_allow_html=True)
 
 # ---------------------------
-# Step definitions
+# NPQP Steps
 # ---------------------------
 step_ids = ["D1","D2","D3","D4","D5","D6","D7","D8"]
 
@@ -126,13 +131,12 @@ npqp_steps_texts = {
 npqp_steps = [(sid,) + npqp_steps_texts[lang][sid] for sid in step_ids]
 
 # ---------------------------
-# Initialize session_state
+# Session state init
 # ---------------------------
 for sid, _, _, _ in npqp_steps:
     if sid not in st.session_state:
         st.session_state[sid] = {"answer": "", "extra": ""}
-
-st.session_state.setdefault("report_date", "")
+st.session_state.setdefault("report_date", datetime.datetime.today().strftime("%B %d, %Y"))
 st.session_state.setdefault("prepared_by", "")
 st.session_state.setdefault("d5_occ_whys", [""]*5)
 st.session_state.setdefault("d5_det_whys", [""]*5)
@@ -140,7 +144,21 @@ st.session_state.setdefault("interactive_whys", [""])
 st.session_state.setdefault("interactive_root_cause", "")
 
 # ---------------------------
-# Translation function
+# Colors for Excel
+# ---------------------------
+step_colors = {
+    "D1": "ADD8E6",
+    "D2": "90EE90",
+    "D3": "FFFF99",
+    "D4": "FFD580",
+    "D5": "FF9999",
+    "D6": "D8BFD8",
+    "D7": "E0FFFF",
+    "D8": "D3D3D3"
+}
+
+# ---------------------------
+# Translation helper
 # ---------------------------
 def translate_text(text, target_lang="es"):
     if not text.strip():
@@ -162,5 +180,141 @@ def translate_text(text, target_lang="es"):
         return text
 
 # ---------------------------
-# Detect language change and translate all stored answers
+# Report info
 # ---------------------------
+st.subheader(t["report_info"])
+st.session_state.report_date = st.text_input(t["report_date"], st.session_state.report_date)
+st.session_state.prepared_by = st.text_input(t["prepared_by"], st.session_state.prepared_by)
+
+# ---------------------------
+# Tabs for D1-D8
+# ---------------------------
+tabs = st.tabs([step for step,_,_,_ in npqp_steps])
+for i, (sid, step_title, note, example) in enumerate(npqp_steps):
+    with tabs[i]:
+        st.markdown(f"### {step_title}")
+        if sid == "D5":
+            # Show guidance for 5-Why
+            full_training_note = (
+                "**Training Guidance:** Use 5-Why analysis to determine the root cause.\n\n"
+                "**Occurrence Example (5-Whys):**\n"
+                "1. Cold solder joint on DSP chip\n2. Soldering temperature too low\n3. Operator didn’t follow profile\n4. Work instructions were unclear\n5. No visual confirmation step\n\n"
+                "**Detection Example (5-Whys):**\n"
+                "1. QA inspection missed cold joint\n2. Inspection checklist incomplete\n3. No automated test step\n4. Batch testing not performed\n5. Early warning signal not tracked\n\n"
+                "**Root Cause Example:**\n"
+                "Insufficient process control on soldering operation, combined with inadequate QA checklist, "
+                "allowed defective DSP soldering to pass undetected."
+            )
+            st.info(full_training_note)
+        else:
+            st.info(f"**Training Guidance:** {note}\n\n💡 **Example:** {example}")
+
+        # Input fields
+        if sid == "D5":
+            st.markdown("#### Occurrence Analysis")
+            for idx, val in enumerate(st.session_state.d5_occ_whys):
+                st.session_state.d5_occ_whys[idx] = st.text_input(f"Occurrence Why {idx+1}", val, key=f"{sid}_occ_{idx}")
+            if st.button(t["add_occ"], key=f"add_occ_{sid}"):
+                st.session_state.d5_occ_whys.append("")
+
+            st.markdown("#### Detection Analysis")
+            for idx, val in enumerate(st.session_state.d5_det_whys):
+                st.session_state.d5_det_whys[idx] = st.text_input(f"Detection Why {idx+1}", val, key=f"{sid}_det_{idx}")
+            if st.button(t["add_det"], key=f"add_det_{sid}"):
+                st.session_state.d5_det_whys.append("")
+
+            # Combine answers
+            st.session_state[sid]["answer"] = (
+                "Occurrence Analysis:\n" + "\n".join([w for w in st.session_state.d5_occ_whys if w.strip()]) +
+                "\n\nDetection Analysis:\n" + "\n".join([w for w in st.session_state.d5_det_whys if w.strip()])
+            )
+            st.session_state[sid]["extra"] = st.text_area("Root Cause (summary after 5-Whys)", st.session_state[sid]["extra"])
+        else:
+            st.session_state[sid]["answer"] = st.text_area(f"Your Answer for {step_title}", st.session_state[sid]["answer"], key=f"ans_{sid}")
+
+# ---------------------------
+# Interactive 5-Why Tab
+# ---------------------------
+tab_interactive, tab_ai = st.tabs([t["interactive_5why_tab"], t["ai_tab"]])
+with tab_interactive:
+    st.markdown("### Interactive 5-Why")
+    for idx, w in enumerate(st.session_state.interactive_whys):
+        st.session_state.interactive_whys[idx] = st.text_input(f"Why {idx+1}", w, key=f"interactive_{idx}")
+    if st.button("➕ Add another Why", key="add_interactive"):
+        st.session_state.interactive_whys.append("")
+
+    st.session_state.interactive_root_cause = st.text_area("Root Cause Suggestion", st.session_state.interactive_root_cause)
+
+with tab_ai:
+    st.markdown("### AI Helper")
+    if st.button("Generate AI Root Cause"):
+        key = st.secrets.get("OPENAI_API_KEY", "")
+        if not key:
+            st.warning("OpenAI API key missing.")
+        else:
+            openai.api_key = key
+            whys_text = "\n".join([w for w in st.session_state.interactive_whys if w.strip()])
+            if whys_text.strip() == "":
+                st.warning("No 5-Why answers to analyze")
+            else:
+                response = openai.ChatCompletion.create(
+                    model="gpt-4",
+                    messages=[
+                        {"role":"system","content":"You are an expert 8D analyst."},
+                        {"role":"user","content":f"Analyze these 5-Why answers and provide a root cause suggestion:\n{whys_text}"}
+                    ]
+                )
+                st.session_state.interactive_root_cause = response.choices[0].message.content
+                st.success("AI suggestion generated")
+
+# ---------------------------
+# Excel Export
+# ---------------------------
+data_rows = [(sid, st.session_state[sid]["answer"], st.session_state[sid]["extra"]) for sid,_,_,_ in npqp_steps]
+data_rows.append(("Interactive 5-Why", "\n".join([w for w in st.session_state.interactive_whys if w.strip()]), st.session_state.interactive_root_cause))
+
+if st.button(t["save_report"]):
+    if not any(ans for _, ans, _ in data_rows):
+        st.error(t["no_answers"])
+    else:
+        xlsx_file = "NPQP_8D_Report.xlsx"
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "NPQP 8D Report"
+        ws.merge_cells("A1:C1")
+        ws["A1"] = "Nissan NPQP 8D Report"
+        ws["A1"].font = Font(size=14, bold=True)
+        ws["A1"].alignment = Alignment(horizontal="center", vertical="center")
+        ws.row_dimensions[1].height = 25
+        ws["A3"] = t["report_date"]
+        ws["B3"] = st.session_state.report_date
+        ws["A4"] = t["prepared_by"]
+        ws["B4"] = st.session_state.prepared_by
+
+        headers = ["Step","Your Answer","Root Cause / Extra"] if lang=="en" else ["Paso","Su Respuesta","Causa Raíz / Extra"]
+        header_fill = PatternFill(start_color="C0C0C0", end_color="C0C0C0", fill_type="solid")
+        row = 6
+        for col, header in enumerate(headers, start=1):
+            cell = ws.cell(row=row, column=col, value=header)
+            cell.font = Font(bold=True)
+            cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+            cell.fill = header_fill
+
+        row = 7
+        for step, ans, extra in data_rows:
+            ws.cell(row=row, column=1, value=step)
+            ws.cell(row=row, column=2, value=ans)
+            ws.cell(row=row, column=3, value=extra)
+            fill_color = step_colors.get(step[:2], "FFFFFF")
+            for col in range(1,4):
+                ws.cell(row=row, column=col).fill = PatternFill(start_color=fill_color,end_color=fill_color,fill_type="solid")
+                ws.cell(row=row, column=col).alignment = Alignment(wrap_text=True, vertical="top")
+            row += 1
+
+        for col in range(1,4):
+            ws.column_dimensions[get_column_letter(col)].width = 40
+
+        wb.save(xlsx_file)
+        st.success("✅ NPQP 8D Report saved successfully.")
+        with open(xlsx_file,"rb") as f:
+            st.download_button(t["download"], f, file_name=xlsx_file)
