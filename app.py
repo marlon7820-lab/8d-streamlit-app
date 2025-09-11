@@ -1,170 +1,158 @@
 import streamlit as st
-import datetime
-from transformers import pipeline
+from googletrans import Translator
+from datetime import datetime
+import openpyxl
+from openpyxl.styles import Font, PatternFill, Alignment
 
-# ---------------------------
-# 1️⃣ CONFIG & SETUP
-# ---------------------------
-st.set_page_config(page_title="8D Report Builder", layout="wide")
+# ----------------------------
+# PAGE CONFIG
+# ----------------------------
+st.set_page_config(page_title="8D Report Tool", layout="wide")
+st.markdown("<style>footer{visibility:hidden}</style>", unsafe_allow_html=True)
 
-# Load translation pipelines (cached so they don't reload every time)
-@st.cache_resource
-def load_translators():
-    return {
-        "en_to_es": pipeline("translation", model="Helsinki-NLP/opus-mt-en-es"),
-        "es_to_en": pipeline("translation", model="Helsinki-NLP/opus-mt-es-en")
+# ----------------------------
+# TRANSLATION SETUP
+# ----------------------------
+translator = Translator()
+
+def translate_text(text, direction="en_to_es"):
+    if not text.strip():
+        return text
+    try:
+        if direction == "en_to_es":
+            return translator.translate(text, src="en", dest="es").text
+        else:
+            return translator.translate(text, src="es", dest="en").text
+    except Exception:
+        return text
+
+# ----------------------------
+# UI TEXTS
+# ----------------------------
+texts = {
+    "en": {
+        "title": "8D Corrective Action Report (NPQP Format)",
+        "prepared_by": "Prepared By",
+        "report_date": "Report Date",
+        "save": "Download Excel Report",
+        "d1": "D1: Team",
+        "d2": "D2: Problem Description",
+        "d3": "D3: Interim Containment",
+        "d4": "D4: Root Cause Analysis",
+        "d5": "D5: Permanent Corrective Action",
+        "d6": "D6: Implement & Verify",
+        "d7": "D7: Prevent Recurrence",
+        "d8": "D8: Congratulate the Team",
+        "why_occ": "5-Why for Occurrence",
+        "why_det": "5-Why for Detection",
+        "root_summary": "Root Cause Summary"
+    },
+    "es": {
+        "title": "Reporte 8D de Acción Correctiva (Formato NPQP)",
+        "prepared_by": "Preparado Por",
+        "report_date": "Fecha de Reporte",
+        "save": "Descargar Reporte en Excel",
+        "d1": "D1: Equipo",
+        "d2": "D2: Descripción del Problema",
+        "d3": "D3: Contención Temporal",
+        "d4": "D4: Análisis de Causa Raíz",
+        "d5": "D5: Acción Correctiva Permanente",
+        "d6": "D6: Implementar y Verificar",
+        "d7": "D7: Prevenir Recurrencia",
+        "d8": "D8: Felicitar al Equipo",
+        "why_occ": "5-Why para Ocurrencia",
+        "why_det": "5-Why para Detección",
+        "root_summary": "Resumen de Causa Raíz"
     }
+}
 
-translators = load_translators()
-
-# Free lightweight model for interactive suggestions
-@st.cache_resource
-def load_suggester():
-    return pipeline("text2text-generation", model="google/flan-t5-small")
-
-suggester = load_suggester()
-
-# ---------------------------
-# 2️⃣ SESSION STATE INIT
-# ---------------------------
-if "language" not in st.session_state:
-    st.session_state.language = "en"
-
+# ----------------------------
+# SESSION STATE INITIALIZATION
+# ----------------------------
+if "lang" not in st.session_state:
+    st.session_state.lang = "en"
 if "answers" not in st.session_state:
     st.session_state.answers = {f"D{i}": "" for i in range(1, 9)}
-    st.session_state.whys_occ = ["" for _ in range(5)]
-    st.session_state.whys_det = ["" for _ in range(5)]
-    st.session_state.report_date = datetime.date.today().strftime("%B %d, %Y")
-    st.session_state.prepared_by = ""
+if "d5_occ" not in st.session_state:
+    st.session_state.d5_occ = ["" for _ in range(5)]
+if "d5_det" not in st.session_state:
+    st.session_state.d5_det = ["" for _ in range(5)]
+if "root_summary" not in st.session_state:
+    st.session_state.root_summary = ""
 
-# ---------------------------
-# 3️⃣ TRANSLATION UTILS
-# ---------------------------
-def translate_text(text, direction="en_to_es"):
-    try:
-        if text.strip():
-            result = translators[direction](text)[0]['translation_text']
-            return result
-    except Exception:
-        pass
-    return text
-
-def t(text):
-    if st.session_state.language == "es":
-        return translate_text(text, "en_to_es")
-    return text
-
-# ---------------------------
-# 4️⃣ LANGUAGE SWITCHER
-# ---------------------------
-col1, col2 = st.columns([4,1])
+# ----------------------------
+# LANGUAGE SWITCHER
+# ----------------------------
+col1, col2 = st.columns([3, 1])
+with col1:
+    st.title(texts[st.session_state.lang]["title"])
 with col2:
-    lang = st.radio("🌐", ["English", "Español"], index=0 if st.session_state.language=="en" else 1)
-    st.session_state.language = "en" if lang == "English" else "es"
+    lang = st.selectbox("🌐", ["English", "Español"], index=0 if st.session_state.lang=="en" else 1)
+    st.session_state.lang = "en" if lang == "English" else "es"
 
-# ---------------------------
-# 5️⃣ HEADER
-# ---------------------------
-st.title(t("8D Report Builder"))
-with st.container():
-    c1, c2 = st.columns(2)
-    with c1:
-        st.session_state.report_date = st.date_input(
-            t("Report Date"), 
-            datetime.datetime.strptime(st.session_state.report_date, "%B %d, %Y")
-        ).strftime("%B %d, %Y")
-    with c2:
-        st.session_state.prepared_by = st.text_input(
-            t("Prepared By"), 
-            st.session_state.prepared_by
-        )
+# ----------------------------
+# REPORT INFO
+# ----------------------------
+col1, col2 = st.columns(2)
+with col1:
+    prepared_by = st.text_input(texts[st.session_state.lang]["prepared_by"])
+with col2:
+    report_date = st.date_input(texts[st.session_state.lang]["report_date"], datetime.today())
 
-# ---------------------------
-# 6️⃣ D-TABS
-# ---------------------------
-tabs = st.tabs([f"D{i}" for i in range(1,9)])
+# ----------------------------
+# 8D FORM TABS
+# ----------------------------
+tabs = st.tabs([texts[st.session_state.lang][f"d{i}"] for i in range(1, 9)])
 
-# D1 — Team Definition
+# D1: TEAM
 with tabs[0]:
-    st.header(t("D1 – Define the Team"))
-    st.session_state.answers["D1"] = st.text_area(
-        t("Team Members & Roles"), 
-        st.session_state.answers["D1"]
-    )
-    st.text_area(t("Additional Notes"), key="D1_extra")
+    st.session_state.answers["D1"] = st.text_area(texts[st.session_state.lang]["d1"], st.session_state.answers["D1"], height=150)
+    extra_comment = st.text_area("Additional Notes", "")
 
-# D2 – Problem Description
-with tabs[1]:
-    st.header(t("D2 – Describe the Problem"))
-    st.session_state.answers["D2"] = st.text_area(
-        t("Problem Description"), 
-        st.session_state.answers["D2"]
-    )
+# D2 - D4, D6 - D8: Simple input
+for i, t in enumerate([tabs[1], tabs[2], tabs[3], tabs[5], tabs[6], tabs[7]], start=2):
+    with t:
+        st.session_state.answers[f"D{i}"] = st.text_area(texts[st.session_state.lang][f"d{i}"], st.session_state.answers[f"D{i}"], height=150)
 
-# D3 – Interim Containment
-with tabs[2]:
-    st.header(t("D3 – Interim Containment"))
-    st.session_state.answers["D3"] = st.text_area(
-        t("Containment Actions"), 
-        st.session_state.answers["D3"]
-    )
-
-# D4 – Root Cause Analysis
-with tabs[3]:
-    st.header(t("D4 – Root Cause"))
-    st.session_state.answers["D4"] = st.text_area(
-        t("Root Cause"), 
-        st.session_state.answers["D4"]
-    )
-
-# D5 – Interactive 5-Why
+# D5: Interactive 5-Why
 with tabs[4]:
-    st.header(t("D5 – 5-Why Analysis"))
+    st.subheader(texts[st.session_state.lang]["why_occ"])
+    for idx in range(5):
+        st.session_state.d5_occ[idx] = st.text_input(f"Why {idx+1}", st.session_state.d5_occ[idx])
 
-    st.subheader(t("Occurrence Analysis"))
-    for i in range(5):
-        st.session_state.whys_occ[i] = st.text_input(
-            t(f"Why {i+1} (Occurrence)"),
-            value=st.session_state.whys_occ[i],
-            key=f"occ_{i}"
-        )
-        if st.session_state.whys_occ[i]:
-            suggestions = suggester(f"Suggest possible next root causes based on: {st.session_state.whys_occ[i]}")
-            st.caption("💡 " + suggestions[0]['generated_text'])
+    st.subheader(texts[st.session_state.lang]["why_det"])
+    for idx in range(5):
+        st.session_state.d5_det[idx] = st.text_input(f"Why {idx+1}", st.session_state.d5_det[idx])
 
-    st.subheader(t("Detection Analysis"))
-    for i in range(5):
-        st.session_state.whys_det[i] = st.text_input(
-            t(f"Why {i+1} (Detection)"),
-            value=st.session_state.whys_det[i],
-            key=f"det_{i}"
-        )
-        if st.session_state.whys_det[i]:
-            suggestions = suggester(f"Suggest possible next detection failure reasons based on: {st.session_state.whys_det[i]}")
-            st.caption("💡 " + suggestions[0]['generated_text'])
+    st.session_state.root_summary = st.text_area(texts[st.session_state.lang]["root_summary"], st.session_state.root_summary, height=100)
 
-# D6 – Permanent Actions
-with tabs[5]:
-    st.header(t("D6 – Permanent Actions"))
-    st.session_state.answers["D6"] = st.text_area(
-        t("Permanent Corrective Actions"), 
-        st.session_state.answers["D6"]
-    )
+# ----------------------------
+# EXPORT TO EXCEL
+# ----------------------------
+if st.button(texts[st.session_state.lang]["save"]):
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "8D Report"
 
-# D7 – Prevent Recurrence
-with tabs[6]:
-    st.header(t("D7 – Prevent Recurrence"))
-    st.session_state.answers["D7"] = st.text_area(
-        t("Systemic Fixes to Prevent Recurrence"), 
-        st.session_state.answers["D7"]
-    )
+    ws.merge_cells("A1:B1")
+    ws["A1"] = texts[st.session_state.lang]["title"]
+    ws["A1"].font = Font(size=14, bold=True)
+    ws["A1"].alignment = Alignment(horizontal="center")
 
-# D8 – Team Recognition
-with tabs[7]:
-    st.header(t("D8 – Team Recognition"))
-    st.session_state.answers["D8"] = st.text_area(
-        t("Team Recognition"), 
-        st.session_state.answers["D8"]
-    )
+    row = 3
+    ws.append(["Prepared By", prepared_by])
+    ws.append(["Report Date", report_date.strftime("%Y-%m-%d")])
+    row += 2
 
-st.success(t("✅ All inputs are auto-saved in memory."))
+    for i in range(1, 9):
+        ws.append([texts[st.session_state.lang][f"d{i}"], st.session_state.answers[f"D{i}"]])
+        row += 1
+
+    ws.append(["5-Why Occurrence", "\n".join(st.session_state.d5_occ)])
+    ws.append(["5-Why Detection", "\n".join(st.session_state.d5_det)])
+    ws.append([texts[st.session_state.lang]["root_summary"], st.session_state.root_summary])
+
+    filename = "8D_Report.xlsx"
+    wb.save(filename)
+    with open(filename, "rb") as f:
+        st.download_button(texts[st.session_state.lang]["save"], f, file_name=filename)
