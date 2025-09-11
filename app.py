@@ -172,4 +172,4 @@ with tab_current:
                 "Insufficient process control on soldering operation, combined with inadequate QA checklist, "
                 "allowed defective DSP soldering to pass undetected."
             )
-            st.info(full_training_note
+            st.info(full_training_note)
