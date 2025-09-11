@@ -3,31 +3,6 @@ from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, PatternFill
 from openpyxl.utils import get_column_letter
 import datetime
-from transformers import pipeline
-
-# ---------------------------
-# Load translation pipelines
-# ---------------------------
-@st.cache_resource
-def load_translators():
-    return {
-        "en_to_es": pipeline("translation", model="Helsinki-NLP/opus-mt-en-es"),
-        "es_to_en": pipeline("translation", model="Helsinki-NLP/opus-mt-es-en")
-    }
-
-translators = load_translators()
-
-def translate_text(text, target_lang="es"):
-    if not text.strip():
-        return text
-    try:
-        if target_lang == "es":
-            return translators["en_to_es"](text)[0]['translation_text']
-        else:
-            return translators["es_to_en"](text)[0]['translation_text']
-    except Exception as e:
-        st.warning(f"Translation failed: {e}")
-        return text
 
 # ---------------------------
 # Page config
@@ -38,6 +13,7 @@ st.set_page_config(
     layout="wide"
 )
 
+# Hide default Streamlit UI
 st.markdown("""
 <style>
 #MainMenu {visibility: hidden;}
@@ -65,7 +41,7 @@ npqp_steps = [
      "Define temporary containment actions to prevent the customer from seeing the problem while permanent actions are developed.",
      "Example: 100% inspection of amplifiers before shipment; use of temporary shielding; quarantine of affected batches."),
     ("D5: Final Analysis",
-     "Use 5-Why analysis to determine the root cause. Separate by Occurrence (why it happened) and Detection (why it wasn’t detected). Add more Whys if needed.",
+     "Interactive 5-Why for root cause. Separate Occurrence and Detection.",
      ""),  # D5 guidance
     ("D6: Permanent Corrective Actions",
      "Define corrective actions that eliminate the root cause permanently and prevent recurrence.",
@@ -88,10 +64,9 @@ st.session_state.setdefault("report_date", "")
 st.session_state.setdefault("prepared_by", "")
 st.session_state.setdefault("d5_occ_whys", [""] * 5)
 st.session_state.setdefault("d5_det_whys", [""] * 5)
-st.session_state.setdefault("interactive_whys", [""])
 st.session_state.setdefault("prev_lang", "en")
 
-# Color dictionary
+# Colors for Excel
 step_colors = {
     "D1: Concern Details": "ADD8E6",
     "D2: Similar Part Considerations": "90EE90",
@@ -117,7 +92,14 @@ st.session_state.prepared_by = st.text_input("✍️ Prepared By", st.session_st
 lang = st.radio("Language / Idioma", ["en", "es"], horizontal=True)
 
 # ---------------------------
-# Tabs for D-steps
+# Placeholder translation function
+# ---------------------------
+def translate_text(text, target_lang="es"):
+    # Placeholder for manual translation feature
+    return text
+
+# ---------------------------
+# Tabs for each D-step
 # ---------------------------
 tabs = st.tabs([step for step, _, _ in npqp_steps])
 for i, (step, note, example) in enumerate(npqp_steps):
@@ -125,29 +107,26 @@ for i, (step, note, example) in enumerate(npqp_steps):
         st.markdown(f"### {step}")
         st.info(f"**Guidance:** {note}\n\n💡 **Example:** {example}")
 
-        if step.startswith("D5"):
-            st.markdown("#### Occurrence Analysis")
+        if step == "D5: Final Analysis":
+            st.markdown("#### Occurrence Analysis (Interactive)")
             for idx, val in enumerate(st.session_state.d5_occ_whys):
                 st.session_state.d5_occ_whys[idx] = st.text_input(f"Occurrence Why {idx+1}", value=val, key=f"{step}_occ_{idx}")
             if st.button("➕ Add Occurrence Why", key=f"add_occ_{step}"):
                 st.session_state.d5_occ_whys.append("")
 
-            st.markdown("#### Detection Analysis")
+            st.markdown("#### Detection Analysis (Interactive)")
             for idx, val in enumerate(st.session_state.d5_det_whys):
                 st.session_state.d5_det_whys[idx] = st.text_input(f"Detection Why {idx+1}", value=val, key=f"{step}_det_{idx}")
             if st.button("➕ Add Detection Why", key=f"add_det_{step}"):
                 st.session_state.d5_det_whys.append("")
 
-            st.markdown("#### Interactive 5-Why")
-            for idx, val in enumerate(st.session_state.interactive_whys):
-                st.session_state.interactive_whys[idx] = st.text_input(f"Why {idx+1}", value=val, key=f"interactive_{idx}")
-                if idx == len(st.session_state.interactive_whys)-1 and val.strip():
-                    st.session_state.interactive_whys.append("")
-
+            # Combine answers
             st.session_state[step]["answer"] = (
                 "Occurrence Analysis:\n" + "\n".join([w for w in st.session_state.d5_occ_whys if w.strip()]) +
                 "\n\nDetection Analysis:\n" + "\n".join([w for w in st.session_state.d5_det_whys if w.strip()])
             )
+            st.session_state[step]["extra"] = st.text_area("Root Cause (summary after 5-Whys)", value=st.session_state[step]["extra"], key="root_cause")
+
         else:
             st.session_state[step]["answer"] = st.text_area(f"Your Answer for {step}", value=st.session_state[step]["answer"], key=f"ans_{step}")
             st.session_state[step]["extra"] = st.text_area(f"Extra / Root Cause", value=st.session_state[step]["extra"], key=f"extra_{step}")
@@ -157,7 +136,6 @@ for i, (step, note, example) in enumerate(npqp_steps):
 # ---------------------------
 st.markdown("---")
 st.subheader("Translate Answers / Traducir Respuestas")
-
 col1, col2 = st.columns(2)
 with col1:
     if st.button("Translate to English / Traducir a Inglés"):
