@@ -92,11 +92,10 @@ st.session_state.prepared_by = st.text_input("✍️ Prepared By", st.session_st
 lang = st.radio("Language / Idioma", ["en", "es"], horizontal=True)
 
 # ---------------------------
-# Placeholder translation function
+# Manual translation function (placeholder)
 # ---------------------------
 def translate_text(text, target_lang="es"):
-    # Placeholder for manual translation feature
-    return text
+    return text  # Placeholder for later AI integration
 
 # ---------------------------
 # Tabs for each D-step
