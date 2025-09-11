@@ -245,3 +245,8 @@ with tab_ai:
 if st.button(t["save_report"]):
     data_rows = [(step, st.session_state[step]["answer"], st.session_state[step]["extra"]) for step, _, _ in npqp_steps]
     data_rows.append(("Interactive 5-Why", "\n".join([w for w in st.session_state.interactive_whys if w.strip()]),
+    st.session_state[step]["extra"] = st.text_area(
+    "Root Cause (summary after 5-Whys) / Causa Raíz",
+    value=st.session_state[step]["extra"],
+    key=f"{step}_root_cause"
+)
