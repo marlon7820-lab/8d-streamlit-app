@@ -23,9 +23,10 @@ header {visibility: hidden;}
 """, unsafe_allow_html=True)
 
 # ---------------------------
-# Language toggle
+# Language toggle (fixed)
 # ---------------------------
-lang = st.selectbox("Select Language / Seleccione Idioma", ["English", "Español"])
+lang_choice = st.selectbox("Select Language / Seleccione Idioma", ["English", "Español"])
+lang = "en" if lang_choice == "English" else "es"
 
 # ---------------------------
 # Language dictionary
@@ -52,7 +53,9 @@ texts = {
 }
 t = texts[lang]
 
+# ---------------------------
 # Custom header
+# ---------------------------
 st.markdown(f"<h1 style='text-align: center; color: #1E90FF;'>{t['header']}</h1>", unsafe_allow_html=True)
 
 # ---------------------------
@@ -85,7 +88,9 @@ npqp_steps = [
      "Example: Update SOPs, PFMEA, work instructions, and employee training to prevent the same issue in future.")
 ]
 
+# ---------------------------
 # Initialize session state
+# ---------------------------
 for step, _, _ in npqp_steps:
     if step not in st.session_state:
         st.session_state[step] = {"answer": "", "extra": ""}
@@ -93,8 +98,6 @@ st.session_state.setdefault("report_date", "")
 st.session_state.setdefault("prepared_by", "")
 st.session_state.setdefault("d5_occ_whys", [""] * 5)
 st.session_state.setdefault("d5_det_whys", [""] * 5)
-
-# Session state for dynamic AI-powered 5-Why
 st.session_state.setdefault("interactive_whys", [""])
 st.session_state.setdefault("interactive_root_cause", "")
 
@@ -134,7 +137,7 @@ def ai_root_cause_summary(whys_list):
     return f"AI analysis of root cause based on: {combined}"
 
 # ---------------------------
-# Tabs: Current Features, Interactive 5-Why, AI Helper
+# Tabs
 # ---------------------------
 tab_current, tab_5why, tab_ai = st.tabs([
     "Current Features",
@@ -147,7 +150,6 @@ tab_current, tab_5why, tab_ai = st.tabs([
 # ---------------------------
 with tab_current:
     st.info("✅ Current working 8D features remain unchanged.")
-    # Insert your existing D1-D8 tabs and input code here
     st.markdown("### Existing 8D Inputs Here (D1-D8 tabs and fields)")
 
 # ---------------------------
@@ -168,7 +170,6 @@ with tab_5why:
     if st.button("➕ Add another Why", key="add_dynamic_why"):
         st.session_state.interactive_whys.append("")
 
-    # AI Root Cause Summary
     root_cause = ai_root_cause_summary(st.session_state.interactive_whys)
     st.session_state.interactive_root_cause = root_cause
     st.text_area("AI Suggested Root Cause", value=root_cause, height=150)
@@ -184,13 +185,10 @@ with tab_ai:
         st.text_area("AI Suggestions", f"AI would analyze the following 5-Whys:\n{whys_text}\n\nand provide recommendations here.")
 
 # ---------------------------
-# Save Button (includes dynamic 5-Why)
+# Save Button (Excel Export)
 # ---------------------------
 if st.button(t["save_report"]):
-    # Collect current answers (placeholder: replace with actual answers from D1-D8)
     data_rows = [(step, st.session_state[step]["answer"], st.session_state[step]["extra"]) for step, _, _ in npqp_steps]
-
-    # Include interactive 5-Why
     data_rows.append(("Interactive 5-Why", "\n".join([w for w in st.session_state.interactive_whys if w.strip()]),
                       st.session_state.interactive_root_cause))
 
@@ -231,18 +229,3 @@ if st.button(t["save_report"]):
             ws.cell(row=row, column=1, value=step)
             ws.cell(row=row, column=2, value=ans)
             ws.cell(row=row, column=3, value=extra)
-
-            fill_color = step_colors.get(step, "FFFFFF")
-            for col in range(1, 4):
-                ws.cell(row=row, column=col).fill = PatternFill(start_color=fill_color, end_color=fill_color, fill_type="solid")
-                ws.cell(row=row, column=col).alignment = Alignment(wrap_text=True, vertical="top")
-            row += 1
-
-        # Adjust column widths
-        for col in range(1, 4):
-            ws.column_dimensions[get_column_letter(col)].width = 40
-
-        wb.save(xlsx_file)
-        st.success("✅ NPQP 8D Report saved successfully.")
-        with open(xlsx_file, "rb") as f:
-            st.download_button(t["download"], f, file_name=xlsx_file)
