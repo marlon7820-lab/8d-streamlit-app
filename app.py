@@ -44,8 +44,6 @@ ui_texts = {
         "download": "📥 Download XLSX",
         "no_answers": "⚠️ No answers filled in yet. Please complete some fields before saving.",
         "ai_helper": "💡 AI Helper Suggestions",
-        "interactive_5why_tab": "Interactive 5-Why",
-        "ai_tab": "AI Helper",
         "add_occ": "➕ Add another Occurrence Why",
         "add_det": "➕ Add another Detection Why"
     },
@@ -58,8 +56,6 @@ ui_texts = {
         "download": "📥 Descargar XLSX",
         "no_answers": "⚠️ No se han completado respuestas. Por favor complete algunos campos antes de guardar.",
         "ai_helper": "💡 Sugerencias del Asistente AI",
-        "interactive_5why_tab": "5-Why Interactivo",
-        "ai_tab": "Asistente AI",
         "add_occ": "➕ Agregar otro Porqué de Ocurrencia",
         "add_det": "➕ Agregar otro Porqué de Detección"
     }
@@ -180,6 +176,27 @@ def translate_text(text, target_lang="es"):
         return text
 
 # ---------------------------
+# Auto-translate on language switch
+# ---------------------------
+def auto_translate_all(prev_lang, current_lang):
+    if prev_lang == current_lang:
+        return
+    target_lang = "es" if current_lang == "es" else "en"
+    # Translate D1-D8
+    for sid, _, _, _ in npqp_steps:
+        st.session_state[sid]["answer"] = translate_text(st.session_state[sid]["answer"], target_lang)
+        st.session_state[sid]["extra"] = translate_text(st.session_state[sid]["extra"], target_lang)
+    # Translate D5 whys
+    st.session_state.d5_occ_whys = [translate_text(w, target_lang) for w in st.session_state.d5_occ_whys]
+    st.session_state.d5_det_whys = [translate_text(w, target_lang) for w in st.session_state.d5_det_whys]
+    # Translate Interactive 5-Why
+    st.session_state.interactive_whys = [translate_text(w, target_lang) for w in st.session_state.interactive_whys]
+    st.session_state.interactive_root_cause = translate_text(st.session_state.interactive_root_cause, target_lang)
+
+auto_translate_all(prev_lang, lang)
+st.session_state["prev_lang"] = lang
+
+# ---------------------------
 # Report info
 # ---------------------------
 st.subheader(t["report_info"])
@@ -194,7 +211,6 @@ for i, (sid, step_title, note, example) in enumerate(npqp_steps):
     with tabs[i]:
         st.markdown(f"### {step_title}")
         if sid == "D5":
-            # Show guidance for 5-Why
             full_training_note = (
                 "**Training Guidance:** Use 5-Why analysis to determine the root cause.\n\n"
                 "**Occurrence Example (5-Whys):**\n"
@@ -223,49 +239,45 @@ for i, (sid, step_title, note, example) in enumerate(npqp_steps):
             if st.button(t["add_det"], key=f"add_det_{sid}"):
                 st.session_state.d5_det_whys.append("")
 
-            # Combine answers
+            # Combine D5 answers
             st.session_state[sid]["answer"] = (
                 "Occurrence Analysis:\n" + "\n".join([w for w in st.session_state.d5_occ_whys if w.strip()]) +
                 "\n\nDetection Analysis:\n" + "\n".join([w for w in st.session_state.d5_det_whys if w.strip()])
             )
+
             st.session_state[sid]["extra"] = st.text_area("Root Cause (summary after 5-Whys)", st.session_state[sid]["extra"])
+
+            # Interactive 5-Why inside D5
+            st.markdown("### Interactive 5-Why")
+            for idx, w in enumerate(st.session_state.interactive_whys):
+                st.session_state.interactive_whys[idx] = st.text_input(f"Why {idx+1}", w, key=f"interactive_{idx}")
+            if st.button("➕ Add another Why", key="add_interactive"):
+                st.session_state.interactive_whys.append("")
+
+            st.session_state.interactive_root_cause = st.text_area("Root Cause Suggestion", st.session_state.interactive_root_cause)
+
+            st.markdown("### AI Helper")
+            if st.button("Generate AI Root Cause", key="ai_root"):
+                key = st.secrets.get("OPENAI_API_KEY", "")
+                if not key:
+                    st.warning("OpenAI API key missing.")
+                else:
+                    openai.api_key = key
+                    whys_text = "\n".join([w for w in st.session_state.interactive_whys if w.strip()])
+                    if whys_text.strip() == "":
+                        st.warning("No 5-Why answers to analyze")
+                    else:
+                        response = openai.ChatCompletion.create(
+                            model="gpt-4",
+                            messages=[
+                                {"role":"system","content":"You are an expert 8D analyst."},
+                                {"role":"user","content":f"Analyze these 5-Why answers and provide a root cause suggestion:\n{whys_text}"}
+                            ]
+                        )
+                        st.session_state.interactive_root_cause = response.choices[0].message.content
+                        st.success("AI suggestion generated")
         else:
             st.session_state[sid]["answer"] = st.text_area(f"Your Answer for {step_title}", st.session_state[sid]["answer"], key=f"ans_{sid}")
-
-# ---------------------------
-# Interactive 5-Why Tab
-# ---------------------------
-tab_interactive, tab_ai = st.tabs([t["interactive_5why_tab"], t["ai_tab"]])
-with tab_interactive:
-    st.markdown("### Interactive 5-Why")
-    for idx, w in enumerate(st.session_state.interactive_whys):
-        st.session_state.interactive_whys[idx] = st.text_input(f"Why {idx+1}", w, key=f"interactive_{idx}")
-    if st.button("➕ Add another Why", key="add_interactive"):
-        st.session_state.interactive_whys.append("")
-
-    st.session_state.interactive_root_cause = st.text_area("Root Cause Suggestion", st.session_state.interactive_root_cause)
-
-with tab_ai:
-    st.markdown("### AI Helper")
-    if st.button("Generate AI Root Cause"):
-        key = st.secrets.get("OPENAI_API_KEY", "")
-        if not key:
-            st.warning("OpenAI API key missing.")
-        else:
-            openai.api_key = key
-            whys_text = "\n".join([w for w in st.session_state.interactive_whys if w.strip()])
-            if whys_text.strip() == "":
-                st.warning("No 5-Why answers to analyze")
-            else:
-                response = openai.ChatCompletion.create(
-                    model="gpt-4",
-                    messages=[
-                        {"role":"system","content":"You are an expert 8D analyst."},
-                        {"role":"user","content":f"Analyze these 5-Why answers and provide a root cause suggestion:\n{whys_text}"}
-                    ]
-                )
-                st.session_state.interactive_root_cause = response.choices[0].message.content
-                st.success("AI suggestion generated")
 
 # ---------------------------
 # Excel Export
@@ -274,47 +286,4 @@ data_rows = [(sid, st.session_state[sid]["answer"], st.session_state[sid]["extra
 data_rows.append(("Interactive 5-Why", "\n".join([w for w in st.session_state.interactive_whys if w.strip()]), st.session_state.interactive_root_cause))
 
 if st.button(t["save_report"]):
-    if not any(ans for _, ans, _ in data_rows):
-        st.error(t["no_answers"])
-    else:
-        xlsx_file = "NPQP_8D_Report.xlsx"
-        wb = Workbook()
-        ws = wb.active
-        ws.title = "NPQP 8D Report"
-        ws.merge_cells("A1:C1")
-        ws["A1"] = "Nissan NPQP 8D Report"
-        ws["A1"].font = Font(size=14, bold=True)
-        ws["A1"].alignment = Alignment(horizontal="center", vertical="center")
-        ws.row_dimensions[1].height = 25
-        ws["A3"] = t["report_date"]
-        ws["B3"] = st.session_state.report_date
-        ws["A4"] = t["prepared_by"]
-        ws["B4"] = st.session_state.prepared_by
-
-        headers = ["Step","Your Answer","Root Cause / Extra"] if lang=="en" else ["Paso","Su Respuesta","Causa Raíz / Extra"]
-        header_fill = PatternFill(start_color="C0C0C0", end_color="C0C0C0", fill_type="solid")
-        row = 6
-        for col, header in enumerate(headers, start=1):
-            cell = ws.cell(row=row, column=col, value=header)
-            cell.font = Font(bold=True)
-            cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
-            cell.fill = header_fill
-
-        row = 7
-        for step, ans, extra in data_rows:
-            ws.cell(row=row, column=1, value=step)
-            ws.cell(row=row, column=2, value=ans)
-            ws.cell(row=row, column=3, value=extra)
-            fill_color = step_colors.get(step[:2], "FFFFFF")
-            for col in range(1,4):
-                ws.cell(row=row, column=col).fill = PatternFill(start_color=fill_color,end_color=fill_color,fill_type="solid")
-                ws.cell(row=row, column=col).alignment = Alignment(wrap_text=True, vertical="top")
-            row += 1
-
-        for col in range(1,4):
-            ws.column_dimensions[get_column_letter(col)].width = 40
-
-        wb.save(xlsx_file)
-        st.success("✅ NPQP 8D Report saved successfully.")
-        with open(xlsx_file,"rb") as f:
-            st.download_button(t["download"], f, file_name=xlsx_file)
+    if not any
