@@ -138,6 +138,7 @@ st.session_state.setdefault("d5_occ_whys", [""]*5)
 st.session_state.setdefault("d5_det_whys", [""]*5)
 st.session_state.setdefault("interactive_whys", [""])
 st.session_state.setdefault("interactive_root_cause", "")
+st.session_state.setdefault("translations", {})
 
 # ---------------------------
 # Colors for Excel
@@ -154,44 +155,51 @@ step_colors = {
 }
 
 # ---------------------------
-# Translation helper
+# Translation helper with caching
 # ---------------------------
-def translate_text(text, target_lang="es"):
+def translate_text_cached(text, target_lang="es", field_id=None):
     if not text.strip():
         return text
+
+    cache_key = f"{field_id}_{target_lang}" if field_id else f"default_{target_lang}"
+
+    if cache_key in st.session_state["translations"]:
+        return st.session_state["translations"][cache_key]
+
     key = st.secrets.get("OPENAI_API_KEY", "")
     if not key:
-        st.warning("OpenAI API key missing. Cannot translate.")
         return text
+
     openai.api_key = key
-    prompt = f"Translate the following text to {target_lang} keeping technical terms intact:\n{text}"
+    prompt = f"Translate the following text to {target_lang}, keeping technical terms intact:\n{text}"
+
     try:
         response = openai.ChatCompletion.create(
             model="gpt-4",
             messages=[{"role":"user","content":prompt}]
         )
-        return response.choices[0].message.content
-    except Exception as e:
-        st.error(f"Translation failed: {e}")
+        translation = response.choices[0].message.content
+        st.session_state["translations"][cache_key] = translation
+        return translation
+    except:
         return text
 
 # ---------------------------
-# Auto-translate on language switch
+# Auto-translate fields if language changed
 # ---------------------------
 def auto_translate_all(prev_lang, current_lang):
     if prev_lang == current_lang:
         return
     target_lang = "es" if current_lang == "es" else "en"
-    # Translate D1-D8
+
     for sid, _, _, _ in npqp_steps:
-        st.session_state[sid]["answer"] = translate_text(st.session_state[sid]["answer"], target_lang)
-        st.session_state[sid]["extra"] = translate_text(st.session_state[sid]["extra"], target_lang)
-    # Translate D5 whys
-    st.session_state.d5_occ_whys = [translate_text(w, target_lang) for w in st.session_state.d5_occ_whys]
-    st.session_state.d5_det_whys = [translate_text(w, target_lang) for w in st.session_state.d5_det_whys]
-    # Translate Interactive 5-Why
-    st.session_state.interactive_whys = [translate_text(w, target_lang) for w in st.session_state.interactive_whys]
-    st.session_state.interactive_root_cause = translate_text(st.session_state.interactive_root_cause, target_lang)
+        st.session_state[sid]["answer"] = translate_text_cached(st.session_state[sid]["answer"], target_lang, field_id=f"{sid}_answer")
+        st.session_state[sid]["extra"] = translate_text_cached(st.session_state[sid]["extra"], target_lang, field_id=f"{sid}_extra")
+
+    st.session_state.d5_occ_whys = [translate_text_cached(w, target_lang, field_id=f"d5_occ_{i}") for i,w in enumerate(st.session_state.d5_occ_whys)]
+    st.session_state.d5_det_whys = [translate_text_cached(w, target_lang, field_id=f"d5_det_{i}") for i,w in enumerate(st.session_state.d5_det_whys)]
+    st.session_state.interactive_whys = [translate_text_cached(w, target_lang, field_id=f"interactive_{i}") for i,w in enumerate(st.session_state.interactive_whys)]
+    st.session_state.interactive_root_cause = translate_text_cached(st.session_state.interactive_root_cause, target_lang, field_id="interactive_root_cause")
 
 auto_translate_all(prev_lang, lang)
 st.session_state["prev_lang"] = lang
@@ -204,28 +212,26 @@ st.session_state.report_date = st.text_input(t["report_date"], st.session_state.
 st.session_state.prepared_by = st.text_input(t["prepared_by"], st.session_state.prepared_by)
 
 # ---------------------------
-# Tabs for D1-D8
+# Tabs D1-D8
 # ---------------------------
 tabs = st.tabs([step for step,_,_,_ in npqp_steps])
 for i, (sid, step_title, note, example) in enumerate(npqp_steps):
     with tabs[i]:
         st.markdown(f"### {step_title}")
         if sid == "D5":
-            full_training_note = (
+            st.info(
                 "**Training Guidance:** Use 5-Why analysis to determine the root cause.\n\n"
                 "**Occurrence Example (5-Whys):**\n"
                 "1. Cold solder joint on DSP chip\n2. Soldering temperature too low\n3. Operator didn’t follow profile\n4. Work instructions were unclear\n5. No visual confirmation step\n\n"
                 "**Detection Example (5-Whys):**\n"
                 "1. QA inspection missed cold joint\n2. Inspection checklist incomplete\n3. No automated test step\n4. Batch testing not performed\n5. Early warning signal not tracked\n\n"
                 "**Root Cause Example:**\n"
-                "Insufficient process control on soldering operation, combined with inadequate QA checklist, "
-                "allowed defective DSP soldering to pass undetected."
+                "Insufficient process control on soldering operation, combined with inadequate QA checklist, allowed defective DSP soldering to pass undetected."
             )
-            st.info(full_training_note)
         else:
             st.info(f"**Training Guidance:** {note}\n\n💡 **Example:** {example}")
 
-        # Input fields
+        # Inputs
         if sid == "D5":
             st.markdown("#### Occurrence Analysis")
             for idx, val in enumerate(st.session_state.d5_occ_whys):
@@ -239,51 +245,17 @@ for i, (sid, step_title, note, example) in enumerate(npqp_steps):
             if st.button(t["add_det"], key=f"add_det_{sid}"):
                 st.session_state.d5_det_whys.append("")
 
-            # Combine D5 answers
             st.session_state[sid]["answer"] = (
                 "Occurrence Analysis:\n" + "\n".join([w for w in st.session_state.d5_occ_whys if w.strip()]) +
                 "\n\nDetection Analysis:\n" + "\n".join([w for w in st.session_state.d5_det_whys if w.strip()])
             )
-
             st.session_state[sid]["extra"] = st.text_area("Root Cause (summary after 5-Whys)", st.session_state[sid]["extra"])
 
-            # Interactive 5-Why inside D5
+            # Interactive 5-Why
             st.markdown("### Interactive 5-Why")
             for idx, w in enumerate(st.session_state.interactive_whys):
                 st.session_state.interactive_whys[idx] = st.text_input(f"Why {idx+1}", w, key=f"interactive_{idx}")
             if st.button("➕ Add another Why", key="add_interactive"):
                 st.session_state.interactive_whys.append("")
 
-            st.session_state.interactive_root_cause = st.text_area("Root Cause Suggestion", st.session_state.interactive_root_cause)
-
-            st.markdown("### AI Helper")
-            if st.button("Generate AI Root Cause", key="ai_root"):
-                key = st.secrets.get("OPENAI_API_KEY", "")
-                if not key:
-                    st.warning("OpenAI API key missing.")
-                else:
-                    openai.api_key = key
-                    whys_text = "\n".join([w for w in st.session_state.interactive_whys if w.strip()])
-                    if whys_text.strip() == "":
-                        st.warning("No 5-Why answers to analyze")
-                    else:
-                        response = openai.ChatCompletion.create(
-                            model="gpt-4",
-                            messages=[
-                                {"role":"system","content":"You are an expert 8D analyst."},
-                                {"role":"user","content":f"Analyze these 5-Why answers and provide a root cause suggestion:\n{whys_text}"}
-                            ]
-                        )
-                        st.session_state.interactive_root_cause = response.choices[0].message.content
-                        st.success("AI suggestion generated")
-        else:
-            st.session_state[sid]["answer"] = st.text_area(f"Your Answer for {step_title}", st.session_state[sid]["answer"], key=f"ans_{sid}")
-
-# ---------------------------
-# Excel Export
-# ---------------------------
-data_rows = [(sid, st.session_state[sid]["answer"], st.session_state[sid]["extra"]) for sid,_,_,_ in npqp_steps]
-data_rows.append(("Interactive 5-Why", "\n".join([w for w in st.session_state.interactive_whys if w.strip()]), st.session_state.interactive_root_cause))
-
-if st.button(t["save_report"]):
-    if not any
+            st.session_state.interactive_root
