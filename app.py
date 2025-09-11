@@ -160,19 +160,14 @@ step_colors = {
 def translate_text_cached(text, target_lang="es", field_id=None):
     if not text.strip():
         return text
-
     cache_key = f"{field_id}_{target_lang}" if field_id else f"default_{target_lang}"
-
     if cache_key in st.session_state["translations"]:
         return st.session_state["translations"][cache_key]
-
     key = st.secrets.get("OPENAI_API_KEY", "")
     if not key:
         return text
-
     openai.api_key = key
     prompt = f"Translate the following text to {target_lang}, keeping technical terms intact:\n{text}"
-
     try:
         response = openai.ChatCompletion.create(
             model="gpt-4",
@@ -192,14 +187,38 @@ def auto_translate_all(prev_lang, current_lang):
         return
     target_lang = "es" if current_lang == "es" else "en"
 
+    # Translate D1–D8 answers and extra fields
     for sid, _, _, _ in npqp_steps:
         st.session_state[sid]["answer"] = translate_text_cached(st.session_state[sid]["answer"], target_lang, field_id=f"{sid}_answer")
         st.session_state[sid]["extra"] = translate_text_cached(st.session_state[sid]["extra"], target_lang, field_id=f"{sid}_extra")
 
-    st.session_state.d5_occ_whys = [translate_text_cached(w, target_lang, field_id=f"d5_occ_{i}") for i,w in enumerate(st.session_state.d5_occ_whys)]
-    st.session_state.d5_det_whys = [translate_text_cached(w, target_lang, field_id=f"d5_det_{i}") for i,w in enumerate(st.session_state.d5_det_whys)]
-    st.session_state.interactive_whys = [translate_text_cached(w, target_lang, field_id=f"interactive_{i}") for i,w in enumerate(st.session_state.interactive_whys)]
-    st.session_state.interactive_root_cause = translate_text_cached(st.session_state.interactive_root_cause, target_lang, field_id="interactive_root_cause")
+    # Translate D5 Occurrence & Detection Whys
+    st.session_state.d5_occ_whys = [
+        translate_text_cached(w, target_lang, field_id=f"d5_occ_{i}") for i, w in enumerate(st.session_state.d5_occ_whys)
+    ]
+    st.session_state.d5_det_whys = [
+        translate_text_cached(w, target_lang, field_id=f"d5_det_{i}") for i, w in enumerate(st.session_state.d5_det_whys)
+    ]
+
+    # Translate Interactive 5-Why
+    st.session_state.interactive_whys = [
+        translate_text_cached(w, target_lang, field_id=f"interactive_{i}") for i, w in enumerate(st.session_state.interactive_whys)
+    ]
+    st.session_state.interactive_root_cause = translate_text_cached(
+        st.session_state.interactive_root_cause, target_lang, field_id="interactive_root_cause"
+    )
+
+    # Refresh Streamlit input fields
+    for sid, _, _, _ in npqp_steps:
+        st.session_state[f"ans_{sid}"] = st.session_state[sid]["answer"]
+        st.session_state[f"{sid}_root_text"] = st.session_state[sid]["extra"]
+    for i in range(len(st.session_state.d5_occ_whys)):
+        st.session_state[f"D5_occ_{i}"] = st.session_state.d5_occ_whys[i]
+    for i in range(len(st.session_state.d5_det_whys)):
+        st.session_state[f"D5_det_{i}"] = st.session_state.d5_det_whys[i]
+    for i in range(len(st.session_state.interactive_whys)):
+        st.session_state[f"interactive_{i}"] = st.session_state.interactive_whys[i]
+    st.session_state["interactive_root_text"] = st.session_state.interactive_root_cause
 
 auto_translate_all(prev_lang, lang)
 st.session_state["prev_lang"] = lang
@@ -249,81 +268,4 @@ for i, (sid, step_title, note, example) in enumerate(npqp_steps):
                 "Occurrence Analysis:\n" + "\n".join([w for w in st.session_state.d5_occ_whys if w.strip()]) +
                 "\n\nDetection Analysis:\n" + "\n".join([w for w in st.session_state.d5_det_whys if w.strip()])
             )
-            st.session_state[sid]["extra"] = st.text_area(
-                "Root Cause (summary after 5-Whys)",
-                st.session_state[sid]["extra"],
-                key=f"{sid}_root_text"
-            )
-
-            # Interactive 5-Why
-            st.markdown("### Interactive 5-Why")
-            for idx, w in enumerate(st.session_state.interactive_whys):
-                st.session_state.interactive_whys[idx] = st.text_input(f"Why {idx+1}", w, key=f"interactive_{idx}")
-            if st.button("➕ Add another Why", key="add_interactive"):
-                st.session_state.interactive_whys.append("")
-
-            st.session_state.interactive_root_cause = st.text_area(
-                "Root Cause Summary (Interactive 5-Why)",
-                st.session_state.interactive_root_cause,
-                key="interactive_root_text"
-            )
-        else:
-            st.session_state[sid]["answer"] = st.text_area(f"Your Answer for {step_title}", st.session_state[sid]["answer"], key=f"ans_{sid}")
-
-# ---------------------------
-# Excel export
-# ---------------------------
-data_rows = [(sid, st.session_state[sid]["answer"], st.session_state[sid]["extra"]) for sid,_,_,_ in npqp_steps]
-data_rows.append((
-    "Interactive 5-Why",
-    "\n".join([w for w in st.session_state.interactive_whys if w.strip()]),
-    st.session_state.interactive_root_cause
-))
-
-if st.button(t["save_report"]):
-    if not any(ans.strip() for _, ans, _ in data_rows):
-        st.error(t["no_answers"])
-    else:
-        xlsx_file = "NPQP_8D_Report.xlsx"
-        wb = Workbook()
-        ws = wb.active
-        ws.title = "NPQP 8D Report"
-
-        ws.merge_cells("A1:C1")
-        ws["A1"] = "Nissan NPQP 8D Report"
-        ws["A1"].font = Font(size=14, bold=True)
-        ws["A1"].alignment = Alignment(horizontal="center", vertical="center")
-        ws.row_dimensions[1].height = 25
-
-        ws["A3"] = "Report Date"
-        ws["B3"] = st.session_state.report_date
-        ws["A4"] = "Prepared By"
-        ws["B4"] = st.session_state.prepared_by
-
-        headers = ["Step", "Your Answer", "Root Cause"]
-        header_fill = PatternFill(start_color="C0C0C0", end_color="C0C0C0", fill_type="solid")
-        row = 6
-        for col, header in enumerate(headers, start=1):
-            cell = ws.cell(row=row, column=col, value=header)
-            cell.font = Font(bold=True)
-            cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
-            cell.fill = header_fill
-
-        row = 7
-        for step, ans, extra in data_rows:
-            ws.cell(row=row, column=1, value=step)
-            ws.cell(row=row, column=2, value=ans)
-            ws.cell(row=row, column=3, value=extra)
-            fill_color = step_colors.get(step[:2], "FFFFFF")
-            for col in range(1, 4):
-                ws.cell(row=row, column=col).fill = PatternFill(start_color=fill_color, end_color=fill_color, fill_type="solid")
-                ws.cell(row=row, column=col).alignment = Alignment(wrap_text=True, vertical="top")
-            row += 1
-
-        for col in range(1, 4):
-            ws.column_dimensions[get_column_letter(col)].width = 40
-
-        wb.save(xlsx_file)
-        st.success("✅ NPQP 8D Report saved successfully.")
-        with open(xlsx_file, "rb") as f:
-            st.download_button(t["download"], f, file_name=xlsx_file)
+            st.session_state
