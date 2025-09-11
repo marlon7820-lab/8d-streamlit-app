@@ -3,19 +3,10 @@ from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, PatternFill
 from openpyxl.utils import get_column_letter
 import datetime
+from googletrans import Translator
 
 # ---------------------------
-# Optional: Google Translate
-# ---------------------------
-try:
-    from googletrans import Translator
-    translator = Translator()
-except:
-    translator = None
-    st.warning("Translation library not installed; bilingual answers won't auto-translate.")
-
-# ---------------------------
-# Page config
+# Page config and branding
 # ---------------------------
 st.set_page_config(
     page_title="8D Training App",
@@ -23,70 +14,74 @@ st.set_page_config(
     layout="wide"
 )
 
-# Hide default menu and footer
+# Hide Streamlit default menu, header, and footer
 st.markdown("""
-<style>
-#MainMenu {visibility: hidden;}
-footer {visibility: hidden;}
-header {visibility: hidden;}
-</style>
+    <style>
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+    </style>
 """, unsafe_allow_html=True)
 
-# App header
-st.markdown("<h1 style='text-align: center; color: #1E90FF;'>📑 8D Training App</h1>", unsafe_allow_html=True)
+# Translator
+translator = Translator()
 
-# ---------------------------
+# -------------------------------------------------------------------
 # Language selection
-# ---------------------------
-lang = st.selectbox("Select Language / Seleccionar idioma", ["English", "Español"])
-if "prev_lang" not in st.session_state:
-    st.session_state.prev_lang = lang
+# -------------------------------------------------------------------
+lang = st.selectbox("Select Language / Seleccione Idioma", ["English", "Español"])
+prev_lang = st.session_state.get("prev_lang", "English")
+st.session_state["prev_lang"] = lang
 
-# ---------------------------
-# NPQP steps
-# ---------------------------
+def translate_text(text, target_lang):
+    if target_lang.startswith("Esp"):
+        return translator.translate(text, src="en", dest="es").text
+    else:
+        return translator.translate(text, src="es", dest="en").text
+
+# -------------------------------------------------------------------
+# NPQP 8D Steps with training notes/examples
+# -------------------------------------------------------------------
 npqp_steps = [
-    ("D1: Concern Details", 
-     {"en": "Describe the customer concerns clearly...", "es": "Describa claramente las preocupaciones del cliente..."},
-     {"en": "Example: Customer reported static noise...", "es": "Ejemplo: El cliente reportó ruido estático..."}),
+    ("D1: Concern Details",
+     "Describe the customer concerns clearly. Include what the issue is, where it occurred, when, and any supporting data.",
+     "Example: Customer reported static noise in amplifier during end-of-line test at Plant A."),
     ("D2: Similar Part Considerations",
-     {"en": "Check for similar parts...", "es": "Verifique piezas similares..."},
-     {"en": "Example: Same speaker type...", "es": "Ejemplo: mismo tipo de altavoz..."}),
+     "Check for similar parts, models, generic parts, other colors, opposite hand, front/rear, etc. to see if issue is recurring or isolated.",
+     "Example: Same speaker type used in another radio model; different amplifier colors; front vs. rear audio units."),
     ("D3: Initial Analysis",
-     {"en": "Perform an initial investigation...", "es": "Realice una investigación inicial..."},
-     {"en": "Example: Visual inspection...", "es": "Ejemplo: inspección visual..."}),
+     "Perform an initial investigation to identify obvious issues, collect data, and document initial findings.",
+     "Example: Visual inspection of solder joints, initial functional tests, checking connectors."),
     ("D4: Implement Containment",
-     {"en": "Define temporary containment actions...", "es": "Defina acciones de contención temporal..."},
-     {"en": "Example: 100% inspection...", "es": "Ejemplo: inspección 100%..."}),
+     "Define temporary containment actions to prevent the customer from seeing the problem while permanent actions are developed.",
+     "Example: 100% inspection of amplifiers before shipment; use of temporary shielding; quarantine of affected batches."),
     ("D5: Final Analysis",
-     {"en": "Use 5-Why analysis to determine the root cause.", "es": "Use análisis de 5-porqués para determinar la causa raíz."},
-     {"en": "", "es": ""}),
+     "Use 5-Why analysis to determine the root cause. Separate by Occurrence (why it happened) and Detection (why it wasn’t detected).",
+     ""),
     ("D6: Permanent Corrective Actions",
-     {"en": "Define corrective actions to eliminate the root cause permanently.", "es": "Defina acciones correctivas para eliminar permanentemente la causa raíz."},
-     {"en": "Example: Update soldering process...", "es": "Ejemplo: Actualizar el proceso de soldadura..."}),
+     "Define corrective actions that eliminate the root cause permanently and prevent recurrence.",
+     "Example: Update soldering process, retrain operators, update work instructions, and add automated inspection."),
     ("D7: Countermeasure Confirmation",
-     {"en": "Verify corrective actions resolve the issue long-term.", "es": "Verifique que las acciones correctivas resuelvan el problema a largo plazo."},
-     {"en": "Example: Functional tests on corrected units...", "es": "Ejemplo: pruebas funcionales en unidades corregidas..."}),
-    ("D8: Follow-up Activities",
-     {"en": "Document lessons learned, update standards, procedures...", "es": "Documente lecciones aprendidas, actualice estándares, procedimientos..."},
-     {"en": "Example: Update SOPs, PFMEA...", "es": "Ejemplo: Actualizar SOP, PFMEA..."}),
+     "Verify that corrective actions effectively resolve the issue long-term.",
+     "Example: Functional tests on corrected amplifiers, accelerated life testing, and monitoring of first production runs."),
+    ("D8: Follow-up Activities (Lessons Learned / Recurrence Prevention)",
+     "Document lessons learned, update standards, procedures, FMEAs, and training to prevent recurrence.",
+     "Example: Update SOPs, PFMEA, work instructions, and employee training to prevent the same issue in future.")
 ]
 
-# ---------------------------
-# Session state initialization
-# ---------------------------
+# -------------------------------------------------------------------
+# Initialize session state
+# -------------------------------------------------------------------
 for step, _, _ in npqp_steps:
     if step not in st.session_state:
         st.session_state[step] = {"answer": "", "extra": ""}
-st.session_state.setdefault("report_date", datetime.datetime.today().strftime("%B %d, %Y"))
+st.session_state.setdefault("report_date", "")
 st.session_state.setdefault("prepared_by", "")
 st.session_state.setdefault("d5_occ_whys", [""] * 5)
 st.session_state.setdefault("d5_det_whys", [""] * 5)
 st.session_state.setdefault("interactive_whys", [""] * 5)
 
-# ---------------------------
-# Step colors for Excel
-# ---------------------------
+# Color dictionary for Excel
 step_colors = {
     "D1: Concern Details": "ADD8E6",
     "D2: Similar Part Considerations": "90EE90",
@@ -95,88 +90,108 @@ step_colors = {
     "D5: Final Analysis": "FF9999",
     "D6: Permanent Corrective Actions": "D8BFD8",
     "D7: Countermeasure Confirmation": "E0FFFF",
-    "D8: Follow-up Activities": "D3D3D3"
+    "D8: Follow-up Activities (Lessons Learned / Recurrence Prevention)": "D3D3D3"
 }
 
-# ---------------------------
-# Translation function
-# ---------------------------
-def translate_answers(to_lang_code):
-    if translator:
-        for step, _, _ in npqp_steps:
-            ans = st.session_state[step]["answer"]
-            if ans.strip():
-                st.session_state[step]["answer"] = translator.translate(ans, dest=to_lang_code).text
-            extra = st.session_state[step]["extra"]
-            if extra.strip():
-                st.session_state[step]["extra"] = translator.translate(extra, dest=to_lang_code).text
+# -------------------------------------------------------------------
+# Report info with formatted date
+# -------------------------------------------------------------------
+st.subheader("Report Information / Información del Informe")
+today_str = datetime.datetime.today().strftime("%B %d, %Y")
+if not st.session_state.report_date:
+    st.session_state.report_date = today_str
+st.session_state.report_date = st.text_input(
+    translate_text("📅 Report Date", lang) if lang=="Español" else "📅 Report Date",
+    value=st.session_state.report_date
+)
+st.session_state.prepared_by = st.text_input(
+    translate_text("✍️ Prepared By", lang) if lang=="Español" else "✍️ Prepared By",
+    value=st.session_state.prepared_by
+)
 
-# Detect language switch
-if st.session_state.prev_lang != lang:
-    to_lang_code = "es" if lang == "Español" else "en"
-    translate_answers(to_lang_code)
-    st.session_state.prev_lang = lang
+# -------------------------------------------------------------------
+# 5-Why interactive suggestion logic
+# -------------------------------------------------------------------
+def suggest_occurrence(previous_whys):
+    suggestions = []
+    for why in previous_whys:
+        w = why.lower()
+        if "solder" in w:
+            suggestions.append("Check soldering process and training.")
+        elif "connection" in w:
+            suggestions.append("Verify connector type and assembly procedure.")
+        elif "material" in w:
+            suggestions.append("Review material specs and batch.")
+        else:
+            suggestions.append("Review previous failures or standard processes.")
+    return suggestions
 
-# ---------------------------
-# Report info
-# ---------------------------
-st.subheader("Report Information" if lang=="English" else "Información del reporte")
-st.session_state.report_date = st.text_input("📅 Report Date" if lang=="English" else "📅 Fecha del reporte", value=st.session_state.report_date)
-st.session_state.prepared_by = st.text_input("✍️ Prepared By" if lang=="English" else "✍️ Preparado por", value=st.session_state.prepared_by)
+def suggest_detection(previous_whys):
+    suggestions = []
+    for why in previous_whys:
+        w = why.lower()
+        if "inspection" in w:
+            suggestions.append("Check QA inspection checklist.")
+        elif "test" in w:
+            suggestions.append("Review automated testing procedure.")
+        else:
+            suggestions.append("Verify process controls and monitoring.")
+    return suggestions
 
-# ---------------------------
+# -------------------------------------------------------------------
 # Tabs for each step
-# ---------------------------
+# -------------------------------------------------------------------
 tabs = st.tabs([step for step, _, _ in npqp_steps])
-for i, (step, notes, example) in enumerate(npqp_steps):
+for i, (step, note, example) in enumerate(npqp_steps):
     with tabs[i]:
-        st.markdown(f"### {step}")
+        st.markdown(f"### {translate_text(step, lang) if lang=='Español' else step}")
 
-        # Training guidance
-        st.info(f"**Training Guidance:** {notes[lang[:2].lower()]}\n\n💡 **Example:** {example[lang[:2].lower()]}")
-
-        # Input fields
         if step.startswith("D5"):
-            st.markdown("#### Occurrence Analysis" if lang=="English" else "#### Análisis de ocurrencia")
+            st.markdown("#### Occurrence Analysis / Análisis de Ocurrencia")
             for idx, val in enumerate(st.session_state.d5_occ_whys):
-                st.session_state.d5_occ_whys[idx] = st.text_input(f"Occurrence Why {idx+1}" if lang=="English" else f"Por qué de ocurrencia {idx+1}", value=val, key=f"{step}_occ_{idx}")
+                st.session_state.d5_occ_whys[idx] = st.text_input(
+                    f"Occurrence Why {idx+1}" if lang=="English" else f"Por qué de Ocurrencia {idx+1}",
+                    value=val,
+                    key=f"occ_{idx}"
+                )
+                if st.session_state.d5_occ_whys[idx].strip():
+                    sugg = suggest_occurrence(st.session_state.d5_occ_whys[:idx+1])
+                    st.text(f"💡 Suggestions: {', '.join(sugg[-1:])}" if lang=="English" else f"💡 Sugerencias: {', '.join(sugg[-1:])}")
 
-            st.markdown("#### Detection Analysis" if lang=="English" else "#### Análisis de detección")
+            st.markdown("#### Detection Analysis / Análisis de Detección")
             for idx, val in enumerate(st.session_state.d5_det_whys):
-                st.session_state.d5_det_whys[idx] = st.text_input(f"Detection Why {idx+1}" if lang=="English" else f"Por qué de detección {idx+1}", value=val, key=f"{step}_det_{idx}")
+                st.session_state.d5_det_whys[idx] = st.text_input(
+                    f"Detection Why {idx+1}" if lang=="English" else f"Por qué de Detección {idx+1}",
+                    value=val,
+                    key=f"det_{idx}"
+                )
+                if st.session_state.d5_det_whys[idx].strip():
+                    sugg = suggest_detection(st.session_state.d5_det_whys[:idx+1])
+                    st.text(f"💡 Suggestions: {', '.join(sugg[-1:])}" if lang=="English" else f"💡 Sugerencias: {', '.join(sugg[-1:])}")
 
-            # Interactive AI suggestions (rule-based)
-            for idx in range(5):
-                if st.session_state.d5_occ_whys[idx]:
-                    # Simple suggestion logic
-                    st.text(f"Suggestion for Occurrence Why {idx+1}: Check process controls and previous similar failures.")
-
-            # Combine answers
             st.session_state[step]["answer"] = (
                 "Occurrence Analysis:\n" + "\n".join([w for w in st.session_state.d5_occ_whys if w.strip()]) +
                 "\n\nDetection Analysis:\n" + "\n".join([w for w in st.session_state.d5_det_whys if w.strip()])
             )
 
-            # Extra field for Root Cause
-            st.session_state[step]["extra"] = st.text_area("Root Cause (summary after 5-Whys)" if lang=="English" else "Causa raíz (resumen después de 5-porqués)", value=st.session_state[step]["extra"])
-
         else:
-            # Only D1 has extra field
-            st.session_state[step]["answer"] = st.text_area(f"Your Answer for {step}" if lang=="English" else f"Su respuesta para {step}", value=st.session_state[step]["answer"])
-            if step.startswith("D1"):
-                st.session_state[step]["extra"] = st.text_area("Additional notes / Notas adicionales", value=st.session_state[step]["extra"])
+            st.session_state[step]["answer"] = st.text_area(
+                translate_text(f"Your Answer for {step}", lang) if lang=="Español" else f"Your Answer for {step}",
+                value=st.session_state[step]["answer"],
+                key=f"ans_{step}"
+            )
 
-# ---------------------------
+# -------------------------------------------------------------------
 # Collect answers
-# ---------------------------
-data_rows = [(step, st.session_state[step]["answer"], st.session_state[step]["extra"]) for step, _, _ in npqp_steps]
+# -------------------------------------------------------------------
+data_rows = [(step, st.session_state[step]["answer"], st.session_state[step].get("extra","")) for step, _, _ in npqp_steps]
 
-# ---------------------------
-# Save button with Excel styling
-# ---------------------------
-if st.button("💾 Save 8D Report" if lang=="English" else "💾 Guardar reporte 8D"):
+# -------------------------------------------------------------------
+# Save button with styled Excel
+# -------------------------------------------------------------------
+if st.button(translate_text("💾 Save 8D Report", lang) if lang=="Español" else "💾 Save 8D Report"):
     if not any(ans for _, ans, _ in data_rows):
-        st.error("⚠️ No answers filled in yet. Please complete some fields before saving." if lang=="English" else "⚠️ No hay respuestas. Por favor complete los campos antes de guardar.")
+        st.error(translate_text("⚠️ No answers filled in yet. Please complete some fields before saving.", lang) if lang=="Español" else "⚠️ No answers filled in yet. Please complete some fields before saving.")
     else:
         xlsx_file = "NPQP_8D_Report.xlsx"
         wb = Workbook()
@@ -191,9 +206,9 @@ if st.button("💾 Save 8D Report" if lang=="English" else "💾 Guardar reporte
         ws.row_dimensions[1].height = 25
 
         # Report info
-        ws["A3"] = "Report Date" if lang=="English" else "Fecha del reporte"
+        ws["A3"] = "Report Date"
         ws["B3"] = st.session_state.report_date
-        ws["A4"] = "Prepared By" if lang=="English" else "Preparado por"
+        ws["A4"] = "Prepared By"
         ws["B4"] = st.session_state.prepared_by
 
         # Headers
@@ -212,12 +227,10 @@ if st.button("💾 Save 8D Report" if lang=="English" else "💾 Guardar reporte
             ws.cell(row=row, column=1, value=step)
             ws.cell(row=row, column=2, value=ans)
             ws.cell(row=row, column=3, value=extra)
-
             fill_color = step_colors.get(step, "FFFFFF")
             for col in range(1, 4):
                 ws.cell(row=row, column=col).fill = PatternFill(start_color=fill_color, end_color=fill_color, fill_type="solid")
                 ws.cell(row=row, column=col).alignment = Alignment(wrap_text=True, vertical="top")
-
             row += 1
 
         # Adjust column widths
@@ -225,6 +238,6 @@ if st.button("💾 Save 8D Report" if lang=="English" else "💾 Guardar reporte
             ws.column_dimensions[get_column_letter(col)].width = 40
 
         wb.save(xlsx_file)
-        st.success("✅ NPQP 8D Report saved successfully." if lang=="English" else "✅ Reporte 8D guardado correctamente.")
+        st.success(translate_text("✅ NPQP 8D Report saved successfully.", lang) if lang=="Español" else "✅ NPQP 8D Report saved successfully.")
         with open(xlsx_file, "rb") as f:
-            st.download_button("📥 Download XLSX" if lang=="English" else "📥 Descargar XLSX", f, file_name=xlsx_file)
+            st.download_button(translate_text("📥 Download XLSX", lang) if lang=="Español" else "📥 Download XLSX", f, file_name=xlsx_file)
