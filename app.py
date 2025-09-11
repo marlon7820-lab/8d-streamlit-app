@@ -155,7 +155,7 @@ step_colors = {
 }
 
 # ---------------------------
-# Translation helper with caching
+# Translation helper
 # ---------------------------
 def translate_text_cached(text, target_lang="es", field_id=None):
     if not text.strip():
@@ -180,7 +180,7 @@ def translate_text_cached(text, target_lang="es", field_id=None):
         return text
 
 # ---------------------------
-# Auto-translate fields if language changed
+# Auto-translate if language changed
 # ---------------------------
 def auto_translate_all(prev_lang, current_lang):
     if prev_lang == current_lang:
@@ -208,18 +208,6 @@ def auto_translate_all(prev_lang, current_lang):
         st.session_state.interactive_root_cause, target_lang, field_id="interactive_root_cause"
     )
 
-    # Refresh Streamlit input fields
-    for sid, _, _, _ in npqp_steps:
-        st.session_state[f"ans_{sid}"] = st.session_state[sid]["answer"]
-        st.session_state[f"{sid}_root_text"] = st.session_state[sid]["extra"]
-    for i in range(len(st.session_state.d5_occ_whys)):
-        st.session_state[f"D5_occ_{i}"] = st.session_state.d5_occ_whys[i]
-    for i in range(len(st.session_state.d5_det_whys)):
-        st.session_state[f"D5_det_{i}"] = st.session_state.d5_det_whys[i]
-    for i in range(len(st.session_state.interactive_whys)):
-        st.session_state[f"interactive_{i}"] = st.session_state.interactive_whys[i]
-    st.session_state["interactive_root_text"] = st.session_state.interactive_root_cause
-
 auto_translate_all(prev_lang, lang)
 st.session_state["prev_lang"] = lang
 
@@ -231,7 +219,7 @@ st.session_state.report_date = st.text_input(t["report_date"], st.session_state.
 st.session_state.prepared_by = st.text_input(t["prepared_by"], st.session_state.prepared_by)
 
 # ---------------------------
-# Tabs D1-D8
+# Tabs D1-D8 with inputs
 # ---------------------------
 tabs = st.tabs([step for step,_,_,_ in npqp_steps])
 for i, (sid, step_title, note, example) in enumerate(npqp_steps):
@@ -241,31 +229,4 @@ for i, (sid, step_title, note, example) in enumerate(npqp_steps):
             st.info(
                 "**Training Guidance:** Use 5-Why analysis to determine the root cause.\n\n"
                 "**Occurrence Example (5-Whys):**\n"
-                "1. Cold solder joint on DSP chip\n2. Soldering temperature too low\n3. Operator didn’t follow profile\n4. Work instructions were unclear\n5. No visual confirmation step\n\n"
-                "**Detection Example (5-Whys):**\n"
-                "1. QA inspection missed cold joint\n2. Inspection checklist incomplete\n3. No automated test step\n4. Batch testing not performed\n5. Early warning signal not tracked\n\n"
-                "**Root Cause Example:**\n"
-                "Insufficient process control on soldering operation, combined with inadequate QA checklist, allowed defective DSP soldering to pass undetected."
-            )
-        else:
-            st.info(f"**Training Guidance:** {note}\n\n💡 **Example:** {example}")
-
-        # Inputs
-        if sid == "D5":
-            st.markdown("#### Occurrence Analysis")
-            for idx, val in enumerate(st.session_state.d5_occ_whys):
-                st.session_state.d5_occ_whys[idx] = st.text_input(f"Occurrence Why {idx+1}", val, key=f"{sid}_occ_{idx}")
-            if st.button(t["add_occ"], key=f"add_occ_{sid}"):
-                st.session_state.d5_occ_whys.append("")
-
-            st.markdown("#### Detection Analysis")
-            for idx, val in enumerate(st.session_state.d5_det_whys):
-                st.session_state.d5_det_whys[idx] = st.text_input(f"Detection Why {idx+1}", val, key=f"{sid}_det_{idx}")
-            if st.button(t["add_det"], key=f"add_det_{sid}"):
-                st.session_state.d5_det_whys.append("")
-
-            st.session_state[sid]["answer"] = (
-                "Occurrence Analysis:\n" + "\n".join([w for w in st.session_state.d5_occ_whys if w.strip()]) +
-                "\n\nDetection Analysis:\n" + "\n".join([w for w in st.session_state.d5_det_whys if w.strip()])
-            )
-            st.session_state
+                "1. Cold solder joint on DSP chip\n2.
