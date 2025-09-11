@@ -5,7 +5,7 @@ from openpyxl.utils import get_column_letter
 import datetime
 
 # ---------------------------
-# Page config
+# Page config and branding
 # ---------------------------
 st.set_page_config(
     page_title="8D Training App",
@@ -13,7 +13,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# Hide Streamlit default menu/footer/header
+# Hide Streamlit default menu, header, and footer
 st.markdown("""
 <style>
 #MainMenu {visibility: hidden;}
@@ -26,178 +26,189 @@ header {visibility: hidden;}
 # Language selection
 # ---------------------------
 lang = st.selectbox("Select Language / Seleccionar Idioma", ["English", "Español"])
+
+lang_map = {"English": "en", "Español": "es"}
+
 t = {
     "en": {
         "title": "📑 8D Training App",
         "report_date": "📅 Report Date",
         "prepared_by": "✍️ Prepared By",
-        "save": "💾 Save 8D Report",
-        "download": "📥 Download XLSX",
-        "d1": "D1: Concern Details",
-        "d2": "D2: Similar Part Considerations",
-        "d3": "D3: Initial Analysis",
-        "d4": "D4: Implement Containment",
-        "d5": "D5: Final Analysis",
-        "d6": "D6: Permanent Corrective Actions",
-        "d7": "D7: Countermeasure Confirmation",
-        "d8": "D8: Follow-up Activities",
-        "d5_occ": "Occurrence Analysis",
-        "d5_det": "Detection Analysis",
-        "root_cause": "Root Cause (summary after 5-Whys)",
-        "training_note": "Training Guidance"
+        "save_button": "💾 Save 8D Report",
+        "download_button": "📥 Download XLSX",
+        "steps": [
+            "D1: Concern Details",
+            "D2: Similar Part Considerations",
+            "D3: Initial Analysis",
+            "D4: Implement Containment",
+            "D5: Final Analysis",
+            "D6: Permanent Corrective Actions",
+            "D7: Countermeasure Confirmation",
+            "D8: Follow-up Activities (Lessons Learned / Recurrence Prevention)"
+        ],
+        "guidance": [
+            "Describe the customer concerns clearly. Include what the issue is, where it occurred, when, and any supporting data.",
+            "Check for similar parts, models, generic parts, other colors, opposite hand, front/rear, etc. to see if issue is recurring or isolated.",
+            "Perform an initial investigation to identify obvious issues, collect data, and document initial findings.",
+            "Define temporary containment actions to prevent the customer from seeing the problem while permanent actions are developed.",
+            "Use 5-Why analysis to determine the root cause. Separate by Occurrence (why it happened) and Detection (why it wasn’t detected). Add more Whys if needed.",
+            "Define corrective actions that eliminate the root cause permanently and prevent recurrence.",
+            "Verify that corrective actions effectively resolve the issue long-term.",
+            "Document lessons learned, update standards, procedures, FMEAs, and training to prevent recurrence."
+        ],
+        "examples": [
+            "Example: Customer reported static noise in amplifier during end-of-line test at Plant A.",
+            "Example: Same speaker type used in another radio model; different amplifier colors; front vs. rear audio units.",
+            "Example: Visual inspection of solder joints, initial functional tests, checking connectors.",
+            "Example: 100% inspection of amplifiers before shipment; use of temporary shielding; quarantine of affected batches.",
+            "Example: Occurrence: Cold solder joint → Solder temp too low → Operator didn’t follow profile → Unclear instructions → No visual check. Detection: QA missed joint → Checklist incomplete → No automated test → Batch not tested → Early warning not tracked.",
+            "Example: Update soldering process, retrain operators, update work instructions, add automated inspection.",
+            "Example: Functional tests on corrected amplifiers, accelerated life testing, monitoring first production runs.",
+            "Example: Update SOPs, PFMEA, work instructions, employee training to prevent recurrence."
+        ]
     },
     "es": {
         "title": "📑 App de Entrenamiento 8D",
         "report_date": "📅 Fecha del Reporte",
         "prepared_by": "✍️ Preparado Por",
-        "save": "💾 Guardar Reporte 8D",
-        "download": "📥 Descargar XLSX",
-        "d1": "D1: Detalles del Problema",
-        "d2": "D2: Consideraciones de Partes Similares",
-        "d3": "D3: Análisis Inicial",
-        "d4": "D4: Implementar Contención",
-        "d5": "D5: Análisis Final",
-        "d6": "D6: Acciones Correctivas Permanentes",
-        "d7": "D7: Confirmación de Contramedidas",
-        "d8": "D8: Seguimiento / Lecciones Aprendidas",
-        "d5_occ": "Análisis de Ocurrencia",
-        "d5_det": "Análisis de Detección",
-        "root_cause": "Causa Raíz (resumen después de 5-Whys)",
-        "training_note": "Guía de Entrenamiento"
+        "save_button": "💾 Guardar Reporte 8D",
+        "download_button": "📥 Descargar XLSX",
+        "steps": [
+            "D1: Detalles de la Preocupación",
+            "D2: Consideraciones de Piezas Similares",
+            "D3: Análisis Inicial",
+            "D4: Implementar Contención",
+            "D5: Análisis Final",
+            "D6: Acciones Correctivas Permanentes",
+            "D7: Confirmación de Contramedidas",
+            "D8: Actividades de Seguimiento (Lecciones Aprendidas / Prevención de Recurrencia)"
+        ],
+        "guidance": [
+            "Describa claramente las preocupaciones del cliente. Incluya qué es el problema, dónde ocurrió, cuándo y cualquier dato de soporte.",
+            "Verifique piezas similares, modelos, piezas genéricas, otros colores, mano opuesta, frente/atrás, etc. para ver si el problema es recurrente o aislado.",
+            "Realice una investigación inicial para identificar problemas obvios, recopile datos y documente hallazgos iniciales.",
+            "Defina acciones de contención temporales para evitar que el cliente vea el problema mientras se desarrollan acciones permanentes.",
+            "Use el análisis de 5 porqués para determinar la causa raíz. Separe por Ocurrencia (por qué ocurrió) y Detección (por qué no se detectó). Agregue más Porqués si es necesario.",
+            "Defina acciones correctivas que eliminen permanentemente la causa raíz y prevengan recurrencia.",
+            "Verifique que las acciones correctivas resuelvan efectivamente el problema a largo plazo.",
+            "Documente lecciones aprendidas, actualice estándares, procedimientos, FMEAs y capacitación para prevenir recurrencia."
+        ],
+        "examples": [
+            "Ejemplo: El cliente reportó ruido estático en el amplificador durante la prueba final en la Planta A.",
+            "Ejemplo: Mismo tipo de altavoz usado en otro modelo de radio; diferentes colores de amplificador; unidades de audio delanteras vs traseras.",
+            "Ejemplo: Inspección visual de soldaduras, pruebas funcionales iniciales, verificación de conectores.",
+            "Ejemplo: Inspección 100% de amplificadores antes del envío; uso de blindaje temporal; cuarentena de lotes afectados.",
+            "Ejemplo: Ocurrencia: Soldadura fría → Temperatura baja → Operador no siguió perfil → Instrucciones poco claras → Sin verificación visual. Detección: QA pasó por alto la unión → Lista de verificación incompleta → Sin prueba automatizada → Lote no probado → Señal temprana no rastreada.",
+            "Ejemplo: Actualizar proceso de soldadura, capacitar operadores, actualizar instrucciones de trabajo, agregar inspección automatizada.",
+            "Ejemplo: Pruebas funcionales en amplificadores corregidos, pruebas de vida aceleradas, monitoreo de primeras corridas de producción.",
+            "Ejemplo: Actualizar SOPs, PFMEA, instrucciones de trabajo, capacitación de empleados para prevenir recurrencia."
+        ]
     }
-}[lang[:2]]
+}[lang_map[lang]]
 
-# App header
+# ---------------------------
+# Session state
+# ---------------------------
+if "report_date" not in st.session_state:
+    st.session_state.report_date = datetime.datetime.today().strftime("%B %d, %Y")
+if "prepared_by" not in st.session_state:
+    st.session_state.prepared_by = ""
+if "answers" not in st.session_state:
+    st.session_state.answers = {step: "" for step in t["steps"]}
+if "d5_occ" not in st.session_state:
+    st.session_state.d5_occ = [""] * 5
+if "d5_det" not in st.session_state:
+    st.session_state.d5_det = [""] * 5
+
+# ---------------------------
+# Header
+# ---------------------------
 st.markdown(f"<h1 style='text-align: center; color: #1E90FF;'>{t['title']}</h1>", unsafe_allow_html=True)
-
-# ---------------------------
-# NPQP Steps + examples
-# ---------------------------
-npqp_steps = [
-    {"id":"D1", "title": t["d1"], "note": "Describe the customer concerns clearly. Include what, where, when, and data.", "example":"Customer reported static noise in amplifier during end-of-line test."},
-    {"id":"D2", "title": t["d2"], "note": "Check similar parts, models, etc.", "example":"Same speaker type used in another radio model; front vs rear."},
-    {"id":"D3", "title": t["d3"], "note": "Initial investigation, collect data.", "example":"Visual inspection of solder joints; initial functional tests."},
-    {"id":"D4", "title": t["d4"], "note": "Temporary containment actions.", "example":"100% inspection of amplifiers; quarantine affected batches."},
-    {"id":"D5", "title": t["d5"], "note": "Use 5-Why analysis to determine root cause.", "example":""},  # interactive 5-Why
-    {"id":"D6", "title": t["d6"], "note": "Define corrective actions to eliminate root cause.", "example":"Update soldering process, retrain operators."},
-    {"id":"D7", "title": t["d7"], "note": "Verify corrective actions are effective.", "example":"Functional tests, accelerated life testing."},
-    {"id":"D8", "title": t["d8"], "note": "Document lessons learned.", "example":"Update SOPs, FMEA, training."}
-]
-
-# ---------------------------
-# Session state initialization
-# ---------------------------
-for step in npqp_steps:
-    sid = step["id"]
-    st.session_state.setdefault(sid, {"answer": "", "extra": ""})
-
-st.session_state.setdefault("report_date", datetime.datetime.today().strftime("%B %d, %Y"))
-st.session_state.setdefault("prepared_by", "")
-
-# D5 interactive 5-Why
-st.session_state.setdefault("d5_occ_whys", [""])
-st.session_state.setdefault("d5_det_whys", [""])
 
 # ---------------------------
 # Report info
 # ---------------------------
 st.subheader(t["report_date"])
-st.session_state.report_date = st.text_input(t["report_date"], value=st.session_state.report_date)
+st.session_state.report_date = st.text_input("", value=st.session_state.report_date)
 st.subheader(t["prepared_by"])
-st.session_state.prepared_by = st.text_input(t["prepared_by"], st.session_state.prepared_by)
+st.session_state.prepared_by = st.text_input("", value=st.session_state.prepared_by)
 
 # ---------------------------
-# Tabs for each step
+# Tabs
 # ---------------------------
-tabs = st.tabs([step["title"] for step in npqp_steps])
-
-for i, step in enumerate(npqp_steps):
-    sid = step["id"]
+tabs = st.tabs(t["steps"])
+for i, step in enumerate(t["steps"]):
     with tabs[i]:
-        st.markdown(f"### {step['title']}")
-        st.info(f"**{t['training_note']}:** {step['note']}\n\n💡 **Example:** {step['example']}")
+        st.markdown(f"### {step}")
+        st.info(f"**Guidance:** {t['guidance'][i]}\n\n💡 **Example:** {t['examples'][i]}")
 
-        if sid == "D5":
-            st.markdown(f"#### {t['d5_occ']}")
-            for idx, val in enumerate(st.session_state.d5_occ_whys):
-                st.session_state.d5_occ_whys[idx] = st.text_input(f"Occurrence Why {idx+1}", value=val, key=f"{sid}_occ_{idx}")
-            if st.button("➕ Add Occurrence Why", key="add_occ_d5"):
-                st.session_state.d5_occ_whys.append("")
+        # D5 interactive 5-Why
+        if "D5" in step:
+            st.markdown("#### Occurrence Analysis")
+            for idx in range(len(st.session_state.d5_occ)):
+                st.session_state.d5_occ[idx] = st.text_input(f"Occurrence Why {idx+1}", value=st.session_state.d5_occ[idx], key=f"d5_occ_{idx}")
 
-            st.markdown(f"#### {t['d5_det']}")
-            for idx, val in enumerate(st.session_state.d5_det_whys):
-                st.session_state.d5_det_whys[idx] = st.text_input(f"Detection Why {idx+1}", value=val, key=f"{sid}_det_{idx}")
-            if st.button("➕ Add Detection Why", key="add_det_d5"):
-                st.session_state.d5_det_whys.append("")
+            st.markdown("#### Detection Analysis")
+            for idx in range(len(st.session_state.d5_det)):
+                st.session_state.d5_det[idx] = st.text_input(f"Detection Why {idx+1}", value=st.session_state.d5_det[idx], key=f"d5_det_{idx}")
 
-            st.session_state[sid]["answer"] = "Occurrence Analysis:\n" + "\n".join([w for w in st.session_state.d5_occ_whys if w.strip()]) + \
-                                              "\n\nDetection Analysis:\n" + "\n".join([w for w in st.session_state.d5_det_whys if w.strip()])
-            st.session_state[sid]["extra"] = st.text_area(t["root_cause"], value=st.session_state[sid]["extra"])
-
+            # Combine for storage
+            st.session_state.answers[step] = (
+                "Occurrence:\n" + "\n".join([w for w in st.session_state.d5_occ if w.strip()]) +
+                "\n\nDetection:\n" + "\n".join([w for w in st.session_state.d5_det if w.strip()])
+            )
         else:
-            st.session_state[sid]["answer"] = st.text_area(f"Your Answer", value=st.session_state[sid]["answer"], key=f"ans_{sid}")
+            st.session_state.answers[step] = st.text_area(f"Your Answer for {step}", value=st.session_state.answers[step], key=f"ans_{step}")
 
 # ---------------------------
-# Collect answers
+# Save to Excel
 # ---------------------------
-data_rows = [(step["title"], st.session_state[step["id"]]["answer"], st.session_state[step["id"]]["extra"]) for step in npqp_steps]
+if st.button(t["save_button"]):
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "NPQP 8D Report"
 
-# ---------------------------
-# Save button with Excel
-# ---------------------------
-if st.button(t["save"]):
-    if not any(ans for _, ans, _ in data_rows):
-        st.error("⚠️ No answers filled in yet.")
-    else:
-        xlsx_file = "NPQP_8D_Report.xlsx"
-        wb = Workbook()
-        ws = wb.active
-        ws.title = "NPQP 8D Report"
+    # Title
+    ws.merge_cells("A1:C1")
+    ws["A1"] = t["title"]
+    ws["A1"].font = Font(size=14, bold=True)
+    ws["A1"].alignment = Alignment(horizontal="center", vertical="center")
+    ws.row_dimensions[1].height = 25
 
-        # Title
-        ws.merge_cells("A1:C1")
-        ws["A1"] = "Nissan NPQP 8D Report"
-        ws["A1"].font = Font(size=14, bold=True)
-        ws["A1"].alignment = Alignment(horizontal="center", vertical="center")
+    # Report info
+    ws["A3"] = t["report_date"]
+    ws["B3"] = st.session_state.report_date
+    ws["A4"] = t["prepared_by"]
+    ws["B4"] = st.session_state.prepared_by
 
-        # Report info
-        ws["A3"] = t["report_date"]
-        ws["B3"] = st.session_state.report_date
-        ws["A4"] = t["prepared_by"]
-        ws["B4"] = st.session_state.prepared_by
+    # Headers
+    headers = ["Step", "Your Answer", "Root Cause"]
+    header_fill = PatternFill(start_color="C0C0C0", end_color="C0C0C0", fill_type="solid")
+    row = 6
+    for col, header in enumerate(headers, start=1):
+        cell = ws.cell(row=row, column=col, value=header)
+        cell.font = Font(bold=True)
+        cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+        cell.fill = header_fill
 
-        # Headers
-        headers = ["Step", "Your Answer", "Root Cause"]
-        header_fill = PatternFill(start_color="C0C0C0", end_color="C0C0C0", fill_type="solid")
-        row = 6
-        for col, header in enumerate(headers, start=1):
-            cell = ws.cell(row=row, column=col, value=header)
-            cell.font = Font(bold=True)
-            cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
-            cell.fill = header_fill
-
-        # Content
-        row = 7
-        for step_title, ans, extra in data_rows:
-            ws.cell(row=row, column=1, value=step_title)
-            ws.cell(row=row, column=2, value=ans)
-            ws.cell(row=row, column=3, value=extra)
-
-            for col in range(1, 4):
-                ws.cell(row=row, column=col).alignment = Alignment(wrap_text=True, vertical="top")
-
-            row += 1
+    # Content
+    row = 7
+    for step in t["steps"]:
+        ans = st.session_state.answers.get(step, "")
+        ws.cell(row=row, column=1, value=step)
+        ws.cell(row=row, column=2, value=ans)
+        ws.cell(row=row, column=3, value="" if step != t["steps"][0] else ans)  # Only D1 extra
 
         for col in range(1, 4):
-            ws.column_dimensions[get_column_letter(col)].width = 40
+            ws.cell(row=row, column=col).alignment = Alignment(wrap_text=True, vertical="top")
+        row += 1
 
-        wb.save(xlsx_file)
-        st.success("✅ NPQP 8D Report saved successfully")
+    # Column widths
+    for col in range(1, 4):
+        ws.column_dimensions[get_column_letter(col)].width = 40
 
-        with open(xlsx_file, "rb") as f:
-            st.download_button(
-                label=t["download"],
-                data=f,
-                file_name=xlsx_file,
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            )
+    xlsx_file = "NPQP_8D_Report.xlsx"
+    wb.save(xlsx_file)
+    st.success("✅ NPQP 8D Report saved successfully.")
+    with open(xlsx_file, "rb") as f:
+        st.download_button(t["download_button"], f, file_name=xlsx_file)
