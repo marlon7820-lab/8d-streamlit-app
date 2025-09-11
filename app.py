@@ -6,12 +6,9 @@ import datetime
 import openai
 
 # ---------------------------
-# OpenAI client setup
+# OpenAI client setup (reads from Streamlit Secrets)
 # ---------------------------
-# Option A: Use environment variable or Streamlit secrets
-# Option B: direct key (less secure)
-# client = openai.OpenAI(api_key="YOUR_API_KEY_HERE")
-client = openai.OpenAI()  # assumes OPENAI_API_KEY is set in environment
+client = openai.OpenAI()  # OPENAI_API_KEY must be in Streamlit Secrets
 
 # ---------------------------
 # Page config and branding
@@ -33,27 +30,9 @@ header {visibility: hidden;}
 st.markdown("<h1 style='text-align: center; color: #1E90FF;'>📑 8D Training App</h1>", unsafe_allow_html=True)
 
 # ---------------------------
-# Initialize session state
+# Steps and guidelines
 # ---------------------------
 steps = ["D1","D2","D3","D4","D5","D6","D7","D8"]
-for sid in steps:
-    if sid not in st.session_state:
-        st.session_state[sid] = {"answer": "", "extra": ""}
-    if f"ans_{sid}" not in st.session_state:
-        st.session_state[f"ans_{sid}"] = ""
-
-if "interactive_whys" not in st.session_state:
-    st.session_state.interactive_whys = [""]
-
-if "prev_lang" not in st.session_state:
-    st.session_state.prev_lang = "en"
-
-st.session_state.setdefault("report_date", "")
-st.session_state.setdefault("prepared_by", "")
-
-# ---------------------------
-# Guidelines
-# ---------------------------
 guidelines = {
     "D1": {"en":"Describe customer concerns clearly.", "es":"Describa claramente las preocupaciones del cliente."},
     "D2": {"en":"Check similar parts and occurrences.", "es":"Verifique partes similares y ocurrencias."},
@@ -66,7 +45,23 @@ guidelines = {
 }
 
 # ---------------------------
-# Helper: AI translation
+# Session state initialization
+# ---------------------------
+for sid in steps:
+    if sid not in st.session_state:
+        st.session_state[sid] = {"answer": "", "extra": ""}
+    if f"ans_{sid}" not in st.session_state:
+        st.session_state[f"ans_{sid}"] = ""
+
+if "interactive_whys" not in st.session_state:
+    st.session_state.interactive_whys = [""]
+
+st.session_state.setdefault("report_date", "")
+st.session_state.setdefault("prepared_by", "")
+st.session_state.setdefault("prev_lang", "en")
+
+# ---------------------------
+# Helper: translation
 # ---------------------------
 def translate_text(text, target_lang):
     if not text.strip():
