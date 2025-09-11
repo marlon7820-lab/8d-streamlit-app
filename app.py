@@ -22,10 +22,47 @@ header {visibility: hidden;}
 </style>
 """, unsafe_allow_html=True)
 
+# App title
 st.markdown("<h1 style='text-align: center; color: #1E90FF;'>📑 8D Training App</h1>", unsafe_allow_html=True)
 
 # ---------------------------
-# NPQP 8D Steps
+# Bilingual labels / guidance dictionary
+# ---------------------------
+texts = {
+    "en": {
+        "report_info": "Report Information",
+        "report_date": "Report Date",
+        "prepared_by": "Prepared By",
+        "save_button": "💾 Save 8D Report",
+        "download_button": "📥 Download XLSX",
+        "d5_occ": "Occurrence Analysis (Interactive)",
+        "d5_det": "Detection Analysis (Interactive)",
+        "root_cause": "Root Cause (summary after 5-Whys)",
+        "translate_en": "Translate to English",
+        "translate_es": "Translate to Spanish",
+        "add_occ": "➕ Add Occurrence Why",
+        "add_det": "➕ Add Detection Why",
+        "translate_section": "Translate Answers / Traducir Respuestas"
+    },
+    "es": {
+        "report_info": "Información del Reporte",
+        "report_date": "Fecha del Reporte",
+        "prepared_by": "Preparado Por",
+        "save_button": "💾 Guardar Reporte 8D",
+        "download_button": "📥 Descargar XLSX",
+        "d5_occ": "Análisis de Ocurrencia (Interactivo)",
+        "d5_det": "Análisis de Detección (Interactivo)",
+        "root_cause": "Causa Raíz (resumen después del 5-Whys)",
+        "translate_en": "Traducir a Inglés",
+        "translate_es": "Traducir a Español",
+        "add_occ": "➕ Agregar Ocurrencia Why",
+        "add_det": "➕ Agregar Detección Why",
+        "translate_section": "Traducir Respuestas / Translate Answers"
+    }
+}
+
+# ---------------------------
+# NPQP 8D Steps with guidance/examples
 # ---------------------------
 npqp_steps = [
     ("D1: Concern Details",
@@ -42,7 +79,7 @@ npqp_steps = [
      "Example: 100% inspection of amplifiers before shipment; use of temporary shielding; quarantine of affected batches."),
     ("D5: Final Analysis",
      "Interactive 5-Why for root cause. Separate Occurrence and Detection.",
-     ""),  # D5 guidance
+     ""),  # D5 guidance placeholder
     ("D6: Permanent Corrective Actions",
      "Define corrective actions that eliminate the root cause permanently and prevent recurrence.",
      "Example: Update soldering process, retrain operators, update work instructions, and add automated inspection."),
@@ -60,13 +97,14 @@ npqp_steps = [
 for step, _, _ in npqp_steps:
     if step not in st.session_state:
         st.session_state[step] = {"answer": "", "extra": ""}
+
 st.session_state.setdefault("report_date", "")
 st.session_state.setdefault("prepared_by", "")
-st.session_state.setdefault("d5_occ_whys", [""] * 5)
+st.session_state.setdefault("d5_occ_whys", [""] * 5)   # start with 5 empty whys
 st.session_state.setdefault("d5_det_whys", [""] * 5)
 st.session_state.setdefault("prev_lang", "en")
 
-# Colors for Excel
+# Excel color mapping
 step_colors = {
     "D1: Concern Details": "ADD8E6",
     "D2: Similar Part Considerations": "90EE90",
@@ -79,105 +117,142 @@ step_colors = {
 }
 
 # ---------------------------
-# Report info
+# Report info (uses dynamic labels)
 # ---------------------------
-st.subheader("Report Information")
+st.subheader(texts["en"]["report_info"])  # header stays in English by default here
 today_str = datetime.datetime.today().strftime("%B %d, %Y")
-st.session_state.report_date = st.text_input("📅 Report Date", value=today_str)
-st.session_state.prepared_by = st.text_input("✍️ Prepared By", st.session_state.prepared_by)
+st.session_state.report_date = st.text_input(texts["en"]["report_date"], value=today_str)
+st.session_state.prepared_by = st.text_input(texts["en"]["prepared_by"], value=st.session_state.prepared_by)
 
 # ---------------------------
-# Language selection
+# Language selection for labels (not answers)
 # ---------------------------
 lang = st.radio("Language / Idioma", ["en", "es"], horizontal=True)
 
-# ---------------------------
-# Manual translation function (placeholder)
-# ---------------------------
-def translate_text(text, target_lang="es"):
-    return text  # Placeholder for later AI integration
+# Update report info labels to selected lang (redraw)
+# We must re-render input labels in the chosen language
+# Recreate report info inputs with correct labels:
+st.session_state.report_date = st.text_input(texts[lang]["report_date"], value=st.session_state.report_date, key="__report_date")
+st.session_state.prepared_by = st.text_input(texts[lang]["prepared_by"], value=st.session_state.prepared_by, key="__prepared_by")
 
 # ---------------------------
-# Tabs for each D-step
+# Placeholder translation function for manual buttons
+# ---------------------------
+def translate_text_placeholder(text, target_lang):
+    # Placeholder: returns same text (no external API)
+    # If you later add an API, replace this function.
+    return text
+
+# ---------------------------
+# Tabs for each D-step with bilingual labels
 # ---------------------------
 tabs = st.tabs([step for step, _, _ in npqp_steps])
 for i, (step, note, example) in enumerate(npqp_steps):
     with tabs[i]:
         st.markdown(f"### {step}")
+        # show guidance in selected language? guidance texts are static English examples;
+        # keep them in English for now but you could provide translated guidance too.
         st.info(f"**Guidance:** {note}\n\n💡 **Example:** {example}")
 
+        # D5: interactive only (Occurrence & Detection)
         if step == "D5: Final Analysis":
-            st.markdown("#### Occurrence Analysis (Interactive)")
+            st.markdown(f"#### {texts[lang]['d5_occ']}")
             for idx, val in enumerate(st.session_state.d5_occ_whys):
-                st.session_state.d5_occ_whys[idx] = st.text_input(f"Occurrence Why {idx+1}", value=val, key=f"{step}_occ_{idx}")
-            if st.button("➕ Add Occurrence Why", key=f"add_occ_{step}"):
+                st.session_state.d5_occ_whys[idx] = st.text_input(
+                    f"{texts[lang]['d5_occ']} - {idx+1}",
+                    value=val,
+                    key=f"{step}_occ_{idx}"
+                )
+            if st.button(texts[lang]["add_occ"], key=f"add_occ_{step}"):
                 st.session_state.d5_occ_whys.append("")
 
-            st.markdown("#### Detection Analysis (Interactive)")
+            st.markdown(f"#### {texts[lang]['d5_det']}")
             for idx, val in enumerate(st.session_state.d5_det_whys):
-                st.session_state.d5_det_whys[idx] = st.text_input(f"Detection Why {idx+1}", value=val, key=f"{step}_det_{idx}")
-            if st.button("➕ Add Detection Why", key=f"add_det_{step}"):
+                st.session_state.d5_det_whys[idx] = st.text_input(
+                    f"{texts[lang]['d5_det']} - {idx+1}",
+                    value=val,
+                    key=f"{step}_det_{idx}"
+                )
+            if st.button(texts[lang]["add_det"], key=f"add_det_{step}"):
                 st.session_state.d5_det_whys.append("")
 
-            # Combine answers
+            # Save aggregated D5 answer and show root cause summary field
             st.session_state[step]["answer"] = (
                 "Occurrence Analysis:\n" + "\n".join([w for w in st.session_state.d5_occ_whys if w.strip()]) +
                 "\n\nDetection Analysis:\n" + "\n".join([w for w in st.session_state.d5_det_whys if w.strip()])
             )
-            st.session_state[step]["extra"] = st.text_area("Root Cause (summary after 5-Whys)", value=st.session_state[step]["extra"], key="root_cause")
+            st.session_state[step]["extra"] = st.text_area(
+                texts[lang]["root_cause"],
+                value=st.session_state[step]["extra"],
+                key="d5_root_cause_text"
+            )
 
         else:
-            st.session_state[step]["answer"] = st.text_area(f"Your Answer for {step}", value=st.session_state[step]["answer"], key=f"ans_{step}")
-            st.session_state[step]["extra"] = st.text_area(f"Extra / Root Cause", value=st.session_state[step]["extra"], key=f"extra_{step}")
+            # Other steps: standard answer + extra fields
+            st.session_state[step]["answer"] = st.text_area(
+                f"{step} - Answer",
+                value=st.session_state[step]["answer"],
+                key=f"ans_{i}"
+            )
+            st.session_state[step]["extra"] = st.text_area(
+                f"{step} - Root Cause / Extra (if applicable)",
+                value=st.session_state[step]["extra"],
+                key=f"extra_{i}"
+            )
 
 # ---------------------------
-# Manual Translation Buttons
+# Manual Translation Buttons (placeholders)
 # ---------------------------
 st.markdown("---")
-st.subheader("Translate Answers / Traducir Respuestas")
+st.subheader(texts[lang]["translate_section"])
 col1, col2 = st.columns(2)
 with col1:
-    if st.button("Translate to English / Traducir a Inglés"):
+    if st.button(texts[lang]["translate_en"]):
+        # Translate each stored answer & extra using placeholder
         for step, _, _ in npqp_steps:
-            st.session_state[step]["answer"] = translate_text(st.session_state[step]["answer"], target_lang="en")
-            st.session_state[step]["extra"] = translate_text(st.session_state[step]["extra"], target_lang="en")
-        st.success("✅ All answers translated to English")
+            st.session_state[step]["answer"] = translate_text_placeholder(st.session_state[step]["answer"], target_lang="en")
+            st.session_state[step]["extra"] = translate_text_placeholder(st.session_state[step]["extra"], target_lang="en")
+        st.success("✅ All answers converted to English (placeholder)")
 
 with col2:
-    if st.button("Translate to Spanish / Traducir a Español"):
+    if st.button(texts[lang]["translate_es"]):
         for step, _, _ in npqp_steps:
-            st.session_state[step]["answer"] = translate_text(st.session_state[step]["answer"], target_lang="es")
-            st.session_state[step]["extra"] = translate_text(st.session_state[step]["extra"], target_lang="es")
-        st.success("✅ All answers translated to Spanish")
+            st.session_state[step]["answer"] = translate_text_placeholder(st.session_state[step]["answer"], target_lang="es")
+            st.session_state[step]["extra"] = translate_text_placeholder(st.session_state[step]["extra"], target_lang="es")
+        st.success("✅ All answers converted to Spanish (placeholder)")
 
 # ---------------------------
-# Prepare Excel data
+# Prepare Excel data rows
 # ---------------------------
 data_rows = [(step, st.session_state[step]["answer"], st.session_state[step]["extra"]) for step, _, _ in npqp_steps]
 
 # ---------------------------
-# Save button with Excel
+# Save to Excel and download
 # ---------------------------
-if st.button("💾 Save 8D Report"):
+if st.button(texts[lang]["save_button"]):
     if not any(ans for _, ans, _ in data_rows):
         st.error("⚠️ No answers filled in yet.")
     else:
-        xlsx_file = "NPQP_8D_Report.xlsx"
+        xlsx_file = f"NPQP_8D_Report_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
         wb = Workbook()
         ws = wb.active
         ws.title = "NPQP 8D Report"
 
+        # Title
         ws.merge_cells("A1:C1")
         ws["A1"] = "Nissan NPQP 8D Report"
         ws["A1"].font = Font(size=14, bold=True)
         ws["A1"].alignment = Alignment(horizontal="center", vertical="center")
+        ws.row_dimensions[1].height = 25
 
-        ws["A3"] = "Report Date"
+        # Report info
+        ws["A3"] = texts[lang]["report_date"]
         ws["B3"] = st.session_state.report_date
-        ws["A4"] = "Prepared By"
+        ws["A4"] = texts[lang]["prepared_by"]
         ws["B4"] = st.session_state.prepared_by
 
-        headers = ["Step", "Your Answer", "Root Cause"]
+        # Headers
+        headers = ["Step", "Answer", "Root Cause / Extra"]
         header_fill = PatternFill(start_color="C0C0C0", end_color="C0C0C0", fill_type="solid")
         row = 6
         for col, header in enumerate(headers, start=1):
@@ -186,21 +261,31 @@ if st.button("💾 Save 8D Report"):
             cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
             cell.fill = header_fill
 
+        # Content rows
         row = 7
         for step, ans, extra in data_rows:
             ws.cell(row=row, column=1, value=step)
             ws.cell(row=row, column=2, value=ans)
             ws.cell(row=row, column=3, value=extra)
+
             fill_color = step_colors.get(step, "FFFFFF")
             for col in range(1, 4):
                 ws.cell(row=row, column=col).fill = PatternFill(start_color=fill_color, end_color=fill_color, fill_type="solid")
                 ws.cell(row=row, column=col).alignment = Alignment(wrap_text=True, vertical="top")
             row += 1
 
+        # Column widths
         for col in range(1, 4):
             ws.column_dimensions[get_column_letter(col)].width = 40
 
+        # Save and provide download
         wb.save(xlsx_file)
         st.success("✅ NPQP 8D Report saved successfully")
         with open(xlsx_file, "rb") as f:
-            st.download_button("📥 Download XLSX", f, file_name=xlsx_file)
+            st.download_button(texts[lang]["download_button"], f, file_name=xlsx_file)
+
+# ---------------------------
+# Notes / Next steps hint
+# ---------------------------
+st.markdown("---")
+st.info("Notes: Labels and guidance switch with the language selector. The manual translate buttons are placeholders — they do not perform actual translations until you integrate an API (OpenAI or Hugging Face). If you'd like, I can add a free-model Hugging Face option for D5 AI suggestions or wire up OpenAI when you have a standard API key.")
