@@ -7,193 +7,197 @@ import datetime
 # ---------------------------
 # Page config
 # ---------------------------
-st.set_page_config(page_title="8D Training App", page_icon="📑", layout="wide")
+st.set_page_config(
+    page_title="8D Training App",
+    page_icon="https://raw.githubusercontent.com/marlon7820-lab/8d-streamlit-app/refs/heads/main/IMG_7771%20Small.png",
+    layout="wide"
+)
 
-# Hide default menu/footer/header
-hide_streamlit_style = """
+# Hide Streamlit default menu/footer/header
+st.markdown("""
 <style>
 #MainMenu {visibility: hidden;}
 footer {visibility: hidden;}
 header {visibility: hidden;}
 </style>
-"""
-st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+""", unsafe_allow_html=True)
 
 # ---------------------------
 # Language selection
 # ---------------------------
-lang = st.selectbox("Select Language / Seleccionar Idioma", ["English", "Spanish"])
-is_en = lang == "English"
-
-# ---------------------------
-# Translations
-# ---------------------------
-texts = {
-    "English": {
-        "D1": "D1: Concern Details",
-        "D2": "D2: Similar Part Considerations",
-        "D3": "D3: Initial Analysis",
-        "D4": "D4: Implement Containment",
-        "D5": "D5: Final Analysis",
-        "D6": "D6: Permanent Corrective Actions",
-        "D7": "D7: Countermeasure Confirmation",
-        "D8": "D8: Follow-up Activities",
-        "report_date": "Report Date",
-        "prepared_by": "Prepared By",
-        "your_answer": "Your Answer",
+lang = st.selectbox("Select Language / Seleccionar Idioma", ["English", "Español"])
+t = {
+    "en": {
+        "title": "📑 8D Training App",
+        "report_date": "📅 Report Date",
+        "prepared_by": "✍️ Prepared By",
+        "save": "💾 Save 8D Report",
+        "download": "📥 Download XLSX",
+        "d1": "D1: Concern Details",
+        "d2": "D2: Similar Part Considerations",
+        "d3": "D3: Initial Analysis",
+        "d4": "D4: Implement Containment",
+        "d5": "D5: Final Analysis",
+        "d6": "D6: Permanent Corrective Actions",
+        "d7": "D7: Countermeasure Confirmation",
+        "d8": "D8: Follow-up Activities",
+        "d5_occ": "Occurrence Analysis",
+        "d5_det": "Detection Analysis",
         "root_cause": "Root Cause (summary after 5-Whys)",
-        "occurrence_analysis": "Occurrence Analysis",
-        "detection_analysis": "Detection Analysis",
-        "save_button": "💾 Save 8D Report"
+        "training_note": "Training Guidance"
     },
-    "Spanish": {
-        "D1": "D1: Detalles de la preocupación",
-        "D2": "D2: Consideraciones de partes similares",
-        "D3": "D3: Análisis inicial",
-        "D4": "D4: Implementar contención",
-        "D5": "D5: Análisis final",
-        "D6": "D6: Acciones correctivas permanentes",
-        "D7": "D7: Confirmación de contramedidas",
-        "D8": "D8: Actividades de seguimiento",
-        "report_date": "Fecha",
-        "prepared_by": "Preparado Por",
-        "your_answer": "Tu Respuesta",
-        "root_cause": "Causa Raíz (resumen después del 5-Whys)",
-        "occurrence_analysis": "Análisis de Ocurrencia",
-        "detection_analysis": "Análisis de Detección",
-        "save_button": "💾 Guardar Reporte 8D"
+    "es": {
+        "title": "📑 App de Entrenamiento 8D",
+        "report_date": "📅 Fecha del Reporte",
+        "prepared_by": "✍️ Preparado Por",
+        "save": "💾 Guardar Reporte 8D",
+        "download": "📥 Descargar XLSX",
+        "d1": "D1: Detalles del Problema",
+        "d2": "D2: Consideraciones de Partes Similares",
+        "d3": "D3: Análisis Inicial",
+        "d4": "D4: Implementar Contención",
+        "d5": "D5: Análisis Final",
+        "d6": "D6: Acciones Correctivas Permanentes",
+        "d7": "D7: Confirmación de Contramedidas",
+        "d8": "D8: Seguimiento / Lecciones Aprendidas",
+        "d5_occ": "Análisis de Ocurrencia",
+        "d5_det": "Análisis de Detección",
+        "root_cause": "Causa Raíz (resumen después de 5-Whys)",
+        "training_note": "Guía de Entrenamiento"
     }
-}
-t = texts[lang]
+}[lang[:2]]
+
+# App header
+st.markdown(f"<h1 style='text-align: center; color: #1E90FF;'>{t['title']}</h1>", unsafe_allow_html=True)
 
 # ---------------------------
-# Step info and training guidance (example)
+# NPQP Steps + examples
 # ---------------------------
 npqp_steps = [
-    ("D1", "Describe the customer concerns clearly...", "Example: Customer reported static noise in amplifier..."),
-    ("D2", "Check for similar parts, models, generic parts...", "Example: Same speaker type used in another radio model..."),
-    ("D3", "Perform an initial investigation...", "Example: Visual inspection of solder joints..."),
-    ("D4", "Define temporary containment actions...", "Example: 100% inspection before shipment..."),
-    ("D5", "Use 5-Why analysis to determine the root cause.", ""),  # D5 interactive
-    ("D6", "Define corrective actions to eliminate the root cause permanently.", "Example: Update soldering process..."),
-    ("D7", "Verify that corrective actions effectively resolve the issue long-term.", "Example: Functional tests on corrected amplifiers..."),
-    ("D8", "Document lessons learned, update standards to prevent recurrence.", "Example: Update SOPs, PFMEA, training...")
+    {"id":"D1", "title": t["d1"], "note": "Describe the customer concerns clearly. Include what, where, when, and data.", "example":"Customer reported static noise in amplifier during end-of-line test."},
+    {"id":"D2", "title": t["d2"], "note": "Check similar parts, models, etc.", "example":"Same speaker type used in another radio model; front vs rear."},
+    {"id":"D3", "title": t["d3"], "note": "Initial investigation, collect data.", "example":"Visual inspection of solder joints; initial functional tests."},
+    {"id":"D4", "title": t["d4"], "note": "Temporary containment actions.", "example":"100% inspection of amplifiers; quarantine affected batches."},
+    {"id":"D5", "title": t["d5"], "note": "Use 5-Why analysis to determine root cause.", "example":""},  # interactive 5-Why
+    {"id":"D6", "title": t["d6"], "note": "Define corrective actions to eliminate root cause.", "example":"Update soldering process, retrain operators."},
+    {"id":"D7", "title": t["d7"], "note": "Verify corrective actions are effective.", "example":"Functional tests, accelerated life testing."},
+    {"id":"D8", "title": t["d8"], "note": "Document lessons learned.", "example":"Update SOPs, FMEA, training."}
 ]
 
 # ---------------------------
-# Session State Initialization
+# Session state initialization
 # ---------------------------
-for step, _, _ in npqp_steps:
-    if step not in st.session_state:
-        st.session_state[step] = {"answer": "", "extra": ""}
+for step in npqp_steps:
+    sid = step["id"]
+    st.session_state.setdefault(sid, {"answer": "", "extra": ""})
+
 st.session_state.setdefault("report_date", datetime.datetime.today().strftime("%B %d, %Y"))
 st.session_state.setdefault("prepared_by", "")
-st.session_state.setdefault("d5_occ_whys", [""] * 5)
-st.session_state.setdefault("d5_det_whys", [""] * 5)
+
+# D5 interactive 5-Why
+st.session_state.setdefault("d5_occ_whys", [""])
+st.session_state.setdefault("d5_det_whys", [""])
 
 # ---------------------------
 # Report info
 # ---------------------------
 st.subheader(t["report_date"])
-st.session_state.report_date = st.text_input(t["report_date"], st.session_state.report_date)
+st.session_state.report_date = st.text_input(t["report_date"], value=st.session_state.report_date)
 st.subheader(t["prepared_by"])
 st.session_state.prepared_by = st.text_input(t["prepared_by"], st.session_state.prepared_by)
 
 # ---------------------------
 # Tabs for each step
 # ---------------------------
-tabs = st.tabs([t[step] for step, _, _ in npqp_steps])
-for i, (step, note, example) in enumerate(npqp_steps):
+tabs = st.tabs([step["title"] for step in npqp_steps])
+
+for i, step in enumerate(npqp_steps):
+    sid = step["id"]
     with tabs[i]:
-        st.markdown(f"### {t[step]}")
-        if step != "D5":
-            st.info(f"{note}\n💡 {example}")
-            st.session_state[step]["answer"] = st.text_area(t["your_answer"], st.session_state[step]["answer"], key=f"ans_{step}")
-        else:
-            st.info(note)
-            # Interactive 5-Why suggestions
-            def get_5why_suggestions(prev_whys):
-                # Simple context-aware rules
-                context = {
-                    "solder": ["Cold solder joint", "Solder bridge", "Insufficient heating"],
-                    "component": ["Wrong component", "Defective batch", "Misplaced polarity"],
-                    "process": ["Step skipped", "Operator not trained", "Incorrect assembly"],
-                    "inspection": ["Visual inspection missed", "Test step skipped"]
-                }
-                prev_text = " ".join(prev_whys).lower()
-                suggestions = []
-                for k, v in context.items():
-                    if k in prev_text:
-                        suggestions.extend(v)
-                if not suggestions:
-                    suggestions = sum(context.values(), [])
-                # Remove duplicates & already used
-                suggestions = [s for s in suggestions if s not in prev_whys]
-                return suggestions[:5]
+        st.markdown(f"### {step['title']}")
+        st.info(f"**{t['training_note']}:** {step['note']}\n\n💡 **Example:** {step['example']}")
 
-            st.markdown(f"#### {t['occurrence_analysis']}")
+        if sid == "D5":
+            st.markdown(f"#### {t['d5_occ']}")
             for idx, val in enumerate(st.session_state.d5_occ_whys):
-                prev = st.session_state.d5_occ_whys[:idx]
-                options = [""] + get_5why_suggestions(prev) + [st.session_state.d5_occ_whys[idx]]
-                st.session_state.d5_occ_whys[idx] = st.selectbox(f"Occurrence Why {idx+1}", options, index=0 if not st.session_state.d5_occ_whys[idx] else 1, key=f"occ_{idx}")
+                st.session_state.d5_occ_whys[idx] = st.text_input(f"Occurrence Why {idx+1}", value=val, key=f"{sid}_occ_{idx}")
+            if st.button("➕ Add Occurrence Why", key="add_occ_d5"):
+                st.session_state.d5_occ_whys.append("")
 
-            st.markdown(f"#### {t['detection_analysis']}")
+            st.markdown(f"#### {t['d5_det']}")
             for idx, val in enumerate(st.session_state.d5_det_whys):
-                prev = st.session_state.d5_det_whys[:idx]
-                options = [""] + get_5why_suggestions(prev) + [st.session_state.d5_det_whys[idx]]
-                st.session_state.d5_det_whys[idx] = st.selectbox(f"Detection Why {idx+1}", options, index=0 if not st.session_state.d5_det_whys[idx] else 1, key=f"det_{idx}")
+                st.session_state.d5_det_whys[idx] = st.text_input(f"Detection Why {idx+1}", value=val, key=f"{sid}_det_{idx}")
+            if st.button("➕ Add Detection Why", key="add_det_d5"):
+                st.session_state.d5_det_whys.append("")
 
-            st.session_state.D5["answer"] = "Occurrence Analysis:\n" + "\n".join([w for w in st.session_state.d5_occ_whys if w.strip()]) + "\n\nDetection Analysis:\n" + "\n".join([w for w in st.session_state.d5_det_whys if w.strip()])
-            st.session_state.D5["extra"] = st.text_area(t["root_cause"], st.session_state.D5["extra"])
+            st.session_state[sid]["answer"] = "Occurrence Analysis:\n" + "\n".join([w for w in st.session_state.d5_occ_whys if w.strip()]) + \
+                                              "\n\nDetection Analysis:\n" + "\n".join([w for w in st.session_state.d5_det_whys if w.strip()])
+            st.session_state[sid]["extra"] = st.text_area(t["root_cause"], value=st.session_state[sid]["extra"])
+
+        else:
+            st.session_state[sid]["answer"] = st.text_area(f"Your Answer", value=st.session_state[sid]["answer"], key=f"ans_{sid}")
 
 # ---------------------------
-# Save button / Excel export
+# Collect answers
 # ---------------------------
-if st.button(t["save_button"]):
-    wb = Workbook()
-    ws = wb.active
-    ws.title = "NPQP 8D Report"
+data_rows = [(step["title"], st.session_state[step["id"]]["answer"], st.session_state[step["id"]]["extra"]) for step in npqp_steps]
 
-    ws.merge_cells("A1:C1")
-    ws["A1"] = "Nissan NPQP 8D Report"
-    ws["A1"].font = Font(size=14, bold=True)
-    ws["A1"].alignment = Alignment(horizontal="center", vertical="center")
+# ---------------------------
+# Save button with Excel
+# ---------------------------
+if st.button(t["save"]):
+    if not any(ans for _, ans, _ in data_rows):
+        st.error("⚠️ No answers filled in yet.")
+    else:
+        xlsx_file = "NPQP_8D_Report.xlsx"
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "NPQP 8D Report"
 
-    ws["A3"] = t["report_date"]
-    ws["B3"] = st.session_state.report_date
-    ws["A4"] = t["prepared_by"]
-    ws["B4"] = st.session_state.prepared_by
+        # Title
+        ws.merge_cells("A1:C1")
+        ws["A1"] = "Nissan NPQP 8D Report"
+        ws["A1"].font = Font(size=14, bold=True)
+        ws["A1"].alignment = Alignment(horizontal="center", vertical="center")
 
-    headers = ["Step", "Answer", "Root Cause"]
-    header_fill = PatternFill(start_color="C0C0C0", end_color="C0C0C0", fill_type="solid")
-    for col, header in enumerate(headers, start=1):
-        cell = ws.cell(row=6, column=col, value=header)
-        cell.font = Font(bold=True)
-        cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
-        cell.fill = header_fill
+        # Report info
+        ws["A3"] = t["report_date"]
+        ws["B3"] = st.session_state.report_date
+        ws["A4"] = t["prepared_by"]
+        ws["B4"] = st.session_state.prepared_by
 
-    row = 7
-    step_colors = {
-        "D1": "ADD8E6", "D2": "90EE90", "D3": "FFFF99", "D4": "FFD580",
-        "D5": "FF9999", "D6": "D8BFD8", "D7": "E0FFFF", "D8": "D3D3D3"
-    }
-    for step, _, _ in npqp_steps:
-        ans = st.session_state[step]["answer"]
-        extra = st.session_state[step]["extra"]
-        ws.cell(row=row, column=1, value=t[step])
-        ws.cell(row=row, column=2, value=ans)
-        ws.cell(row=row, column=3, value=extra)
-        fill_color = step_colors.get(step, "FFFFFF")
+        # Headers
+        headers = ["Step", "Your Answer", "Root Cause"]
+        header_fill = PatternFill(start_color="C0C0C0", end_color="C0C0C0", fill_type="solid")
+        row = 6
+        for col, header in enumerate(headers, start=1):
+            cell = ws.cell(row=row, column=col, value=header)
+            cell.font = Font(bold=True)
+            cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+            cell.fill = header_fill
+
+        # Content
+        row = 7
+        for step_title, ans, extra in data_rows:
+            ws.cell(row=row, column=1, value=step_title)
+            ws.cell(row=row, column=2, value=ans)
+            ws.cell(row=row, column=3, value=extra)
+
+            for col in range(1, 4):
+                ws.cell(row=row, column=col).alignment = Alignment(wrap_text=True, vertical="top")
+
+            row += 1
+
         for col in range(1, 4):
-            ws.cell(row=row, column=col).fill = PatternFill(start_color=fill_color, end_color=fill_color, fill_type="solid")
-            ws.cell(row=row, column=col).alignment = Alignment(wrap_text=True, vertical="top")
-        row += 1
+            ws.column_dimensions[get_column_letter(col)].width = 40
 
-    for col in range(1, 4):
-        ws.column_dimensions[get_column_letter(col)].width = 40
+        wb.save(xlsx_file)
+        st.success("✅ NPQP 8D Report saved successfully")
 
-    xlsx_file = "NPQP_8D_Report.xlsx"
-    wb.save(xlsx_file)
-    st.success("✅ Report saved successfully")
-    with open(xlsx_file, "rb") as f:
-        st.download_button("📥 Download XLS
+        with open(xlsx_file, "rb") as f:
+            st.download_button(
+                label=t["download"],
+                data=f,
+                file_name=xlsx_file,
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
