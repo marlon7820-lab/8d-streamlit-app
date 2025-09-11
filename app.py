@@ -6,11 +6,12 @@ import datetime
 import openai
 
 # ---------------------------
-# Set OpenAI API key
+# OpenAI client setup
 # ---------------------------
-# Option A: via environment variable / Streamlit secrets (recommended)
-# Option B: uncomment below for direct key (less secure)
-# openai.api_key = "YOUR_API_KEY_HERE"
+# Option A: Use environment variable or Streamlit secrets
+# Option B: direct key (less secure)
+# client = openai.OpenAI(api_key="YOUR_API_KEY_HERE")
+client = openai.OpenAI()  # assumes OPENAI_API_KEY is set in environment
 
 # ---------------------------
 # Page config and branding
@@ -21,14 +22,14 @@ st.set_page_config(
     layout="wide"
 )
 
-hide_streamlit_style = """
+st.markdown("""
 <style>
 #MainMenu {visibility: hidden;}
 footer {visibility: hidden;}
 header {visibility: hidden;}
 </style>
-"""
-st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+""", unsafe_allow_html=True)
+
 st.markdown("<h1 style='text-align: center; color: #1E90FF;'>📑 8D Training App</h1>", unsafe_allow_html=True)
 
 # ---------------------------
@@ -71,14 +72,14 @@ def translate_text(text, target_lang):
     if not text.strip():
         return text
     try:
-        response = openai.ChatCompletion.create(
+        response = client.chat.completions.create(
             model="gpt-4",
             messages=[
                 {"role":"system","content":f"Translate the following text to {'English' if target_lang=='en' else 'Spanish'}."},
                 {"role":"user","content":text}
             ]
         )
-        return response.choices[0].message["content"].strip()
+        return response.choices[0].message.content.strip()
     except Exception as e:
         st.warning(f"Translation failed: {e}")
         return text
@@ -91,14 +92,14 @@ def suggest_root_cause(whys_list, lang="en"):
     if not chain_text:
         return ""
     try:
-        response = openai.ChatCompletion.create(
+        response = client.chat.completions.create(
             model="gpt-4",
             messages=[
                 {"role":"system", "content": f"Based on the following 5-Why analysis, suggest a concise root cause in {'English' if lang=='en' else 'Spanish'}."},
                 {"role":"user", "content": chain_text}
             ]
         )
-        return response.choices[0].message["content"].strip()
+        return response.choices[0].message.content.strip()
     except Exception as e:
         st.warning(f"Root cause suggestion failed: {e}")
         return ""
