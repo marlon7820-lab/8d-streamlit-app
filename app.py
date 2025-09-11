@@ -203,28 +203,7 @@ if st.button("💾 Save 8D Report / Guardar Reporte 8D"):
             extra = extra_whys
 
         ws.cell(row=row, column=1, value=sid)
-        ws.cell(row=row, column=2, value
-                        ws.cell(row=row, column=2, value=ans)
+        ws.cell(row=row, column=2, value=ans)
         ws.cell(row=row, column=3, value=extra)
 
-        fill_color = step_colors.get(sid, "FFFFFF")
-        for col in range(1, 4):
-            ws.cell(row=row, column=col).fill = PatternFill(start_color=fill_color, end_color=fill_color, fill_type="solid")
-            ws.cell(row=row, column=col).alignment = Alignment(wrap_text=True, vertical="top")
-        row += 1
-
-    # Adjust column widths
-    for col in range(1, 4):
-        ws.column_dimensions[get_column_letter(col)].width = 40
-
-    # Save workbook
-    wb.save(xlsx_file)
-    st.success("✅ NPQP 8D Report saved successfully / Reporte 8D guardado correctamente.")
-
-    # Download button
-    with open(xlsx_file, "rb") as f:
-        st.download_button(
-            label="📥 Download XLSX / Descargar XLSX",
-            data=f,
-            file_name=xlsx_file
-        )
+        fill_color
