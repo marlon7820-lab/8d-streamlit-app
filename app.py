@@ -6,7 +6,7 @@ import datetime
 import openai
 
 # ---------------------------
-# OpenAI client setup (read key from Streamlit secrets)
+# OpenAI client setup
 # ---------------------------
 client = openai.OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
@@ -197,23 +197,10 @@ if st.button("💾 Save 8D Report / Guardar Reporte 8D"):
         ans = st.session_state[sid]["answer"]
         extra = st.session_state[sid].get("extra","")
         if sid=="D5":
-            extra = "\n".join([w for w in st.session_state.interactive_whys if w.strip()])
+            extra_whys = "\n".join([w for w in st.session_state.interactive_whys if w.strip()])
             if st.session_state.D5.get("extra",""):
-                extra += "\nAI Root Cause: " + st.session_state.D5["extra"]
+                extra_whys += "\nAI Root Cause: " + st.session_state.D5["extra"]
+            extra = extra_whys
 
         ws.cell(row=row, column=1, value=sid)
-        ws.cell(row=row, column=2, value=ans)
-        ws.cell(row=row, column=3, value=extra)
-
-        fill_color = step_colors.get(sid, "FFFFFF")
-        for col in range(1,4):
-            ws.cell(row=row, column=col).fill = PatternFill(start_color=fill_color, end_color=fill_color, fill_type="solid")
-            ws.cell(row=row, column=col).alignment = Alignment(wrap_text=True, vertical="top")
-
-        row += 1
-
-    for col in range(1,4):
-        ws.column_dimensions[get_column_letter(col)].width = 40
-
-    wb.save(xlsx_file)
-    st.success("✅ NPQP
+        ws.cell(row=row, column=2, value
