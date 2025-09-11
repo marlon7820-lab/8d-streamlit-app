@@ -249,7 +249,11 @@ for i, (sid, step_title, note, example) in enumerate(npqp_steps):
                 "Occurrence Analysis:\n" + "\n".join([w for w in st.session_state.d5_occ_whys if w.strip()]) +
                 "\n\nDetection Analysis:\n" + "\n".join([w for w in st.session_state.d5_det_whys if w.strip()])
             )
-            st.session_state[sid]["extra"] = st.text_area("Root Cause (summary after 5-Whys)", st.session_state[sid]["extra"])
+            st.session_state[sid]["extra"] = st.text_area(
+                "Root Cause (summary after 5-Whys)",
+                st.session_state[sid]["extra"],
+                key=f"{sid}_root_text"
+            )
 
             # Interactive 5-Why
             st.markdown("### Interactive 5-Why")
@@ -258,4 +262,68 @@ for i, (sid, step_title, note, example) in enumerate(npqp_steps):
             if st.button("➕ Add another Why", key="add_interactive"):
                 st.session_state.interactive_whys.append("")
 
-            st.session_state.interactive_root
+            st.session_state.interactive_root_cause = st.text_area(
+                "Root Cause Summary (Interactive 5-Why)",
+                st.session_state.interactive_root_cause,
+                key="interactive_root_text"
+            )
+        else:
+            st.session_state[sid]["answer"] = st.text_area(f"Your Answer for {step_title}", st.session_state[sid]["answer"], key=f"ans_{sid}")
+
+# ---------------------------
+# Excel export
+# ---------------------------
+data_rows = [(sid, st.session_state[sid]["answer"], st.session_state[sid]["extra"]) for sid,_,_,_ in npqp_steps]
+data_rows.append((
+    "Interactive 5-Why",
+    "\n".join([w for w in st.session_state.interactive_whys if w.strip()]),
+    st.session_state.interactive_root_cause
+))
+
+if st.button(t["save_report"]):
+    if not any(ans.strip() for _, ans, _ in data_rows):
+        st.error(t["no_answers"])
+    else:
+        xlsx_file = "NPQP_8D_Report.xlsx"
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "NPQP 8D Report"
+
+        ws.merge_cells("A1:C1")
+        ws["A1"] = "Nissan NPQP 8D Report"
+        ws["A1"].font = Font(size=14, bold=True)
+        ws["A1"].alignment = Alignment(horizontal="center", vertical="center")
+        ws.row_dimensions[1].height = 25
+
+        ws["A3"] = "Report Date"
+        ws["B3"] = st.session_state.report_date
+        ws["A4"] = "Prepared By"
+        ws["B4"] = st.session_state.prepared_by
+
+        headers = ["Step", "Your Answer", "Root Cause"]
+        header_fill = PatternFill(start_color="C0C0C0", end_color="C0C0C0", fill_type="solid")
+        row = 6
+        for col, header in enumerate(headers, start=1):
+            cell = ws.cell(row=row, column=col, value=header)
+            cell.font = Font(bold=True)
+            cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+            cell.fill = header_fill
+
+        row = 7
+        for step, ans, extra in data_rows:
+            ws.cell(row=row, column=1, value=step)
+            ws.cell(row=row, column=2, value=ans)
+            ws.cell(row=row, column=3, value=extra)
+            fill_color = step_colors.get(step[:2], "FFFFFF")
+            for col in range(1, 4):
+                ws.cell(row=row, column=col).fill = PatternFill(start_color=fill_color, end_color=fill_color, fill_type="solid")
+                ws.cell(row=row, column=col).alignment = Alignment(wrap_text=True, vertical="top")
+            row += 1
+
+        for col in range(1, 4):
+            ws.column_dimensions[get_column_letter(col)].width = 40
+
+        wb.save(xlsx_file)
+        st.success("✅ NPQP 8D Report saved successfully.")
+        with open(xlsx_file, "rb") as f:
+            st.download_button(t["download"], f, file_name=xlsx_file)
