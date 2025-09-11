@@ -13,7 +13,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# Hide Streamlit default menu, header, and footer
+# Hide Streamlit menu and footer
 st.markdown("""
     <style>
     #MainMenu {visibility: hidden;}
@@ -23,13 +23,39 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ---------------------------
-# Language selection
+# Translation dictionary
 # ---------------------------
-lang = st.selectbox("Select Language / Seleccione Idioma", ["English", "Español"])
-EN = lang == "English"
+TEXTS = {
+    "en": {
+        "app_title": "📑 8D Training App",
+        "report_date": "📅 Report Date",
+        "prepared_by": "✍️ Prepared By",
+        "occurrence_analysis": "Occurrence Analysis",
+        "detection_analysis": "Detection Analysis",
+        "root_cause": "Root Cause (summary after 5-Whys)",
+        "save_button": "💾 Save 8D Report",
+        "success": "✅ NPQP 8D Report saved successfully."
+    },
+    "es": {
+        "app_title": "📑 Aplicación de Entrenamiento 8D",
+        "report_date": "📅 Fecha del Reporte",
+        "prepared_by": "✍️ Elaborado Por",
+        "occurrence_analysis": "Análisis de Ocurrencia",
+        "detection_analysis": "Análisis de Detección",
+        "root_cause": "Causa Raíz (resumen después de 5-Whys)",
+        "save_button": "💾 Guardar Reporte 8D",
+        "success": "✅ Reporte 8D NPQP guardado correctamente."
+    }
+}
 
 # ---------------------------
-# NPQP 8D Steps with training notes/examples
+# Language selection
+# ---------------------------
+lang = st.selectbox("Language / Idioma", ["English", "Español"])
+lang = "en" if lang == "English" else "es"
+
+# ---------------------------
+# NPQP 8D Steps
 # ---------------------------
 npqp_steps = [
     ("D1: Concern Details",
@@ -45,8 +71,8 @@ npqp_steps = [
      "Define temporary containment actions to prevent the customer from seeing the problem while permanent actions are developed.",
      "Example: 100% inspection of amplifiers before shipment; use of temporary shielding; quarantine of affected batches."),
     ("D5: Final Analysis",
-     "Use 5-Why analysis to determine the root cause. Separate by Occurrence (why it happened) and Detection (why it wasn’t detected).",
-     ""),  # Training guidance added dynamically
+     "Use 5-Why analysis to determine the root cause. Occurrence & Detection separate.",
+     ""),
     ("D6: Permanent Corrective Actions",
      "Define corrective actions that eliminate the root cause permanently and prevent recurrence.",
      "Example: Update soldering process, retrain operators, update work instructions, and add automated inspection."),
@@ -59,19 +85,7 @@ npqp_steps = [
 ]
 
 # ---------------------------
-# Initialize session state
-# ---------------------------
-for step, _, _ in npqp_steps:
-    if step not in st.session_state:
-        st.session_state[step] = {"answer": "", "extra": ""}
-
-st.session_state.setdefault("report_date", datetime.datetime.today().strftime("%B %d, %Y"))
-st.session_state.setdefault("prepared_by", "")
-st.session_state.setdefault("occ_whys", [""]*5)
-st.session_state.setdefault("det_whys", [""]*5)
-
-# ---------------------------
-# Color dictionary for Excel
+# Step colors for Excel
 # ---------------------------
 step_colors = {
     "D1: Concern Details": "ADD8E6",
@@ -85,88 +99,102 @@ step_colors = {
 }
 
 # ---------------------------
-# Smart 5-Why suggestions (offline, context-based)
+# Session state initialization
 # ---------------------------
-OCC_SUG = [
-    {"cause": "Cold solder joint on DSP chip", "keywords": ["solder","joint","chip"]},
-    {"cause": "Incorrect assembly process", "keywords": ["assembly","process"]},
-    {"cause": "Operator error", "keywords": ["operator","manual"]},
-    {"cause": "Material defect", "keywords": ["material","component"]},
-    {"cause": "Work instructions unclear", "keywords": ["instructions","procedure"]}
+for step, _, _ in npqp_steps:
+    if step not in st.session_state:
+        st.session_state[step] = {"answer": "", "extra": ""}
+st.session_state.setdefault("report_date", "")
+st.session_state.setdefault("prepared_by", "")
+st.session_state.setdefault("d5_occ_whys", [""]*5)
+st.session_state.setdefault("d5_det_whys", [""]*5)
+
+# ---------------------------
+# Offline 5-Why suggestions
+# ---------------------------
+OCCURRENCE_SUGGESTIONS = [
+    "Cold solder joint on DSP chip",
+    "Loose connector",
+    "Incorrect assembly",
+    "Component misalignment",
+    "Design tolerance issue"
+]
+DETECTION_SUGGESTIONS = [
+    "No inspection at this step",
+    "Inspection procedure unclear",
+    "Test not sensitive enough",
+    "Human error during check",
+    "Missing test step"
 ]
 
-DET_SUG = [
-    {"cause": "QA inspection missed cold joint", "keywords": ["qa","inspection","missed"]},
-    {"cause": "Checklist incomplete", "keywords": ["checklist","incomplete"]},
-    {"cause": "No automated test step", "keywords": ["automated","test"]},
-    {"cause": "Batch testing not performed", "keywords": ["batch","testing"]},
-    {"cause": "Early warning signal not tracked", "keywords": ["early","warning","signal"]}
-]
-
-def smart_suggestions(prev_answers, sug_list):
-    text = " ".join(prev_answers).lower()
-    suggestions = [s["cause"] for s in sug_list if any(k in text for k in s["keywords"])]
-    return suggestions[:3]  # max 3 suggestions
+def suggest_next_why(previous_whys, mode="occurrence"):
+    if mode=="occurrence":
+        suggestions = [s for s in OCCURRENCE_SUGGESTIONS if s not in previous_whys]
+    else:
+        suggestions = [s for s in DETECTION_SUGGESTIONS if s not in previous_whys]
+    return suggestions[:3]
 
 # ---------------------------
 # Report info
 # ---------------------------
-st.subheader("Report Information")
-st.session_state.report_date = st.text_input("📅 Report Date", value=st.session_state.report_date)
-st.session_state.prepared_by = st.text_input("✍️ Prepared By", value=st.session_state.prepared_by)
+today_str = datetime.datetime.today().strftime("%B %d, %Y")
+st.session_state.report_date = st.text_input(TEXTS[lang]["report_date"], value=today_str)
+st.session_state.prepared_by = st.text_input(TEXTS[lang]["prepared_by"], value=st.session_state.prepared_by)
 
 # ---------------------------
 # Tabs for each step
 # ---------------------------
-tabs = st.tabs([step for step,_,_ in npqp_steps])
+tabs = st.tabs([step for step, _, _ in npqp_steps])
+
 for i, (step, note, example) in enumerate(npqp_steps):
     with tabs[i]:
         st.markdown(f"### {step}")
+        if note:
+            st.info(f"**Training Guidance:** {note}\n\n💡 **Example:** {example}")
+
         if step.startswith("D5"):
-            st.info("**Guidance:** Use 5-Why analysis to find the root cause. Occurrence vs Detection.")
+            st.markdown(f"#### {TEXTS[lang]['occurrence_analysis']}")
+            for idx in range(5):
+                suggestions = suggest_next_why(st.session_state.d5_occ_whys[:idx], mode="occurrence")
+                options = [""] + suggestions
+                st.session_state.d5_occ_whys[idx] = st.selectbox(
+                    f"Occurrence Why {idx+1}",
+                    options=options,
+                    index=options.index(st.session_state.d5_occ_whys[idx]) if st.session_state.d5_occ_whys[idx] in options else 0,
+                    key=f"d5_occ_{idx}"
+                )
             
-            st.markdown("#### Occurrence Analysis")
-            for idx, val in enumerate(st.session_state.occ_whys):
-                col1, col2 = st.columns([3,1])
-                with col1:
-                    st.session_state.occ_whys[idx] = st.text_input(f"Occurrence Why {idx+1}", value=val, key=f"occ_{idx}")
-                with col2:
-                    suggs = smart_suggestions(st.session_state.occ_whys[:idx], OCC_SUG)
-                    for sug in suggs:
-                        if st.button(sug, key=f"occ_sug_{idx}_{sug}"):
-                            st.session_state.occ_whys[idx] = sug
-
-            st.markdown("#### Detection Analysis")
-            for idx, val in enumerate(st.session_state.det_whys):
-                col1, col2 = st.columns([3,1])
-                with col1:
-                    st.session_state.det_whys[idx] = st.text_input(f"Detection Why {idx+1}", value=val, key=f"det_{idx}")
-                with col2:
-                    suggs = smart_suggestions(st.session_state.det_whys[:idx], DET_SUG)
-                    for sug in suggs:
-                        if st.button(sug, key=f"det_sug_{idx}_{sug}"):
-                            st.session_state.det_whys[idx] = sug
-
+            st.markdown(f"#### {TEXTS[lang]['detection_analysis']}")
+            for idx in range(5):
+                suggestions = suggest_next_why(st.session_state.d5_det_whys[:idx], mode="detection")
+                options = [""] + suggestions
+                st.session_state.d5_det_whys[idx] = st.selectbox(
+                    f"Detection Why {idx+1}",
+                    options=options,
+                    index=options.index(st.session_state.d5_det_whys[idx]) if st.session_state.d5_det_whys[idx] in options else 0,
+                    key=f"d5_det_{idx}"
+                )
+            
             st.session_state[step]["answer"] = (
-                "Occurrence Analysis:\n" + "\n".join([w for w in st.session_state.occ_whys if w.strip()]) +
-                "\n\nDetection Analysis:\n" + "\n".join([w for w in st.session_state.det_whys if w.strip()])
+                "Occurrence Analysis:\n" + "\n".join([w for w in st.session_state.d5_occ_whys if w.strip()]) +
+                "\n\nDetection Analysis:\n" + "\n".join([w for w in st.session_state.d5_det_whys if w.strip()])
             )
-            st.session_state[step]["extra"] = st.text_area("Root Cause (summary after 5-Whys)", value=st.session_state[step]["extra"], key="root_cause")
         else:
-            st.session_state[step]["answer"] = st.text_area(f"Your Answer for {step}", value=st.session_state[step]["answer"], key=f"ans_{step}")
-            if step.startswith("D1"):
-                st.session_state[step]["extra"] = st.text_area("Extra Notes for D1", value=st.session_state[step]["extra"], key="extra_D1")
+            st.session_state[step]["answer"] = st.text_area(f"Your Answer for {step}", value=st.session_state[step]["answer"])
+
+        if step.startswith("D1"):
+            st.session_state[step]["extra"] = st.text_area(TEXTS[lang]['root_cause'], value=st.session_state[step]["extra"])
 
 # ---------------------------
 # Collect answers for Excel
 # ---------------------------
-data_rows = [(step, st.session_state[step]["answer"], st.session_state[step]["extra"]) for step,_,_ in npqp_steps]
+data_rows = [(step, st.session_state[step]["answer"], st.session_state[step]["extra"]) for step, _, _ in npqp_steps]
 
 # ---------------------------
-# Save button with styled Excel
+# Save button
 # ---------------------------
-if st.button("💾 Save 8D Report"):
-    if not any(ans for _,ans,_ in data_rows):
+if st.button(TEXTS[lang]["save_button"]):
+    if not any(ans for _, ans, _ in data_rows):
         st.error("⚠️ No answers filled in yet. Please complete some fields before saving.")
     else:
         xlsx_file = "NPQP_8D_Report.xlsx"
@@ -188,7 +216,7 @@ if st.button("💾 Save 8D Report"):
         ws["B4"] = st.session_state.prepared_by
 
         # Headers
-        headers = ["Step", "Your Answer", "Root Cause / Extra"]
+        headers = ["Step", "Your Answer", "Extra"]
         header_fill = PatternFill(start_color="C0C0C0", end_color="C0C0C0", fill_type="solid")
         row = 6
         for col, header in enumerate(headers, start=1):
@@ -203,18 +231,16 @@ if st.button("💾 Save 8D Report"):
             ws.cell(row=row, column=1, value=step)
             ws.cell(row=row, column=2, value=ans)
             ws.cell(row=row, column=3, value=extra)
-
             fill_color = step_colors.get(step, "FFFFFF")
             for col in range(1, 4):
                 ws.cell(row=row, column=col).fill = PatternFill(start_color=fill_color, end_color=fill_color, fill_type="solid")
                 ws.cell(row=row, column=col).alignment = Alignment(wrap_text=True, vertical="top")
             row += 1
 
-        # Adjust column widths
         for col in range(1, 4):
             ws.column_dimensions[get_column_letter(col)].width = 40
 
         wb.save(xlsx_file)
-        st.success("✅ NPQP 8D Report saved successfully.")
+        st.success(TEXTS[lang]["success"])
         with open(xlsx_file, "rb") as f:
             st.download_button("📥 Download XLSX", f, file_name=xlsx_file)
