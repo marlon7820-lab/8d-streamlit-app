@@ -2,3 +2,4 @@ streamlit
 openpyxl
 deep-translator
 googletrans==4.0.0-rc1
+httpx==0.24.1
