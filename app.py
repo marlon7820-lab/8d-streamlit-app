@@ -26,6 +26,8 @@ header {visibility: hidden;}
 # Language selection
 # ---------------------------
 lang = st.selectbox("Language / Idioma", ["English", "Español"])
+
+# Text labels
 t = {}
 if lang=="English":
     t = {
@@ -58,22 +60,49 @@ else:
 # 8D Steps
 # ---------------------------
 npqp_steps = [
-    ("D1: Concern Details","Describe the customer concerns clearly.","Example: Customer reported static noise in amplifier."),
-    ("D2: Similar Part Considerations","Check similar parts or models.","Example: Same speaker used in another radio model."),
-    ("D3: Initial Analysis","Perform initial investigation.","Example: Visual inspection, functional tests."),
-    ("D4: Implement Containment","Define temporary containment actions.","Example: Quarantine affected batches."),
-    ("D5: Final Analysis","",""),  # Interactive 5-Why will be handled separately
-    ("D6: Permanent Corrective Actions","Define corrective actions.","Example: Update process, retrain operators."),
-    ("D7: Countermeasure Confirmation","Verify effectiveness of corrective actions.","Example: Functional tests, monitoring."),
-    ("D8: Follow-up Activities","Document lessons learned.","Example: Update SOPs, FMEA, training.")
+    ("D1", "Concern Details", "Describe the customer concerns clearly.", ["Customer reported static noise in amplifier","Customer received wrong part","Customer reported overheating"]),
+    ("D2", "Similar Part Considerations", "Check similar parts or models.", ["Same speaker used in another radio model","Check same batch of PCB","Similar connector in other assembly"]),
+    ("D3", "Initial Analysis", "Perform initial investigation.", ["Visual inspection","Functional tests","Check logs for error codes"]),
+    ("D4", "Implement Containment", "Define temporary containment actions.", ["Quarantine affected batches","Immediate replacement","Customer notification"]),
+    ("D5", "Final Analysis", "Perform root cause analysis with 5-Why.", ["Check occurrence root cause","Check detection gap","Review process documentation"]),
+    ("D6", "Permanent Corrective Actions", "Define corrective actions.", ["Update process","Retrain operators","Modify inspection procedure"]),
+    ("D7", "Countermeasure Confirmation", "Verify effectiveness of corrective actions.", ["Functional tests","Monitor next batch","Customer feedback verification"]),
+    ("D8", "Follow-up Activities", "Document lessons learned.", ["Update SOPs","Update FMEA","Team training"])
 ]
+
+# ---------------------------
+# Language mapping for step titles
+# ---------------------------
+step_titles = {
+    "English": {
+        "D1":"D1: Concern Details",
+        "D2":"D2: Similar Part Considerations",
+        "D3":"D3: Initial Analysis",
+        "D4":"D4: Implement Containment",
+        "D5":"D5: Final Analysis",
+        "D6":"D6: Permanent Corrective Actions",
+        "D7":"D7: Countermeasure Confirmation",
+        "D8":"D8: Follow-up Activities"
+    },
+    "Español": {
+        "D1":"D1: Detalles de la Preocupación",
+        "D2":"D2: Consideraciones de Partes Similares",
+        "D3":"D3: Análisis Inicial",
+        "D4":"D4: Implementar Contención",
+        "D5":"D5: Análisis Final",
+        "D6":"D6: Acciones Correctivas Permanentes",
+        "D7":"D7: Confirmación de Contramedidas",
+        "D8":"D8: Actividades de Seguimiento"
+    }
+}
 
 # ---------------------------
 # Session state initialization
 # ---------------------------
-for step, _, _ in npqp_steps:
+for step, _, _, _ in npqp_steps:
     if step not in st.session_state:
         st.session_state[step] = {"answer": "", "extra": ""}
+
 st.session_state.setdefault("report_date", datetime.datetime.today().strftime("%B %d, %Y"))
 st.session_state.setdefault("prepared_by", "")
 
@@ -83,14 +112,14 @@ st.session_state.setdefault("d5_det", [""]*5)
 
 # Excel colors
 step_colors = {
-    "D1: Concern Details": "ADD8E6",
-    "D2: Similar Part Considerations": "90EE90",
-    "D3: Initial Analysis": "FFFF99",
-    "D4: Implement Containment": "FFD580",
-    "D5: Final Analysis": "FF9999",
-    "D6: Permanent Corrective Actions": "D8BFD8",
-    "D7: Countermeasure Confirmation": "E0FFFF",
-    "D8: Follow-up Activities": "D3D3D3"
+    "D1": "ADD8E6",
+    "D2": "90EE90",
+    "D3": "FFFF99",
+    "D4": "FFD580",
+    "D5": "FF9999",
+    "D6": "D8BFD8",
+    "D7": "E0FFFF",
+    "D8": "D3D3D3"
 }
 
 # ---------------------------
@@ -103,19 +132,17 @@ st.session_state.prepared_by = st.text_input(t["prepared_by"], value=st.session_
 # ---------------------------
 # Tabs for steps
 # ---------------------------
-tabs = st.tabs([step for step,_,_ in npqp_steps])
-for i, (step, note, example) in enumerate(npqp_steps):
+tabs = st.tabs([step_titles[lang][step] for step,_,_,_ in npqp_steps])
+for i, (step, name, note, examples) in enumerate(npqp_steps):
     with tabs[i]:
-        st.markdown(f"### {step}")
-
-        if step!="D5: Final Analysis":
-            # Training guidance
-            if note:
-                st.info(f"**Training Guidance:** {note}\n\n💡 **Example:** {example}")
+        st.markdown(f"### {step_titles[lang][step]}")
+        if step!="D5":
+            st.info(f"**Training Guidance:** {note}\n\n💡 **Examples:** {', '.join(examples)}")
             st.session_state[step]["answer"] = st.text_area(t["answer"], value=st.session_state[step]["answer"], key=f"ans_{step}")
-            if step=="D1: Concern Details":
+            if step=="D1":
                 st.session_state[step]["extra"] = st.text_area(t["root_cause"], value=st.session_state[step]["extra"], key=f"extra_{step}")
         else:
+            st.info(f"**Training Guidance:** {note}\n\n💡 **Examples:** {', '.join(examples)}")
             # Interactive 5-Why
             def get_suggestions(prev):
                 if not prev: return []
@@ -155,7 +182,7 @@ for i, (step, note, example) in enumerate(npqp_steps):
 # Collect data rows
 # ---------------------------
 data_rows = []
-for step,_ ,_ in npqp_steps:
+for step,_ ,_,_ in npqp_steps:
     ans = st.session_state[step]["answer"]
     extra = st.session_state[step]["extra"]
     data_rows.append((step, ans, extra))
@@ -198,7 +225,7 @@ if st.button(t["save"]):
         # Content
         row = 7
         for step, ans, extra in data_rows:
-            ws.cell(row=row, column=1, value=step)
+            ws.cell(row=row, column=1, value=step_titles[lang][step])
             ws.cell(row=row, column=2, value=ans)
             ws.cell(row=row, column=3, value=extra)
             fill_color = step_colors.get(step, "FFFFFF")
