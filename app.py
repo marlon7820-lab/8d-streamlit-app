@@ -153,7 +153,7 @@ tab_current, tab_5why, tab_ai = st.tabs([
 with tab_current:
     for i, (step, note, example) in enumerate(npqp_steps):
         st.markdown(f"### {step}")
-        if step.startswith("D5") or step.startswith("D5:") or step.startswith("D5: Análisis Final"):
+        if step.startswith("D5"):
             full_training_note = (
                 "**Training Guidance / Guía de Entrenamiento:** Use 5-Why analysis to determine the root cause.\n\n"
                 "**Occurrence Example / Ejemplo de Ocurrencia (5-Whys):**\n"
@@ -196,5 +196,52 @@ with tab_current:
                 "\n\nDetection Analysis:\n" + "\n".join([w for w in st.session_state.d5_det_whys if w.strip()])
             )
 
-            # Root Cause field
-            st.session_state[step]["extra"] = st.text_area("Root Cause (summary after 5-Whys) / Causa Raíz
+            # Root Cause field (fixed syntax)
+            st.session_state[step]["extra"] = st.text_area(
+                "Root Cause (summary after 5-Whys) / Causa Raíz",
+                value=st.session_state[step]["extra"],
+                key=f"{step}_root_cause"
+            )
+        else:
+            st.session_state[step]["answer"] = st.text_area(f"Your Answer for {step} / Su Respuesta para {step}",
+                                                             value=st.session_state[step]["answer"],
+                                                             key=f"ans_{step}")
+
+# ---------------------------
+# Interactive 5-Why Tab
+# ---------------------------
+with tab_5why:
+    st.header("Interactive 5-Why Analysis (AI-Powered)")
+
+    for idx, val in enumerate(st.session_state.interactive_whys):
+        placeholder = st.empty()
+        st.session_state.interactive_whys[idx] = placeholder.text_input(
+            f"Why {idx+1}", value=val, key=f"interactive_why_{idx}"
+        )
+        if val.strip() != "":
+            suggestion = ai_suggestion_for_next_why(val)
+            st.markdown(f"*Suggested next question / Siguiente sugerencia: {suggestion}*")
+
+    if st.button("➕ Add another Why / Agregar otro Porqué", key="add_dynamic_why"):
+        st.session_state.interactive_whys.append("")
+
+    root_cause = ai_root_cause_summary(st.session_state.interactive_whys)
+    st.session_state.interactive_root_cause = root_cause
+    st.text_area("AI Suggested Root Cause / Causa Raíz sugerida por AI", value=root_cause, height=150)
+
+# ---------------------------
+# AI Helper Tab
+# ---------------------------
+with tab_ai:
+    st.header(t["ai_helper"])
+    st.info("This tab can provide additional AI guidance or corrective action suggestions / Este tab puede proporcionar sugerencias adicionales de AI.")
+    if st.button("Generate AI Suggestions / Generar Sugerencias AI"):
+        whys_text = "\n".join([w for w in st.session_state.interactive_whys if w.strip()])
+        st.text_area("AI Suggestions / Sugerencias AI", f"AI would analyze the following 5-Whys:\n{whys_text}\n\nand provide recommendations here." if lang=="en" else f"AI analizaría los siguientes 5-Whys:\n{whys_text}\n\ny proporcionaría recomendaciones aquí.")
+
+# ---------------------------
+# Save Button (Excel Export)
+# ---------------------------
+if st.button(t["save_report"]):
+    data_rows = [(step, st.session_state[step]["answer"], st.session_state[step]["extra"]) for step, _, _ in npqp_steps]
+    data_rows.append(("Interactive 5-Why", "\n".join([w for w in st.session_state.interactive_whys if w.strip()]),
