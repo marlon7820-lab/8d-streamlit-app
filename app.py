@@ -6,6 +6,13 @@ import datetime
 import openai
 
 # ---------------------------
+# Set OpenAI API key
+# ---------------------------
+# Option A: via environment variable / Streamlit secrets (recommended)
+# Option B: uncomment below for direct key (less secure)
+# openai.api_key = "YOUR_API_KEY_HERE"
+
+# ---------------------------
 # Page config and branding
 # ---------------------------
 st.set_page_config(
@@ -14,16 +21,14 @@ st.set_page_config(
     layout="wide"
 )
 
-# Hide Streamlit default menu, header, and footer
 hide_streamlit_style = """
-            <style>
-            #MainMenu {visibility: hidden;}
-            footer {visibility: hidden;}
-            header {visibility: hidden;}
-            </style>
-            """
+<style>
+#MainMenu {visibility: hidden;}
+footer {visibility: hidden;}
+header {visibility: hidden;}
+</style>
+"""
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
-
 st.markdown("<h1 style='text-align: center; color: #1E90FF;'>📑 8D Training App</h1>", unsafe_allow_html=True)
 
 # ---------------------------
@@ -46,7 +51,7 @@ st.session_state.setdefault("report_date", "")
 st.session_state.setdefault("prepared_by", "")
 
 # ---------------------------
-# Guidelines for each step
+# Guidelines
 # ---------------------------
 guidelines = {
     "D1": {"en":"Describe customer concerns clearly.", "es":"Describa claramente las preocupaciones del cliente."},
@@ -60,28 +65,55 @@ guidelines = {
 }
 
 # ---------------------------
+# Helper: AI translation
+# ---------------------------
+def translate_text(text, target_lang):
+    if not text.strip():
+        return text
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-4",
+            messages=[
+                {"role":"system","content":f"Translate the following text to {'English' if target_lang=='en' else 'Spanish'}."},
+                {"role":"user","content":text}
+            ]
+        )
+        return response.choices[0].message["content"].strip()
+    except Exception as e:
+        st.warning(f"Translation failed: {e}")
+        return text
+
+# ---------------------------
+# Helper: AI root cause suggestion
+# ---------------------------
+def suggest_root_cause(whys_list, lang="en"):
+    chain_text = "\n".join([f"{i+1}. {w}" for i, w in enumerate(whys_list) if w.strip()])
+    if not chain_text:
+        return ""
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-4",
+            messages=[
+                {"role":"system", "content": f"Based on the following 5-Why analysis, suggest a concise root cause in {'English' if lang=='en' else 'Spanish'}."},
+                {"role":"user", "content": chain_text}
+            ]
+        )
+        return response.choices[0].message["content"].strip()
+    except Exception as e:
+        st.warning(f"Root cause suggestion failed: {e}")
+        return ""
+
+# ---------------------------
 # Language selection
 # ---------------------------
 lang = st.radio("Language / Idioma", ["en", "es"], horizontal=True)
 
-# Translate entered answers if language changed
+# Translate answers if language switched
 if lang != st.session_state.prev_lang:
     for sid in steps:
-        # Translate main answer
         if st.session_state[f"ans_{sid}"]:
-            try:
-                response = openai.ChatCompletion.create(
-                    model="gpt-4",
-                    messages=[
-                        {"role":"system","content":f"Translate text to {'English' if lang=='en' else 'Spanish'}."},
-                        {"role":"user","content":st.session_state[f"ans_{sid}"]}
-                    ]
-                )
-                st.session_state[f"ans_{sid}"] = response.choices[0].message["content"].strip()
-            except Exception:
-                pass
-    # Translate 5-Whys
-    st.session_state.interactive_whys = [w for w in st.session_state.interactive_whys]
+            st.session_state[f"ans_{sid}"] = translate_text(st.session_state[f"ans_{sid}"], lang)
+    st.session_state.interactive_whys = [translate_text(w, lang) for w in st.session_state.interactive_whys]
     st.session_state.prev_lang = lang
 
 # ---------------------------
@@ -116,13 +148,17 @@ for i, sid in enumerate(steps):
                     value=st.session_state.interactive_whys[idx],
                     key=f"why_{idx}"
                 )
-                # show next input if current filled
                 if idx == len(st.session_state.interactive_whys)-1 and st.session_state.interactive_whys[idx].strip():
                     st.session_state.interactive_whys.append("")
             
             if st.button("Generate Root Cause Suggestion / Sugerencia de Causa Raíz"):
-                chain = " -> ".join([w for w in st.session_state.interactive_whys if w.strip()])
-                st.success(f"Suggested Root Cause / Causa Raíz Sugerida: {chain}")
+                whys_input = [w for w in st.session_state.interactive_whys if w.strip()]
+                suggested_cause = suggest_root_cause(whys_input, lang)
+                if suggested_cause:
+                    st.success(f"Suggested Root Cause / Causa Raíz Sugerida: {suggested_cause}")
+                    st.session_state.D5["extra"] = suggested_cause
+                else:
+                    st.warning("No suggestion generated. Please fill in the Why fields.")
 
 # ---------------------------
 # Save to Excel
@@ -165,10 +201,11 @@ if st.button("💾 Save 8D Report / Guardar Reporte 8D"):
 
     for sid in steps:
         ans = st.session_state[sid]["answer"]
-        extra = ""  # Optional root cause column, can include interactive 5why
+        extra = ""
         if sid=="D5":
             extra = "\n".join([w for w in st.session_state.interactive_whys if w.strip()])
-
+            if st.session_state.D5.get("extra"):
+                extra += "\nAI Root Cause Suggestion: " + st.session_state.D5["extra"]
         ws.cell(row=row, column=1, value=sid)
         ws.cell(row=row, column=2, value=ans)
         ws.cell(row=row, column=3, value=extra)
@@ -178,7 +215,6 @@ if st.button("💾 Save 8D Report / Guardar Reporte 8D"):
             ws.cell(row=row, column=col).alignment = Alignment(wrap_text=True, vertical="top")
         row += 1
 
-    # Adjust column widths
     for col in range(1,4):
         ws.column_dimensions[get_column_letter(col)].width = 40
 
