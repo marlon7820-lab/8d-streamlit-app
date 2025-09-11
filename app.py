@@ -3,15 +3,31 @@ from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, PatternFill
 from openpyxl.utils import get_column_letter
 import datetime
-import openai
+from transformers import pipeline
 
 # ---------------------------
-# OpenAI client setup
+# Load AI model (Hugging Face GPT-2)
 # ---------------------------
-client = openai.OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+@st.cache_resource
+def load_ai_model():
+    return pipeline('text-generation', model='gpt2')
+
+generator = load_ai_model()
+
+def suggest_root_cause_hf(whys_list, lang="en"):
+    chain_text = "\n".join([f"{i+1}. {w}" for i, w in enumerate(whys_list) if w.strip()])
+    if not chain_text:
+        return ""
+    prompt = f"Based on the following 5-Why analysis, suggest a concise root cause in {'English' if lang=='en' else 'Spanish'}:\n{chain_text}\nRoot Cause:"
+    try:
+        response = generator(prompt, max_length=150, do_sample=True, temperature=0.7)
+        return response[0]['generated_text'].split("Root Cause:")[-1].strip()
+    except Exception as e:
+        st.warning(f"Root cause suggestion failed: {e}")
+        return ""
 
 # ---------------------------
-# Page config and branding
+# Page config
 # ---------------------------
 st.set_page_config(
     page_title="8D Training App",
@@ -30,7 +46,7 @@ header {visibility: hidden;}
 st.markdown("<h1 style='text-align: center; color: #1E90FF;'>📑 8D Training App</h1>", unsafe_allow_html=True)
 
 # ---------------------------
-# Steps and guidelines
+# Steps & guidelines
 # ---------------------------
 steps = ["D1","D2","D3","D4","D5","D6","D7","D8"]
 guidelines = {
@@ -59,55 +75,22 @@ st.session_state.setdefault("prepared_by", "")
 st.session_state.setdefault("prev_lang", "en")
 
 # ---------------------------
-# Helper: translation
+# Simple offline translation placeholder
 # ---------------------------
-def translate_text(text, target_lang):
-    if not text.strip():
-        return text
-    try:
-        response = client.chat.completions.create(
-            model="gpt-4",
-            messages=[
-                {"role":"system","content":f"Translate the following text to {'English' if target_lang=='en' else 'Spanish'}."},
-                {"role":"user","content":text}
-            ]
-        )
-        return response.choices[0].message.content.strip()
-    except Exception as e:
-        st.warning(f"Translation failed: {e}")
-        return text
-
-# ---------------------------
-# Helper: AI root cause suggestion
-# ---------------------------
-def suggest_root_cause(whys_list, lang="en"):
-    chain_text = "\n".join([f"{i+1}. {w}" for i, w in enumerate(whys_list) if w.strip()])
-    if not chain_text:
-        return ""
-    try:
-        response = client.chat.completions.create(
-            model="gpt-4",
-            messages=[
-                {"role":"system", "content": f"Based on the following 5-Why analysis, suggest a concise root cause in {'English' if lang=='en' else 'Spanish'}."},
-                {"role":"user", "content": chain_text}
-            ]
-        )
-        return response.choices[0].message.content.strip()
-    except Exception as e:
-        st.warning(f"Root cause suggestion failed: {e}")
-        return ""
+def translate_text_offline(text, target_lang):
+    # Placeholder: does not actually translate
+    return text
 
 # ---------------------------
 # Language selection
 # ---------------------------
 lang = st.radio("Language / Idioma", ["en", "es"], horizontal=True)
 
-# Translate answers if language switched
 if lang != st.session_state.prev_lang:
     for sid in steps:
         if st.session_state[f"ans_{sid}"]:
-            st.session_state[f"ans_{sid}"] = translate_text(st.session_state[f"ans_{sid}"], lang)
-    st.session_state.interactive_whys = [translate_text(w, lang) for w in st.session_state.interactive_whys]
+            st.session_state[f"ans_{sid}"] = translate_text_offline(st.session_state[f"ans_{sid}"], lang)
+    st.session_state.interactive_whys = [translate_text_offline(w, lang) for w in st.session_state.interactive_whys]
     st.session_state.prev_lang = lang
 
 # ---------------------------
@@ -119,7 +102,7 @@ st.session_state.report_date = st.text_input("📅 Report Date / Fecha del Repor
 st.session_state.prepared_by = st.text_input("✍️ Prepared By / Preparado por", st.session_state.prepared_by)
 
 # ---------------------------
-# Tabs for each step
+# Tabs for steps
 # ---------------------------
 tabs = st.tabs(steps)
 for i, sid in enumerate(steps):
@@ -133,7 +116,6 @@ for i, sid in enumerate(steps):
         )
         st.session_state[sid]["answer"] = st.session_state[f"ans_{sid}"]
 
-        # Only D5: interactive 5-Why
         if sid=="D5":
             st.markdown("### Interactive 5-Why / 5-Porqués Interactivo")
             for idx in range(len(st.session_state.interactive_whys)):
@@ -144,15 +126,15 @@ for i, sid in enumerate(steps):
                 )
                 if idx == len(st.session_state.interactive_whys)-1 and st.session_state.interactive_whys[idx].strip():
                     st.session_state.interactive_whys.append("")
-            
+
             if st.button("Generate Root Cause Suggestion / Sugerencia de Causa Raíz"):
                 whys_input = [w for w in st.session_state.interactive_whys if w.strip()]
-                suggested_cause = suggest_root_cause(whys_input, lang)
+                suggested_cause = suggest_root_cause_hf(whys_input, lang)
                 if suggested_cause:
                     st.success(f"Suggested Root Cause / Causa Raíz Sugerida: {suggested_cause}")
                     st.session_state.D5["extra"] = suggested_cause
                 else:
-                    st.warning("No suggestion generated. Please fill in the Why fields.")
+                    st.warning("No suggestion generated. Fill in the Why fields.")
 
 # ---------------------------
 # Save to Excel
@@ -206,4 +188,18 @@ if st.button("💾 Save 8D Report / Guardar Reporte 8D"):
         ws.cell(row=row, column=2, value=ans)
         ws.cell(row=row, column=3, value=extra)
 
-        fill_color
+        fill_color = step_colors.get(sid,"FFFFFF")
+        for col in range(1,4):
+            ws.cell(row=row, column=col).fill = PatternFill(start_color=fill_color, end_color=fill_color, fill_type="solid")
+            ws.cell(row=row, column=col).alignment = Alignment(wrap_text=True, vertical="top")
+        row += 1
+
+    # Adjust column widths
+    for col in range(1,4):
+        ws.column_dimensions[get_column_letter(col)].width = 40
+
+    wb.save(xlsx_file)
+
+    st.success("✅ NPQP 8D Report saved successfully.")
+    with open(xlsx_file, "rb") as f:
+        st.download_button("📥 Download XLSX", f, file_name=xlsx_file)
