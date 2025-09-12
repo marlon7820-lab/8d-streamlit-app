@@ -197,3 +197,4 @@ if st.button("💾 Save 8D Report / Guardar Reporte"):
             fill_color = step_colors.get(step, "FFFFFF")
             for col in range(1,4):
                 ws.cell(row=row, column=col).fill = PatternFill(start_color=fill_color, end_color=
+                                                               )
