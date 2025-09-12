@@ -240,17 +240,18 @@ with st.sidebar:
 
     st.markdown("---")
     st.markdown("### Reset All Data")
-   if st.button("🗑️ Clear All"):
-    # Reset each D-step
-    for step, _, _ in npqp_steps:
-        st.session_state[step] = {"answer": "", "extra": ""}
-    # Reset report info
-    st.session_state["report_date"] = datetime.datetime.today().strftime("%B %d, %Y")
-    st.session_state["prepared_by"] = ""
-    # Reset D5 whys safely
-    st.session_state["d5_occ_whys"] = [""] * 5
-    st.session_state["d5_det_whys"] = [""] * 5
-    # Ensure keys exist before rerun
-    for step in ["D1","D2","D3","D4","D5","D6","D7","D8"]:
-        st.session_state.setdefault(step, {"answer":"", "extra":""})
-    st.experimental_rerun()
+
+    if st.button("🗑️ Clear All"):
+        # Reset each D-step
+        for step, _, _ in npqp_steps:
+            st.session_state[step] = {"answer": "", "extra": ""}
+        # Reset report info
+        st.session_state["report_date"] = datetime.datetime.today().strftime("%B %d, %Y")
+        st.session_state["prepared_by"] = ""
+        # Reset D5 whys safely
+        st.session_state["d5_occ_whys"] = [""] * 5
+        st.session_state["d5_det_whys"] = [""] * 5
+        # Ensure all D-steps exist
+        for step in ["D1","D2","D3","D4","D5","D6","D7","D8"]:
+            st.session_state.setdefault(step, {"answer":"", "extra":""})
+        st.experimental_rerun()
