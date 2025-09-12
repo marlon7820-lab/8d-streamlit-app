@@ -6,9 +6,10 @@ import io
 
 # ---------------------------
 # Page config and branding
-# ---------------------------st.set_page_config(
-    page_title="8D Report Assistant",
-    page_icon="https://raw.githubusercontent.com/<your-username>/<your-repo>/main/<your-logo-file>.png",
+# ---------------------------
+st.set_page_config(
+    page_title="8D Report Assistant",  # Updated page title
+    page_icon="logo.png",              # Updated to local logo file
     layout="wide"
 )
 
@@ -21,7 +22,8 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-st.markdown("<h1 style='text-align: center; color: #1E90FF;'>📑 8D Training App</h1>", unsafe_allow_html=True)
+# Update app title with new name
+st.markdown("<h1 style='text-align: center; color: #1E90FF;'>📋 8D Report Assistant</h1>", unsafe_allow_html=True)
 
 # ---------------------------
 # Language selection
