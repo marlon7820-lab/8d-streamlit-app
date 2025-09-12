@@ -188,7 +188,7 @@ if st.button("💾 Save 8D Report / Guardar Reporte"):
             cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
             cell.fill = header_fill
 
-      # Content
+     # Content
 row = 7
 for step, ans, extra in data_rows:
     ws.cell(row=row, column=1, value=step)
@@ -200,6 +200,9 @@ for step, ans, extra in data_rows:
             start_color=fill_color,
             end_color=fill_color,
             fill_type="solid"
+        )
+        ws.cell(row=row, column=col).alignment = Alignment(
+            wrap_text=True, vertical="top"
         )
     row += 1
                                                                )
