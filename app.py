@@ -100,21 +100,22 @@ st.session_state.report_date = st.text_input(f"{t[lang_key]['Report_Date']}", va
 st.session_state.prepared_by = st.text_input(f"{t[lang_key]['Prepared_By']}", value=st.session_state.prepared_by)
 
 # ---------------------------
-# Tabs for each step with dynamic colored badges
+# Tabs for each step (with completion badges)
 # ---------------------------
-tab_labels = []
-for step, _, _ in npqp_steps:
-    if st.session_state[step]["answer"].strip() != "":
-        badge = f"<span style='color:white; background-color:#28a745; padding:2px 6px; border-radius:4px;'>Answered</span>"
-    else:
-        badge = f"<span style='color:white; background-color:#dc3545; padding:2px 6px; border-radius:4px;'>Empty</span>"
-    tab_labels.append(f"{t[lang_key][step]} {badge}")
-
-tabs = st.tabs(tab_labels)
-
+tabs = st.tabs([t[lang_key][step] for step, _, _ in npqp_steps])
 for i, (step, note, example) in enumerate(npqp_steps):
     with tabs[i]:
+        # Badge
+        answer_filled = bool(st.session_state[step]["answer"].strip())
+        badge_color = "#28a745" if answer_filled else "#dc3545"
+        badge_text = "Answered" if answer_filled else "Empty"
+        st.markdown(
+            f"<div style='display:inline-block; background-color:{badge_color}; color:white; padding:4px 8px; border-radius:5px; font-weight:bold;'>{badge_text}</div>",
+            unsafe_allow_html=True
+        )
+
         st.markdown(f"### {t[lang_key][step]}")
+
         if step != "D5":
             st.info(f"**{t[lang_key]['Training_Guidance']}:** {note}\n\n💡 **{t[lang_key]['Example']}:** {example}")
             st.session_state[step]["answer"] = st.text_area(f"Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}")
@@ -257,6 +258,6 @@ with st.sidebar:
         st.session_state["d5_det_whys"] = [""] * 5
         st.session_state["report_date"] = datetime.datetime.today().strftime("%B %d, %Y")
         st.session_state["prepared_by"] = ""
-        for step in ["D1","D2","D3","D4","D5","D6","D7","D8"]:
+        for step in ["D1","D2","D        for step in ["D1","D2","D3","D4","D5","D6","D7","D8"]:
             st.session_state.setdefault(step, {"answer":"", "extra":""})
         st.success("✅ All data has been reset!")
