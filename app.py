@@ -1,7 +1,6 @@
 import streamlit as st
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, PatternFill
-from openpyxl.utils import get_column_letter
 import datetime
 
 # ---------------------------
@@ -13,23 +12,19 @@ st.set_page_config(
     layout="wide"
 )
 
-# Hide Streamlit default menu, header, and footer
-hide_streamlit_style = """
+st.markdown("""
     <style>
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
     </style>
-"""
-st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+""", unsafe_allow_html=True)
 st.markdown("<h1 style='text-align: center; color: #1E90FF;'>📑 8D Training App</h1>", unsafe_allow_html=True)
 
 # ---------------------------
 # Language selection
 # ---------------------------
 lang = st.selectbox("Select Language / Seleccionar Idioma", ["English", "Español"])
-
-# Translation dictionary
 t = {
     "en": {
         "D1": "D1: Concern Details",
@@ -93,6 +88,7 @@ npqp_steps = [
 for step, _, _ in npqp_steps:
     if step not in st.session_state:
         st.session_state[step] = {"answer": "", "extra": ""}
+
 st.session_state.setdefault("report_date", datetime.datetime.today().strftime("%B %d, %Y"))
 st.session_state.setdefault("prepared_by", "")
 st.session_state.setdefault("d5_occ_whys", [""] * 5)
@@ -117,36 +113,36 @@ for i, (step, note, example) in enumerate(npqp_steps):
             st.session_state[step]["answer"] = st.text_area(f"Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}")
         else:
             st.info(f"**{t[lang_key]['Training_Guidance']}:** {note}")
-            
-            # -------- Occurrence Analysis --------
             st.markdown("#### Occurrence Analysis")
-            for idx, val in enumerate(st.session_state.d5_occ_whys):
-                suggestions = ["Operator error", "Process not followed", "Equipment malfunction",
-                               "Incorrect setup", "Material defect", "Missing training", "Environmental issue"]
+            for idx in range(5):
                 if idx == 0:
-                    # first why free-text
-                    st.session_state.d5_occ_whys[idx] = st.text_input(f"{t[lang_key]['Occurrence_Why']} {idx+1}", value=val, key=f"occ_{idx}")
+                    st.session_state.d5_occ_whys[idx] = st.text_input(
+                        f"{t[lang_key]['Occurrence_Why']} {idx+1}",
+                        value=st.session_state.d5_occ_whys[idx],
+                        key=f"occ_{idx}"
+                    )
                 else:
-                    # subsequent why: suggestion + free-text
-                    options = [st.session_state.d5_occ_whys[idx-1]] + suggestions
+                    suggestions = ["Operator error", "Process not followed", "Equipment malfunction"]
                     st.session_state.d5_occ_whys[idx] = st.selectbox(
-                        f"{t[lang_key]['Occurrence_Why']} {idx+1}", [""] + options, key=f"occ_{idx}", index=0
+                        f"{t[lang_key]['Occurrence_Why']} {idx+1}",
+                        [""] + suggestions,
+                        key=f"occ_{idx}"
                     )
-            
-            # -------- Detection Analysis --------
             st.markdown("#### Detection Analysis")
-            for idx, val in enumerate(st.session_state.d5_det_whys):
-                suggestions = ["QA checklist incomplete", "No automated test", "Missed inspection",
-                               "Incorrect measurement", "Sensor malfunction", "Test not calibrated"]
+            for idx in range(5):
                 if idx == 0:
-                    st.session_state.d5_det_whys[idx] = st.text_input(f"{t[lang_key]['Detection_Why']} {idx+1}", value=val, key=f"det_{idx}")
-                else:
-                    options = [st.session_state.d5_det_whys[idx-1]] + suggestions
-                    st.session_state.d5_det_whys[idx] = st.selectbox(
-                        f"{t[lang_key]['Detection_Why']} {idx+1}", [""] + options, key=f"det_{idx}", index=0
+                    st.session_state.d5_det_whys[idx] = st.text_input(
+                        f"{t[lang_key]['Detection_Why']} {idx+1}",
+                        value=st.session_state.d5_det_whys[idx],
+                        key=f"det_{idx}"
                     )
-            
-            # Combine D5 answers
+                else:
+                    suggestions = ["QA checklist incomplete", "No automated test", "Missed inspection"]
+                    st.session_state.d5_det_whys[idx] = st.selectbox(
+                        f"{t[lang_key]['Detection_Why']} {idx+1}",
+                        [""] + suggestions,
+                        key=f"det_{idx}"
+                    )
             st.session_state.D5["answer"] = (
                 "Occurrence Analysis:\n" + "\n".join([w for w in st.session_state.d5_occ_whys if w.strip()]) +
                 "\n\nDetection Analysis:\n" + "\n".join([w for w in st.session_state.d5_det_whys if w.strip()])
@@ -154,4 +150,28 @@ for i, (step, note, example) in enumerate(npqp_steps):
             st.session_state.D5["extra"] = st.text_area(f"{t[lang_key]['Root_Cause']}", value=st.session_state.D5["extra"], key="root_cause")
 
 # ---------------------------
-#
+# Collect answers
+# ---------------------------
+data_rows = [(step, st.session_state[step]["answer"], st.session_state[step]["extra"]) for step, _, _ in npqp_steps]
+
+# ---------------------------
+# Save to Excel
+# ---------------------------
+if st.button(f"{t[lang_key]['Save']}"):
+    if not any(ans for _, ans, _ in data_rows):
+        st.error("⚠️ No answers filled in yet. Please complete some fields before saving.")
+    else:
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "NPQP 8D Report"
+
+        # Headers
+        ws.append(["Step", "Answer", "Extra Notes"])
+        for step, answer, extra in data_rows:
+            ws.append([step, answer, extra])
+
+        # Save
+        xlsx_file = "NPQP_8D_Report.xlsx"
+        wb.save(xlsx_file)
+        st.success(f"✅ {t[lang_key]['Download']} ready!")
+        st.download_button(f"{t[lang_key]['Download']}", xlsx_file, file_name=xlsx_file)
