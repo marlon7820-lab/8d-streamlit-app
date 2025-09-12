@@ -136,14 +136,14 @@ st.session_state.report_date = st.text_input(f"{t[lang_key]['Report_Date']}", va
 st.session_state.prepared_by = st.text_input(f"{t[lang_key]['Prepared_By']}", value=st.session_state.prepared_by)
 
 # ---------------------------
-# Tabs for each step with badges
+# Tabs for each step with red/green "Empty/Filled"
 # ---------------------------
 tab_labels = []
 for step, _, _ in npqp_steps:
     if st.session_state[step]["answer"].strip() != "":
-        tab_labels.append(f"{t[lang_key][step]} ✅")
+        tab_labels.append(f"🟢 {t[lang_key][step]} - Filled")
     else:
-        tab_labels.append(f"{t[lang_key][step]} ❌")
+        tab_labels.append(f"🔴 {t[lang_key][step]} - Empty")
 
 tabs = st.tabs(tab_labels)
 for i, (step, note, example) in enumerate(npqp_steps):
