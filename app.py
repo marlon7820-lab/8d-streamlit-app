@@ -6,10 +6,9 @@ import io
 
 # ---------------------------
 # Page config and branding
-# ---------------------------
-st.set_page_config(
-    page_title="8D Training App",
-    page_icon="https://raw.githubusercontent.com/marlon7820-lab/8d-streamlit-app/refs/heads/main/IMG_7771%20Small.png",
+# ---------------------------st.set_page_config(
+    page_title="8D Report Assistant",
+    page_icon="https://raw.githubusercontent.com/<your-username>/<your-repo>/main/<your-logo-file>.png",
     layout="wide"
 )
 
