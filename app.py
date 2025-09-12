@@ -17,20 +17,6 @@ st.set_page_config(
     layout="wide"
 )
 
-# ---------------------------
-# Force Light Mode for consistent colors across devices
-# ---------------------------
-st.markdown(
-    """
-    <style>
-    body {
-        color-scheme: light !important;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
-
 st.markdown("""
     <style>
     #MainMenu {visibility: hidden;}
@@ -114,9 +100,16 @@ st.session_state.report_date = st.text_input(f"{t[lang_key]['Report_Date']}", va
 st.session_state.prepared_by = st.text_input(f"{t[lang_key]['Prepared_By']}", value=st.session_state.prepared_by)
 
 # ---------------------------
-# Tabs for each step
+# Tabs for each step with colored completion badges
 # ---------------------------
-tabs = st.tabs([t[lang_key][step] for step, _, _ in npqp_steps])
+tab_labels = []
+for step, _, _ in npqp_steps:
+    answer_filled = bool(st.session_state[step]["answer"].strip())
+    badge_color = "🟢" if answer_filled else "🔴"
+    tab_labels.append(f"{badge_color} {t[lang_key][step]}")
+
+tabs = st.tabs(tab_labels)
+
 for i, (step, note, example) in enumerate(npqp_steps):
     with tabs[i]:
         st.markdown(f"### {t[lang_key][step]}")
