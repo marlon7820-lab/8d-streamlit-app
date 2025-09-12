@@ -17,7 +17,6 @@ st.set_page_config(
     layout="wide"
 )
 
-# Hide Streamlit default menu, header, and footer
 st.markdown("""
     <style>
     #MainMenu {visibility: hidden;}
@@ -34,45 +33,26 @@ st.markdown("<h1 style='text-align: center; color: #1E90FF;'>📋 8D Report Assi
 lang = st.selectbox("Select Language / Seleccionar Idioma", ["English", "Español"])
 lang_key = "en" if lang == "English" else "es"
 
-# Translation dictionary
 t = {
     "en": {
-        "D1": "D1: Concern Details",
-        "D2": "D2: Similar Part Considerations",
-        "D3": "D3: Initial Analysis",
-        "D4": "D4: Implement Containment",
-        "D5": "D5: Final Analysis",
-        "D6": "D6: Permanent Corrective Actions",
-        "D7": "D7: Countermeasure Confirmation",
-        "D8": "D8: Follow-up Activities (Lessons Learned / Recurrence Prevention)",
-        "Report_Date": "Report Date",
-        "Prepared_By": "Prepared By",
-        "Root_Cause": "Root Cause (summary after 5-Whys)",
-        "Occurrence_Why": "Occurrence Why",
-        "Detection_Why": "Detection Why",
-        "Save": "💾 Save 8D Report",
-        "Download": "📥 Download XLSX",
-        "Training_Guidance": "Training Guidance",
-        "Example": "Example"
+        "D1": "D1: Concern Details", "D2": "D2: Similar Part Considerations",
+        "D3": "D3: Initial Analysis", "D4": "D4: Implement Containment",
+        "D5": "D5: Final Analysis", "D6": "D6: Permanent Corrective Actions",
+        "D7": "D7: Countermeasure Confirmation", "D8": "D8: Follow-up Activities (Lessons Learned / Recurrence Prevention)",
+        "Report_Date": "Report Date", "Prepared_By": "Prepared By",
+        "Root_Cause": "Root Cause (summary after 5-Whys)", "Occurrence_Why": "Occurrence Why",
+        "Detection_Why": "Detection Why", "Save": "💾 Save 8D Report", "Download": "📥 Download XLSX",
+        "Training_Guidance": "Training Guidance", "Example": "Example"
     },
     "es": {
-        "D1": "D1: Detalles de la preocupación",
-        "D2": "D2: Consideraciones de partes similares",
-        "D3": "D3: Análisis inicial",
-        "D4": "D4: Implementar contención",
-        "D5": "D5: Análisis final",
-        "D6": "D6: Acciones correctivas permanentes",
-        "D7": "D7: Confirmación de contramedidas",
-        "D8": "D8: Actividades de seguimiento (Lecciones aprendidas / Prevención de recurrencia)",
-        "Report_Date": "Fecha del informe",
-        "Prepared_By": "Preparado por",
-        "Root_Cause": "Causa raíz (resumen después de los 5 Porqués)",
-        "Occurrence_Why": "Por qué Ocurrencia",
-        "Detection_Why": "Por qué Detección",
-        "Save": "💾 Guardar Informe 8D",
-        "Download": "📥 Descargar XLSX",
-        "Training_Guidance": "Guía de Entrenamiento",
-        "Example": "Ejemplo"
+        "D1": "D1: Detalles de la preocupación", "D2": "D2: Consideraciones de partes similares",
+        "D3": "D3: Análisis inicial", "D4": "D4: Implementar contención",
+        "D5": "D5: Análisis final", "D6": "D6: Acciones correctivas permanentes",
+        "D7": "D7: Confirmación de contramedidas", "D8": "D8: Actividades de seguimiento (Lecciones aprendidas / Prevención de recurrencia)",
+        "Report_Date": "Fecha del informe", "Prepared_By": "Preparado por",
+        "Root_Cause": "Causa raíz (resumen después de los 5 Porqués)", "Occurrence_Why": "Por qué Ocurrencia",
+        "Detection_Why": "Por qué Detección", "Save": "💾 Guardar Informe 8D", "Download": "📥 Descargar XLSX",
+        "Training_Guidance": "Guía de Entrenamiento", "Example": "Ejemplo"
     }
 }
 
@@ -102,7 +82,7 @@ st.session_state.setdefault("d5_occ_whys", [""] * 5)
 st.session_state.setdefault("d5_det_whys", [""] * 5)
 
 # ---------------------------
-# Restore from URL (using st.query_params)
+# Restore from URL (st.query_params)
 # ---------------------------
 if "backup" in st.query_params:
     try:
@@ -159,7 +139,7 @@ for i, (step, note, example) in enumerate(npqp_steps):
 data_rows = [(step, st.session_state[step]["answer"], st.session_state[step]["extra"]) for step, _, _ in npqp_steps]
 
 # ---------------------------
-# Save / Download Excel (Improved Formatting)
+# Save / Download Excel
 # ---------------------------
 def generate_excel():
     wb = Workbook()
@@ -169,7 +149,7 @@ def generate_excel():
     thin = Side(border_style="thin", color="000000")
     border = Border(left=thin, right=thin, top=thin, bottom=thin)
 
-    # Logo (optional)
+    # Optional Logo
     if os.path.exists("logo.png"):
         try:
             img = XLImage("logo.png")
@@ -204,7 +184,6 @@ def generate_excel():
             cell.alignment = Alignment(wrap_text=True, vertical="top")
             cell.border = border
 
-    # Set column widths
     ws.column_dimensions[get_column_letter(1)].width = 28
     ws.column_dimensions[get_column_letter(2)].width = 80
     ws.column_dimensions[get_column_letter(3)].width = 60
@@ -221,10 +200,11 @@ st.download_button(
 )
 
 # ---------------------------
-# Sidebar: JSON Backup/Restore + Reset
+# Sidebar: JSON Backup / Restore + Reset
 # ---------------------------
 with st.sidebar:
     st.markdown("## Backup / Restore")
+
     def generate_json():
         save_data = {k: v for k, v in st.session_state.items() if not k.startswith("_")}
         return json.dumps(save_data, indent=4)
@@ -244,8 +224,12 @@ with st.sidebar:
                 st.session_state[k] = v
             st.success("✅ Progress restored!")
         except Exception as e:
-            st.error(f"❌ Could not load: {e}")
-
-    # Reset All Answers
-    if st.button("♻️ Reset All Answers"):
-        for step, _,
+                        st.error(f"❌ Could not load JSON: {e}")
+ if st.button("♻️ Reset All Answers"):
+        for step, _, _ in npqp_steps:
+            st.session_state[step] = {"answer": "", "extra": ""}
+        st.session_state.d5_occ_whys = [""] * 5
+        st.session_state.d5_det_whys = [""] * 5
+        st.session_state.report_date = datetime.datetime.today().strftime("%B %d, %Y")
+        st.session_state.prepared_by = ""
+        st.success("🔄 All fields have been reset.")
