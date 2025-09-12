@@ -1,8 +1,8 @@
 import streamlit as st
 from openpyxl import Workbook
-from openpyxl.styles import Font, Alignment, PatternFill
 from openpyxl.utils import get_column_letter
 import datetime
+import io
 
 # ---------------------------
 # Page config and branding
@@ -14,20 +14,21 @@ st.set_page_config(
 )
 
 # Hide Streamlit default menu, header, and footer
-hide_streamlit_style = """
+st.markdown("""
     <style>
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
     </style>
-"""
-st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+""", unsafe_allow_html=True)
+
 st.markdown("<h1 style='text-align: center; color: #1E90FF;'>📑 8D Training App</h1>", unsafe_allow_html=True)
 
 # ---------------------------
 # Language selection
 # ---------------------------
 lang = st.selectbox("Select Language / Seleccionar Idioma", ["English", "Español"])
+lang_key = "en" if lang == "English" else "es"
 
 # Translation dictionary
 t = {
@@ -70,8 +71,6 @@ t = {
         "Example": "Ejemplo"
     }
 }
-
-lang_key = "en" if lang == "English" else "es"
 
 # ---------------------------
 # NPQP 8D steps
@@ -122,16 +121,17 @@ for i, (step, note, example) in enumerate(npqp_steps):
                 if idx == 0:
                     st.session_state.d5_occ_whys[idx] = st.text_input(f"{t[lang_key]['Occurrence_Why']} {idx+1}", value=val, key=f"occ_{idx}")
                 else:
-                    # Suggestion dropdown based on previous
                     suggestions = ["Operator error", "Process not followed", "Equipment malfunction"]
-                    st.session_state.d5_occ_whys[idx] = st.selectbox(f"{t[lang_key]['Occurrence_Why']} {idx+1}", [""] + suggestions, key=f"occ_{idx}")
+                    st.session_state.d5_occ_whys[idx] = st.selectbox(f"{t[lang_key]['Occurrence_Why']} {idx+1}", [""] + suggestions + [st.session_state.d5_occ_whys[idx]], key=f"occ_{idx}")
+
             st.markdown("#### Detection Analysis")
             for idx, val in enumerate(st.session_state.d5_det_whys):
                 if idx == 0:
                     st.session_state.d5_det_whys[idx] = st.text_input(f"{t[lang_key]['Detection_Why']} {idx+1}", value=val, key=f"det_{idx}")
                 else:
                     suggestions = ["QA checklist incomplete", "No automated test", "Missed inspection"]
-                    st.session_state.d5_det_whys[idx] = st.selectbox(f"{t[lang_key]['Detection_Why']} {idx+1}", [""] + suggestions, key=f"det_{idx}")
+                    st.session_state.d5_det_whys[idx] = st.selectbox(f"{t[lang_key]['Detection_Why']} {idx+1}", [""] + suggestions + [st.session_state.d5_det_whys[idx]], key=f"det_{idx}")
+
             st.session_state.D5["answer"] = (
                 "Occurrence Analysis:\n" + "\n".join([w for w in st.session_state.d5_occ_whys if w.strip()]) +
                 "\n\nDetection Analysis:\n" + "\n".join([w for w in st.session_state.d5_det_whys if w.strip()])
@@ -142,17 +142,36 @@ for i, (step, note, example) in enumerate(npqp_steps):
 # Collect answers
 # ---------------------------
 data_rows = [(step, st.session_state[step]["answer"], st.session_state[step]["extra"]) for step, _, _ in npqp_steps]
-# Adjust column widths
+
+# ---------------------------
+# Save / Download Excel
+# ---------------------------
+def generate_excel():
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "NPQP 8D Report"
+
+    # Report info
+    ws.append([t[lang_key]['Report_Date'], st.session_state.report_date])
+    ws.append([t[lang_key]['Prepared_By'], st.session_state.prepared_by])
+    ws.append([])  # empty row
+
+    # Add each D step
+    for step, answer, extra in data_rows:
+        ws.append([t[lang_key][step], answer, extra])
+
+    # Adjust column widths
     for col in range(1, 4):
         ws.column_dimensions[get_column_letter(col)].width = 40
 
-    # Save workbook in-memory and provide download
-    from io import BytesIO
-    output = BytesIO()
+    # Save in-memory
+    output = io.BytesIO()
     wb.save(output)
-    st.download_button(
-        label=t["Download Report"],
-        data=output.getvalue(),
-        file_name=f"8D_Report_{st.session_state.report_date.replace(' ', '_')}.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    )
+    return output.getvalue()
+
+st.download_button(
+    label=f"{t[lang_key]['Download']}",
+    data=generate_excel(),
+    file_name=f"8D_Report_{st.session_state.report_date.replace(' ', '_')}.xlsx",
+    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+)
