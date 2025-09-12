@@ -2,7 +2,6 @@ import streamlit as st
 from openpyxl import Workbook
 from openpyxl.utils import get_column_letter
 from openpyxl.styles import PatternFill, Font, Alignment, Border, Side
-from openpyxl.drawing.image import Image as XLImage
 import datetime
 import io
 import os
@@ -22,26 +21,13 @@ st.markdown("""
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
+    .stApp { background-color: #F5F7FA; }
+    .stTextArea textarea { border-radius: 5px; border: 1px solid #C3D7F0; padding: 8px; background-color: #FFFFFF; }
     </style>
 """, unsafe_allow_html=True)
 
 # App title
 st.markdown("<h1 style='text-align: center; color: #1E90FF;'>📋 8D Report Assistant</h1>", unsafe_allow_html=True)
-
-# ---------------------------
-# App-wide custom CSS
-# ---------------------------
-st.markdown("""
-    <style>
-    .stApp { background-color: #F5F7FA; }
-    .stTabs [role="tab"] { font-weight: bold; background-color: #E6F0FA; color: #1E1E1E; border-radius: 5px; }
-    .stTabs [role="tab"]:hover { background-color: #CDE0F7; }
-    .stSidebar h2, .stSidebar h3 { color: #1E90FF; }
-    .stSidebar button { background-color: #1E90FF; color: white; font-weight: bold; border-radius: 5px; }
-    .stSidebar button:hover { background-color: #1C86EE; color: white; }
-    .stTextArea textarea { border-radius: 5px; border: 1px solid #C3D7F0; padding: 8px; background-color: #FFFFFF; }
-    </style>
-""", unsafe_allow_html=True)
 
 # ---------------------------
 # Language selection
@@ -88,7 +74,7 @@ st.session_state.report_date = st.text_input(f"{t[lang_key]['Report_Date']}", va
 st.session_state.prepared_by = st.text_input(f"{t[lang_key]['Prepared_By']}", value=st.session_state.prepared_by)
 
 # ---------------------------
-# Tabs with completion badges and guidance/examples
+# Tabs with guidance/examples and completion badges
 # ---------------------------
 tab_labels = []
 for step, _, _ in npqp_steps:
@@ -139,7 +125,7 @@ for i, (step, note, example) in enumerate(npqp_steps):
 data_rows = [(step, st.session_state[step]["answer"], st.session_state[step]["extra"]) for step, _, _ in npqp_steps]
 
 # ---------------------------
-# Save / Download Excel with formatting
+# Save / Download Excel with colored headers and bold answers
 # ---------------------------
 def generate_excel():
     wb = Workbook()
@@ -149,25 +135,8 @@ def generate_excel():
     thin = Side(border_style="thin", color="000000")
     border = Border(left=thin,right=thin,top=thin,bottom=thin)
 
-    # Logo
-    if os.path.exists("logo.png"):
-        try:
-            img = XLImage("logo.png")
-            img.width = 140
-            img.height = 40
-            ws.add_image(img,"A1")
-        except: pass
-
-    ws.merge_cells(start_row=3,start_column=1,end_row=3,end_column=3)
-    ws.cell(row=3,column=1,value="📋 8D Report Assistant").font=Font(bold=True,size=14)
-
-    # Report info
-    ws.append([t[lang_key]['Report_Date'], st.session_state.report_date])
-    ws.append([t[lang_key]['Prepared_By'], st.session_state.prepared_by])
-    ws.append([])
-
-    # Header
-    header_row = ws.max_row+1
+    # Header row
+    header_row = 1
     headers = ["Step","Answer","Extra / Notes"]
     header_fill = PatternFill(start_color="1E90FF", end_color="1E90FF", fill_type="solid")
     for c_idx,h in enumerate(headers,start=1):
@@ -177,9 +146,8 @@ def generate_excel():
         cell.alignment = Alignment(horizontal="center",vertical="center",wrap_text=True)
         cell.border = border
 
-    # Add each step row
-    row_idx = header_row+1
-    for step, answer, extra in data_rows:
+    # Add each step
+    for row_idx, (step, answer, extra) in enumerate(data_rows, start=2):
         ws.append([t[lang_key][step], answer, extra])
         fill = PatternFill(start_color="E6F0FA", end_color="E6F0FA", fill_type="solid") if row_idx%2==0 else PatternFill(start_color="FFFFFF", end_color="FFFFFF", fill_type="solid")
         for col in range(1,4):
@@ -188,9 +156,7 @@ def generate_excel():
             cell.font = Font(bold=True if col==2 else False)
             cell.alignment = Alignment(wrap_text=True, vertical="top")
             cell.border = border
-        row_idx += 1
 
-    # Column widths
     for col in range(1,4):
         ws.column_dimensions[get_column_letter(col)].width = 40
 
