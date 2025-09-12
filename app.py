@@ -88,7 +88,7 @@ st.session_state.report_date = st.text_input(f"{t[lang_key]['Report_Date']}", va
 st.session_state.prepared_by = st.text_input(f"{t[lang_key]['Prepared_By']}", value=st.session_state.prepared_by)
 
 # ---------------------------
-# Tabs with completion badges
+# Tabs with completion badges and guidance/examples
 # ---------------------------
 tab_labels = []
 for step, _, _ in npqp_steps:
@@ -112,23 +112,26 @@ for i, (step, note, example) in enumerate(npqp_steps):
             st.info(f"**{t[lang_key]['Training_Guidance']}:** {note}")
             st.markdown("#### Occurrence Analysis")
             for idx, val in enumerate(st.session_state.d5_occ_whys):
-                if idx==0:
+                if idx == 0:
                     st.session_state.d5_occ_whys[idx] = st.text_input(f"{t[lang_key]['Occurrence_Why']} {idx+1}", value=val, key=f"occ_{idx}")
                 else:
                     suggestions = ["Operator error","Process not followed","Equipment malfunction"]
                     st.session_state.d5_occ_whys[idx] = st.selectbox(f"{t[lang_key]['Occurrence_Why']} {idx+1}", [""]+suggestions+[st.session_state.d5_occ_whys[idx]], key=f"occ_{idx}")
+
             st.markdown("#### Detection Analysis")
             for idx, val in enumerate(st.session_state.d5_det_whys):
-                if idx==0:
+                if idx == 0:
                     st.session_state.d5_det_whys[idx] = st.text_input(f"{t[lang_key]['Detection_Why']} {idx+1}", value=val, key=f"det_{idx}")
                 else:
                     suggestions = ["QA checklist incomplete","No automated test","Missed inspection"]
                     st.session_state.d5_det_whys[idx] = st.selectbox(f"{t[lang_key]['Detection_Why']} {idx+1}", [""]+suggestions+[st.session_state.d5_det_whys[idx]], key=f"det_{idx}")
+
             st.session_state.D5["answer"] = (
                 "Occurrence Analysis:\n" + "\n".join([w for w in st.session_state.d5_occ_whys if w.strip()]) +
                 "\n\nDetection Analysis:\n" + "\n".join([w for w in st.session_state.d5_det_whys if w.strip()])
             )
-            st.text_area(f"{t[lang_key]['Root_Cause']}", value=st.session_state.D5["extra"], key="root_cause")
+            st.info(f"💡 **{t[lang_key]['Example']}:** Summarize root causes after 5-Whys analysis")
+            st.session_state.D5["extra"] = st.text_area(f"{t[lang_key]['Root_Cause']}", value=st.session_state.D5["extra"], key="root_cause")
 
 # ---------------------------
 # Collect answers
