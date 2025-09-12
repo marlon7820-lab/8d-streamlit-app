@@ -1,10 +1,11 @@
 import streamlit as st
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, PatternFill
+from openpyxl.utils import get_column_letter
 import datetime
 
 # ---------------------------
-# Page config and branding
+# Page config
 # ---------------------------
 st.set_page_config(
     page_title="8D Training App",
@@ -13,11 +14,11 @@ st.set_page_config(
 )
 
 st.markdown("""
-    <style>
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    header {visibility: hidden;}
-    </style>
+<style>
+#MainMenu {visibility: hidden;}
+footer {visibility: hidden;}
+header {visibility: hidden;}
+</style>
 """, unsafe_allow_html=True)
 st.markdown("<h1 style='text-align: center; color: #1E90FF;'>📑 8D Training App</h1>", unsafe_allow_html=True)
 
@@ -65,11 +66,10 @@ t = {
         "Example": "Ejemplo"
     }
 }
-
 lang_key = "en" if lang == "English" else "es"
 
 # ---------------------------
-# NPQP 8D steps
+# 8D Steps
 # ---------------------------
 npqp_steps = [
     ("D1", "Describe the customer concerns clearly. Include what the issue is, where it occurred, when, and any supporting data.", "Customer reported static noise in amplifier during end-of-line test."),
@@ -83,7 +83,7 @@ npqp_steps = [
 ]
 
 # ---------------------------
-# Initialize session state
+# Session state
 # ---------------------------
 for step, _, _ in npqp_steps:
     if step not in st.session_state:
@@ -97,12 +97,12 @@ st.session_state.setdefault("d5_det_whys", [""] * 5)
 # ---------------------------
 # Report info
 # ---------------------------
-st.subheader(f"{t[lang_key]['Report_Date']}")
-st.session_state.report_date = st.text_input(f"{t[lang_key]['Report_Date']}", value=st.session_state.report_date)
-st.session_state.prepared_by = st.text_input(f"{t[lang_key]['Prepared_By']}", value=st.session_state.prepared_by)
+st.subheader(t[lang_key]["Report_Date"])
+st.session_state.report_date = st.text_input(t[lang_key]["Report_Date"], value=st.session_state.report_date)
+st.session_state.prepared_by = st.text_input(t[lang_key]["Prepared_By"], value=st.session_state.prepared_by)
 
 # ---------------------------
-# Tabs for each step
+# Tabs
 # ---------------------------
 tabs = st.tabs([t[lang_key][step] for step, _, _ in npqp_steps])
 for i, (step, note, example) in enumerate(npqp_steps):
@@ -147,7 +147,7 @@ for i, (step, note, example) in enumerate(npqp_steps):
                 "Occurrence Analysis:\n" + "\n".join([w for w in st.session_state.d5_occ_whys if w.strip()]) +
                 "\n\nDetection Analysis:\n" + "\n".join([w for w in st.session_state.d5_det_whys if w.strip()])
             )
-            st.session_state.D5["extra"] = st.text_area(f"{t[lang_key]['Root_Cause']}", value=st.session_state.D5["extra"], key="root_cause")
+            st.session_state.D5["extra"] = st.text_area(t[lang_key]["Root_Cause"], value=st.session_state.D5["extra"], key="root_cause")
 
 # ---------------------------
 # Collect answers
@@ -155,23 +155,29 @@ for i, (step, note, example) in enumerate(npqp_steps):
 data_rows = [(step, st.session_state[step]["answer"], st.session_state[step]["extra"]) for step, _, _ in npqp_steps]
 
 # ---------------------------
-# Save to Excel
+# Save and download Excel
 # ---------------------------
-if st.button(f"{t[lang_key]['Save']}"):
+if st.button(t[lang_key]["Save"]):
     if not any(ans for _, ans, _ in data_rows):
-        st.error("⚠️ No answers filled in yet. Please complete some fields before saving.")
+        st.error("⚠️ No answers filled in yet.")
     else:
         wb = Workbook()
         ws = wb.active
         ws.title = "NPQP 8D Report"
 
-        # Headers
-        ws.append(["Step", "Answer", "Extra Notes"])
-        for step, answer, extra in data_rows:
-            ws.append([step, answer, extra])
+        # Title
+        ws.merge_cells("A1:C1")
+        ws["A1"] = "NPQP 8D Report"
+        ws["A1"].font = Font(size=14, bold=True)
+        ws["A1"].alignment = Alignment(horizontal="center")
 
-        # Save
-        xlsx_file = "NPQP_8D_Report.xlsx"
-        wb.save(xlsx_file)
-        st.success(f"✅ {t[lang_key]['Download']} ready!")
-        st.download_button(f"{t[lang_key]['Download']}", xlsx_file, file_name=xlsx_file)
+        # Report info
+        ws.append([t[lang_key]["Report_Date"], st.session_state.report_date])
+        ws.append([t[lang_key]["Prepared_By"], st.session_state.prepared_by])
+        ws.append([])  # empty row
+
+        # Header
+        ws.append(["Step", "Answer", "Extra Notes"])
+        for col in range(1, 4):
+            ws.cell(row=ws.max_row, column=col).font = Font(bold=True)
+            ws.cell(row=ws.max
