@@ -117,7 +117,9 @@ for i, (step, note, example) in enumerate(npqp_steps):
                     st.session_state.d5_occ_whys[idx] = st.text_input(f"{t[lang_key]['Occurrence_Why']} {idx+1}", value=val, key=f"occ_{idx}")
                 else:
                     suggestions = ["Operator error", "Process not followed", "Equipment malfunction"]
-                    st.session_state.d5_occ_whys[idx] = st.selectbox(f"{t[lang_key]['Occurrence_Why']} {idx+1}", [""] + suggestions + [st.session_state.d5_occ_whys[idx]], key=f"occ_{idx}")
+                    st.session_state.d5_occ_whys[idx] = st.selectbox(
+                        f"{t[lang_key]['Occurrence_Why']} {idx+1}", [""] + suggestions + [st.session_state.d5_occ_whys[idx]], key=f"occ_{idx}"
+                    )
 
             st.markdown("#### Detection Analysis")
             for idx, val in enumerate(st.session_state.d5_det_whys):
@@ -125,13 +127,17 @@ for i, (step, note, example) in enumerate(npqp_steps):
                     st.session_state.d5_det_whys[idx] = st.text_input(f"{t[lang_key]['Detection_Why']} {idx+1}", value=val, key=f"det_{idx}")
                 else:
                     suggestions = ["QA checklist incomplete", "No automated test", "Missed inspection"]
-                    st.session_state.d5_det_whys[idx] = st.selectbox(f"{t[lang_key]['Detection_Why']} {idx+1}", [""] + suggestions + [st.session_state.d5_det_whys[idx]], key=f"det_{idx}")
+                    st.session_state.d5_det_whys[idx] = st.selectbox(
+                        f"{t[lang_key]['Detection_Why']} {idx+1}", [""] + suggestions + [st.session_state.d5_det_whys[idx]], key=f"det_{idx}"
+                    )
 
             st.session_state.D5["answer"] = (
                 "Occurrence Analysis:\n" + "\n".join([w for w in st.session_state.d5_occ_whys if w.strip()]) +
                 "\n\nDetection Analysis:\n" + "\n".join([w for w in st.session_state.d5_det_whys if w.strip()])
             )
-            st.session_state.D5["extra"] = st.text_area(f"{t[lang_key]['Root_Cause']}", value=st.session_state.D5["extra"], key="root_cause")
+            st.session_state.D5["extra"] = st.text_area(
+                f"{t[lang_key]['Root_Cause']}", value=st.session_state.D5["extra"], key="root_cause"
+            )
 
 # ---------------------------
 # Collect answers
@@ -180,33 +186,34 @@ def generate_excel():
         r = ws.max_row
         for c in range(1, 4):
             cell = ws.cell(row=r, column=c)
-            cell.alignment = Alignment(wrap_text=True, vertical="top")
+                       cell.alignment = Alignment(wrap_text=True, vertical="top")
             cell.border = border
 
-    ws.column_dimensions[get_column_letter(1)].width = 28
-    ws.column_dimensions[get_column_letter(2)].width = 80
-    ws.column_dimensions[get_column_letter(3)].width = 60
+    for col in range(1, 4):
+        ws.column_dimensions[get_column_letter(col)].width = 40
 
     output = io.BytesIO()
     wb.save(output)
     return output.getvalue()
 
+
 st.download_button(
     label=f"{t[lang_key]['Download']}",
     data=generate_excel(),
-    file_name=f"
-    # ---------------------------
+    file_name=f"8D_Report_{st.session_state.report_date.replace(' ', '_')}.xlsx",
+    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+)
+
+# ---------------------------
 # Sidebar: JSON Backup / Restore + Reset
 # ---------------------------
 with st.sidebar:
     st.markdown("## Backup / Restore")
 
-    # Generate JSON of current session
     def generate_json():
         save_data = {k: v for k, v in st.session_state.items() if not k.startswith("_")}
         return json.dumps(save_data, indent=4)
 
-    # Download button for JSON backup
     st.download_button(
         label="💾 Save Progress (JSON)",
         data=generate_json(),
@@ -217,7 +224,6 @@ with st.sidebar:
     st.markdown("---")
     st.markdown("### Restore from JSON")
 
-    # Upload JSON to restore session
     uploaded_file = st.file_uploader("Upload JSON file to restore", type="json")
     if uploaded_file:
         try:
