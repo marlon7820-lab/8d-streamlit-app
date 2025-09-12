@@ -34,6 +34,11 @@ st.markdown("""
         color: #000000 !important; /* Make tab text dark for readability */
     }
 
+    /* Tab content text */
+    .stMarkdown, .stText, .stTextArea, .stInfo, .stTextInput {
+        color: #000000 !important; /* Force tab content text to be dark */
+    }
+
     /* Text area boxes */
     textarea {
         background-color: #ffffff !important;
