@@ -186,10 +186,7 @@ def generate_excel():
         r = ws.max_row
         for c in range(1, 4):
             cell = ws.cell(row=r, column=c)
-                       cell.alignment = Alignment(wrap_text=True, vertical="top")
-            cell.border = border
-
-    for col in range(1, 4):
+               for col in range(1, 4):
         ws.column_dimensions[get_column_letter(col)].width = 40
 
     output = io.BytesIO()
