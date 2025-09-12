@@ -25,25 +25,28 @@ st.markdown("""
     /* Background gradient for the main page */
     .stApp {
         background: linear-gradient(to right, #f0f8ff, #e6f2ff);
+        color: #000000 !important; /* Ensure text is dark and readable */
     }
 
     /* Tab headers styling */
-    .css-1v3fvcr .css-1d391kg { 
-        font-weight: bold; 
-        color: #1E90FF;
+    .stTabs [data-baseweb="tab"] {
+        font-weight: bold;
+        color: #000000 !important; /* Make tab text dark for readability */
     }
 
     /* Text area boxes */
     textarea {
-        background-color: #f9f9f9 !important;
+        background-color: #ffffff !important;
         border: 1px solid #1E90FF !important;
         border-radius: 5px;
+        color: #000000 !important;
     }
 
     /* Info boxes for guidance and examples */
     .stInfo {
         background-color: #e6f7ff !important;
         border-left: 5px solid #1E90FF !important;
+        color: #000000 !important; /* Dark text for readability */
     }
 
     /* Sidebar section headers */
@@ -136,14 +139,14 @@ st.session_state.report_date = st.text_input(f"{t[lang_key]['Report_Date']}", va
 st.session_state.prepared_by = st.text_input(f"{t[lang_key]['Prepared_By']}", value=st.session_state.prepared_by)
 
 # ---------------------------
-# Tabs for each step with red/green "Empty/Filled"
+# Tabs with ✅ / 🔴 status indicators
 # ---------------------------
 tab_labels = []
 for step, _, _ in npqp_steps:
     if st.session_state[step]["answer"].strip() != "":
-        tab_labels.append(f"🟢 {t[lang_key][step]} - Filled")
+        tab_labels.append(f"🟢 {t[lang_key][step]}")
     else:
-        tab_labels.append(f"🔴 {t[lang_key][step]} - Empty")
+        tab_labels.append(f"🔴 {t[lang_key][step]}")
 
 tabs = st.tabs(tab_labels)
 for i, (step, note, example) in enumerate(npqp_steps):
