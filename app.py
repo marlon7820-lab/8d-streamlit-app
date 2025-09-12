@@ -165,4 +165,20 @@ def generate_excel():
     ws.append([])
 
     # Column headers
-    ws
+    # Adjust column widths
+        for col in ws.columns:
+            max_length = 0
+            column = col[0].column_letter
+            for cell in col:
+                try:
+                    if cell.value:
+                        max_length = max(max_length, len(str(cell.value)))
+                except:
+                    pass
+            ws.column_dimensions[column].width = max(15, max_length + 2)
+
+        # Save file
+        xlsx_file = "NPQP_8D_Report.xlsx"
+        wb.save(xlsx_file)
+        st.success("✅ 8D report saved!")
+        st.download_button(t[lang_key]["Download"], xlsx_file, file_name=xlsx_file)
