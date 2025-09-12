@@ -1,15 +1,19 @@
 import streamlit as st
 from openpyxl import Workbook
+from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
 from openpyxl.utils import get_column_letter
+from openpyxl.drawing.image import Image as XLImage
 import datetime
 import io
+import json
+import os
 
 # ---------------------------
 # Page config and branding
 # ---------------------------
 st.set_page_config(
-    page_title="8D Report Assistant",  # Updated page title
-    page_icon="logo.png",              # Updated to local logo file
+    page_title="8D Report Assistant",
+    page_icon="logo.png",
     layout="wide"
 )
 
@@ -22,7 +26,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Update app title with new name
+# Update app title
 st.markdown("<h1 style='text-align: center; color: #1E90FF;'>📋 8D Report Assistant</h1>", unsafe_allow_html=True)
 
 # ---------------------------
@@ -99,6 +103,18 @@ st.session_state.setdefault("d5_occ_whys", [""] * 5)
 st.session_state.setdefault("d5_det_whys", [""] * 5)
 
 # ---------------------------
+# Restore from URL (auto-backup)
+# ---------------------------
+query_params = st.experimental_get_query_params()
+if "backup" in query_params:
+    try:
+        data = json.loads(query_params["backup"][0])
+        for k, v in data.items():
+            st.session_state[k] = v
+    except Exception:
+        pass
+
+# ---------------------------
 # Report info
 # ---------------------------
 st.subheader(f"{t[lang_key]['Report_Date']}")
@@ -145,27 +161,54 @@ for i, (step, note, example) in enumerate(npqp_steps):
 data_rows = [(step, st.session_state[step]["answer"], st.session_state[step]["extra"]) for step, _, _ in npqp_steps]
 
 # ---------------------------
-# Save / Download Excel
+# Save / Download Excel (Improved Formatting)
 # ---------------------------
 def generate_excel():
     wb = Workbook()
     ws = wb.active
     ws.title = "NPQP 8D Report"
 
-    # Report info
+    thin = Side(border_style="thin", color="000000")
+    border = Border(left=thin, right=thin, top=thin, bottom=thin)
+
+    # Logo (optional)
+    if os.path.exists("logo.png"):
+        try:
+            img = XLImage("logo.png")
+            img.width = 140
+            img.height = 40
+            ws.add_image(img, "A1")
+        except:
+            pass
+
+    ws.merge_cells(start_row=3, start_column=1, end_row=3, end_column=3)
+    ws.cell(row=3, column=1, value="📋 8D Report Assistant").font = Font(bold=True, size=14)
+
     ws.append([t[lang_key]['Report_Date'], st.session_state.report_date])
     ws.append([t[lang_key]['Prepared_By'], st.session_state.prepared_by])
-    ws.append([])  # empty row
+    ws.append([])
 
-    # Add each D step
+    header_row = ws.max_row + 1
+    headers = ["Step", "Answer", "Extra / Notes"]
+    fill = PatternFill(start_color="1E90FF", end_color="1E90FF", fill_type="solid")
+    for c_idx, h in enumerate(headers, start=1):
+        cell = ws.cell(row=header_row, column=c_idx, value=h)
+        cell.fill = fill
+        cell.font = Font(bold=True, color="FFFFFF")
+        cell.alignment = Alignment(horizontal="center", vertical="center")
+        cell.border = border
+
     for step, answer, extra in data_rows:
         ws.append([t[lang_key][step], answer, extra])
+        r = ws.max_row
+        for c in range(1, 4):
+            cell = ws.cell(row=r, column=c)
+            cell.alignment = Alignment(wrap_text=True, vertical="top")
+            cell.border = border
 
-    # Adjust column widths
     for col in range(1, 4):
-        ws.column_dimensions[get_column_letter(col)].width = 40
+        ws.column_dimensions[get_column_letter(col)].width = [28, 80, 60][col-1]
 
-    # Save in-memory
     output = io.BytesIO()
     wb.save(output)
     return output.getvalue()
@@ -176,3 +219,32 @@ st.download_button(
     file_name=f"8D_Report_{st.session_state.report_date.replace(' ', '_')}.xlsx",
     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 )
+
+# ---------------------------
+# JSON Backup + Restore
+# ---------------------------
+def generate_json():
+    save_data = {k: v for k, v in st.session_state.items() if not k.startswith("_")}
+    return json.dumps(save_data, indent=4)
+
+st.download_button(
+    label="💾 Save Progress (JSON)",
+    data=generate_json(),
+    file_name=f"8D_Report_Backup_{st.session_state.report_date.replace(' ', '_')}.json",
+    mime="application/json"
+)
+
+uploaded_json = st.file_uploader("📂 Load Saved Progress (JSON)", type=["json"])
+if uploaded_json:
+    try:
+        restored = json.load(uploaded_json)
+        for k, v in restored.items():
+            st.session_state[k] = v
+        st.success("✅ Progress restored!")
+    except Exception as e:
+        st.error(f"❌ Could not load: {e}")
+
+# ---------------------------
+# Auto-backup in URL
+# ---------------------------
+st.experimental_set_query_params(backup=generate_json())
