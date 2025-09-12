@@ -17,11 +17,47 @@ st.set_page_config(
     layout="wide"
 )
 
+# ---------------------------
+# App colors and styles
+# ---------------------------
 st.markdown("""
     <style>
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    header {visibility: hidden;}
+    /* Background gradient for the main page */
+    .stApp {
+        background: linear-gradient(to right, #f0f8ff, #e6f2ff);
+    }
+
+    /* Tab headers styling */
+    .css-1v3fvcr .css-1d391kg { 
+        font-weight: bold; 
+        color: #1E90FF;
+    }
+
+    /* Text area boxes */
+    textarea {
+        background-color: #f9f9f9 !important;
+        border: 1px solid #1E90FF !important;
+        border-radius: 5px;
+    }
+
+    /* Info boxes for guidance and examples */
+    .stInfo {
+        background-color: #e6f7ff !important;
+        border-left: 5px solid #1E90FF !important;
+    }
+
+    /* Sidebar section headers */
+    .css-1d391kg {
+        color: #1E90FF !important;
+        font-weight: bold !important;
+    }
+
+    /* Download button highlight */
+    button[kind="primary"] {
+        background-color: #1E90FF !important;
+        color: white !important;
+        font-weight: bold;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -100,18 +136,16 @@ st.session_state.report_date = st.text_input(f"{t[lang_key]['Report_Date']}", va
 st.session_state.prepared_by = st.text_input(f"{t[lang_key]['Prepared_By']}", value=st.session_state.prepared_by)
 
 # ---------------------------
-# Tabs for each step with dynamic colored badges
+# Tabs for each step with badges
 # ---------------------------
 tab_labels = []
 for step, _, _ in npqp_steps:
     if st.session_state[step]["answer"].strip() != "":
-        badge = f"<span style='color:white; background-color:#28a745; padding:2px 6px; border-radius:4px;'>Answered</span>"
+        tab_labels.append(f"{t[lang_key][step]} ✅")
     else:
-        badge = f"<span style='color:white; background-color:#dc3545; padding:2px 6px; border-radius:4px;'>Empty</span>"
-    tab_labels.append(f"{t[lang_key][step]} {badge}")
+        tab_labels.append(f"{t[lang_key][step]} ❌")
 
 tabs = st.tabs(tab_labels)
-
 for i, (step, note, example) in enumerate(npqp_steps):
     with tabs[i]:
         st.markdown(f"### {t[lang_key][step]}")
@@ -198,6 +232,7 @@ def generate_excel():
         for c in range(1, 4):
             cell = ws.cell(row=r, column=c)
             cell.alignment = Alignment(wrap_text=True, vertical="top")
+            cell.font = Font(bold=True if c == 2 else False)  # Bold only answers column
             cell.border = border
 
     for col in range(1, 4):
