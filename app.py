@@ -17,6 +17,7 @@ st.set_page_config(
     layout="wide"
 )
 
+# Hide default Streamlit elements
 st.markdown("""
     <style>
     #MainMenu {visibility: hidden;}
@@ -149,7 +150,6 @@ def generate_excel():
     thin = Side(border_style="thin", color="000000")
     border = Border(left=thin, right=thin, top=thin, bottom=thin)
 
-    # Optional Logo
     if os.path.exists("logo.png"):
         try:
             img = XLImage("logo.png")
@@ -198,38 +198,4 @@ st.download_button(
     file_name=f"8D_Report_{st.session_state.report_date.replace(' ', '_')}.xlsx",
     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 )
-
-# ---------------------------
-# Sidebar: JSON Backup / Restore + Reset
-# ---------------------------
-with st.sidebar:
-    st.markdown("## Backup / Restore")
-
-    def generate_json():
-        save_data = {k: v for k, v in st.session_state.items() if not k.startswith("_")}
-        return json.dumps(save_data, indent=4)
-
-    st.download_button(
-        label="💾 Save Progress (JSON)",
-        data=generate_json(),
-        file_name=f"8D_Report_Backup_{st.session_state.report_date.replace(' ', '_')}.json",
-        mime="application/json"
-    )
-
-    uploaded_json = st.file_uploader("📂 Load Saved Progress (JSON)", type=["json"])
-    if uploaded_json:
-        try:
-            restored = json.load(uploaded_json)
-            for k, v in restored.items():
-                st.session_state[k] = v
-            st.success("✅ Progress restored!")
-        except Exception as e:
-                        st.error(f"❌ Could not load JSON: {e}")
- if st.button("♻️ Reset All Answers"):
-        for step, _, _ in npqp_steps:
-            st.session_state[step] = {"answer": "", "extra": ""}
-        st.session_state.d5_occ_whys = [""] * 5
-        st.session_state.d5_det_whys = [""] * 5
-        st.session_state.report_date = datetime.datetime.today().strftime("%B %d, %Y")
-        st.session_state.prepared_by = ""
-        st.success("🔄 All fields have been reset.")
+``
