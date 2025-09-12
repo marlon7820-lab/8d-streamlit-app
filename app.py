@@ -117,21 +117,36 @@ for i, (step, note, example) in enumerate(npqp_steps):
             st.session_state[step]["answer"] = st.text_area(f"Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}")
         else:
             st.info(f"**{t[lang_key]['Training_Guidance']}:** {note}")
+            
+            # -------- Occurrence Analysis --------
             st.markdown("#### Occurrence Analysis")
             for idx, val in enumerate(st.session_state.d5_occ_whys):
+                suggestions = ["Operator error", "Process not followed", "Equipment malfunction",
+                               "Incorrect setup", "Material defect", "Missing training", "Environmental issue"]
                 if idx == 0:
+                    # first why free-text
                     st.session_state.d5_occ_whys[idx] = st.text_input(f"{t[lang_key]['Occurrence_Why']} {idx+1}", value=val, key=f"occ_{idx}")
                 else:
-                    # Suggestion dropdown based on previous
-                    suggestions = ["Operator error", "Process not followed", "Equipment malfunction"]
-                    st.session_state.d5_occ_whys[idx] = st.selectbox(f"{t[lang_key]['Occurrence_Why']} {idx+1}", [""] + suggestions, key=f"occ_{idx}")
+                    # subsequent why: suggestion + free-text
+                    options = [st.session_state.d5_occ_whys[idx-1]] + suggestions
+                    st.session_state.d5_occ_whys[idx] = st.selectbox(
+                        f"{t[lang_key]['Occurrence_Why']} {idx+1}", [""] + options, key=f"occ_{idx}", index=0
+                    )
+            
+            # -------- Detection Analysis --------
             st.markdown("#### Detection Analysis")
             for idx, val in enumerate(st.session_state.d5_det_whys):
+                suggestions = ["QA checklist incomplete", "No automated test", "Missed inspection",
+                               "Incorrect measurement", "Sensor malfunction", "Test not calibrated"]
                 if idx == 0:
                     st.session_state.d5_det_whys[idx] = st.text_input(f"{t[lang_key]['Detection_Why']} {idx+1}", value=val, key=f"det_{idx}")
                 else:
-                    suggestions = ["QA checklist incomplete", "No automated test", "Missed inspection"]
-                    st.session_state.d5_det_whys[idx] = st.selectbox(f"{t[lang_key]['Detection_Why']} {idx+1}", [""] + suggestions, key=f"det_{idx}")
+                    options = [st.session_state.d5_det_whys[idx-1]] + suggestions
+                    st.session_state.d5_det_whys[idx] = st.selectbox(
+                        f"{t[lang_key]['Detection_Why']} {idx+1}", [""] + options, key=f"det_{idx}", index=0
+                    )
+            
+            # Combine D5 answers
             st.session_state.D5["answer"] = (
                 "Occurrence Analysis:\n" + "\n".join([w for w in st.session_state.d5_occ_whys if w.strip()]) +
                 "\n\nDetection Analysis:\n" + "\n".join([w for w in st.session_state.d5_det_whys if w.strip()])
@@ -139,21 +154,4 @@ for i, (step, note, example) in enumerate(npqp_steps):
             st.session_state.D5["extra"] = st.text_area(f"{t[lang_key]['Root_Cause']}", value=st.session_state.D5["extra"], key="root_cause")
 
 # ---------------------------
-# Collect answers
-# ---------------------------
-data_rows = [(step, st.session_state[step]["answer"], st.session_state[step]["extra"]) for step, _, _ in npqp_steps]
-
-# ---------------------------
-# Save to Excel
-# ---------------------------
-if st.button(f"{t[lang_key]['Save']}"):
-    if not any(ans for _, ans, _ in data_rows):
-        st.error("⚠️ No answers filled in yet. Please complete some fields before saving.")
-    else:
-        xlsx_file = "NPQP_8D_Report.xlsx"
-        wb = Workbook()
-        ws = wb.active
-        ws.title = "NPQP 8D Report"
-
-        # Title
-        ws.merge_cells("A1:C1")
+#
