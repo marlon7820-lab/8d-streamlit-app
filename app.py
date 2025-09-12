@@ -114,7 +114,8 @@ for i, (step, note, example) in enumerate(npqp_steps):
             st.markdown("#### Occurrence Analysis")
             for idx, val in enumerate(st.session_state.d5_occ_whys):
                 if idx == 0:
-                    st.session_state.d5_occ_whys[idx] = st.text_input(f"{t[lang_key]['Occurrence_Why']} {idx+1}", value=val, key=f"occ_{idx}")
+                    st.session_state.d5_occ_whys[idx] = st.text_input(
+                        f"{t[lang_key]['Occurrence_Why']} {idx+1}", value=val, key=f"occ_{idx}")
                 else:
                     suggestions = ["Operator error", "Process not followed", "Equipment malfunction"]
                     st.session_state.d5_occ_whys[idx] = st.selectbox(
@@ -124,7 +125,8 @@ for i, (step, note, example) in enumerate(npqp_steps):
             st.markdown("#### Detection Analysis")
             for idx, val in enumerate(st.session_state.d5_det_whys):
                 if idx == 0:
-                    st.session_state.d5_det_whys[idx] = st.text_input(f"{t[lang_key]['Detection_Why']} {idx+1}", value=val, key=f"det_{idx}")
+                    st.session_state.d5_det_whys[idx] = st.text_input(
+                        f"{t[lang_key]['Detection_Why']} {idx+1}", value=val, key=f"det_{idx}")
                 else:
                     suggestions = ["QA checklist incomplete", "No automated test", "Missed inspection"]
                     st.session_state.d5_det_whys[idx] = st.selectbox(
@@ -171,6 +173,7 @@ def generate_excel():
     ws.append([t[lang_key]['Prepared_By'], st.session_state.prepared_by])
     ws.append([])
 
+    # Header
     header_row = ws.max_row + 1
     headers = ["Step", "Answer", "Extra / Notes"]
     fill = PatternFill(start_color="1E90FF", end_color="1E90FF", fill_type="solid")
@@ -181,12 +184,16 @@ def generate_excel():
         cell.alignment = Alignment(horizontal="center", vertical="center")
         cell.border = border
 
+    # Data rows
     for step, answer, extra in data_rows:
         ws.append([t[lang_key][step], answer, extra])
         r = ws.max_row
         for c in range(1, 4):
             cell = ws.cell(row=r, column=c)
-               for col in range(1, 4):
+            cell.alignment = Alignment(wrap_text=True, vertical="top")
+            cell.border = border
+
+    for col in range(1, 4):
         ws.column_dimensions[get_column_letter(col)].width = 40
 
     output = io.BytesIO()
