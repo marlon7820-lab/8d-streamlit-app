@@ -1,7 +1,6 @@
 import streamlit as st
 from openpyxl import Workbook
-from openpyxl.styles import Font, Alignment, PatternFill
-from openpyxl.utils import get_column_letter
+from openpyxl.styles import Font, Alignment
 import datetime
 
 # ---------------------------
@@ -72,14 +71,14 @@ lang_key = "en" if lang == "English" else "es"
 # 8D Steps
 # ---------------------------
 npqp_steps = [
-    ("D1", "Describe the customer concerns clearly. Include what the issue is, where it occurred, when, and any supporting data.", "Customer reported static noise in amplifier during end-of-line test."),
-    ("D2", "Check for similar parts, models, generic parts, other colors, opposite hand, front/rear, etc.", "Same speaker type used in another radio model; different amplifier colors."),
-    ("D3", "Perform an initial investigation to identify obvious issues, collect data, and document initial findings.", "Visual inspection of solder joints, initial functional tests, checking connectors."),
-    ("D4", "Define temporary containment actions to prevent the customer from seeing the problem while permanent actions are developed.", "100% inspection of amplifiers before shipment; temporary shielding."),
-    ("D5", "Use 5-Why analysis to determine the root cause. Separate Occurrence and Detection.", ""),
-    ("D6", "Define corrective actions that eliminate the root cause permanently and prevent recurrence.", "Update soldering process, retrain operators, update work instructions."),
-    ("D7", "Verify that corrective actions effectively resolve the issue long-term.", "Functional tests on corrected amplifiers, accelerated life testing."),
-    ("D8", "Document lessons learned, update standards, procedures, FMEAs, and training to prevent recurrence.", "Update SOPs, PFMEA, work instructions, and employee training.")
+    ("D1", "Describe the customer concerns clearly.", "Example: Customer reported static noise."),
+    ("D2", "Check for similar parts, models, generic parts, etc.", "Example: Same speaker type in other radio."),
+    ("D3", "Perform an initial investigation.", "Example: Visual inspection of solder joints."),
+    ("D4", "Define temporary containment actions.", "Example: 100% inspection before shipment."),
+    ("D5", "Use 5-Why analysis. Separate Occurrence and Detection.", ""),
+    ("D6", "Define corrective actions.", "Example: Update process and retrain operators."),
+    ("D7", "Verify corrective actions effectiveness.", "Example: Functional tests, accelerated life testing."),
+    ("D8", "Document lessons learned.", "Example: Update SOPs, PFMEA, training.")
 ]
 
 # ---------------------------
@@ -88,7 +87,6 @@ npqp_steps = [
 for step, _, _ in npqp_steps:
     if step not in st.session_state:
         st.session_state[step] = {"answer": "", "extra": ""}
-
 st.session_state.setdefault("report_date", datetime.datetime.today().strftime("%B %d, %Y"))
 st.session_state.setdefault("prepared_by", "")
 st.session_state.setdefault("d5_occ_whys", [""] * 5)
@@ -102,51 +100,30 @@ st.session_state.report_date = st.text_input(t[lang_key]["Report_Date"], value=s
 st.session_state.prepared_by = st.text_input(t[lang_key]["Prepared_By"], value=st.session_state.prepared_by)
 
 # ---------------------------
-# Tabs
+# Tabs for steps
 # ---------------------------
 tabs = st.tabs([t[lang_key][step] for step, _, _ in npqp_steps])
 for i, (step, note, example) in enumerate(npqp_steps):
     with tabs[i]:
         st.markdown(f"### {t[lang_key][step]}")
         if step != "D5":
-            st.info(f"**{t[lang_key]['Training_Guidance']}:** {note}\n\n💡 **{t[lang_key]['Example']}:** {example}")
             st.session_state[step]["answer"] = st.text_area(f"Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}")
         else:
-            st.info(f"**{t[lang_key]['Training_Guidance']}:** {note}")
             st.markdown("#### Occurrence Analysis")
             for idx in range(5):
                 if idx == 0:
-                    st.session_state.d5_occ_whys[idx] = st.text_input(
-                        f"{t[lang_key]['Occurrence_Why']} {idx+1}",
-                        value=st.session_state.d5_occ_whys[idx],
-                        key=f"occ_{idx}"
-                    )
+                    st.session_state.d5_occ_whys[idx] = st.text_input(f"{t[lang_key]['Occurrence_Why']} {idx+1}", value=st.session_state.d5_occ_whys[idx], key=f"occ_{idx}")
                 else:
                     suggestions = ["Operator error", "Process not followed", "Equipment malfunction"]
-                    st.session_state.d5_occ_whys[idx] = st.selectbox(
-                        f"{t[lang_key]['Occurrence_Why']} {idx+1}",
-                        [""] + suggestions,
-                        key=f"occ_{idx}"
-                    )
+                    st.session_state.d5_occ_whys[idx] = st.selectbox(f"{t[lang_key]['Occurrence_Why']} {idx+1}", [""] + suggestions, key=f"occ_{idx}")
             st.markdown("#### Detection Analysis")
             for idx in range(5):
                 if idx == 0:
-                    st.session_state.d5_det_whys[idx] = st.text_input(
-                        f"{t[lang_key]['Detection_Why']} {idx+1}",
-                        value=st.session_state.d5_det_whys[idx],
-                        key=f"det_{idx}"
-                    )
+                    st.session_state.d5_det_whys[idx] = st.text_input(f"{t[lang_key]['Detection_Why']} {idx+1}", value=st.session_state.d5_det_whys[idx], key=f"det_{idx}")
                 else:
                     suggestions = ["QA checklist incomplete", "No automated test", "Missed inspection"]
-                    st.session_state.d5_det_whys[idx] = st.selectbox(
-                        f"{t[lang_key]['Detection_Why']} {idx+1}",
-                        [""] + suggestions,
-                        key=f"det_{idx}"
-                    )
-            st.session_state.D5["answer"] = (
-                "Occurrence Analysis:\n" + "\n".join([w for w in st.session_state.d5_occ_whys if w.strip()]) +
-                "\n\nDetection Analysis:\n" + "\n".join([w for w in st.session_state.d5_det_whys if w.strip()])
-            )
+                    st.session_state.d5_det_whys[idx] = st.selectbox(f"{t[lang_key]['Detection_Why']} {idx+1}", [""] + suggestions, key=f"det_{idx}")
+            st.session_state.D5["answer"] = "Occurrence Analysis:\n" + "\n".join([w for w in st.session_state.d5_occ_whys if w.strip()]) + "\n\nDetection Analysis:\n" + "\n".join([w for w in st.session_state.d5_det_whys if w.strip()])
             st.session_state.D5["extra"] = st.text_area(t[lang_key]["Root_Cause"], value=st.session_state.D5["extra"], key="root_cause")
 
 # ---------------------------
@@ -155,7 +132,7 @@ for i, (step, note, example) in enumerate(npqp_steps):
 data_rows = [(step, st.session_state[step]["answer"], st.session_state[step]["extra"]) for step, _, _ in npqp_steps]
 
 # ---------------------------
-# Save and download Excel
+# Save Excel
 # ---------------------------
 if st.button(t[lang_key]["Save"]):
     if not any(ans for _, ans, _ in data_rows):
@@ -174,10 +151,32 @@ if st.button(t[lang_key]["Save"]):
         # Report info
         ws.append([t[lang_key]["Report_Date"], st.session_state.report_date])
         ws.append([t[lang_key]["Prepared_By"], st.session_state.prepared_by])
-        ws.append([])  # empty row
+        ws.append([])
 
         # Header
         ws.append(["Step", "Answer", "Extra Notes"])
         for col in range(1, 4):
             ws.cell(row=ws.max_row, column=col).font = Font(bold=True)
-            ws.cell(row=ws.max
+            ws.cell(row=ws.max_row, column=col).alignment = Alignment(horizontal="center")
+
+        # Write data
+        for step, answer, extra in data_rows:
+            ws.append([step, answer, extra])
+
+        # Adjust column widths
+        for col in ws.columns:
+            max_length = 0
+            column = col[0].column_letter
+            for cell in col:
+                try:
+                    if cell.value:
+                        max_length = max(max_length, len(str(cell.value)))
+                except:
+                    pass
+            ws.column_dimensions[column].width = max(15, max_length + 2)
+
+        # Save file
+        xlsx_file = "NPQP_8D_Report.xlsx"
+        wb.save(xlsx_file)
+        st.success("✅ 8D report saved!")
+        st.download_button(t[lang_key]["Download"], xlsx_file, file_name=xlsx_file)
