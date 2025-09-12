@@ -219,30 +219,3 @@ st.download_button(
 )
 
 # ---------------------------
-# JSON Backup + Restore
-# ---------------------------
-def generate_json():
-    save_data = {k: v for k, v in st.session_state.items() if not k.startswith("_")}
-    return json.dumps(save_data, indent=4)
-
-st.download_button(
-    label="💾 Save Progress (JSON)",
-    data=generate_json(),
-    file_name=f"8D_Report_Backup_{st.session_state.report_date.replace(' ', '_')}.json",
-    mime="application/json"
-)
-
-uploaded_json = st.file_uploader("📂 Load Saved Progress (JSON)", type=["json"])
-if uploaded_json:
-    try:
-        restored = json.load(uploaded_json)
-        for k, v in restored.items():
-            st.session_state[k] = v
-        st.success("✅ Progress restored!")
-    except Exception as e:
-        st.error(f"❌ Could not load: {e}")
-
-# ---------------------------
-# Auto-backup in URL (using st.query_params)
-# ---------------------------
-st.query_params["backup"] = generate_json()
