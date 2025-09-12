@@ -240,8 +240,7 @@ with st.sidebar:
 
     st.markdown("---")
     st.markdown("### Reset All Data")
-
-    if st.button("🗑️ Clear All"):
+   if st.button("🗑️ Clear All"):
     # Reset each D-step
     for step, _, _ in npqp_steps:
         st.session_state[step] = {"answer": "", "extra": ""}
