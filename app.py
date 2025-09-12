@@ -240,21 +240,14 @@ with st.sidebar:
     st.markdown("### Reset All Data")
 
     if st.button("🗑️ Clear All"):
-        # Reset each D-step except D5
         for step, _, _ in npqp_steps:
             if step != "D5":
                 st.session_state[step] = {"answer": "", "extra": ""}
-        # Reset D5 properly
         st.session_state["D5"] = {"answer": "", "extra": ""}
         st.session_state["d5_occ_whys"] = [""] * 5
         st.session_state["d5_det_whys"] = [""] * 5
-
-        # Reset report info
         st.session_state["report_date"] = datetime.datetime.today().strftime("%B %d, %Y")
         st.session_state["prepared_by"] = ""
-
-        # Ensure all keys exist
         for step in ["D1","D2","D3","D4","D5","D6","D7","D8"]:
             st.session_state.setdefault(step, {"answer":"", "extra":""})
-
-        st.experimental_rerun()
+        st.success("✅ All data has been reset!")
