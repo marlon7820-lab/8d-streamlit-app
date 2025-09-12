@@ -142,18 +142,17 @@ for i, (step, note, example) in enumerate(npqp_steps):
 # Collect answers
 # ---------------------------
 data_rows = [(step, st.session_state[step]["answer"], st.session_state[step]["extra"]) for step, _, _ in npqp_steps]
+# Adjust column widths
+    for col in range(1, 4):
+        ws.column_dimensions[get_column_letter(col)].width = 40
 
-# ---------------------------
-# Save to Excel
-# ---------------------------
-if st.button(f"{t[lang_key]['Save']}"):
-    if not any(ans for _, ans, _ in data_rows):
-        st.error("⚠️ No answers filled in yet. Please complete some fields before saving.")
-    else:
-        xlsx_file = "NPQP_8D_Report.xlsx"
-        wb = Workbook()
-        ws = wb.active
-        ws.title = "NPQP 8D Report"
-
-        # Title
-        ws.merge_cells("A1:C1")
+    # Save workbook in-memory and provide download
+    from io import BytesIO
+    output = BytesIO()
+    wb.save(output)
+    st.download_button(
+        label=t["Download Report"],
+        data=output.getvalue(),
+        file_name=f"8D_Report_{st.session_state.report_date.replace(' ', '_')}.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
