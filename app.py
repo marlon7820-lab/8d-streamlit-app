@@ -26,7 +26,6 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Update app title
 st.markdown("<h1 style='text-align: center; color: #1E90FF;'>📋 8D Report Assistant</h1>", unsafe_allow_html=True)
 
 # ---------------------------
@@ -103,12 +102,11 @@ st.session_state.setdefault("d5_occ_whys", [""] * 5)
 st.session_state.setdefault("d5_det_whys", [""] * 5)
 
 # ---------------------------
-# Restore from URL (auto-backup)
+# Restore from URL (using st.query_params)
 # ---------------------------
-query_params = st.experimental_get_query_params()
-if "backup" in query_params:
+if "backup" in st.query_params:
     try:
-        data = json.loads(query_params["backup"][0])
+        data = json.loads(st.query_params["backup"])
         for k, v in data.items():
             st.session_state[k] = v
     except Exception:
@@ -245,6 +243,6 @@ if uploaded_json:
         st.error(f"❌ Could not load: {e}")
 
 # ---------------------------
-# Auto-backup in URL
+# Auto-backup in URL (using st.query_params)
 # ---------------------------
-st.experimental_set_query_params(backup=generate_json())
+st.query_params["backup"] = generate_json()
