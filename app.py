@@ -188,13 +188,18 @@ if st.button("💾 Save 8D Report / Guardar Reporte"):
             cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
             cell.fill = header_fill
 
-        # Content
-        row = 7
-        for step, ans, extra in data_rows:
-            ws.cell(row=row, column=1, value=step)
-            ws.cell(row=row, column=2, value=ans)
-            ws.cell(row=row, column=3, value=extra)
-            fill_color = step_colors.get(step, "FFFFFF")
-            for col in range(1,4):
-                ws.cell(row=row, column=col).fill = PatternFill(start_color=fill_color, end_color=
+      # Content
+row = 7
+for step, ans, extra in data_rows:
+    ws.cell(row=row, column=1, value=step)
+    ws.cell(row=row, column=2, value=ans)
+    ws.cell(row=row, column=3, value=extra)
+    fill_color = step_colors.get(step, "FFFFFF")
+    for col in range(1, 4):
+        ws.cell(row=row, column=col).fill = PatternFill(
+            start_color=fill_color,
+            end_color=fill_color,
+            fill_type="solid"
+        )
+    row += 1
                                                                )
