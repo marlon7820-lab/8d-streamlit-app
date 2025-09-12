@@ -189,4 +189,63 @@ def generate_excel():
     header_row = ws.max_row + 1
     headers = ["Step", "Answer", "Extra / Notes"]
     fill = PatternFill(start_color="1E90FF", end_color="1E90FF", fill_type="solid")
-    for c_idx
+    for c_idx, h in enumerate(headers, start=1):
+        cell = ws.cell(row=header_row, column=c_idx, value=h)
+        cell.fill = fill
+        cell.font = Font(bold=True, color="FFFFFF")
+        cell.alignment = Alignment(horizontal="center", vertical="center")
+        cell.border = border
+
+    for step, answer, extra in data_rows:
+        ws.append([t[lang_key][step], answer, extra])
+        r = ws.max_row
+        for c in range(1, 4):
+            cell = ws.cell(row=r, column=c)
+            cell.alignment = Alignment(wrap_text=True, vertical="top")
+            cell.border = border
+
+    # Set column widths
+    ws.column_dimensions[get_column_letter(1)].width = 28
+    ws.column_dimensions[get_column_letter(2)].width = 80
+    ws.column_dimensions[get_column_letter(3)].width = 60
+
+    output = io.BytesIO()
+    wb.save(output)
+    return output.getvalue()
+
+st.download_button(
+    label=f"{t[lang_key]['Download']}",
+    data=generate_excel(),
+    file_name=f"8D_Report_{st.session_state.report_date.replace(' ', '_')}.xlsx",
+    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+)
+
+# ---------------------------
+# Sidebar: JSON Backup/Restore + Reset
+# ---------------------------
+with st.sidebar:
+    st.markdown("## Backup / Restore")
+    def generate_json():
+        save_data = {k: v for k, v in st.session_state.items() if not k.startswith("_")}
+        return json.dumps(save_data, indent=4)
+
+    st.download_button(
+        label="💾 Save Progress (JSON)",
+        data=generate_json(),
+        file_name=f"8D_Report_Backup_{st.session_state.report_date.replace(' ', '_')}.json",
+        mime="application/json"
+    )
+
+    uploaded_json = st.file_uploader("📂 Load Saved Progress (JSON)", type=["json"])
+    if uploaded_json:
+        try:
+            restored = json.load(uploaded_json)
+            for k, v in restored.items():
+                st.session_state[k] = v
+            st.success("✅ Progress restored!")
+        except Exception as e:
+            st.error(f"❌ Could not load: {e}")
+
+    # Reset All Answers
+    if st.button("♻️ Reset All Answers"):
+        for step, _,
