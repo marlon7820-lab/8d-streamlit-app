@@ -35,7 +35,7 @@ st.markdown("""
     }
 
     /* Tab content text */
-    .stMarkdown, .stText, .stTextArea, .stInfo, .stTextInput {
+    .stMarkdown, .stText, .stTextArea, .stTextInput, .stButton {
         color: #000000 !important; /* Force tab content text to be dark */
     }
 
@@ -51,7 +51,10 @@ st.markdown("""
     .stInfo {
         background-color: #e6f7ff !important;
         border-left: 5px solid #1E90FF !important;
-        color: #000000 !important; /* Dark text for readability */
+        color: #000000 !important; /* Force black text for readability */
+    }
+    .stInfo p, .stInfo span, .stInfo div {
+        color: #000000 !important; /* Also force nested text inside info boxes */
     }
 
     /* Sidebar section headers */
