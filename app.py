@@ -250,14 +250,17 @@ with st.sidebar:
     st.markdown("### Reset All Data")
 
     if st.button("🗑️ Clear All"):
-        for step, _, _ in npqp_steps:
-            if step != "D5":
-                st.session_state[step] = {"answer": "", "extra": ""}
-        st.session_state["D5"] = {"answer": "", "extra": ""}
-        st.session_state["d5_occ_whys"] = [""] * 5
-        st.session_state["d5_det_whys"] = [""] * 5
-        st.session_state["report_date"] = datetime.datetime.today().strftime("%B %d, %Y")
-        st.session_state["prepared_by"] = ""
-        for step in ["D1","D2","D        for step in ["D1","D2","D3","D4","D5","D6","D7","D8"]:
-            st.session_state.setdefault(step, {"answer":"", "extra":""})
-        st.success("✅ All data has been reset!")
+    for step, _, _ in npqp_steps:
+        if step != "D5":
+            st.session_state[step] = {"answer": "", "extra": ""}
+    st.session_state["D5"] = {"answer": "", "extra": ""}
+    st.session_state["d5_occ_whys"] = [""] * 5
+    st.session_state["d5_det_whys"] = [""] * 5
+    st.session_state["report_date"] = datetime.datetime.today().strftime("%B %d, %Y")
+    st.session_state["prepared_by"] = ""
+    
+    # Ensure all steps are in session state
+    for step in ["D1","D2","D3","D4","D5","D6","D7","D8"]:
+        st.session_state.setdefault(step, {"answer":"", "extra":""})
+    
+    st.success("✅ All data has been reset!")
