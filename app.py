@@ -1,12 +1,12 @@
 import streamlit as st
 from openpyxl import Workbook
-from openpyxl.styles import Font, Alignment, PatternFill
+from openpyxl.styles import Font
 from openpyxl.utils import get_column_letter
 import datetime
 from io import BytesIO
 
 # ---------------------------
-# Page config
+# Page config and branding
 # ---------------------------
 st.set_page_config(
     page_title="8D Training App",
@@ -15,14 +15,14 @@ st.set_page_config(
 )
 
 # Hide Streamlit default menu, header, and footer
-st.markdown("""
+hide_streamlit_style = """
     <style>
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
     </style>
-""", unsafe_allow_html=True)
-
+"""
+st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 st.markdown("<h1 style='text-align: center; color: #1E90FF;'>📑 8D Training App</h1>", unsafe_allow_html=True)
 
 # ---------------------------
@@ -30,6 +30,7 @@ st.markdown("<h1 style='text-align: center; color: #1E90FF;'>📑 8D Training Ap
 # ---------------------------
 lang = st.selectbox("Select Language / Seleccionar Idioma", ["English", "Español"])
 
+# Translation dictionary
 t = {
     "en": {
         "D1": "D1: Concern Details",
@@ -106,7 +107,7 @@ st.session_state.report_date = st.text_input(f"{t[lang_key]['Report_Date']}", va
 st.session_state.prepared_by = st.text_input(f"{t[lang_key]['Prepared_By']}", value=st.session_state.prepared_by)
 
 # ---------------------------
-# Tabs
+# Tabs for each step
 # ---------------------------
 tabs = st.tabs([t[lang_key][step] for step, _, _ in npqp_steps])
 for i, (step, note, example) in enumerate(npqp_steps):
@@ -123,7 +124,7 @@ for i, (step, note, example) in enumerate(npqp_steps):
                     st.session_state.d5_occ_whys[idx] = st.text_input(f"{t[lang_key]['Occurrence_Why']} {idx+1}", value=val, key=f"occ_{idx}")
                 else:
                     suggestions = ["Operator error", "Process not followed", "Equipment malfunction"]
-                    st.session_state.d5_occ_whys[idx] = st.selectbox(f"{t[lang_key]['Occurrence_Why']} {idx+1}", [""] + suggestions, key=f"occ_{idx}")
+                    st.session_state.d5_occ_whys[idx] = st.selectbox(f"{t[lang_key]['Occurrence_Why']} {idx+1}", [""] + suggestions, key=f"occ_{idx}", index=0)
 
             st.markdown("#### Detection Analysis")
             for idx, val in enumerate(st.session_state.d5_det_whys):
@@ -131,7 +132,7 @@ for i, (step, note, example) in enumerate(npqp_steps):
                     st.session_state.d5_det_whys[idx] = st.text_input(f"{t[lang_key]['Detection_Why']} {idx+1}", value=val, key=f"det_{idx}")
                 else:
                     suggestions = ["QA checklist incomplete", "No automated test", "Missed inspection"]
-                    st.session_state.d5_det_whys[idx] = st.selectbox(f"{t[lang_key]['Detection_Why']} {idx+1}", [""] + suggestions, key=f"det_{idx}")
+                    st.session_state.d5_det_whys[idx] = st.selectbox(f"{t[lang_key]['Detection_Why']} {idx+1}", [""] + suggestions, key=f"det_{idx}", index=0)
 
             st.session_state.D5["answer"] = (
                 "Occurrence Analysis:\n" + "\n".join([w for w in st.session_state.d5_occ_whys if w.strip()]) +
@@ -140,30 +141,18 @@ for i, (step, note, example) in enumerate(npqp_steps):
             st.session_state.D5["extra"] = st.text_area(f"{t[lang_key]['Root_Cause']}", value=st.session_state.D5["extra"], key="root_cause")
 
 # ---------------------------
-# Prepare Excel
+# Save to Excel
 # ---------------------------
 if st.button(f"{t[lang_key]['Save']}"):
     wb = Workbook()
     ws = wb.active
     ws.title = "NPQP 8D Report"
 
-    ws.append(["NPQP 8D Report"])
-    ws["A1"].font = Font(size=14, bold=True)
+    # Title
     ws.merge_cells("A1:C1")
+    ws["A1"].value = "NPQP 8D Report"
+    ws["A1"].font = Font(size=14, bold=True)
 
+    # Report info
     ws.append([f"{t[lang_key]['Report_Date']}: {st.session_state.report_date}"])
-    ws.append([f"{t[lang_key]['Prepared_By']}: {st.session_state.prepared_by}"])
-    ws.append([])
-
-    for step, _, _ in npqp_steps:
-        ws.append([t[lang_key][step]])
-        ws.append([st.session_state[step]["answer"]])
-        if st.session_state[step]["extra"].strip():
-            ws.append([st.session_state[step]["extra"]])
-        ws.append([])
-
-    # Adjust column width
-    for col in ws.columns:
-        max_length = max(len(str(cell.value)) if cell.value else 0 for cell in col)
-        adjusted_width = max_length + 5
-        ws
+    ws.append([f"{t[lang_key]['Prepared_By']}: {st.session_state
