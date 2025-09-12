@@ -17,14 +17,11 @@ st.set_page_config(
     layout="wide"
 )
 
-# App colors and styling
 st.markdown("""
     <style>
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
-    .stTextInput>div>div>input {background-color: #F0F8FF;}
-    .stTextArea>div>div>textarea {background-color: #F0F8FF;}
     </style>
 """, unsafe_allow_html=True)
 
@@ -101,30 +98,31 @@ if "backup" in st.query_params:
 st.subheader(f"{t[lang_key]['Report_Date']}")
 st.session_state.report_date = st.text_input(f"{t[lang_key]['Report_Date']}", value=st.session_state.report_date)
 st.session_state.prepared_by = st.text_input(f"{t[lang_key]['Prepared_By']}", value=st.session_state.prepared_by)
+
 # ---------------------------
-# Tabs for each step with completion badges
+# Tabs for each step with colored completion badges
 # ---------------------------
-tabs = st.tabs([t[lang_key][step] for step, _, _ in npqp_steps])
+tab_labels = []
+for step, _, _ in npqp_steps:
+    answer_filled = bool(st.session_state[step]["answer"].strip())
+    badge_color = "🟢" if answer_filled else "🔴"
+    tab_labels.append(f"{badge_color} {t[lang_key][step]}")
+
+tabs = st.tabs(tab_labels)
+
 for i, (step, note, example) in enumerate(npqp_steps):
     with tabs[i]:
-        # Completion badge
-        answered = bool(st.session_state[step]["answer"].strip())
-        badge = "✅" if answered else "❌"
-        st.markdown(f"### {t[lang_key][step]} {badge}")
-
+        st.markdown(f"### {t[lang_key][step]}")
         if step != "D5":
             st.info(f"**{t[lang_key]['Training_Guidance']}:** {note}\n\n💡 **{t[lang_key]['Example']}:** {example}")
-            st.session_state[step]["answer"] = st.text_area(
-                f"Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}"
-            )
+            st.session_state[step]["answer"] = st.text_area(f"Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}")
         else:
             st.info(f"**{t[lang_key]['Training_Guidance']}:** {note}")
             st.markdown("#### Occurrence Analysis")
             for idx, val in enumerate(st.session_state.d5_occ_whys):
                 if idx == 0:
                     st.session_state.d5_occ_whys[idx] = st.text_input(
-                        f"{t[lang_key]['Occurrence_Why']} {idx+1}", value=val, key=f"occ_{idx}"
-                    )
+                        f"{t[lang_key]['Occurrence_Why']} {idx+1}", value=val, key=f"occ_{idx}")
                 else:
                     suggestions = ["Operator error", "Process not followed", "Equipment malfunction"]
                     st.session_state.d5_occ_whys[idx] = st.selectbox(
@@ -135,8 +133,7 @@ for i, (step, note, example) in enumerate(npqp_steps):
             for idx, val in enumerate(st.session_state.d5_det_whys):
                 if idx == 0:
                     st.session_state.d5_det_whys[idx] = st.text_input(
-                        f"{t[lang_key]['Detection_Why']} {idx+1}", value=val, key=f"det_{idx}"
-                    )
+                        f"{t[lang_key]['Detection_Why']} {idx+1}", value=val, key=f"det_{idx}")
                 else:
                     suggestions = ["QA checklist incomplete", "No automated test", "Missed inspection"]
                     st.session_state.d5_det_whys[idx] = st.selectbox(
@@ -199,7 +196,6 @@ def generate_excel():
         for c in range(1, 4):
             cell = ws.cell(row=r, column=c)
             cell.alignment = Alignment(wrap_text=True, vertical="top")
-            cell.font = Font(bold=(c==2))  # Bold answers column
             cell.border = border
 
     for col in range(1, 4):
@@ -208,6 +204,7 @@ def generate_excel():
     output = io.BytesIO()
     wb.save(output)
     return output.getvalue()
+
 
 st.download_button(
     label=f"{t[lang_key]['Download']}",
