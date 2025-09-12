@@ -17,7 +17,6 @@ st.set_page_config(
     layout="wide"
 )
 
-# Hide default Streamlit elements
 st.markdown("""
     <style>
     #MainMenu {visibility: hidden;}
@@ -87,7 +86,7 @@ st.session_state.setdefault("d5_det_whys", [""] * 5)
 # ---------------------------
 if "backup" in st.query_params:
     try:
-        data = json.loads(st.query_params["backup"])
+        data = json.loads(st.query_params["backup"][0])
         for k, v in data.items():
             st.session_state[k] = v
     except Exception:
@@ -195,7 +194,48 @@ def generate_excel():
 st.download_button(
     label=f"{t[lang_key]['Download']}",
     data=generate_excel(),
-    file_name=f"8D_Report_{st.session_state.report_date.replace(' ', '_')}.xlsx",
-    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-)
-``
+    file_name=f"
+    # ---------------------------
+# Sidebar: JSON Backup / Restore + Reset
+# ---------------------------
+with st.sidebar:
+    st.markdown("## Backup / Restore")
+
+    # Generate JSON of current session
+    def generate_json():
+        save_data = {k: v for k, v in st.session_state.items() if not k.startswith("_")}
+        return json.dumps(save_data, indent=4)
+
+    # Download button for JSON backup
+    st.download_button(
+        label="💾 Save Progress (JSON)",
+        data=generate_json(),
+        file_name=f"8D_Report_Backup_{st.session_state.report_date.replace(' ', '_')}.json",
+        mime="application/json"
+    )
+
+    st.markdown("---")
+    st.markdown("### Restore from JSON")
+
+    # Upload JSON to restore session
+    uploaded_file = st.file_uploader("Upload JSON file to restore", type="json")
+    if uploaded_file:
+        try:
+            restore_data = json.load(uploaded_file)
+            for k, v in restore_data.items():
+                st.session_state[k] = v
+            st.success("✅ Session restored from JSON!")
+        except Exception as e:
+            st.error(f"Error restoring JSON: {e}")
+
+    st.markdown("---")
+    st.markdown("### Reset All Data")
+
+    if st.button("🗑️ Clear All"):
+        for step, _, _ in npqp_steps:
+            st.session_state[step] = {"answer": "", "extra": ""}
+        st.session_state["report_date"] = datetime.datetime.today().strftime("%B %d, %Y")
+        st.session_state["prepared_by"] = ""
+        st.session_state["d5_occ_whys"] = [""] * 5
+        st.session_state["d5_det_whys"] = [""] * 5
+        st.experimental_rerun()
