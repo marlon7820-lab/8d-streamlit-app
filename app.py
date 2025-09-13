@@ -22,32 +22,23 @@ st.set_page_config(
 # ---------------------------
 st.markdown("""
     <style>
-    /* Background gradient for the main page */
     .stApp {
         background: linear-gradient(to right, #f0f8ff, #e6f2ff);
         color: #000000 !important;
     }
-
-    /* Tab headers styling */
     .stTabs [data-baseweb="tab"] {
         font-weight: bold;
         color: #000000 !important;
     }
-
-    /* Tab content text */
     .stMarkdown, .stText, .stTextArea, .stTextInput, .stButton {
         color: #000000 !important;
     }
-
-    /* Text area boxes */
     textarea {
         background-color: #ffffff !important;
         border: 1px solid #1E90FF !important;
         border-radius: 5px;
         color: #000000 !important;
     }
-
-    /* Info boxes for guidance and examples */
     .stInfo {
         background-color: #cce6ff !important;
         border-left: 5px solid #1E90FF !important;
@@ -56,14 +47,10 @@ st.markdown("""
     .stInfo * {
         color: #000000 !important;
     }
-
-    /* Sidebar section headers */
     .css-1d391kg {
         color: #1E90FF !important;
         font-weight: bold !important;
     }
-
-    /* Download button highlight */
     button[kind="primary"] {
         background-color: #1E90FF !important;
         color: white !important;
@@ -163,7 +150,7 @@ for i, (step, note, example) in enumerate(npqp_steps):
         if step != "D5":
             st.info(f"**{t[lang_key]['Training_Guidance']}:** {note}\n\n💡 **{t[lang_key]['Example']}:** {example}")
             st.session_state[step]["answer"] = st.text_area(f"Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}")
-                    else:
+        else:
             st.info(f"**{t[lang_key]['Training_Guidance']}:** {note}")
             st.markdown("#### Occurrence Analysis")
             for idx, val in enumerate(st.session_state.d5_occ_whys):
