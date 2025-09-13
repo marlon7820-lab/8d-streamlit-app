@@ -131,8 +131,6 @@ st.session_state.setdefault("report_date", datetime.datetime.today().strftime("%
 st.session_state.setdefault("prepared_by", "")
 st.session_state.setdefault("d5_occ_whys", [""] * 5)
 st.session_state.setdefault("d5_det_whys", [""] * 5)
-
-# NEW: track selected items dynamically to filter dropdowns
 st.session_state.setdefault("d5_occ_selected", [])
 st.session_state.setdefault("d5_det_selected", [])
 
@@ -153,6 +151,7 @@ if "backup" in st.query_params:
 st.subheader(f"{t[lang_key]['Report_Date']}")
 st.session_state.report_date = st.text_input(f"{t[lang_key]['Report_Date']}", value=st.session_state.report_date)
 st.session_state.prepared_by = st.text_input(f"{t[lang_key]['Prepared_By']}", value=st.session_state.prepared_by)
+
 # ---------------------------
 # Tabs with ✅ / 🔴 status indicators
 # ---------------------------
@@ -184,137 +183,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             <b>{t[lang_key]['Training_Guidance']}:</b> {note_text}<br><br>
             💡 <b>{t[lang_key]['Example']}:</b> {example_text}
             </div>
-            """, unsafe_allow_html=True)
-            st.session_state[step]["answer"] = st.text_area(
-                "Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}"
-            )
-
-        # ---------------------------
-        # D5 Section (Only inside its tab)
-        # ---------------------------
-        if step == "D5":
-            st.markdown(f"""
-            <div style="
-                background-color:#b3e0ff; 
-                color:black; 
-                padding:12px; 
-                border-left:5px solid #1E90FF; 
-                border-radius:6px;
-                width:100%;
-                font-size:14px;
-                line-height:1.5;
-            ">
-            <b>{t[lang_key]['Training_Guidance']}:</b> {note_dict[lang_key]}
-            </div>
-            """, unsafe_allow_html=True)
-
-            # Occurrence Section
-            st.markdown("#### Occurrence Analysis")
-            occurrence_categories = {
-                "Machine / Equipment-related": [
-                    "Mechanical failure or breakdown",
-                    "Calibration issues (incorrect settings)",
-                    "Tooling or fixture failure",
-                    "Machine wear and tear"
-                ],
-                "Material / Component-related": [
-                    "Wrong material delivered",
-                    "Material defects or impurities",
-                    "Damage during storage or transport",
-                    "Incorrect specifications or tolerance errors"
-                ],
-                "Process / Method-related": [
-                    "Incorrect process steps due to poor process design",
-                    "Inefficient workflow or bottlenecks",
-                    "Lack of standardized procedures",
-                    "Outdated or incomplete work instructions"
-                ],
-                "Environmental / External Factors": [
-                    "Temperature, humidity, or other environmental conditions",
-                    "Power fluctuations or outages",
-                    "Contamination (dust, oil, chemicals)",
-                    "Regulatory or compliance changes"
-                ]
-            }
-
-            # Build dynamic remaining options so that once a value is picked it is removed from subsequent dropdowns
-            selected_occ = []
-            for idx, val in enumerate(st.session_state.d5_occ_whys):
-                # Build options excluding those already selected in this render (selected_occ) and excluding the rest of the session values
-                remaining_options = []
-                for cat, items in occurrence_categories.items():
-                    for item in items:
-                        full_item = f"{cat}: {item}"
-                        # show option only if not already chosen in this loop and not present in other saved whys
-                        if full_item not in selected_occ and full_item not in st.session_state.d5_occ_whys:
-                            remaining_options.append(full_item)
-                # Ensure current value remains available so it doesn't disappear
-                if val and val not in remaining_options:
-                    remaining_options.append(val)
-
-                options = [""] + sorted(remaining_options)
-                # Compute safe index
-                try:
-                    index = options.index(val) if val else 0
-                except ValueError:
-                    index = 0
-
-                st.session_state.d5_occ_whys[idx] = st.selectbox(
-                    f"{t[lang_key]['Occurrence_Why']} {idx+1}",
-                    options,
-                    index=index,
-                    key=f"occ_{idx}"
-                )
-                if st.session_state.d5_occ_whys[idx]:
-                    selected_occ.append(st.session_state.d5_occ_whys[idx])
-
-            st.session_state["d5_occ_selected"] = selected_occ
-
-            # Detection Section
-            st.markdown("#### Detection Analysis")
-            detection_categories = {
-                "QA / Inspection-related": [
-                    "QA checklist incomplete",
-                    "No automated test",
-                    "Missed inspection due to process gap",
-                    "Tooling or equipment inspection not scheduled"
-                ],
-                "Validation / Process-related": [
-                    "Insufficient validation steps",
-                    "Design verification not complete",
-                    "Inspection documentation missing or outdated"
-                ]
-            }
-
-            selected_det = []
-            for idx, val in enumerate(st.session_state.d5_det_whys):
-                remaining_options = []
-                for cat, items in detection_categories.items():
-                    for item in items:
-                        full_item = f"{cat}: {item}"
-                        if full_item not in selected_det and full_item not in st.session_state.d5_det_whys:
-                            remaining_options.append(full_item)
-                if val and val not in remaining_options:
-                    remaining_options.append(val)
-
-                options_det = [""] + sorted(remaining_options)
-                try:
-                    index_det = options_det.index(val) if val else 0
-                except ValueError:
-                    index_det = 0
-
-                st.session_state.d5_det_whys[idx] = st.selectbox(
-                    f"{t[lang_key]['Detection_Why']} {idx+1}",
-                    options_det,
-                    index=index_det,
-                    key=f"det_{idx}"
-                )
-                if st.session_state.d5_det_whys[idx]:
-                    selected_det.append(st.session_state.d5_det_whys[idx])
-
-            st.session_state["d5_det_selected"] = selected_det
-
-            # Combine answers into D5 answer field
+                        # Combine answers into D5 answer field
             st.session_state.D5["answer"] = (
                 "Occurrence Analysis:\n" + "\n".join([w for w in st.session_state.d5_occ_whys if w.strip()]) +
                 "\n\nDetection Analysis:\n" + "\n".join([w for w in st.session_state.d5_det_whys if w.strip()])
@@ -436,11 +305,4 @@ with st.sidebar:
         st.session_state["prepared_by"] = ""
         for step in ["D1","D2","D3","D4","D5","D6","D7","D8"]:
             st.session_state.setdefault(step, {"answer":"", "extra":""})
-            # ---------------------------
-# App Version Info
-# ---------------------------
-st.markdown(
-    "<hr><small><i>Version: 1.3 – Last Updated: Sept 13, 2025</i></small>",
-    unsafe_allow_html=True
-)
         st.success("✅ All data has been reset!")
