@@ -40,7 +40,7 @@ st.markdown("""
         color: #000000 !important;
     }
     /* Mobile-safe info boxes: all text forced black */
-    .stInfo, .stInfo * {
+    div.stInfo, div.stInfo * {
         background-color: #b3e0ff !important;  /* Bright blue background */
         color: #000000 !important;            /* Force black text */
     }
@@ -236,7 +236,6 @@ def generate_excel():
     output = io.BytesIO()
     wb.save(output)
     return output.getvalue()
-
 
 st.download_button(
     label=f"{t[lang_key]['Download']}",
