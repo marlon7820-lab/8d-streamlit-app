@@ -39,13 +39,10 @@ st.markdown("""
         border-radius: 5px;
         color: #000000 !important;
     }
-    .stInfo {
-        background-color: #b3e0ff !important;  /* Brighter light blue */
-        border-left: 5px solid #1E90FF !important;
-        color: #000000 !important;
-    }
-    .stInfo * {
-        color: #000000 !important;            /* Ensure all inner text is black */
+    /* Mobile-safe info boxes: all text forced black */
+    .stInfo, .stInfo * {
+        background-color: #b3e0ff !important;  /* Bright blue background */
+        color: #000000 !important;            /* Force black text */
     }
     .css-1d391kg {
         color: #1E90FF !important;
