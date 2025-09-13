@@ -83,17 +83,48 @@ t = {
 }
 
 # ---------------------------
-# NPQP 8D steps
+# NPQP 8D steps with bilingual notes/examples
 # ---------------------------
 npqp_steps = [
-    ("D1", "Describe the customer concerns clearly. Include what the issue is, where it occurred, when, and any supporting data.", "Customer reported static noise in amplifier during end-of-line test."),
-    ("D2", "Check for similar parts, models, generic parts, other colors, opposite hand, front/rear, etc.", "Same speaker type used in another radio model; different amplifier colors."),
-    ("D3", "Perform an initial investigation to identify obvious issues, collect data, and document initial findings.", "Visual inspection of solder joints, initial functional tests, checking connectors."),
-    ("D4", "Define temporary containment actions to prevent the customer from seeing the problem while permanent actions are developed.", "100% inspection of amplifiers before shipment; temporary shielding."),
-    ("D5", "Use 5-Why analysis to determine the root cause. Separate Occurrence and Detection.", ""),
-    ("D6", "Define corrective actions that eliminate the root cause permanently and prevent recurrence.", "Update soldering process, retrain operators, update work instructions."),
-    ("D7", "Verify that corrective actions effectively resolve the issue long-term.", "Functional tests on corrected amplifiers, accelerated life testing."),
-    ("D8", "Document lessons learned, update standards, procedures, FMEAs, and training to prevent recurrence.", "Update SOPs, PFMEA, work instructions, and employee training.")
+    ("D1", 
+     {"en":"Describe the customer concerns clearly. Include what the issue is, where it occurred, when, and any supporting data.",
+      "es":"Describa claramente las preocupaciones del cliente. Incluya cuál es el problema, dónde ocurrió, cuándo y cualquier dato de apoyo."},
+     {"en":"Customer reported static noise in amplifier during end-of-line test.",
+      "es":"El cliente reportó ruido estático en el amplificador durante la prueba final."}),
+    ("D2",
+     {"en":"Check for similar parts, models, generic parts, other colors, opposite hand, front/rear, etc.",
+      "es":"Verifique partes similares, modelos, partes genéricas, otros colores, lado opuesto, delantero/trasero, etc."},
+     {"en":"Same speaker type used in another radio model; different amplifier colors.",
+      "es":"El mismo tipo de altavoz se usa en otro modelo de radio; diferentes colores de amplificador."}),
+    ("D3",
+     {"en":"Perform an initial investigation to identify obvious issues, collect data, and document initial findings.",
+      "es":"Realice una investigación inicial para identificar problemas obvios, recopilar datos y documentar hallazgos iniciales."},
+     {"en":"Visual inspection of solder joints, initial functional tests, checking connectors.",
+      "es":"Inspección visual de las soldaduras, pruebas funcionales iniciales, revisión de conectores."}),
+    ("D4",
+     {"en":"Define temporary containment actions to prevent the customer from seeing the problem while permanent actions are developed.",
+      "es":"Defina acciones de contención temporales para evitar que el cliente vea el problema mientras se desarrollan acciones permanentes."},
+     {"en":"100% inspection of amplifiers before shipment; temporary shielding.",
+      "es":"Inspección del 100% de los amplificadores antes del envío; blindaje temporal."}),
+    ("D5",
+     {"en":"Use 5-Why analysis to determine the root cause. Separate Occurrence and Detection.",
+      "es":"Use el análisis de 5 Porqués para determinar la causa raíz. Separe Ocurrencia y Detección."},
+     {"en":"","es":""}),
+    ("D6",
+     {"en":"Define corrective actions that eliminate the root cause permanently and prevent recurrence.",
+      "es":"Defina acciones correctivas que eliminen permanentemente la causa raíz y prevengan recurrencias."},
+     {"en":"Update soldering process, retrain operators, update work instructions.",
+      "es":"Actualizar el proceso de soldadura, capacitar nuevamente a los operadores, actualizar instrucciones de trabajo."}),
+    ("D7",
+     {"en":"Verify that corrective actions effectively resolve the issue long-term.",
+      "es":"Verifique que las acciones correctivas resuelvan efectivamente el problema a largo plazo."},
+     {"en":"Functional tests on corrected amplifiers, accelerated life testing.",
+      "es":"Pruebas funcionales en amplificadores corregidos, pruebas de vida acelerada."}),
+    ("D8",
+     {"en":"Document lessons learned, update standards, procedures, FMEAs, and training to prevent recurrence.",
+      "es":"Documente las lecciones aprendidas, actualice estándares, procedimientos, FMEAs y capacitación para prevenir recurrencias."},
+     {"en":"Update SOPs, PFMEA, work instructions, and employee training.",
+      "es":"Actualizar SOPs, PFMEA, instrucciones de trabajo y capacitación de empleados."})
 ]
 
 # ---------------------------
@@ -136,11 +167,14 @@ for step, _, _ in npqp_steps:
         tab_labels.append(f"🔴 {t[lang_key][step]}")
 
 tabs = st.tabs(tab_labels)
-for i, (step, note, example) in enumerate(npqp_steps):
+for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     with tabs[i]:
         st.markdown(f"### {t[lang_key][step]}")
         if step != "D5":
-            # MOBILE-SAFE guidance/example box
+            note_text = note_dict[lang_key]
+            example_text = example_dict[lang_key]
+
+            # MOBILE-SAFE bilingual guidance/example box
             st.markdown(f"""
             <div style="
                 background-color:#b3e0ff; 
@@ -152,14 +186,14 @@ for i, (step, note, example) in enumerate(npqp_steps):
                 font-size:14px;
                 line-height:1.5;
             ">
-            <b>{t[lang_key]['Training_Guidance']}:</b> {note}<br><br>
-            💡 <b>{t[lang_key]['Example']}:</b> {example}
+            <b>{t[lang_key]['Training_Guidance']}:</b> {note_text}<br><br>
+            💡 <b>{t[lang_key]['Example']}:</b> {example_text}
             </div>
             """, unsafe_allow_html=True)
 
             st.session_state[step]["answer"] = st.text_area(f"Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}")
         else:
-            # D5 mobile-safe guidance
+            note_text = note_dict[lang_key]
             st.markdown(f"""
             <div style="
                 background-color:#b3e0ff; 
@@ -171,7 +205,7 @@ for i, (step, note, example) in enumerate(npqp_steps):
                 font-size:14px;
                 line-height:1.5;
             ">
-            <b>{t[lang_key]['Training_Guidance']}:</b> {note}
+            <b>{t[lang_key]['Training_Guidance']}:</b> {note_text}
             </div>
             """, unsafe_allow_html=True)
 
