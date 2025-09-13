@@ -36,14 +36,10 @@ st.markdown("""
         border-radius: 5px;
         color: #000000 !important;
     }
-    .stInfo {
+    .stAlert {
         background-color: #e6f7ff !important;
         border-left: 5px solid #1E90FF !important;
         color: #000000 !important;
-    }
-    .css-1d391kg {
-        color: #1E90FF !important;
-        font-weight: bold !important;
     }
     button[kind="primary"] {
         background-color: #1E90FF !important;
@@ -84,46 +80,17 @@ t = {
     }
 }
 
-# ---------------------------
-# NPQP 8D steps
-# ---------------------------
 npqp_steps = [
-    ("D1", {"en":"Describe the customer concerns clearly. Include what the issue is, where it occurred, when, and any supporting data.",
-            "es":"Describa claramente las preocupaciones del cliente. Incluya cuál es el problema, dónde ocurrió, cuándo y cualquier dato de soporte."},
-     {"en":"Customer reported static noise in amplifier during end-of-line test.",
-      "es":"El cliente reportó ruido estático en el amplificador durante la prueba final."}),
-    ("D2", {"en":"Check for similar parts, models, generic parts, other colors, opposite hand, front/rear, etc.",
-            "es":"Verifique partes similares, modelos, partes genéricas, otros colores, mano opuesta, frente/trasero, etc."},
-     {"en":"Same speaker type used in another radio model; different amplifier colors.",
-      "es":"Mismo tipo de altavoz usado en otro modelo de radio; diferentes colores de amplificador."}),
-    ("D3", {"en":"Perform an initial investigation to identify obvious issues, collect data, and document initial findings.",
-            "es":"Realice una investigación inicial para identificar problemas evidentes, recopile datos y documente hallazgos iniciales."},
-     {"en":"Visual inspection of solder joints, initial functional tests, checking connectors.",
-      "es":"Inspección visual de soldaduras, pruebas funcionales iniciales, revisión de conectores."}),
-    ("D4", {"en":"Define temporary containment actions to prevent the customer from seeing the problem while permanent actions are developed.",
-            "es":"Defina acciones de contención temporales para evitar que el cliente vea el problema mientras se desarrollan acciones permanentes."},
-     {"en":"100% inspection of amplifiers before shipment; temporary shielding.",
-      "es":"Inspección 100% de amplificadores antes del envío; blindaje temporal."}),
-    ("D5", {"en":"Use 5-Why analysis to determine the root cause. Separate Occurrence and Detection.",
-            "es":"Use el análisis de 5 Porqués para determinar la causa raíz. Separe Ocurrencia y Detección."},
-     {"en":"","es":""}),
-    ("D6", {"en":"Define corrective actions that eliminate the root cause permanently and prevent recurrence.",
-            "es":"Defina acciones correctivas que eliminen la causa raíz permanentemente y eviten recurrencia."},
-     {"en":"Update soldering process, retrain operators, update work instructions.",
-      "es":"Actualizar proceso de soldadura, reentrenar operadores, actualizar instrucciones de trabajo."}),
-    ("D7", {"en":"Verify that corrective actions effectively resolve the issue long-term.",
-            "es":"Verifique que las acciones correctivas resuelvan efectivamente el problema a largo plazo."},
-     {"en":"Functional tests on corrected amplifiers, accelerated life testing.",
-      "es":"Pruebas funcionales en amplificadores corregidos, pruebas de vida aceleradas."}),
-    ("D8", {"en":"Document lessons learned, update standards, procedures, FMEAs, and training to prevent recurrence.",
-            "es":"Documente lecciones aprendidas, actualice estándares, procedimientos, FMEAs y capacitación para prevenir recurrencia."},
-     {"en":"Update SOPs, PFMEA, work instructions, and employee training.",
-      "es":"Actualizar SOPs, PFMEA, instrucciones de trabajo y capacitación de empleados."})
+    ("D1", "Describe the customer concerns clearly. Include what the issue is, where it occurred, when, and any supporting data.", "Customer reported static noise in amplifier during end-of-line test."),
+    ("D2", "Check for similar parts, models, generic parts, other colors, opposite hand, front/rear, etc.", "Same speaker type used in another radio model; different amplifier colors."),
+    ("D3", "Perform an initial investigation to identify obvious issues, collect data, and document initial findings.", "Visual inspection of solder joints, initial functional tests, checking connectors."),
+    ("D4", "Define temporary containment actions to prevent the customer from seeing the problem while permanent actions are developed.", "100% inspection of amplifiers before shipment; temporary shielding."),
+    ("D5", "Use 5-Why analysis to determine the root cause. Separate Occurrence and Detection.", ""),
+    ("D6", "Define corrective actions that eliminate the root cause permanently and prevent recurrence.", "Update soldering process, retrain operators, update work instructions."),
+    ("D7", "Verify that corrective actions effectively resolve the issue long-term.", "Functional tests on corrected amplifiers, accelerated life testing."),
+    ("D8", "Document lessons learned, update standards, procedures, FMEAs, and training to prevent recurrence.", "Update SOPs, PFMEA, work instructions, and employee training.")
 ]
 
-# ---------------------------
-# Initialize session state
-# ---------------------------
 for step, _, _ in npqp_steps:
     if step not in st.session_state:
         st.session_state[step] = {"answer": "", "extra": ""}
@@ -131,211 +98,120 @@ st.session_state.setdefault("report_date", datetime.datetime.today().strftime("%
 st.session_state.setdefault("prepared_by", "")
 st.session_state.setdefault("d5_occ_whys", [""] * 5)
 st.session_state.setdefault("d5_det_whys", [""] * 5)
-st.session_state.setdefault("d5_occ_selected", [])
-st.session_state.setdefault("d5_det_selected", [])
 
 # ---------------------------
-# Restore from URL (st.query_params)
-# ---------------------------
-if "backup" in st.query_params:
-    try:
-        data = json.loads(st.query_params["backup"][0])
-        for k, v in data.items():
-            st.session_state[k] = v
-    except Exception:
-        pass
-
-# ---------------------------
-# Report info
+# Report info inputs
 # ---------------------------
 st.subheader(f"{t[lang_key]['Report_Date']}")
 st.session_state.report_date = st.text_input(f"{t[lang_key]['Report_Date']}", value=st.session_state.report_date)
 st.session_state.prepared_by = st.text_input(f"{t[lang_key]['Prepared_By']}", value=st.session_state.prepared_by)
 
-# ---------------------------
-# Tabs with ✅ / 🔴 status indicators
-# ---------------------------
 tab_labels = []
 for step, _, _ in npqp_steps:
     if st.session_state[step]["answer"].strip() != "":
         tab_labels.append(f"🟢 {t[lang_key][step]}")
     else:
         tab_labels.append(f"🔴 {t[lang_key][step]}")
-
 tabs = st.tabs(tab_labels)
-for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
+for i, (step, note, example) in enumerate(npqp_steps):
     with tabs[i]:
         st.markdown(f"### {t[lang_key][step]}")
-        if step not in ["D5"]:
-            note_text = note_dict[lang_key]
-            example_text = example_dict[lang_key]
-            st.markdown(f"""
-            <div style="
-                background-color:#b3e0ff; 
-                color:black; 
-                padding:12px; 
-                border-left:5px solid #1E90FF; 
-                border-radius:6px;
-                width:100%;
-                font-size:14px;
-                line-height:1.5;
-            ">
-            <b>{t[lang_key]['Training_Guidance']}:</b> {note_text}<br><br>
-            💡 <b>{t[lang_key]['Example']}:</b> {example_text}
-            </div>
-            """, unsafe_allow_html=True)
-            st.session_state[step]["answer"] = st.text_area(f"Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}")
-            # ---------------------------
-# D5 Section: Occurrence & Detection (Fixed)
-# ---------------------------
-
-if "D5" in [step for step, _, _ in npqp_steps]:
-    st.markdown(f"""
-    <div style="
-        background-color:#b3e0ff; 
-        color:black; 
-        padding:12px; 
-        border-left:5px solid #1E90FF; 
-        border-radius:6px;
-        width:100%;
-        font-size:14px;
-        line-height:1.5;
-    ">
-    <b>{t[lang_key]['Training_Guidance']}:</b> {npqp_steps[4][1][lang_key]}
-    </div>
-    """, unsafe_allow_html=True)
-
-    st.markdown("#### Occurrence Analysis")
-    occurrence_categories = {
-        "Machine / Equipment-related": [
-            "Mechanical failure or breakdown",
-            "Calibration issues (incorrect settings)",
-            "Tooling or fixture failure",
-            "Machine wear and tear"
-        ],
-        "Material / Component-related": [
-            "Wrong material delivered",
-            "Material defects or impurities",
-            "Damage during storage or transport",
-            "Incorrect specifications or tolerance errors"
-        ],
-        "Process / Method-related": [
-            "Incorrect process steps due to poor process design",
-            "Inefficient workflow or bottlenecks",
-            "Lack of standardized procedures",
-            "Outdated or incomplete work instructions"
-        ],
-        "Environmental / External Factors": [
-            "Temperature, humidity, or other environmental conditions",
-            "Power fluctuations or outages",
-            "Contamination (dust, oil, chemicals)",
-            "Regulatory or compliance changes"
-        ]
-    }
-
-    selected_occ = st.session_state.get("d5_occ_selected", [])
-
-    for idx, val in enumerate(st.session_state.d5_occ_whys):
-        if idx == 0:
-            st.session_state.d5_occ_whys[idx] = st.text_input(
-                f"{t[lang_key]['Occurrence_Why']} {idx+1}", value=val, key=f"occ_{idx}")
-            if st.session_state.d5_occ_whys[idx] != "" and st.session_state.d5_occ_whys[idx] not in selected_occ:
-                selected_occ.append(st.session_state.d5_occ_whys[idx])
+        if step != "D5":
+            st.info(f"**{t[lang_key]['Training_Guidance']}:** {note}\n\n💡 **{t[lang_key]['Example']}:** {example}")
+            st.session_state[step]["answer"] = st.text_area("Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}")
         else:
-            remaining_options = []
-            for cat, items in occurrence_categories.items():
-                for item in items:
-                    full_item = f"{cat}: {item}"
-                    if full_item not in selected_occ:
-                        remaining_options.append(full_item)
-            if st.session_state.d5_occ_whys[idx] not in remaining_options and st.session_state.d5_occ_whys[idx] != "":
-                remaining_options.append(st.session_state.d5_occ_whys[idx])
+            st.info(f"**{t[lang_key]['Training_Guidance']}:** {note}")
+            occurrence_categories = {
+                "Machine / Equipment-related": [
+                    "Mechanical failure or breakdown",
+                    "Calibration issues (incorrect settings)",
+                    "Tooling or fixture failure",
+                    "Machine wear and tear"
+                ],
+                "Material / Component-related": [
+                    "Wrong material delivered",
+                    "Material defects or impurities",
+                    "Damage during storage or transport",
+                    "Incorrect specifications or tolerance errors"
+                ],
+                "Process / Method-related": [
+                    "Incorrect process steps due to poor process design",
+                    "Inefficient workflow or bottlenecks",
+                    "Lack of standardized procedures",
+                    "Outdated or incomplete work instructions"
+                ],
+                "Environmental / External Factors": [
+                    "Temperature, humidity, or other environmental conditions",
+                    "Power fluctuations or outages",
+                    "Contamination (dust, oil, chemicals)",
+                    "Regulatory or compliance changes"
+                ]
+            }
 
-            st.session_state.d5_occ_whys[idx] = st.selectbox(
-                f"{t[lang_key]['Occurrence_Why']} {idx+1}",
-                [""] + remaining_options,
-                index=remaining_options.index(st.session_state.d5_occ_whys[idx]) + 1 if st.session_state.d5_occ_whys[idx] != "" else 0,
-                key=f"occ_{idx}"
+            st.markdown("#### Occurrence Analysis")
+            selected_occ = st.session_state.get("d5_occ_selected", [])
+            for idx, val in enumerate(st.session_state.d5_occ_whys):
+                if idx == 0:
+                    st.session_state.d5_occ_whys[idx] = st.text_input(f"{t[lang_key]['Occurrence_Why']} {idx+1}", value=val, key=f"occ_{idx}")
+                else:
+                    remaining_options = []
+                    for cat, items in occurrence_categories.items():
+                        remaining_options.extend([f"{cat}: {item}" for item in items if f"{cat}: {item}" not in selected_occ])
+                    if val and val not in remaining_options:
+                        remaining_options.append(val)
+                    choice = st.selectbox(f"{t[lang_key]['Occurrence_Why']} {idx+1}", [""] + remaining_options, key=f"occ_{idx}")
+                    st.session_state.d5_occ_whys[idx] = choice
+                    if choice and choice not in selected_occ:
+                        selected_occ.append(choice)
+            st.session_state["d5_occ_selected"] = selected_occ
+
+            st.markdown("#### Detection Analysis")
+            detection_categories = {
+                "QA / Inspection-related": [
+                    "QA checklist incomplete",
+                    "No automated test",
+                    "Missed inspection due to process gap",
+                    "Tooling or equipment inspection not scheduled"
+                ],
+                "Validation / Process-related": [
+                    "Insufficient validation steps",
+                    "Design verification not complete",
+                    "Inspection documentation missing or outdated"
+                ]
+            }
+            selected_det = st.session_state.get("d5_det_selected", [])
+            for idx, val in enumerate(st.session_state.d5_det_whys):
+                if idx == 0:
+                    st.session_state.d5_det_whys[idx] = st.text_input(f"{t[lang_key]['Detection_Why']} {idx+1}", value=val, key=f"det_{idx}")
+                else:
+                    remaining_det = []
+                    for cat, items in detection_categories.items():
+                        remaining_det.extend([f"{cat}: {item}" for item in items if f"{cat}: {item}" not in selected_det])
+                    if val and val not in remaining_det:
+                        remaining_det.append(val)
+                    choice = st.selectbox(f"{t[lang_key]['Detection_Why']} {idx+1}", [""] + remaining_det, key=f"det_{idx}")
+                    st.session_state.d5_det_whys[idx] = choice
+                    if choice and choice not in selected_det:
+                        selected_det.append(choice)
+            st.session_state["d5_det_selected"] = selected_det
+
+            st.session_state.D5["answer"] = (
+                "Occurrence Analysis:\n" + "\n".join([w for w in st.session_state.d5_occ_whys if w.strip()]) +
+                "\n\nDetection Analysis:\n" + "\n".join([w for w in st.session_state.d5_det_whys if w.strip()])
             )
-            if st.session_state.d5_occ_whys[idx] not in selected_occ and st.session_state.d5_occ_whys[idx] != "":
-                selected_occ.append(st.session_state.d5_occ_whys[idx])
-
-    st.session_state["d5_occ_selected"] = selected_occ
-
-    # ---------------------------
-    # Detection Section
-    # ---------------------------
-    st.markdown("#### Detection Analysis")
-    detection_categories = {
-        "QA / Inspection-related": [
-            "QA checklist incomplete",
-            "No automated test",
-            "Missed inspection due to process gap",
-            "Tooling or equipment inspection not scheduled"
-        ],
-        "Validation / Process-related": [
-            "Insufficient validation steps",
-            "Design verification not complete",
-            "Inspection documentation missing or outdated"
-        ]
-    }
-
-    selected_det = st.session_state.get("d5_det_selected", [])
-
-    for idx, val in enumerate(st.session_state.d5_det_whys):
-        if idx == 0:
-            st.session_state.d5_det_whys[idx] = st.text_input(
-                f"{t[lang_key]['Detection_Why']} {idx+1}", value=val, key=f"det_{idx}")
-            if st.session_state.d5_det_whys[idx] != "" and st.session_state.d5_det_whys[idx] not in selected_det:
-                selected_det.append(st.session_state.d5_det_whys[idx])
-        else:
-            remaining_options = []
-            for cat, items in detection_categories.items():
-                for item in items:
-                    full_item = f"{cat}: {item}"
-                    if full_item not in selected_det:
-                        remaining_options.append(full_item)
-            if st.session_state.d5_det_whys[idx] not in remaining_options and st.session_state.d5_det_whys[idx] != "":
-                remaining_options.append(st.session_state.d5_det_whys[idx])
-
-            st.session_state.d5_det_whys[idx] = st.selectbox(
-                f"{t[lang_key]['Detection_Why']} {idx+1}",
-                [""] + remaining_options,
-                index=remaining_options.index(st.session_state.d5_det_whys[idx]) + 1 if st.session_state.d5_det_whys[idx] != "" else 0,
-                key=f"det_{idx}"
-            )
-            if st.session_state.d5_det_whys[idx] not in selected_det and st.session_state.d5_det_whys[idx] != "":
-                selected_det.append(st.session_state.d5_det_whys[idx])
-
-    st.session_state["d5_det_selected"] = selected_det
-
-    # Combine answers into D5 answer field
-    st.session_state.D5["answer"] = (
-        "Occurrence Analysis:\n" + "\n".join([w for w in st.session_state.d5_occ_whys if w.strip()]) +
-        "\n\nDetection Analysis:\n" + "\n".join([w for w in st.session_state.d5_det_whys if w.strip()])
-    )
-
-    # Root cause text area
-    st.session_state.D5["extra"] = st.text_area(
-        f"{t[lang_key]['Root_Cause']}", value=st.session_state.D5["extra"], key="root_cause"
-    )
+            st.session_state.D5["extra"] = st.text_area(f"{t[lang_key]['Root_Cause']}", value=st.session_state.D5["extra"], key="root_cause")
 
 # ---------------------------
-# Collect answers for Excel
+# Collect answers + Excel/JSON logic (unchanged)
 # ---------------------------
 data_rows = [(step, st.session_state[step]["answer"], st.session_state[step]["extra"]) for step, _, _ in npqp_steps]
 
-# ---------------------------
-# Save / Download Excel
-# ---------------------------
 def generate_excel():
     wb = Workbook()
     ws = wb.active
     ws.title = "NPQP 8D Report"
-
     thin = Side(border_style="thin", color="000000")
     border = Border(left=thin, right=thin, top=thin, bottom=thin)
-
     if os.path.exists("logo.png"):
         try:
             img = XLImage("logo.png")
@@ -344,10 +220,8 @@ def generate_excel():
             ws.add_image(img, "A1")
         except:
             pass
-
     ws.merge_cells(start_row=3, start_column=1, end_row=3, end_column=3)
     ws.cell(row=3, column=1, value="📋 8D Report Assistant").font = Font(bold=True, size=14)
-
     ws.append([t[lang_key]['Report_Date'], st.session_state.report_date])
     ws.append([t[lang_key]['Prepared_By'], st.session_state.prepared_by])
     ws.append([])
@@ -361,7 +235,6 @@ def generate_excel():
         cell.font = Font(bold=True, color="FFFFFF")
         cell.alignment = Alignment(horizontal="center", vertical="center")
         cell.border = border
-
     for step, answer, extra in data_rows:
         ws.append([t[lang_key][step], answer, extra])
         r = ws.max_row
@@ -370,14 +243,12 @@ def generate_excel():
             cell.alignment = Alignment(wrap_text=True, vertical="top")
             cell.font = Font(bold=True if c == 2 else False)
             cell.border = border
-
     for col in range(1, 4):
         ws.column_dimensions[get_column_letter(col)].width = 40
 
     output = io.BytesIO()
     wb.save(output)
     return output.getvalue()
-
 
 st.download_button(
     label=f"{t[lang_key]['Download']}",
@@ -386,26 +257,18 @@ st.download_button(
     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 )
 
-# ---------------------------
-# Sidebar: JSON Backup / Restore + Reset
-# ---------------------------
 with st.sidebar:
     st.markdown("## Backup / Restore")
-
     def generate_json():
         save_data = {k: v for k, v in st.session_state.items() if not k.startswith("_")}
         return json.dumps(save_data, indent=4)
-
     st.download_button(
         label="💾 Save Progress (JSON)",
         data=generate_json(),
         file_name=f"8D_Report_Backup_{st.session_state.report_date.replace(' ', '_')}.json",
         mime="application/json"
     )
-
     st.markdown("---")
-    st.markdown("### Restore from JSON")
-
     uploaded_file = st.file_uploader("Upload JSON file to restore", type="json")
     if uploaded_file:
         try:
@@ -415,21 +278,14 @@ with st.sidebar:
             st.success("✅ Session restored from JSON!")
         except Exception as e:
             st.error(f"Error restoring JSON: {e}")
-
     st.markdown("---")
-    st.markdown("### Reset All Data")
-
     if st.button("🗑️ Clear All"):
         for step, _, _ in npqp_steps:
-            if step != "D5":
-                st.session_state[step] = {"answer": "", "extra": ""}
-        st.session_state["D5"] = {"answer": "", "extra": ""}
+            st.session_state[step] = {"answer": "", "extra": ""}
         st.session_state["d5_occ_whys"] = [""] * 5
         st.session_state["d5_det_whys"] = [""] * 5
         st.session_state["d5_occ_selected"] = []
         st.session_state["d5_det_selected"] = []
         st.session_state["report_date"] = datetime.datetime.today().strftime("%B %d, %Y")
         st.session_state["prepared_by"] = ""
-        for step in ["D1","D2","D3","D4","D5","D6","D7","D8"]:
-            st.session_state.setdefault(step, {"answer":"", "extra":""})
         st.success("✅ All data has been reset!")
