@@ -436,4 +436,11 @@ with st.sidebar:
         st.session_state["prepared_by"] = ""
         for step in ["D1","D2","D3","D4","D5","D6","D7","D8"]:
             st.session_state.setdefault(step, {"answer":"", "extra":""})
+            # ---------------------------
+# App Version Info
+# ---------------------------
+st.markdown(
+    "<hr><small><i>Version: 1.3 – Last Updated: Sept 13, 2025</i></small>",
+    unsafe_allow_html=True
+)
         st.success("✅ All data has been reset!")
