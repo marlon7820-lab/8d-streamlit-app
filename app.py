@@ -25,18 +25,18 @@ st.markdown("""
     /* Background gradient for the main page */
     .stApp {
         background: linear-gradient(to right, #f0f8ff, #e6f2ff);
-        color: #000000 !important; /* Ensure text is dark and readable */
+        color: #000000 !important;
     }
 
     /* Tab headers styling */
     .stTabs [data-baseweb="tab"] {
         font-weight: bold;
-        color: #000000 !important; /* Make tab text dark for readability */
+        color: #000000 !important;
     }
 
     /* Tab content text */
     .stMarkdown, .stText, .stTextArea, .stTextInput, .stButton {
-        color: #000000 !important; /* Force tab content text to be dark */
+        color: #000000 !important;
     }
 
     /* Text area boxes */
@@ -49,12 +49,12 @@ st.markdown("""
 
     /* Info boxes for guidance and examples */
     .stInfo {
-        background-color: #e6f7ff !important;
+        background-color: #cce6ff !important;
         border-left: 5px solid #1E90FF !important;
-        color: #000000 !important; /* Force black text for readability */
+        color: #000000 !important;
     }
-    .stInfo p, .stInfo span, .stInfo div {
-        color: #000000 !important; /* Also force nested text inside info boxes */
+    .stInfo * {
+        color: #000000 !important;
     }
 
     /* Sidebar section headers */
@@ -163,7 +163,7 @@ for i, (step, note, example) in enumerate(npqp_steps):
         if step != "D5":
             st.info(f"**{t[lang_key]['Training_Guidance']}:** {note}\n\n💡 **{t[lang_key]['Example']}:** {example}")
             st.session_state[step]["answer"] = st.text_area(f"Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}")
-        else:
+                    else:
             st.info(f"**{t[lang_key]['Training_Guidance']}:** {note}")
             st.markdown("#### Occurrence Analysis")
             for idx, val in enumerate(st.session_state.d5_occ_whys):
@@ -243,7 +243,7 @@ def generate_excel():
         for c in range(1, 4):
             cell = ws.cell(row=r, column=c)
             cell.alignment = Alignment(wrap_text=True, vertical="top")
-            cell.font = Font(bold=True if c == 2 else False)  # Bold only answers column
+            cell.font = Font(bold=True if c == 2 else False)
             cell.border = border
 
     for col in range(1, 4):
