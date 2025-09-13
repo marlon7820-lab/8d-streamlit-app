@@ -185,7 +185,33 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             </div>
             """, unsafe_allow_html=True)
             st.session_state[step]["answer"] = st.text_area(f"Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}")
-                        "Machine wear and tear"
+            # ---------------------------
+# D5 Section: Occurrence & Detection (Fixed)
+# ---------------------------
+
+if "D5" in [step for step, _, _ in npqp_steps]:
+    st.markdown(f"""
+    <div style="
+        background-color:#b3e0ff; 
+        color:black; 
+        padding:12px; 
+        border-left:5px solid #1E90FF; 
+        border-radius:6px;
+        width:100%;
+        font-size:14px;
+        line-height:1.5;
+    ">
+    <b>{t[lang_key]['Training_Guidance']}:</b> {npqp_steps[4][1][lang_key]}
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("#### Occurrence Analysis")
+    occurrence_categories = {
+        "Machine / Equipment-related": [
+            "Mechanical failure or breakdown",
+            "Calibration issues (incorrect settings)",
+            "Tooling or fixture failure",
+            "Machine wear and tear"
         ],
         "Material / Component-related": [
             "Wrong material delivered",
@@ -240,7 +266,6 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     # Detection Section
     # ---------------------------
     st.markdown("#### Detection Analysis")
-
     detection_categories = {
         "QA / Inspection-related": [
             "QA checklist incomplete",
