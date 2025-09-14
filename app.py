@@ -61,7 +61,7 @@ st.markdown("<h1 style='text-align: center; color: #1E90FF;'>📋 8D Report Assi
 # ---------------------------
 # Version info
 # ---------------------------
-version_number = "v1.0.2"
+version_number = "v1.0.1"
 last_updated = "September 13, 2025"
 
 st.markdown(f"""
@@ -86,7 +86,8 @@ t = {
         "Report_Date": "Report Date", "Prepared_By": "Prepared By",
         "Root_Cause": "Root Cause (summary after 5-Whys)", "Occurrence_Why": "Occurrence Why",
         "Detection_Why": "Detection Why", "Save": "💾 Save 8D Report", "Download": "📥 Download XLSX",
-        "Training_Guidance": "Training Guidance", "Example": "Example"
+        "Training_Guidance": "Training Guidance", "Example": "Example",
+        "Add_Why": "+ Add Another Why"
     },
     "es": {
         "D1": "D1: Detalles de la preocupación", "D2": "D2: Consideraciones de partes similares",
@@ -96,7 +97,8 @@ t = {
         "Report_Date": "Fecha del informe", "Prepared_By": "Preparado por",
         "Root_Cause": "Causa raíz (resumen después de los 5 Porqués)", "Occurrence_Why": "Por qué Ocurrencia",
         "Detection_Why": "Por qué Detección", "Save": "💾 Guardar Informe 8D", "Download": "📥 Descargar XLSX",
-        "Training_Guidance": "Guía de Entrenamiento", "Example": "Ejemplo"
+        "Training_Guidance": "Guía de Entrenamiento", "Example": "Ejemplo",
+        "Add_Why": "+ Agregar Otro Porqué"
     }
 }
 
@@ -147,6 +149,8 @@ st.session_state.setdefault("report_date", datetime.datetime.today().strftime("%
 st.session_state.setdefault("prepared_by", "")
 st.session_state.setdefault("d5_occ_whys", [""] * 5)
 st.session_state.setdefault("d5_det_whys", [""] * 5)
+st.session_state.setdefault("d5_occ_additional", [])
+st.session_state.setdefault("d5_det_additional", [])
 st.session_state.setdefault("d5_occ_selected", [])
 st.session_state.setdefault("d5_det_selected", [])
 # ---------------------------
@@ -205,7 +209,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             )
 
         # ---------------------------
-        # D5 Section
+        # D5 Section (Only inside its tab)
         # ---------------------------
         if step == "D5":
             st.markdown(f"""
@@ -224,7 +228,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             """, unsafe_allow_html=True)
 
             # ---------------------------
-            # Occurrence Section (searchable multi-select)
+            # Occurrence Analysis with dynamic boxes
             # ---------------------------
             st.markdown("#### Occurrence Analysis")
             occurrence_categories = {
@@ -253,19 +257,27 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                     "Regulatory or compliance changes"
                 ]
             }
-            occ_options = []
-            for cat, items in occurrence_categories.items():
-                occ_options += [f"{cat}: {item}" for item in items]
 
-            st.session_state.d5_occ_selected = st.multiselect(
-                "Select or add Occurrence Why (can type new)",
-                options=occ_options,
-                default=st.session_state.d5_occ_selected,
-                key="d5_occ_multi"
-            )
+            all_occ_options = [f"{cat}: {item}" for cat, items in occurrence_categories.items() for item in items]
+            occ_list = st.session_state.d5_occ_whys + st.session_state.d5_occ_additional
+            new_occ_list = []
+
+            for idx, val in enumerate(occ_list):
+                used_options = [v for v in new_occ_list if v in all_occ_options]
+                options = [""] + [opt for opt in all_occ_options if opt not in used_options]
+                st.write(f"Occurrence Why {idx+1}")
+                user_input = st.text_input(
+                    f"Select or type Occurrence Why {idx+1}", value=val, key=f"d5_occ_{idx}"
+                )
+                new_occ_list.append(user_input.strip())
+            st.session_state.d5_occ_whys = new_occ_list[:5]
+            st.session_state.d5_occ_additional = new_occ_list[5:]
+
+            if st.button(t[lang_key]['Add_Why'], key="add_occ_why"):
+                st.session_state.d5_occ_additional.append("")
 
             # ---------------------------
-            # Detection Section (searchable multi-select)
+            # Detection Analysis with dynamic boxes
             # ---------------------------
             st.markdown("#### Detection Analysis")
             detection_categories = {
@@ -281,26 +293,32 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                     "Inspection documentation missing or outdated"
                 ]
             }
-            det_options = []
-            for cat, items in detection_categories.items():
-                det_options += [f"{cat}: {item}" for item in items]
 
-            st.session_state.d5_det_selected = st.multiselect(
-                "Select or add Detection Why (can type new)",
-                options=det_options,
-                default=st.session_state.d5_det_selected,
-                key="d5_det_multi"
-            )
+            all_det_options = [f"{cat}: {item}" for cat, items in detection_categories.items() for item in items]
+            det_list = st.session_state.d5_det_whys + st.session_state.d5_det_additional
+            new_det_list = []
 
-            # ---------------------------
-            # Combine answers into D5 answer field
-            # ---------------------------
+            for idx, val in enumerate(det_list):
+                used_det_options = [v for v in new_det_list if v in all_det_options]
+                options_det = [""] + [opt for opt in all_det_options if opt not in used_det_options]
+                st.write(f"Detection Why {idx+1}")
+                user_input = st.text_input(
+                    f"Select or type Detection Why {idx+1}", value=val, key=f"d5_det_{idx}"
+                )
+                new_det_list.append(user_input.strip())
+            st.session_state.d5_det_whys = new_det_list[:5]
+            st.session_state.d5_det_additional = new_det_list[5:]
+
+            if st.button(t[lang_key]['Add_Why'], key="add_det_why"):
+                st.session_state.d5_det_additional.append("")
+
+            # Combine D5 answers
             st.session_state.D5["answer"] = (
-                "Occurrence Analysis:\n" + "\n".join(st.session_state.d5_occ_selected) +
-                "\n\nDetection Analysis:\n" + "\n".join(st.session_state.d5_det_selected)
+                "Occurrence Analysis:\n" + "\n".join([w for w in st.session_state.d5_occ_whys + st.session_state.d5_occ_additional if w.strip()]) +
+                "\n\nDetection Analysis:\n" + "\n".join([w for w in st.session_state.d5_det_whys + st.session_state.d5_det_additional if w.strip()])
             )
 
-            # Root cause text area
+            # Root cause
             st.session_state.D5["extra"] = st.text_area(
                 f"{t[lang_key]['Root_Cause']}", value=st.session_state.D5["extra"], key="root_cause"
             )
@@ -410,6 +428,8 @@ with st.sidebar:
         st.session_state["D5"] = {"answer": "", "extra": ""}
         st.session_state["d5_occ_whys"] = [""] * 5
         st.session_state["d5_det_whys"] = [""] * 5
+        st.session_state["d5_occ_additional"] = []
+        st.session_state["d5_det_additional"] = []
         st.session_state["d5_occ_selected"] = []
         st.session_state["d5_det_selected"] = []
         st.session_state["report_date"] = datetime.datetime.today().strftime("%B %d, %Y")
