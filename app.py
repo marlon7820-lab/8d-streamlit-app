@@ -21,14 +21,36 @@ st.set_page_config(
 # App colors and styles
 # ---------------------------
 st.markdown("""
-<style>
-.stApp { background: linear-gradient(to right, #f0f8ff, #e6f2ff); color: #000000 !important; }
-.stTabs [data-baseweb="tab"] { font-weight: bold; color: #000000 !important; }
-textarea { background-color: #ffffff !important; border: 1px solid #1E90FF !important; border-radius: 5px; color: #000000 !important; }
-.stInfo { background-color: #e6f7ff !important; border-left: 5px solid #1E90FF !important; color: #000000 !important; }
-.css-1d391kg { color: #1E90FF !important; font-weight: bold !important; }
-button[kind="primary"] { background-color: #1E90FF !important; color: white !important; font-weight: bold; }
-</style>
+    <style>
+    .stApp {
+        background: linear-gradient(to right, #f0f8ff, #e6f2ff);
+        color: #000000 !important;
+    }
+    .stTabs [data-baseweb="tab"] {
+        font-weight: bold;
+        color: #000000 !important;
+    }
+    textarea {
+        background-color: #ffffff !important;
+        border: 1px solid #1E90FF !important;
+        border-radius: 5px;
+        color: #000000 !important;
+    }
+    .stInfo {
+        background-color: #e6f7ff !important;
+        border-left: 5px solid #1E90FF !important;
+        color: #000000 !important;
+    }
+    .css-1d391kg {
+        color: #1E90FF !important;
+        font-weight: bold !important;
+    }
+    button[kind="primary"] {
+        background-color: #1E90FF !important;
+        color: white !important;
+        font-weight: bold;
+    }
+    </style>
 """, unsafe_allow_html=True)
 
 # ---------------------------
@@ -39,7 +61,7 @@ st.markdown("<h1 style='text-align: center; color: #1E90FF;'>📋 8D Report Assi
 # ---------------------------
 # Version info
 # ---------------------------
-version_number = "v1.0.1"
+version_number = "v1.0.2"
 last_updated = "September 13, 2025"
 
 st.markdown(f"""
@@ -127,7 +149,6 @@ st.session_state.setdefault("d5_occ_whys", [""] * 5)
 st.session_state.setdefault("d5_det_whys", [""] * 5)
 st.session_state.setdefault("d5_occ_selected", [])
 st.session_state.setdefault("d5_det_selected", [])
-
 # ---------------------------
 # Restore from URL (st.query_params)
 # ---------------------------
@@ -157,6 +178,7 @@ for step, _, _ in npqp_steps:
         tab_labels.append(f"🔴 {t[lang_key][step]}")
 
 tabs = st.tabs(tab_labels)
+
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     with tabs[i]:
         st.markdown(f"### {t[lang_key][step]}")
@@ -183,7 +205,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             )
 
         # ---------------------------
-        # D5 Section (Only inside its tab)
+        # D5 Section
         # ---------------------------
         if step == "D5":
             st.markdown(f"""
@@ -202,7 +224,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             """, unsafe_allow_html=True)
 
             # ---------------------------
-            # Occurrence Section
+            # Occurrence Section (searchable multi-select)
             # ---------------------------
             st.markdown("#### Occurrence Analysis")
             occurrence_categories = {
@@ -231,37 +253,19 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                     "Regulatory or compliance changes"
                 ]
             }
+            occ_options = []
+            for cat, items in occurrence_categories.items():
+                occ_options += [f"{cat}: {item}" for item in items]
 
-            selected_occ = []
-            for idx, val in enumerate(st.session_state.d5_occ_whys):
-                remaining_options = []
-                for cat, items in occurrence_categories.items():
-                    for item in items:
-                        full_item = f"{cat}: {item}"
-                        if full_item not in selected_occ and full_item not in st.session_state.d5_occ_whys:
-                            remaining_options.append(full_item)
-                if val and val not in remaining_options:
-                    remaining_options.append(val)
-
-                options = [""] + sorted(remaining_options)
-                try:
-                    index = options.index(val) if val else 0
-                except ValueError:
-                    index = 0
-
-                st.session_state.d5_occ_whys[idx] = st.selectbox(
-                    f"{t[lang_key]['Occurrence_Why']} {idx+1}",
-                    options,
-                    index=index,
-                    key=f"occ_{idx}"
-                )
-                if st.session_state.d5_occ_whys[idx]:
-                    selected_occ.append(st.session_state.d5_occ_whys[idx])
-
-            st.session_state["d5_occ_selected"] = selected_occ
+            st.session_state.d5_occ_selected = st.multiselect(
+                "Select or add Occurrence Why (can type new)",
+                options=occ_options,
+                default=st.session_state.d5_occ_selected,
+                key="d5_occ_multi"
+            )
 
             # ---------------------------
-            # Detection Section
+            # Detection Section (searchable multi-select)
             # ---------------------------
             st.markdown("#### Detection Analysis")
             detection_categories = {
@@ -277,39 +281,23 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                     "Inspection documentation missing or outdated"
                 ]
             }
+            det_options = []
+            for cat, items in detection_categories.items():
+                det_options += [f"{cat}: {item}" for item in items]
 
-            selected_det = []
-            for idx, val in enumerate(st.session_state.d5_det_whys):
-                remaining_options = []
-                for cat, items in detection_categories.items():
-                    for item in items:
-                        full_item = f"{cat}: {item}"
-                        if full_item not in selected_det and full_item not in st.session_state.d5_det_whys:
-                            remaining_options.append(full_item)
-                if val and val not in remaining_options:
-                    remaining_options.append(val)
+            st.session_state.d5_det_selected = st.multiselect(
+                "Select or add Detection Why (can type new)",
+                options=det_options,
+                default=st.session_state.d5_det_selected,
+                key="d5_det_multi"
+            )
 
-                options_det = [""] + sorted(remaining_options)
-                try:
-                    index_det = options_det.index(val) if val else 0
-                except ValueError:
-                    index_det = 0
-
-                st.session_state.d5_det_whys[idx] = st.selectbox(
-                    f"{t[lang_key]['Detection_Why']} {idx+1}",
-                    options_det,
-                    index=index_det,
-                    key=f"det_{idx}"
-                )
-                if st.session_state.d5_det_whys[idx]:
-                    selected_det.append(st.session_state.d5_det_whys[idx])
-
-            st.session_state["d5_det_selected"] = selected_det
-
+            # ---------------------------
             # Combine answers into D5 answer field
+            # ---------------------------
             st.session_state.D5["answer"] = (
-                "Occurrence Analysis:\n" + "\n".join([w for w in st.session_state.d5_occ_whys if w.strip()]) +
-                "\n\nDetection Analysis:\n" + "\n".join([w for w in st.session_state.d5_det_whys if w.strip()])
+                "Occurrence Analysis:\n" + "\n".join(st.session_state.d5_occ_selected) +
+                "\n\nDetection Analysis:\n" + "\n".join(st.session_state.d5_det_selected)
             )
 
             # Root cause text area
