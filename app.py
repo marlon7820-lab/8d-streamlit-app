@@ -1,4 +1,3 @@
-# --------------------------- Part 1 ---------------------------
 import streamlit as st
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
@@ -62,8 +61,8 @@ st.markdown("<h1 style='text-align: center; color: #1E90FF;'>📋 8D Report Assi
 # ---------------------------
 # Version info
 # ---------------------------
-version_number = "v1.0.6"
-last_updated = "September 13, 2025"
+version_number = "v1.0.7"
+last_updated = "September 14, 2025"
 
 st.markdown(f"""
 <hr style='border:1px solid #1E90FF; margin-top:10px; margin-bottom:5px;'>
@@ -172,7 +171,7 @@ st.session_state.report_date = st.text_input(f"{t[lang_key]['Report_Date']}", va
 st.session_state.prepared_by = st.text_input(f"{t[lang_key]['Prepared_By']}", value=st.session_state.prepared_by)
 
 # ---------------------------
-# Tabs with ✅ / 🔴 status indicators
+# Tabs with status indicators
 # ---------------------------
 tab_labels = []
 for step, _, _ in npqp_steps:
@@ -210,8 +209,9 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             st.session_state[step]["answer"] = st.text_area(
                 "Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}"
             )
-            # --------------------------- Part 2 ---------------------------
-
+            # ---------------------------
+# Render D5–D8 tabs
+# ---------------------------
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     with tabs[i]:
         if step == "D5":
@@ -285,7 +285,6 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                     index=index,
                     key=f"occ_{idx}"
                 )
-                # Free text override
                 free_text = st.text_input(f"Or enter your own Occurrence Why {idx+1}", value="", key=f"occ_txt_{idx}")
                 if free_text.strip():
                     st.session_state.d5_occ_whys[idx] = free_text
@@ -339,7 +338,6 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                     index=index_det,
                     key=f"det_{idx}"
                 )
-                # Free text override
                 free_text_det = st.text_input(f"Or enter your own Detection Why {idx+1}", value="", key=f"det_txt_{idx}")
                 if free_text_det.strip():
                     st.session_state.d5_det_whys[idx] = free_text_det
@@ -353,16 +351,20 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             st.session_state["d5_det_selected"] = selected_det
 
             # ---------------------------
-            # Root Cause Suggestion
+            # Root Cause Suggestion (NEW)
             # ---------------------------
-            st.markdown("#### Suggested Root Cause")
-            suggested_occ_rc = "The root cause that allowed this issue to occur may be related to: " + ", ".join(selected_occ) if selected_occ else ""
-            suggested_det_rc = "The root cause that allowed this issue to escape detection may be related to: " + ", ".join(selected_det) if selected_det else ""
-            st.session_state.D5["extra"] = st.text_area(
-                f"{t[lang_key]['Root_Cause_Occ']}", value=suggested_occ_rc, key="root_cause_occ"
-            )
-            st.text_area(
-                f"{t[lang_key]['Root_Cause_Det']}", value=suggested_det_rc, key="root_cause_det"
+            final_occ_cause = ""
+            if selected_occ:
+                final_occ_cause = "Root cause (Occurrence): " + selected_occ[-1]
+
+            final_det_cause = ""
+            if selected_det:
+                final_det_cause = "Root cause (Detection): " + selected_det[-1]
+
+            combined_root_cause = "\n".join(filter(None, [final_occ_cause, final_det_cause]))
+
+            st.session_state["D5"]["answer"] = st.text_area(
+                "Final Root Cause", value=combined_root_cause, key="final_root_cause"
             )
 
         elif step in ["D6","D7","D8"]:
