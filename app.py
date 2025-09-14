@@ -7,6 +7,7 @@ import datetime
 import io
 import json
 import os
+from collections import Counter
 
 # ---------------------------
 # Page config and branding
@@ -50,6 +51,11 @@ st.markdown("""
         color: white !important;
         font-weight: bold;
     }
+    .neutral-button button {
+        background-color: #d3d3d3 !important;
+        color: black !important;
+        font-weight: bold;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -61,7 +67,7 @@ st.markdown("<h1 style='text-align: center; color: #1E90FF;'>📋 8D Report Assi
 # ---------------------------
 # Version info
 # ---------------------------
-version_number = "v1.0.1"
+version_number = "v1.0.2"
 last_updated = "September 13, 2025"
 
 st.markdown(f"""
@@ -86,7 +92,8 @@ t = {
         "Report_Date": "Report Date", "Prepared_By": "Prepared By",
         "Root_Cause": "Root Cause (summary after 5-Whys)", "Occurrence_Why": "Occurrence Why",
         "Detection_Why": "Detection Why", "Save": "💾 Save 8D Report", "Download": "📥 Download XLSX",
-        "Training_Guidance": "Training Guidance", "Example": "Example", "Add_Why": "➕ Add Another Why"
+        "Training_Guidance": "Training Guidance", "Example": "Example",
+        "Add_Why": "➕ Add Another Why"
     },
     "es": {
         "D1": "D1: Detalles de la preocupación", "D2": "D2: Consideraciones de partes similares",
@@ -96,7 +103,8 @@ t = {
         "Report_Date": "Fecha del informe", "Prepared_By": "Preparado por",
         "Root_Cause": "Causa raíz (resumen después de los 5 Porqués)", "Occurrence_Why": "Por qué Ocurrencia",
         "Detection_Why": "Por qué Detección", "Save": "💾 Guardar Informe 8D", "Download": "📥 Descargar XLSX",
-        "Training_Guidance": "Guía de Entrenamiento", "Example": "Ejemplo", "Add_Why": "➕ Agregar Otro Porqué"
+        "Training_Guidance": "Guía de Entrenamiento", "Example": "Ejemplo",
+        "Add_Why": "➕ Añadir otro Porqué"
     }
 }
 
@@ -206,7 +214,9 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             st.session_state[step]["answer"] = st.text_area(
                 "Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}"
             )
-                    # ---------------------------
+
+# --- End of Part 1 ---
+        # ---------------------------
         # D5 Section (Only inside its tab)
         # ---------------------------
         if step == "D5":
@@ -225,8 +235,9 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             </div>
             """, unsafe_allow_html=True)
 
-            # Occurrence Section
-            st.markdown("#### Occurrence Analysis")
+            # ---------------------------
+            # D5 Occurrence & Detection Analysis
+            # ---------------------------
             occurrence_categories = {
                 "Machine / Equipment-related": [
                     "Mechanical failure or breakdown",
@@ -254,43 +265,6 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                 ]
             }
 
-            # Display dynamic Occurrence why boxes
-            selected_occ = []
-            for idx in range(st.session_state.d5_occ_dynamic_count):
-                current_val = st.session_state.d5_occ_whys[idx] if idx < len(st.session_state.d5_occ_whys) else ""
-                remaining_options = []
-                for cat, items in occurrence_categories.items():
-                    for item in items:
-                        full_item = f"{cat}: {item}"
-                        if full_item not in selected_occ:
-                            remaining_options.append(full_item)
-                if current_val and current_val not in remaining_options:
-                    remaining_options.append(current_val)
-                options = [""] + sorted(remaining_options)
-                selected_option = st.selectbox(
-                    f"{t[lang_key]['Occurrence_Why']} {idx+1}",
-                    options,
-                    index=options.index(current_val) if current_val in options else 0,
-                    key=f"occ_{idx}"
-                )
-                # Save the value back
-                if idx < len(st.session_state.d5_occ_whys):
-                    st.session_state.d5_occ_whys[idx] = selected_option
-                else:
-                    st.session_state.d5_occ_whys.append(selected_option)
-                if selected_option:
-                    selected_occ.append(selected_option)
-
-            st.session_state["d5_occ_selected"] = selected_occ
-
-            # Add more Occurrence why boxes button
-            if st.button(f"{t[lang_key]['Add_Why']} (Occurrence)"):
-                st.session_state.d5_occ_dynamic_count += 1
-                if st.session_state.d5_occ_dynamic_count > len(st.session_state.d5_occ_whys):
-                    st.session_state.d5_occ_whys.append("")
-
-            # Detection Section
-            st.markdown("#### Detection Analysis")
             detection_categories = {
                 "QA / Inspection-related": [
                     "QA checklist incomplete",
@@ -305,77 +279,91 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                 ]
             }
 
-            # Display dynamic Detection why boxes
-            selected_det = []
-            for idx in range(st.session_state.d5_det_dynamic_count):
-                current_val = st.session_state.d5_det_whys[idx] if idx < len(st.session_state.d5_det_whys) else ""
-                remaining_options = []
-                for cat, items in detection_categories.items():
-                    for item in items:
-                        full_item = f"{cat}: {item}"
-                        if full_item not in selected_det:
-                            remaining_options.append(full_item)
-                if current_val and current_val not in remaining_options:
-                    remaining_options.append(current_val)
-                options_det = [""] + sorted(remaining_options)
-                selected_option_det = st.selectbox(
-                    f"{t[lang_key]['Detection_Why']} {idx+1}",
-                    options_det,
-                    index=options_det.index(current_val) if current_val in options_det else 0,
-                    key=f"det_{idx}"
-                )
-                if idx < len(st.session_state.d5_det_whys):
-                    st.session_state.d5_det_whys[idx] = selected_option_det
+            def dynamic_why_section(section_name, categories, session_key, selected_key):
+                count_key = f"d5_{section_name}_dynamic_count"
+                for idx in range(st.session_state[count_key]):
+                    val = st.session_state[session_key][idx] if idx < len(st.session_state[session_key]) else ""
+                    remaining_options = []
+                    for cat, items in categories.items():
+                        for item in items:
+                            full_item = f"{cat}: {item}"
+                            if full_item not in st.session_state[selected_key]:
+                                remaining_options.append(full_item)
+                    if val and val not in remaining_options:
+                        remaining_options.append(val)
+
+                    options = [""] + sorted(remaining_options)
+                    # Free text + dropdown handling
+                    text_val = st.text_input(
+                        f"{t[lang_key]['Occurrence_Why'] if section_name=='occ' else t[lang_key]['Detection_Why']} {idx+1} (or type your own)",
+                        value=val,
+                        key=f"{section_name}_text_{idx}"
+                    )
+
+                    select_val = st.selectbox(
+                        f"Dropdown for {t[lang_key]['Occurrence_Why'] if section_name=='occ' else t[lang_key]['Detection_Why']} {idx+1}",
+                        options,
+                        index=options.index(val) if val in options else 0,
+                        key=f"{section_name}_dropdown_{idx}"
+                    )
+
+                    # Save either typed or dropdown value
+                    final_val = text_val.strip() if text_val.strip() else select_val
+                    if idx < len(st.session_state[session_key]):
+                        st.session_state[session_key][idx] = final_val
+                    else:
+                        st.session_state[session_key].append(final_val)
+
+                    # Track selected for option removal
+                    if final_val and final_val not in st.session_state[selected_key]:
+                        st.session_state[selected_key].append(final_val)
+
+                # Button to add another Why
+                if st.button(f"{t[lang_key]['Add_Why']}", key=f"{section_name}_add_button"):
+                    st.session_state[count_key] += 1
+                    if session_key not in st.session_state:
+                        st.session_state[session_key] = [""]
+                    else:
+                        st.session_state[session_key].append("")
+
+            # Render Occurrence and Detection sections
+            st.markdown("#### Occurrence Analysis")
+            dynamic_why_section("occ", occurrence_categories, "d5_occ_whys", "d5_occ_selected")
+
+            st.markdown("#### Detection Analysis")
+            dynamic_why_section("det", detection_categories, "d5_det_whys", "d5_det_selected")
+
+            # ---------------------------
+            # Suggested Root Cause
+            # ---------------------------
+            def suggest_root_cause(whys_list, type_name):
+                if whys_list:
+                    most_common = Counter(whys_list).most_common(1)[0][0]
+                    if type_name=="occ":
+                        return f"The root cause that allowed this issue to occur is most likely related to: {most_common}"
+                    else:
+                        return f"The root cause that allowed this issue to escape detection is most likely related to: {most_common}"
                 else:
-                    st.session_state.d5_det_whys.append(selected_option_det)
-                if selected_option_det:
-                    selected_det.append(selected_option_det)
+                    return ""
 
-            st.session_state["d5_det_selected"] = selected_det
+            suggested_occ_rc = suggest_root_cause([w for w in st.session_state.d5_occ_whys if w.strip()], "occ")
+            suggested_det_rc = suggest_root_cause([w for w in st.session_state.d5_det_whys if w.strip()], "det")
 
-            # Add more Detection why boxes button
-            if st.button(f"{t[lang_key]['Add_Why']} (Detection)"):
-                st.session_state.d5_det_dynamic_count += 1
-                if st.session_state.d5_det_dynamic_count > len(st.session_state.d5_det_whys):
-                    st.session_state.d5_det_whys.append("")
+            st.markdown("#### Suggested Root Causes")
+            st.text_area(f"Occurrence Root Cause", value=suggested_occ_rc, height=60)
+            st.text_area(f"Detection Root Cause", value=suggested_det_rc, height=60)
 
             # Combine answers into D5 answer field
             st.session_state.D5["answer"] = (
                 "Occurrence Analysis:\n" + "\n".join([w for w in st.session_state.d5_occ_whys if w.strip()]) +
                 "\n\nDetection Analysis:\n" + "\n".join([w for w in st.session_state.d5_det_whys if w.strip()])
             )
-
-            # ---------------------------
-            # Root Cause Suggestion
-            # ---------------------------
-            def suggest_root_cause(whys):
-                # Simple suggestion: most frequently selected category prefix
-                categories = [w.split(":")[0] for w in whys if ":" in w]
-                if categories:
-                    from collections import Counter
-                    most_common = Counter(categories).most_common(1)[0][0]
-                    return f"Suggested Root Cause: {most_common}"
-                return ""
-
-            st.session_state.D5["extra_occ"] = st.text_area(
-                f"{t[lang_key]['Root_Cause']} (Occurrence)", 
-                value=suggest_root_cause(st.session_state.d5_occ_whys), 
-                key="root_cause_occ"
-            )
-            st.session_state.D5["extra_det"] = st.text_area(
-                f"{t[lang_key]['Root_Cause']} (Detection)", 
-                value=suggest_root_cause(st.session_state.d5_det_whys), 
-                key="root_cause_det"
-            )
+            st.session_state.D5["extra"] = f"{suggested_occ_rc}\n{suggested_det_rc}"
 
 # ---------------------------
 # Collect answers for Excel
 # ---------------------------
-data_rows = [(step, st.session_state[step]["answer"], 
-              st.session_state[step].get("extra","") + 
-              ("\n" + st.session_state[step].get("extra_occ","") if step=="D5" else "") +
-              ("\n" + st.session_state[step].get("extra_det","") if step=="D5" else "")
-             ) for step, _, _ in npqp_steps]
+data_rows = [(step, st.session_state[step]["answer"], st.session_state[step]["extra"]) for step, _, _ in npqp_steps]
 
 # ---------------------------
 # Save / Download Excel
@@ -384,7 +372,6 @@ def generate_excel():
     wb = Workbook()
     ws = wb.active
     ws.title = "NPQP 8D Report"
-
     thin = Side(border_style="thin", color="000000")
     border = Border(left=thin, right=thin, top=thin, bottom=thin)
 
@@ -474,7 +461,7 @@ with st.sidebar:
         for step, _, _ in npqp_steps:
             if step != "D5":
                 st.session_state[step] = {"answer": "", "extra": ""}
-        st.session_state["D5"] = {"answer": "", "extra": "", "extra_occ":"", "extra_det":""}
+        st.session_state["D5"] = {"answer": "", "extra": ""}
         st.session_state["d5_occ_whys"] = [""] * 5
         st.session_state["d5_det_whys"] = [""] * 5
         st.session_state["d5_occ_selected"] = []
