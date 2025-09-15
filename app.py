@@ -1,3 +1,4 @@
+# --------------------------- Part 1 ---------------------------
 import streamlit as st
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
@@ -21,14 +22,36 @@ st.set_page_config(
 # App colors and styles
 # ---------------------------
 st.markdown("""
-<style>
-.stApp { background: linear-gradient(to right, #f0f8ff, #e6f2ff); color: #000000 !important; }
-.stTabs [data-baseweb="tab"] { font-weight: bold; color: #000000 !important; }
-textarea { background-color: #ffffff !important; border: 1px solid #1E90FF !important; border-radius: 5px; color: #000000 !important; }
-.stInfo { background-color: #e6f7ff !important; border-left: 5px solid #1E90FF !important; color: #000000 !important; }
-.css-1d391kg { color: #1E90FF !important; font-weight: bold !important; }
-button[kind="primary"] { background-color: #87AFC7 !important; color: white !important; font-weight: bold; }
-</style>
+    <style>
+    .stApp {
+        background: linear-gradient(to right, #f0f8ff, #e6f2ff);
+        color: #000000 !important;
+    }
+    .stTabs [data-baseweb="tab"] {
+        font-weight: bold;
+        color: #000000 !important;
+    }
+    textarea {
+        background-color: #ffffff !important;
+        border: 1px solid #1E90FF !important;
+        border-radius: 5px;
+        color: #000000 !important;
+    }
+    .stInfo {
+        background-color: #e6f7ff !important;
+        border-left: 5px solid #1E90FF !important;
+        color: #000000 !important;
+    }
+    .css-1d391kg {
+        color: #1E90FF !important;
+        font-weight: bold !important;
+    }
+    button[kind="primary"] {
+        background-color: #87AFC7 !important;
+        color: white !important;
+        font-weight: bold;
+    }
+    </style>
 """, unsafe_allow_html=True)
 
 # ---------------------------
@@ -41,6 +64,7 @@ st.markdown("<h1 style='text-align: center; color: #1E90FF;'>📋 8D Report Assi
 # ---------------------------
 version_number = "v1.0.7"
 last_updated = "September 14, 2025"
+
 st.markdown(f"""
 <hr style='border:1px solid #1E90FF; margin-top:10px; margin-bottom:5px;'>
 <p style='font-size:12px; font-style:italic; text-align:center; color:#555555;'>
@@ -122,27 +146,33 @@ npqp_steps = [
 # Initialize session state
 # ---------------------------
 for step, _, _ in npqp_steps:
-    st.session_state.setdefault(step, {"answer":"", "extra":""})
+    if step not in st.session_state:
+        st.session_state[step] = {"answer": "", "extra": ""}
 
-# Initialize D5 specific variables
-st.session_state.setdefault("d5_occ_whys", [""]*5)
-st.session_state.setdefault("d5_det_whys", [""]*5)
+st.session_state.setdefault("report_date", datetime.datetime.today().strftime("%B %d, %Y"))
+st.session_state.setdefault("prepared_by", "")
+st.session_state.setdefault("d5_occ_whys", [""] * 5)
+st.session_state.setdefault("d5_det_whys", [""] * 5)
 st.session_state.setdefault("d5_occ_selected", [])
 st.session_state.setdefault("d5_det_selected", [])
 
-# Initialize report info safely
-st.session_state.setdefault("report_date", datetime.datetime.today().strftime("%B %d, %Y"))
-st.session_state.setdefault("prepared_by", "")
+# ---------------------------
+# Restore from URL (st.query_params)
+# ---------------------------
+if "backup" in st.query_params:
+    try:
+        data = json.loads(st.query_params["backup"][0])
+        for k, v in data.items():
+            st.session_state[k] = v
+    except Exception:
+        pass
+
 # ---------------------------
 # Report info
 # ---------------------------
 st.subheader(f"{t[lang_key]['Report_Date']}")
-st.session_state.report_date = st.text_input(
-    f"{t[lang_key]['Report_Date']}", value=st.session_state.report_date
-)
-st.session_state.prepared_by = st.text_input(
-    f"{t[lang_key]['Prepared_By']}", value=st.session_state.prepared_by
-)
+st.session_state.report_date = st.text_input(f"{t[lang_key]['Report_Date']}", value=st.session_state.report_date)
+st.session_state.prepared_by = st.text_input(f"{t[lang_key]['Prepared_By']}", value=st.session_state.prepared_by)
 
 # ---------------------------
 # Tabs with ✅ / 🔴 status indicators
@@ -157,14 +187,12 @@ for step, _, _ in npqp_steps:
 tabs = st.tabs(tab_labels)
 
 # ---------------------------
-# Render D1–D5 tabs
+# Render D1–D4 tabs
 # ---------------------------
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     with tabs[i]:
         st.markdown(f"### {t[lang_key][step]}")
-
         if step not in ["D5","D6","D7","D8"]:
-            # D1–D4
             note_text = note_dict[lang_key]
             example_text = example_dict[lang_key]
             st.markdown(f"""
@@ -185,11 +213,11 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             st.session_state[step]["answer"] = st.text_area(
                 "Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}"
             )
+            # --------------------------- Part 2 ---------------------------
 
-        elif step == "D5":
-            # ---------------------------
-            # D5 Training guidance
-            # ---------------------------
+for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
+    with tabs[i]:
+        if step == "D5":
             st.markdown(f"""
             <div style="
                 background-color:#b3e0ff; 
@@ -206,7 +234,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             """, unsafe_allow_html=True)
 
             # ---------------------------
-            # Occurrence Analysis
+            # Occurrence Section
             # ---------------------------
             st.markdown("#### Occurrence Analysis")
             occurrence_categories = {
@@ -247,11 +275,18 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                             remaining_options.append(full_item)
                 if val and val not in remaining_options:
                     remaining_options.append(val)
+
                 options = [""] + sorted(remaining_options)
-                index = options.index(val) if val in options else 0
+                try:
+                    index = options.index(val) if val else 0
+                except ValueError:
+                    index = 0
 
                 st.session_state.d5_occ_whys[idx] = st.selectbox(
-                    f"{t[lang_key]['Occurrence_Why']} {idx+1}", options, index=index, key=f"occ_{idx}"
+                    f"{t[lang_key]['Occurrence_Why']} {idx+1}",
+                    options,
+                    index=index,
+                    key=f"occ_{idx}"
                 )
                 # Free text override
                 free_text = st.text_input(f"Or enter your own Occurrence Why {idx+1}", value="", key=f"occ_txt_{idx}")
@@ -267,7 +302,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             st.session_state["d5_occ_selected"] = selected_occ
 
             # ---------------------------
-            # Detection Analysis
+            # Detection Section
             # ---------------------------
             st.markdown("#### Detection Analysis")
             detection_categories = {
@@ -294,11 +329,18 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                             remaining_options.append(full_item)
                 if val and val not in remaining_options:
                     remaining_options.append(val)
+
                 options_det = [""] + sorted(remaining_options)
-                index_det = options_det.index(val) if val in options_det else 0
+                try:
+                    index_det = options_det.index(val) if val else 0
+                except ValueError:
+                    index_det = 0
 
                 st.session_state.d5_det_whys[idx] = st.selectbox(
-                    f"{t[lang_key]['Detection_Why']} {idx+1}", options_det, index=index_det, key=f"det_{idx}"
+                    f"{t[lang_key]['Detection_Why']} {idx+1}",
+                    options_det,
+                    index=index_det,
+                    key=f"det_{idx}"
                 )
                 # Free text override
                 free_text_det = st.text_input(f"Or enter your own Detection Why {idx+1}", value="", key=f"det_txt_{idx}")
@@ -314,26 +356,35 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             st.session_state["d5_det_selected"] = selected_det
 
             # ---------------------------
-            # Save root causes in ANSWER column
+            # Root Cause Suggestion (NOW SAVES UNDER ANSWER)
             # ---------------------------
+            st.markdown("#### Suggested Root Cause")
             suggested_occ_rc = (
                 "The root cause that allowed this issue to occur may be related to: "
                 + ", ".join(selected_occ)
-                if selected_occ else ""
+                if selected_occ
+                else ""
             )
             suggested_det_rc = (
                 "The root cause that allowed this issue to escape detection may be related to: "
                 + ", ".join(selected_det)
-                if selected_det else ""
+                if selected_det
+                else ""
             )
-            st.session_state.D5["answer"] = suggested_occ_rc + "\n" + suggested_det_rc
-            # ---------------------------
-# Render D6–D8 tabs
-# ---------------------------
-for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
-    if step in ["D6","D7","D8"]:
-        with tabs[i]:
-            st.markdown(f"### {t[lang_key][step]}")
+
+            # Save under ANSWER, not EXTRA
+            st.session_state.D5["answer"] = st.text_area(
+                f"{t[lang_key]['Root_Cause_Occ']}",
+                value=suggested_occ_rc,
+                key="root_cause_occ"
+            )
+            st.text_area(
+                f"{t[lang_key]['Root_Cause_Det']}",
+                value=suggested_det_rc,
+                key="root_cause_det"
+            )
+
+        elif step in ["D6","D7","D8"]:
             note_text = note_dict[lang_key]
             example_text = example_dict[lang_key]
             st.markdown(f"""
@@ -371,7 +422,6 @@ def generate_excel():
     thin = Side(border_style="thin", color="000000")
     border = Border(left=thin, right=thin, top=thin, bottom=thin)
 
-    # Add logo if available
     if os.path.exists("logo.png"):
         try:
             img = XLImage("logo.png")
@@ -456,7 +506,8 @@ with st.sidebar:
 
     if st.button("🗑️ Clear All"):
         for step, _, _ in npqp_steps:
-            st.session_state[step] = {"answer": "", "extra": ""}
+            if step != "D5":
+                st.session_state[step] = {"answer": "", "extra": ""}
         st.session_state["D5"] = {"answer": "", "extra": ""}
         st.session_state["d5_occ_whys"] = [""] * 5
         st.session_state["d5_det_whys"] = [""] * 5
@@ -464,4 +515,6 @@ with st.sidebar:
         st.session_state["d5_det_selected"] = []
         st.session_state["report_date"] = datetime.datetime.today().strftime("%B %d, %Y")
         st.session_state["prepared_by"] = ""
+        for step in ["D1","D2","D3","D4","D5","D6","D7","D8"]:
+            st.session_state.setdefault(step, {"answer":"", "extra":""})
         st.success("✅ All data has been reset!")
