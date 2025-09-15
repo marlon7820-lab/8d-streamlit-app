@@ -214,6 +214,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                 "Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}"
             )
             # --------------------------- Part 2 ---------------------------
+
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     with tabs[i]:
         if step == "D5":
@@ -233,7 +234,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             """, unsafe_allow_html=True)
 
             # ---------------------------
-            # Occurrence Section with FMEA
+            # Occurrence Section
             # ---------------------------
             st.markdown("#### Occurrence Analysis")
             occurrence_categories = {
@@ -261,9 +262,6 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                     "Power fluctuations or outages",
                     "Contamination (dust, oil, chemicals)",
                     "Regulatory or compliance changes"
-                ],
-                f"{t[lang_key]['FMEA_Failure']}": [
-                    "FMEA failure occurrence identified"
                 ]
             }
 
@@ -358,16 +356,32 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             st.session_state["d5_det_selected"] = selected_det
 
             # ---------------------------
-            # Root Cause Suggestion
+            # Root Cause Suggestion (NOW SAVES UNDER ANSWER)
             # ---------------------------
             st.markdown("#### Suggested Root Cause")
-            suggested_occ_rc = "The root cause that allowed this issue to occur may be related to: " + ", ".join(selected_occ) if selected_occ else ""
-            suggested_det_rc = "The root cause that allowed this issue to escape detection may be related to: " + ", ".join(selected_det) if selected_det else ""
-            st.session_state.D5["extra"] = st.text_area(
-                f"{t[lang_key]['Root_Cause_Occ']}", value=suggested_occ_rc, key="root_cause_occ"
+            suggested_occ_rc = (
+                "The root cause that allowed this issue to occur may be related to: "
+                + ", ".join(selected_occ)
+                if selected_occ
+                else ""
+            )
+            suggested_det_rc = (
+                "The root cause that allowed this issue to escape detection may be related to: "
+                + ", ".join(selected_det)
+                if selected_det
+                else ""
+            )
+
+            # Save under ANSWER, not EXTRA
+            st.session_state.D5["answer"] = st.text_area(
+                f"{t[lang_key]['Root_Cause_Occ']}",
+                value=suggested_occ_rc,
+                key="root_cause_occ"
             )
             st.text_area(
-                f"{t[lang_key]['Root_Cause_Det']}", value=suggested_det_rc, key="root_cause_det"
+                f"{t[lang_key]['Root_Cause_Det']}",
+                value=suggested_det_rc,
+                key="root_cause_det"
             )
 
         elif step in ["D6","D7","D8"]:
@@ -504,4 +518,3 @@ with st.sidebar:
         for step in ["D1","D2","D3","D4","D5","D6","D7","D8"]:
             st.session_state.setdefault(step, {"answer":"", "extra":""})
         st.success("✅ All data has been reset!")
-            
