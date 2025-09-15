@@ -62,8 +62,8 @@ st.markdown("<h1 style='text-align: center; color: #1E90FF;'>📋 8D Report Assi
 # ---------------------------
 # Version info
 # ---------------------------
-version_number = "v1.0.6"
-last_updated = "September 13, 2025"
+version_number = "v1.0.7"
+last_updated = "September 14, 2025"
 
 st.markdown(f"""
 <hr style='border:1px solid #1E90FF; margin-top:10px; margin-bottom:5px;'>
@@ -88,7 +88,8 @@ t = {
         "Root_Cause_Occ": "Root Cause (Occurrence)", "Root_Cause_Det": "Root Cause (Detection)",
         "Occurrence_Why": "Occurrence Why", "Detection_Why": "Detection Why",
         "Save": "💾 Save 8D Report", "Download": "📥 Download XLSX",
-        "Training_Guidance": "Training Guidance", "Example": "Example"
+        "Training_Guidance": "Training Guidance", "Example": "Example",
+        "FMEA_Failure": "FMEA Failure Occurrence"
     },
     "es": {
         "D1": "D1: Detalles de la preocupación", "D2": "D2: Consideraciones de partes similares",
@@ -99,12 +100,13 @@ t = {
         "Root_Cause_Occ": "Causa raíz (Ocurrencia)", "Root_Cause_Det": "Causa raíz (Detección)",
         "Occurrence_Why": "Por qué Ocurrencia", "Detection_Why": "Por qué Detección",
         "Save": "💾 Guardar Informe 8D", "Download": "📥 Descargar XLSX",
-        "Training_Guidance": "Guía de Entrenamiento", "Example": "Ejemplo"
+        "Training_Guidance": "Guía de Entrenamiento", "Example": "Ejemplo",
+        "FMEA_Failure": "Ocurrencia de falla FMEA"
     }
 }
 
 # ---------------------------
-# NPQP 8D steps with updated examples
+# NPQP 8D steps with examples
 # ---------------------------
 npqp_steps = [
     ("D1", {"en":"Describe the customer concerns clearly. Include what the issue is, where it occurred, when, and any supporting data.",
@@ -123,8 +125,8 @@ npqp_steps = [
             "es":"Defina acciones de contención temporales para evitar que el cliente vea el problema mientras se desarrollan acciones permanentes."},
      {"en":"100% inspection of amplifiers before shipment; temporary shielding.",
       "es":"Inspección 100% de amplificadores antes del envío; blindaje temporal."}),
-    ("D5", {"en":"Use 5-Why analysis to determine the root cause. Separate Occurrence and Detection. Each why helps drill down to the underlying process, equipment, material, or FMEA gaps.",
-            "es":"Use el análisis de 5 Porqués para determinar la causa raíz. Separe Ocurrencia y Detección. Cada porqué ayuda a identificar problemas en el proceso, equipo, material o brechas en FMEA."},
+    ("D5", {"en":"Use 5-Why analysis to determine the root cause. Separate Occurrence and Detection. Include FMEA failure occurrence if applicable.",
+            "es":"Use el análisis de 5 Porqués para determinar la causa raíz. Separe Ocurrencia y Detección. Incluya la ocurrencia de falla FMEA si aplica."},
      {"en":"","es":""}),
     ("D6", {"en":"Define corrective actions that eliminate the root cause permanently and prevent recurrence.",
             "es":"Defina acciones correctivas que eliminen la causa raíz permanentemente y eviten recurrencia."},
@@ -146,6 +148,7 @@ npqp_steps = [
 for step, _, _ in npqp_steps:
     if step not in st.session_state:
         st.session_state[step] = {"answer": "", "extra": ""}
+
 st.session_state.setdefault("report_date", datetime.datetime.today().strftime("%B %d, %Y"))
 st.session_state.setdefault("prepared_by", "")
 st.session_state.setdefault("d5_occ_whys", [""] * 5)
@@ -210,10 +213,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             st.session_state[step]["answer"] = st.text_area(
                 "Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}"
             )
-
-# ---------------------------
-# D5 Tab Rendering (start) – Part 2 will continue from here
-# --------------------------- Part 2 ---------------------------
+            # --------------------------- Part 2 ---------------------------
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     with tabs[i]:
         if step == "D5":
@@ -233,7 +233,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             """, unsafe_allow_html=True)
 
             # ---------------------------
-            # Occurrence Section
+            # Occurrence Section with FMEA
             # ---------------------------
             st.markdown("#### Occurrence Analysis")
             occurrence_categories = {
@@ -261,6 +261,9 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                     "Power fluctuations or outages",
                     "Contamination (dust, oil, chemicals)",
                     "Regulatory or compliance changes"
+                ],
+                f"{t[lang_key]['FMEA_Failure']}": [
+                    "FMEA failure occurrence identified"
                 ]
             }
 
@@ -287,6 +290,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                     index=index,
                     key=f"occ_{idx}"
                 )
+                # Free text override
                 free_text = st.text_input(f"Or enter your own Occurrence Why {idx+1}", value="", key=f"occ_txt_{idx}")
                 if free_text.strip():
                     st.session_state.d5_occ_whys[idx] = free_text
@@ -340,6 +344,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                     index=index_det,
                     key=f"det_{idx}"
                 )
+                # Free text override
                 free_text_det = st.text_input(f"Or enter your own Detection Why {idx+1}", value="", key=f"det_txt_{idx}")
                 if free_text_det.strip():
                     st.session_state.d5_det_whys[idx] = free_text_det
@@ -353,18 +358,17 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             st.session_state["d5_det_selected"] = selected_det
 
             # ---------------------------
-            # Smart Root Cause Suggestion
+            # Root Cause Suggestion
             # ---------------------------
             st.markdown("#### Suggested Root Cause")
             suggested_occ_rc = "The root cause that allowed this issue to occur may be related to: " + ", ".join(selected_occ) if selected_occ else ""
             suggested_det_rc = "The root cause that allowed this issue to escape detection may be related to: " + ", ".join(selected_det) if selected_det else ""
-            
-            # Save under D5 answer (not extra)
-            st.session_state.D5["answer"] = suggested_occ_rc
-            st.session_state.D5["extra"] = suggested_det_rc
-
-            st.text_area(f"{t[lang_key]['Root_Cause_Occ']}", value=suggested_occ_rc, key="root_cause_occ")
-            st.text_area(f"{t[lang_key]['Root_Cause_Det']}", value=suggested_det_rc, key="root_cause_det")
+            st.session_state.D5["extra"] = st.text_area(
+                f"{t[lang_key]['Root_Cause_Occ']}", value=suggested_occ_rc, key="root_cause_occ"
+            )
+            st.text_area(
+                f"{t[lang_key]['Root_Cause_Det']}", value=suggested_det_rc, key="root_cause_det"
+            )
 
         elif step in ["D6","D7","D8"]:
             note_text = note_dict[lang_key]
@@ -500,3 +504,4 @@ with st.sidebar:
         for step in ["D1","D2","D3","D4","D5","D6","D7","D8"]:
             st.session_state.setdefault(step, {"answer":"", "extra":""})
         st.success("✅ All data has been reset!")
+            
