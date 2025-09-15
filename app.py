@@ -215,9 +215,15 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             )
             # --------------------------- Part 2 ---------------------------
 
+# Track selected tab index to prevent jump back to D1
+if "active_tab" not in st.session_state:
+    st.session_state["active_tab"] = 0
+
+# Render D5–D8 tabs
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     with tabs[i]:
         if step == "D5":
+            st.session_state["active_tab"] = i  # Stay on D5 when interacting
             st.markdown(f"""
             <div style="
                 background-color:#b3e0ff; 
@@ -288,7 +294,6 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                     index=index,
                     key=f"occ_{idx}"
                 )
-                # Free text override
                 free_text = st.text_input(f"Or enter your own Occurrence Why {idx+1}", value="", key=f"occ_txt_{idx}")
                 if free_text.strip():
                     st.session_state.d5_occ_whys[idx] = free_text
@@ -342,7 +347,6 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                     index=index_det,
                     key=f"det_{idx}"
                 )
-                # Free text override
                 free_text_det = st.text_input(f"Or enter your own Detection Why {idx+1}", value="", key=f"det_txt_{idx}")
                 if free_text_det.strip():
                     st.session_state.d5_det_whys[idx] = free_text_det
@@ -356,23 +360,12 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             st.session_state["d5_det_selected"] = selected_det
 
             # ---------------------------
-            # Root Cause Suggestion (NOW SAVES UNDER ANSWER)
+            # Root Cause Suggestion
             # ---------------------------
             st.markdown("#### Suggested Root Cause")
-            suggested_occ_rc = (
-                "The root cause that allowed this issue to occur may be related to: "
-                + ", ".join(selected_occ)
-                if selected_occ
-                else ""
-            )
-            suggested_det_rc = (
-                "The root cause that allowed this issue to escape detection may be related to: "
-                + ", ".join(selected_det)
-                if selected_det
-                else ""
-            )
+            suggested_occ_rc = "The root cause that allowed this issue to occur may be related to: " + ", ".join(selected_occ) if selected_occ else ""
+            suggested_det_rc = "The root cause that allowed this issue to escape detection may be related to: " + ", ".join(selected_det) if selected_det else ""
 
-            # Save under ANSWER, not EXTRA
             st.session_state.D5["answer"] = st.text_area(
                 f"{t[lang_key]['Root_Cause_Occ']}",
                 value=suggested_occ_rc,
@@ -506,15 +499,11 @@ with st.sidebar:
 
     if st.button("🗑️ Clear All"):
         for step, _, _ in npqp_steps:
-            if step != "D5":
-                st.session_state[step] = {"answer": "", "extra": ""}
-        st.session_state["D5"] = {"answer": "", "extra": ""}
+            st.session_state[step] = {"answer": "", "extra": ""}
         st.session_state["d5_occ_whys"] = [""] * 5
         st.session_state["d5_det_whys"] = [""] * 5
         st.session_state["d5_occ_selected"] = []
         st.session_state["d5_det_selected"] = []
         st.session_state["report_date"] = datetime.datetime.today().strftime("%B %d, %Y")
         st.session_state["prepared_by"] = ""
-        for step in ["D1","D2","D3","D4","D5","D6","D7","D8"]:
-            st.session_state.setdefault(step, {"answer":"", "extra":""})
         st.success("✅ All data has been reset!")
