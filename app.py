@@ -22,36 +22,36 @@ st.set_page_config(
 # App colors and styles
 # ---------------------------
 st.markdown("""
-<style>
-.stApp {
-    background: linear-gradient(to right, #f0f8ff, #e6f2ff);
-    color: #000000 !important;
-}
-.stTabs [data-baseweb="tab"] {
-    font-weight: bold;
-    color: #000000 !important;
-}
-textarea {
-    background-color: #ffffff !important;
-    border: 1px solid #1E90FF !important;
-    border-radius: 5px;
-    color: #000000 !important;
-}
-.stInfo {
-    background-color: #e6f7ff !important;
-    border-left: 5px solid #1E90FF !important;
-    color: #000000 !important;
-}
-.css-1d391kg {
-    color: #1E90FF !important;
-    font-weight: bold !important;
-}
-button[kind="primary"] {
-    background-color: #87AFC7 !important;
-    color: white !important;
-    font-weight: bold;
-}
-</style>
+    <style>
+    .stApp {
+        background: linear-gradient(to right, #f0f8ff, #e6f2ff);
+        color: #000000 !important;
+    }
+    .stTabs [data-baseweb="tab"] {
+        font-weight: bold;
+        color: #000000 !important;
+    }
+    textarea {
+        background-color: #ffffff !important;
+        border: 1px solid #1E90FF !important;
+        border-radius: 5px;
+        color: #000000 !important;
+    }
+    .stInfo {
+        background-color: #e6f7ff !important;
+        border-left: 5px solid #1E90FF !important;
+        color: #000000 !important;
+    }
+    .css-1d391kg {
+        color: #1E90FF !important;
+        font-weight: bold !important;
+    }
+    button[kind="primary"] {
+        background-color: #87AFC7 !important;
+        color: white !important;
+        font-weight: bold;
+    }
+    </style>
 """, unsafe_allow_html=True)
 
 # ---------------------------
@@ -104,7 +104,7 @@ t = {
 }
 
 # ---------------------------
-# NPQP 8D steps
+# NPQP 8D steps with updated examples
 # ---------------------------
 npqp_steps = [
     ("D1", {"en":"Describe the customer concerns clearly. Include what the issue is, where it occurred, when, and any supporting data.",
@@ -152,7 +152,6 @@ st.session_state.setdefault("d5_occ_whys", [""] * 5)
 st.session_state.setdefault("d5_det_whys", [""] * 5)
 st.session_state.setdefault("d5_occ_selected", [])
 st.session_state.setdefault("d5_det_selected", [])
-st.session_state.setdefault("active_tab", 0)
 
 # ---------------------------
 # Restore from URL (st.query_params)
@@ -181,11 +180,43 @@ for step, _, _ in npqp_steps:
         tab_labels.append(f"🟢 {t[lang_key][step]}")
     else:
         tab_labels.append(f"🔴 {t[lang_key][step]}")
-tabs = st.tabs(tab_labels, key="main_tabs")
-# --------------------------- Part 2a ---------------------------
+
+# ✅ Fix: removed key to prevent TypeError
+tabs = st.tabs(tab_labels)
+# --------------------------- Part 2 ---------------------------
+# ---------------------------
+# Render D1–D8 tabs content
+# ---------------------------
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     with tabs[i]:
-        if step == "D5":
+        st.markdown(f"### {t[lang_key][step]}")
+        
+        if step not in ["D5","D6","D7","D8"]:
+            note_text = note_dict[lang_key]
+            example_text = example_dict[lang_key]
+            st.markdown(f"""
+            <div style="
+                background-color:#b3e0ff; 
+                color:black; 
+                padding:12px; 
+                border-left:5px solid #1E90FF; 
+                border-radius:6px;
+                width:100%;
+                font-size:14px;
+                line-height:1.5;
+            ">
+            <b>{t[lang_key]['Training_Guidance']}:</b> {note_text}<br><br>
+            💡 <b>{t[lang_key]['Example']}:</b> {example_text}
+            </div>
+            """, unsafe_allow_html=True)
+            st.session_state[step]["answer"] = st.text_area(
+                "Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}"
+            )
+
+        elif step == "D5":
+            # ---------------------------
+            # Training guidance
+            # ---------------------------
             st.markdown(f"""
             <div style="
                 background-color:#b3e0ff; 
@@ -202,39 +233,34 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             """, unsafe_allow_html=True)
 
             # ---------------------------
-            # Occurrence Section
+            # Occurrence Analysis
             # ---------------------------
             st.markdown("#### Occurrence Analysis")
             occurrence_categories = {
-                "Machine / Equipment-related": [
+                "Machine / Equipment": [
                     "Mechanical failure or breakdown",
-                    "Calibration issues (incorrect settings)",
+                    "Calibration issues",
                     "Tooling or fixture failure",
                     "Machine wear and tear",
-                    "Failure not identified in FMEA"
+                    "FMEA failure not identified"
                 ],
-                "Material / Component-related": [
+                "Material / Component": [
                     "Wrong material delivered",
-                    "Material defects or impurities",
-                    "Damage during storage or transport",
-                    "Incorrect specifications or tolerance errors"
+                    "Material defects",
+                    "Damage during transport",
+                    "Incorrect specifications"
                 ],
-                "Process / Method-related": [
-                    "Incorrect process steps due to poor process design",
-                    "Inefficient workflow or bottlenecks",
+                "Process / Method": [
+                    "Incorrect process steps",
+                    "Inefficient workflow",
                     "Lack of standardized procedures",
-                    "Outdated or incomplete work instructions"
+                    "Outdated work instructions"
                 ],
-                "Environmental / External Factors": [
-                    "Temperature, humidity, or other environmental conditions",
-                    "Power fluctuations or outages",
-                    "Contamination (dust, oil, chemicals)",
-                    "Regulatory or compliance changes"
-                ],
-                "FMEA Failure Occurrence": [
-                    "Failure mode not captured in FMEA",
-                    "FMEA mitigation not effective",
-                    "FMEA detection gap"
+                "Environmental / External": [
+                    "Temperature, humidity, or environment",
+                    "Power fluctuations",
+                    "Contamination",
+                    "Regulatory changes"
                 ]
             }
 
@@ -261,6 +287,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                     index=index,
                     key=f"occ_{idx}"
                 )
+
                 # Free text override
                 free_text = st.text_input(f"Or enter your own Occurrence Why {idx+1}", value="", key=f"occ_txt_{idx}")
                 if free_text.strip():
@@ -275,20 +302,20 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             st.session_state["d5_occ_selected"] = selected_occ
 
             # ---------------------------
-            # Detection Section
+            # Detection Analysis
             # ---------------------------
             st.markdown("#### Detection Analysis")
             detection_categories = {
-                "QA / Inspection-related": [
+                "QA / Inspection": [
                     "QA checklist incomplete",
                     "No automated test",
-                    "Missed inspection due to process gap",
-                    "Tooling or equipment inspection not scheduled"
+                    "Missed inspection",
+                    "Tooling not scheduled"
                 ],
-                "Validation / Process-related": [
+                "Validation / Process": [
                     "Insufficient validation steps",
-                    "Design verification not complete",
-                    "Inspection documentation missing or outdated"
+                    "Design verification incomplete",
+                    "Inspection documentation outdated"
                 ]
             }
 
@@ -315,6 +342,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                     index=index_det,
                     key=f"det_{idx}"
                 )
+
                 # Free text override
                 free_text_det = st.text_input(f"Or enter your own Detection Why {idx+1}", value="", key=f"det_txt_{idx}")
                 if free_text_det.strip():
@@ -329,34 +357,18 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             st.session_state["d5_det_selected"] = selected_det
 
             # ---------------------------
-            # Root Cause Suggestion
+            # Suggested Root Cause saved under answer
             # ---------------------------
-            st.markdown("#### Suggested Root Cause")
-            suggested_occ_rc = (
-                "The root cause that allowed this issue to occur may be related to: "
-                + ", ".join(selected_occ)
-                if selected_occ
-                else ""
-            )
-            suggested_det_rc = (
-                "The root cause that allowed this issue to escape detection may be related to: "
-                + ", ".join(selected_det)
-                if selected_det
-                else ""
-            )
+            suggested_occ_rc = "The root cause that allowed this issue to occur may be related to: " + ", ".join(selected_occ) if selected_occ else ""
+            suggested_det_rc = "The root cause that allowed this issue to escape detection may be related to: " + ", ".join(selected_det) if selected_det else ""
+            st.session_state.D5["answer"] = f"{suggested_occ_rc}\n{suggested_det_rc}"
 
-            # Save suggested root cause directly under 'answer'
-            st.session_state.D5["answer"] = suggested_occ_rc + "\n" + suggested_det_rc
-            st.text_area(
-                f"{t[lang_key]['Root_Cause_Occ']}", value=suggested_occ_rc, key="root_cause_occ_display"
-            )
-            st.text_area(
-                f"{t[lang_key]['Root_Cause_Det']}", value=suggested_det_rc, key="root_cause_det_display"
-            )
-            # --------------------------- Part 2b ---------------------------
-for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
-    with tabs[i]:
-        if step in ["D6","D7","D8"]:
+            st.text_area("Root Cause (Occurrence + Detection)", value=st.session_state.D5["answer"], key="root_cause_text")
+
+        else:
+            # D6–D8 content
+            note_text = note_dict[lang_key]
+            example_text = example_dict[lang_key]
             st.markdown(f"""
             <div style="
                 background-color:#b3e0ff; 
@@ -368,8 +380,8 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                 font-size:14px;
                 line-height:1.5;
             ">
-            <b>{t[lang_key]['Training_Guidance']}:</b> {note_dict[lang_key]}<br><br>
-            💡 <b>{t[lang_key]['Example']}:</b> {example_dict[lang_key]}
+            <b>{t[lang_key]['Training_Guidance']}:</b> {note_text}<br><br>
+            💡 <b>{t[lang_key]['Example']}:</b> {example_text}
             </div>
             """, unsafe_allow_html=True)
             st.session_state[step]["answer"] = st.text_area(
@@ -388,7 +400,6 @@ def generate_excel():
     wb = Workbook()
     ws = wb.active
     ws.title = "NPQP 8D Report"
-
     thin = Side(border_style="thin", color="000000")
     border = Border(left=thin, right=thin, top=thin, bottom=thin)
 
@@ -460,7 +471,6 @@ with st.sidebar:
 
     st.markdown("---")
     st.markdown("### Restore from JSON")
-
     uploaded_file = st.file_uploader("Upload JSON file to restore", type="json")
     if uploaded_file:
         try:
@@ -473,7 +483,6 @@ with st.sidebar:
 
     st.markdown("---")
     st.markdown("### Reset All Data")
-
     if st.button("🗑️ Clear All"):
         for step, _, _ in npqp_steps:
             if step != "D5":
