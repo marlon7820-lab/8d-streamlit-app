@@ -23,12 +23,34 @@ st.set_page_config(
 # ---------------------------
 st.markdown("""
     <style>
-    .stApp { background: linear-gradient(to right, #f0f8ff, #e6f2ff); color: #000000 !important; }
-    .stTabs [data-baseweb="tab"] { font-weight: bold; color: #000000 !important; }
-    textarea { background-color: #ffffff !important; border: 1px solid #1E90FF !important; border-radius: 5px; color: #000000 !important; }
-    .stInfo { background-color: #e6f7ff !important; border-left: 5px solid #1E90FF !important; color: #000000 !important; }
-    .css-1d391kg { color: #1E90FF !important; font-weight: bold !important; }
-    button[kind="primary"] { background-color: #87AFC7 !important; color: white !important; font-weight: bold; }
+    .stApp {
+        background: linear-gradient(to right, #f0f8ff, #e6f2ff);
+        color: #000000 !important;
+    }
+    .stTabs [data-baseweb="tab"] {
+        font-weight: bold;
+        color: #000000 !important;
+    }
+    textarea {
+        background-color: #ffffff !important;
+        border: 1px solid #1E90FF !important;
+        border-radius: 5px;
+        color: #000000 !important;
+    }
+    .stInfo {
+        background-color: #e6f7ff !important;
+        border-left: 5px solid #1E90FF !important;
+        color: #000000 !important;
+    }
+    .css-1d391kg {
+        color: #1E90FF !important;
+        font-weight: bold !important;
+    }
+    button[kind="primary"] {
+        background-color: #87AFC7 !important;
+        color: white !important;
+        font-weight: bold;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -130,7 +152,6 @@ st.session_state.setdefault("d5_occ_whys", [""] * 5)
 st.session_state.setdefault("d5_det_whys", [""] * 5)
 st.session_state.setdefault("d5_occ_selected", [])
 st.session_state.setdefault("d5_det_selected", [])
-st.session_state.setdefault("active_tab", 0)  # <-- store active tab to fix D5 jump
 
 # ---------------------------
 # Restore from URL (st.query_params)
@@ -160,39 +181,12 @@ for step, _, _ in npqp_steps:
     else:
         tab_labels.append(f"🔴 {t[lang_key][step]}")
 
-tabs = st.tabs(tab_labels, key="main_tabs")
+# ✅ FIX: Remove 'key' to prevent TypeError / jumping
+tabs = st.tabs(tab_labels)
 # --------------------------- Part 2a ---------------------------
-# ---------------------------
-# Render D1–D8 tabs
-# ---------------------------
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     with tabs[i]:
-        st.session_state["active_tab"] = i  # store active tab to prevent jump
-        st.markdown(f"### {t[lang_key][step]}")
-
-        if step not in ["D5","D6","D7","D8"]:
-            note_text = note_dict[lang_key]
-            example_text = example_dict[lang_key]
-            st.markdown(f"""
-            <div style="
-                background-color:#b3e0ff; 
-                color:black; 
-                padding:12px; 
-                border-left:5px solid #1E90FF; 
-                border-radius:6px;
-                width:100%;
-                font-size:14px;
-                line-height:1.5;
-            ">
-            <b>{t[lang_key]['Training_Guidance']}:</b> {note_text}<br><br>
-            💡 <b>{t[lang_key]['Example']}:</b> {example_text}
-            </div>
-            """, unsafe_allow_html=True)
-            st.session_state[step]["answer"] = st.text_area(
-                "Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}"
-            )
-
-        elif step == "D5":
+        if step == "D5":
             st.markdown(f"""
             <div style="
                 background-color:#b3e0ff; 
@@ -209,7 +203,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             """, unsafe_allow_html=True)
 
             # ---------------------------
-            # Occurrence Section with FMEA added
+            # Occurrence Section
             # ---------------------------
             st.markdown("#### Occurrence Analysis")
             occurrence_categories = {
@@ -238,10 +232,10 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                     "Contamination (dust, oil, chemicals)",
                     "Regulatory or compliance changes"
                 ],
-                "FMEA / Failure Occurrence": [
-                    "Failure mode not captured in PFMEA",
-                    "Risk assessment underestimated",
-                    "Control plan ineffective"
+                "FMEA-related": [
+                    "Failure mode not identified in FMEA",
+                    "Risk priority number underestimated",
+                    "Control plan missing or inadequate"
                 ]
             }
 
@@ -280,7 +274,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                 st.session_state.d5_occ_whys.append("")
 
             st.session_state["d5_occ_selected"] = selected_occ
-            # --------------------------- Part 2b ---------------------------
+
             # ---------------------------
             # Detection Section
             # ---------------------------
@@ -336,16 +330,24 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             st.session_state["d5_det_selected"] = selected_det
 
             # ---------------------------
-            # Root Cause Suggestion saved under answers
+            # Root Cause Suggestion (saved under 'answer')
             # ---------------------------
             st.markdown("#### Suggested Root Cause")
             suggested_occ_rc = "The root cause that allowed this issue to occur may be related to: " + ", ".join(selected_occ) if selected_occ else ""
             suggested_det_rc = "The root cause that allowed this issue to escape detection may be related to: " + ", ".join(selected_det) if selected_det else ""
-
-            # Save root causes under answer field
+            
+            # Save under 'answer' now
             st.session_state.D5["answer"] = f"{suggested_occ_rc}\n{suggested_det_rc}"
-
-        elif step in ["D6","D7","D8"]:
+            st.text_area(
+                f"{t[lang_key]['Root_Cause_Occ']}", value=suggested_occ_rc, key="root_cause_occ", height=80
+            )
+            st.text_area(
+                f"{t[lang_key]['Root_Cause_Det']}", value=suggested_det_rc, key="root_cause_det", height=80
+            )
+            # --------------------------- Part 2b ---------------------------
+for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
+    with tabs[i]:
+        if step in ["D6", "D7", "D8"]:
             note_text = note_dict[lang_key]
             example_text = example_dict[lang_key]
             st.markdown(f"""
@@ -467,15 +469,11 @@ with st.sidebar:
 
     if st.button("🗑️ Clear All"):
         for step, _, _ in npqp_steps:
-            if step != "D5":
-                st.session_state[step] = {"answer": "", "extra": ""}
-        st.session_state["D5"] = {"answer": "", "extra": ""}
+            st.session_state[step] = {"answer": "", "extra": ""}
         st.session_state["d5_occ_whys"] = [""] * 5
         st.session_state["d5_det_whys"] = [""] * 5
         st.session_state["d5_occ_selected"] = []
         st.session_state["d5_det_selected"] = []
         st.session_state["report_date"] = datetime.datetime.today().strftime("%B %d, %Y")
         st.session_state["prepared_by"] = ""
-        for step in ["D1","D2","D3","D4","D5","D6","D7","D8"]:
-            st.session_state.setdefault(step, {"answer":"", "extra":""})
         st.success("✅ All data has been reset!")
