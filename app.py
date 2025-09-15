@@ -1,3 +1,4 @@
+# --------------------------- Part 1 ---------------------------
 import streamlit as st
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
@@ -156,6 +157,12 @@ st.session_state.setdefault("d5_occ_selected", [])
 st.session_state.setdefault("d5_det_selected", [])
 
 # ---------------------------
+# Fix for jumping: active tab tracking
+# ---------------------------
+if "active_tab" not in st.session_state:
+    st.session_state.active_tab = 0
+
+# ---------------------------
 # Restore from URL (st.query_params)
 # ---------------------------
 if "backup" in st.query_params:
@@ -172,13 +179,10 @@ if "backup" in st.query_params:
 st.subheader(f"{t[lang_key]['Report_Date']}")
 st.session_state.report_date = st.text_input(f"{t[lang_key]['Report_Date']}", value=st.session_state.report_date)
 st.session_state.prepared_by = st.text_input(f"{t[lang_key]['Prepared_By']}", value=st.session_state.prepared_by)
-
+# --------------------------- Part 2 ---------------------------
 # ---------------------------
-# Track active tab to prevent jumping (FIX)
+# Tabs with ✅ / 🔴 status indicators
 # ---------------------------
-if "active_tab" not in st.session_state:
-    st.session_state.active_tab = 0  # default first tab
-
 tab_labels = []
 for step, _, _ in npqp_steps:
     if st.session_state[step]["answer"].strip() != "":
@@ -186,17 +190,19 @@ for step, _, _ in npqp_steps:
     else:
         tab_labels.append(f"🔴 {t[lang_key][step]}")
 
+# Preserve active tab to prevent jumping
 tabs = st.tabs(tab_labels)
+current_tab_index = st.session_state.active_tab
+
 # ---------------------------
 # Render Tabs (D1–D8)
 # ---------------------------
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     with tabs[i]:
-        st.session_state.active_tab = i  # Track current tab
-
+        st.session_state.active_tab = i  # Track which tab is active
         st.markdown(f"### {t[lang_key][step]}")
 
-        if step not in ["D5", "D6", "D7", "D8"]:
+        if step not in ["D5","D6","D7","D8"]:
             note_text = note_dict[lang_key]
             example_text = example_dict[lang_key]
             st.markdown(f"""
@@ -235,7 +241,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             </div>
             """, unsafe_allow_html=True)
 
-            # Ensure session_state lists are initialized
+            # Initialize lists if missing
             st.session_state.setdefault("d5_occ_whys", [""] * 5)
             st.session_state.setdefault("d5_det_whys", [""] * 5)
 
@@ -376,7 +382,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             )
 
         # --------------------------- D6–D8 ---------------------------
-        elif step in ["D6", "D7", "D8"]:
+        elif step in ["D6","D7","D8"]:
             note_text = note_dict[lang_key]
             example_text = example_dict[lang_key]
             st.markdown(f"""
@@ -397,7 +403,8 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             st.session_state[step]["answer"] = st.text_area(
                 "Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}"
             )
-            # ---------------------------
+            # --------------------------- Part 3 ---------------------------
+# ---------------------------
 # Collect answers for Excel
 # ---------------------------
 data_rows = [(step, st.session_state[step]["answer"], st.session_state[step]["extra"]) for step, _, _ in npqp_steps]
@@ -506,6 +513,7 @@ with st.sidebar:
         st.session_state["d5_det_selected"] = []
         st.session_state["report_date"] = datetime.datetime.today().strftime("%B %d, %Y")
         st.session_state["prepared_by"] = ""
+        st.session_state["active_tab"] = 0
         for step in ["D1","D2","D3","D4","D5","D6","D7","D8"]:
             st.session_state.setdefault(step, {"answer":"", "extra":""})
         st.success("✅ All data has been reset!")
