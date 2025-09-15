@@ -185,7 +185,10 @@ for step, _, _ in npqp_steps:
         tab_labels.append(f"🔴 {t[lang_key][step]}")
 
 tabs = st.tabs(tab_labels)
-# --------------------------- Part 2 ---------------------------
+
+# ---------------------------
+# Render Tabs (D1–D8)
+# ---------------------------
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     with tabs[i]:
         st.markdown(f"### {t[lang_key][step]}")
@@ -211,8 +214,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             st.session_state[step]["answer"] = st.text_area(
                 "Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}"
             )
-
-        # --------------------------- D5 Section (Fixed Jumping) ---------------------------
+                    # --------------------------- D5 Fixed Section ---------------------------
         if step == "D5":
             st.markdown(f"""
             <div style="
@@ -229,15 +231,11 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             </div>
             """, unsafe_allow_html=True)
 
-            # Only initialize if not already set, to prevent jumping
-            if "d5_occ_whys" not in st.session_state:
-                st.session_state.d5_occ_whys = [""] * 5
-            if "d5_det_whys" not in st.session_state:
-                st.session_state.d5_det_whys = [""] * 5
-            if "d5_occ_selected" not in st.session_state:
-                st.session_state.d5_occ_selected = []
-            if "d5_det_selected" not in st.session_state:
-                st.session_state.d5_det_selected = []
+            # Initialize session_state for D5 if not present
+            st.session_state.setdefault("d5_occ_whys", [""] * 5)
+            st.session_state.setdefault("d5_det_whys", [""] * 5)
+            st.session_state.setdefault("d5_occ_selected", [])
+            st.session_state.setdefault("d5_det_selected", [])
 
             # ---------------------------
             # Occurrence Section
@@ -271,32 +269,36 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                 ]
             }
 
-            selected_occ = st.session_state.d5_occ_selected.copy()
-            for idx, val in enumerate(st.session_state.d5_occ_whys):
+            selected_occ = st.session_state["d5_occ_selected"]
+
+            for idx in range(len(st.session_state.d5_occ_whys)):
                 remaining_options = []
                 for cat, items in occurrence_categories.items():
                     for item in items:
                         full_item = f"{cat}: {item}"
-                        if full_item not in selected_occ:
+                        if full_item not in selected_occ or full_item == st.session_state.d5_occ_whys[idx]:
                             remaining_options.append(full_item)
-                if val and val not in remaining_options:
-                    remaining_options.append(val)
 
                 options = [""] + sorted(remaining_options)
                 current_value = st.session_state.d5_occ_whys[idx]
-                st.session_state.d5_occ_whys[idx] = st.selectbox(
-                    f"{t[lang_key]['Occurrence_Why']} {idx+1}",
-                    options,
-                    index=options.index(current_value) if current_value in options else 0,
-                    key=f"occ_{idx}"
-                )
-                free_text = st.text_input(
-                    f"Or enter your own Occurrence Why {idx+1}", 
-                    value=st.session_state.d5_occ_whys[idx], 
-                    key=f"occ_txt_{idx}"
-                )
-                if free_text.strip():
-                    st.session_state.d5_occ_whys[idx] = free_text
+                # Use form_container to prevent rerun jumping
+                container_occ = st.container()
+                with container_occ:
+                    st.session_state.d5_occ_whys[idx] = st.selectbox(
+                        f"{t[lang_key]['Occurrence_Why']} {idx+1}",
+                        options,
+                        index=options.index(current_value) if current_value in options else 0,
+                        key=f"occ_{idx}"
+                    )
+                    free_text = st.text_input(
+                        f"Or enter your own Occurrence Why {idx+1}",
+                        value=st.session_state.d5_occ_whys[idx],
+                        key=f"occ_txt_{idx}"
+                    )
+                    if free_text.strip():
+                        st.session_state.d5_occ_whys[idx] = free_text
+
+                # Update selected_occ without causing tab jumping
                 if st.session_state.d5_occ_whys[idx] and st.session_state.d5_occ_whys[idx] not in selected_occ:
                     selected_occ.append(st.session_state.d5_occ_whys[idx])
 
@@ -323,32 +325,34 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                 ]
             }
 
-            selected_det = st.session_state.d5_det_selected.copy()
-            for idx, val in enumerate(st.session_state.d5_det_whys):
+            selected_det = st.session_state["d5_det_selected"]
+
+            for idx in range(len(st.session_state.d5_det_whys)):
                 remaining_options = []
                 for cat, items in detection_categories.items():
                     for item in items:
                         full_item = f"{cat}: {item}"
-                        if full_item not in selected_det:
+                        if full_item not in selected_det or full_item == st.session_state.d5_det_whys[idx]:
                             remaining_options.append(full_item)
-                if val and val not in remaining_options:
-                    remaining_options.append(val)
 
                 options_det = [""] + sorted(remaining_options)
                 current_value = st.session_state.d5_det_whys[idx]
-                st.session_state.d5_det_whys[idx] = st.selectbox(
-                    f"{t[lang_key]['Detection_Why']} {idx+1}",
-                    options_det,
-                    index=options_det.index(current_value) if current_value in options_det else 0,
-                    key=f"det_{idx}"
-                )
-                free_text_det = st.text_input(
-                    f"Or enter your own Detection Why {idx+1}", 
-                    value=st.session_state.d5_det_whys[idx], 
-                    key=f"det_txt_{idx}"
-                )
-                if free_text_det.strip():
-                    st.session_state.d5_det_whys[idx] = free_text_det
+                container_det = st.container()
+                with container_det:
+                    st.session_state.d5_det_whys[idx] = st.selectbox(
+                        f"{t[lang_key]['Detection_Why']} {idx+1}",
+                        options_det,
+                        index=options_det.index(current_value) if current_value in options_det else 0,
+                        key=f"det_{idx}"
+                    )
+                    free_text_det = st.text_input(
+                        f"Or enter your own Detection Why {idx+1}",
+                        value=st.session_state.d5_det_whys[idx],
+                        key=f"det_txt_{idx}"
+                    )
+                    if free_text_det.strip():
+                        st.session_state.d5_det_whys[idx] = free_text_det
+
                 if st.session_state.d5_det_whys[idx] and st.session_state.d5_det_whys[idx] not in selected_det:
                     selected_det.append(st.session_state.d5_det_whys[idx])
 
@@ -405,7 +409,71 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             st.session_state[step]["answer"] = st.text_area(
                 "Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}"
             )
-            # --------------------------- Part 3 ---------------------------
+            # ---------------------------
+# Collect answers for Excel
+# ---------------------------
+data_rows = [(step, st.session_state[step]["answer"], st.session_state[step]["extra"]) for step, _, _ in npqp_steps]
+
+# ---------------------------
+# Save / Download Excel
+# ---------------------------
+def generate_excel():
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "NPQP 8D Report"
+
+    thin = Side(border_style="thin", color="000000")
+    border = Border(left=thin, right=thin, top=thin, bottom=thin)
+
+    if os.path.exists("logo.png"):
+        try:
+            img = XLImage("logo.png")
+            img.width = 140
+            img.height = 40
+            ws.add_image(img, "A1")
+        except:
+            pass
+
+    ws.merge_cells(start_row=3, start_column=1, end_row=3, end_column=3)
+    ws.cell(row=3, column=1, value="📋 8D Report Assistant").font = Font(bold=True, size=14)
+
+    ws.append([t[lang_key]['Report_Date'], st.session_state.report_date])
+    ws.append([t[lang_key]['Prepared_By'], st.session_state.prepared_by])
+    ws.append([])
+
+    header_row = ws.max_row + 1
+    headers = ["Step", "Answer", "Extra / Notes"]
+    fill = PatternFill(start_color="1E90FF", end_color="1E90FF", fill_type="solid")
+    for c_idx, h in enumerate(headers, start=1):
+        cell = ws.cell(row=header_row, column=c_idx, value=h)
+        cell.fill = fill
+        cell.font = Font(bold=True, color="FFFFFF")
+        cell.alignment = Alignment(horizontal="center", vertical="center")
+        cell.border = border
+
+    for step, answer, extra in data_rows:
+        ws.append([t[lang_key][step], answer, extra])
+        r = ws.max_row
+        for c in range(1, 4):
+            cell = ws.cell(row=r, column=c)
+            cell.alignment = Alignment(wrap_text=True, vertical="top")
+            cell.font = Font(bold=True if c == 2 else False)
+            cell.border = border
+
+    for col in range(1, 4):
+        ws.column_dimensions[get_column_letter(col)].width = 40
+
+    output = io.BytesIO()
+    wb.save(output)
+    return output.getvalue()
+
+st.download_button(
+    label=f"{t[lang_key]['Download']}",
+    data=generate_excel(),
+    file_name=f"8D_Report_{st.session_state.report_date.replace(' ', '_')}.xlsx",
+    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+)
+
 # ---------------------------
 # Sidebar: JSON Backup / Restore + Reset
 # ---------------------------
