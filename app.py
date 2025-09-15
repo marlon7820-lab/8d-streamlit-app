@@ -187,11 +187,12 @@ for step, _, _ in npqp_steps:
 tabs = st.tabs(tab_labels)
 
 # ---------------------------
-# Render D1–D4 tabs
+# Render Tabs (D1–D8)
 # ---------------------------
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     with tabs[i]:
         st.markdown(f"### {t[lang_key][step]}")
+
         if step not in ["D5","D6","D7","D8"]:
             note_text = note_dict[lang_key]
             example_text = example_dict[lang_key]
@@ -213,10 +214,8 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             st.session_state[step]["answer"] = st.text_area(
                 "Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}"
             )
-            # --------------------------- Part 2 ---------------------------
 
-for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
-    with tabs[i]:
+        # --------------------------- D5 FIXED ---------------------------
         if step == "D5":
             st.markdown(f"""
             <div style="
@@ -232,6 +231,10 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             <b>{t[lang_key]['Training_Guidance']}:</b> {note_dict[lang_key]}
             </div>
             """, unsafe_allow_html=True)
+
+            # Ensure session_state lists are initialized
+            st.session_state.setdefault("d5_occ_whys", [""] * 5)
+            st.session_state.setdefault("d5_det_whys", [""] * 5)
 
             # ---------------------------
             # Occurrence Section
@@ -271,28 +274,22 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                 for cat, items in occurrence_categories.items():
                     for item in items:
                         full_item = f"{cat}: {item}"
-                        if full_item not in selected_occ and full_item not in st.session_state.d5_occ_whys:
+                        if full_item not in selected_occ:
                             remaining_options.append(full_item)
                 if val and val not in remaining_options:
                     remaining_options.append(val)
 
                 options = [""] + sorted(remaining_options)
-                try:
-                    index = options.index(val) if val else 0
-                except ValueError:
-                    index = 0
-
+                current_value = st.session_state.d5_occ_whys[idx]
                 st.session_state.d5_occ_whys[idx] = st.selectbox(
                     f"{t[lang_key]['Occurrence_Why']} {idx+1}",
                     options,
-                    index=index,
+                    index=options.index(current_value) if current_value in options else 0,
                     key=f"occ_{idx}"
                 )
-                # Free text override
-                free_text = st.text_input(f"Or enter your own Occurrence Why {idx+1}", value="", key=f"occ_txt_{idx}")
+                free_text = st.text_input(f"Or enter your own Occurrence Why {idx+1}", value=st.session_state.d5_occ_whys[idx], key=f"occ_txt_{idx}")
                 if free_text.strip():
                     st.session_state.d5_occ_whys[idx] = free_text
-
                 if st.session_state.d5_occ_whys[idx]:
                     selected_occ.append(st.session_state.d5_occ_whys[idx])
 
@@ -325,28 +322,22 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                 for cat, items in detection_categories.items():
                     for item in items:
                         full_item = f"{cat}: {item}"
-                        if full_item not in selected_det and full_item not in st.session_state.d5_det_whys:
+                        if full_item not in selected_det:
                             remaining_options.append(full_item)
                 if val and val not in remaining_options:
                     remaining_options.append(val)
 
                 options_det = [""] + sorted(remaining_options)
-                try:
-                    index_det = options_det.index(val) if val else 0
-                except ValueError:
-                    index_det = 0
-
+                current_value = st.session_state.d5_det_whys[idx]
                 st.session_state.d5_det_whys[idx] = st.selectbox(
                     f"{t[lang_key]['Detection_Why']} {idx+1}",
                     options_det,
-                    index=index_det,
+                    index=options_det.index(current_value) if current_value in options_det else 0,
                     key=f"det_{idx}"
                 )
-                # Free text override
-                free_text_det = st.text_input(f"Or enter your own Detection Why {idx+1}", value="", key=f"det_txt_{idx}")
+                free_text_det = st.text_input(f"Or enter your own Detection Why {idx+1}", value=st.session_state.d5_det_whys[idx], key=f"det_txt_{idx}")
                 if free_text_det.strip():
                     st.session_state.d5_det_whys[idx] = free_text_det
-
                 if st.session_state.d5_det_whys[idx]:
                     selected_det.append(st.session_state.d5_det_whys[idx])
 
@@ -356,23 +347,20 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             st.session_state["d5_det_selected"] = selected_det
 
             # ---------------------------
-            # Root Cause Suggestion (NOW SAVES UNDER ANSWER)
+            # Suggested Root Cause (save under ANSWER)
             # ---------------------------
             st.markdown("#### Suggested Root Cause")
             suggested_occ_rc = (
                 "The root cause that allowed this issue to occur may be related to: "
                 + ", ".join(selected_occ)
-                if selected_occ
-                else ""
+                if selected_occ else ""
             )
             suggested_det_rc = (
                 "The root cause that allowed this issue to escape detection may be related to: "
                 + ", ".join(selected_det)
-                if selected_det
-                else ""
+                if selected_det else ""
             )
 
-            # Save under ANSWER, not EXTRA
             st.session_state.D5["answer"] = st.text_area(
                 f"{t[lang_key]['Root_Cause_Occ']}",
                 value=suggested_occ_rc,
@@ -384,6 +372,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                 key="root_cause_det"
             )
 
+        # --------------------------- D6–D8 ---------------------------
         elif step in ["D6","D7","D8"]:
             note_text = note_dict[lang_key]
             example_text = example_dict[lang_key]
@@ -405,8 +394,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             st.session_state[step]["answer"] = st.text_area(
                 "Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}"
             )
-
-# ---------------------------
+            # ---------------------------
 # Collect answers for Excel
 # ---------------------------
 data_rows = [(step, st.session_state[step]["answer"], st.session_state[step]["extra"]) for step, _, _ in npqp_steps]
