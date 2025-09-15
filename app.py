@@ -232,14 +232,9 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             </div>
             """, unsafe_allow_html=True)
 
-            # Ensure session_state lists are initialized
-            st.session_state.setdefault("d5_occ_whys", [""] * 5)
-            st.session_state.setdefault("d5_det_whys", [""] * 5)
-
             # ---------------------------
-            # Occurrence Section
+            # Occurrence Section (D5)
             # ---------------------------
-            st.markdown("#### Occurrence Analysis")
             occurrence_categories = {
                 "Machine / Equipment-related": [
                     "Mechanical failure or breakdown",
@@ -269,27 +264,29 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             }
 
             selected_occ = []
-            for idx, val in enumerate(st.session_state.d5_occ_whys):
-                remaining_options = []
-                for cat, items in occurrence_categories.items():
-                    for item in items:
-                        full_item = f"{cat}: {item}"
-                        if full_item not in selected_occ:
-                            remaining_options.append(full_item)
-                if val and val not in remaining_options:
-                    remaining_options.append(val)
-
-                options = [""] + sorted(remaining_options)
+            for idx in range(len(st.session_state.d5_occ_whys)):
                 current_value = st.session_state.d5_occ_whys[idx]
+                options = [""] + sorted([f"{cat}: {item}" 
+                                         for cat, items in occurrence_categories.items() 
+                                         for item in items])
+                if current_value and current_value not in options:
+                    options.append(current_value)
+
                 st.session_state.d5_occ_whys[idx] = st.selectbox(
                     f"{t[lang_key]['Occurrence_Why']} {idx+1}",
                     options,
                     index=options.index(current_value) if current_value in options else 0,
                     key=f"occ_{idx}"
                 )
-                free_text = st.text_input(f"Or enter your own Occurrence Why {idx+1}", value=st.session_state.d5_occ_whys[idx], key=f"occ_txt_{idx}")
+                
+                free_text = st.text_input(
+                    f"Or enter your own Occurrence Why {idx+1}",
+                    value=st.session_state.d5_occ_whys[idx],
+                    key=f"occ_txt_{idx}"
+                )
                 if free_text.strip():
                     st.session_state.d5_occ_whys[idx] = free_text
+
                 if st.session_state.d5_occ_whys[idx]:
                     selected_occ.append(st.session_state.d5_occ_whys[idx])
 
@@ -299,9 +296,8 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             st.session_state["d5_occ_selected"] = selected_occ
 
             # ---------------------------
-            # Detection Section
+            # Detection Section (D5)
             # ---------------------------
-            st.markdown("#### Detection Analysis")
             detection_categories = {
                 "QA / Inspection-related": [
                     "QA checklist incomplete",
@@ -317,27 +313,29 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             }
 
             selected_det = []
-            for idx, val in enumerate(st.session_state.d5_det_whys):
-                remaining_options = []
-                for cat, items in detection_categories.items():
-                    for item in items:
-                        full_item = f"{cat}: {item}"
-                        if full_item not in selected_det:
-                            remaining_options.append(full_item)
-                if val and val not in remaining_options:
-                    remaining_options.append(val)
-
-                options_det = [""] + sorted(remaining_options)
+            for idx in range(len(st.session_state.d5_det_whys)):
                 current_value = st.session_state.d5_det_whys[idx]
+                options_det = [""] + sorted([f"{cat}: {item}" 
+                                             for cat, items in detection_categories.items() 
+                                             for item in items])
+                if current_value and current_value not in options_det:
+                    options_det.append(current_value)
+
                 st.session_state.d5_det_whys[idx] = st.selectbox(
                     f"{t[lang_key]['Detection_Why']} {idx+1}",
                     options_det,
                     index=options_det.index(current_value) if current_value in options_det else 0,
                     key=f"det_{idx}"
                 )
-                free_text_det = st.text_input(f"Or enter your own Detection Why {idx+1}", value=st.session_state.d5_det_whys[idx], key=f"det_txt_{idx}")
+
+                free_text_det = st.text_input(
+                    f"Or enter your own Detection Why {idx+1}",
+                    value=st.session_state.d5_det_whys[idx],
+                    key=f"det_txt_{idx}"
+                )
                 if free_text_det.strip():
                     st.session_state.d5_det_whys[idx] = free_text_det
+
                 if st.session_state.d5_det_whys[idx]:
                     selected_det.append(st.session_state.d5_det_whys[idx])
 
@@ -394,7 +392,8 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             st.session_state[step]["answer"] = st.text_area(
                 "Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}"
             )
-            # ---------------------------
+            # --------------------------- Part 2 ---------------------------
+# ---------------------------
 # Collect answers for Excel
 # ---------------------------
 data_rows = [(step, st.session_state[step]["answer"], st.session_state[step]["extra"]) for step, _, _ in npqp_steps]
