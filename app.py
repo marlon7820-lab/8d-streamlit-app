@@ -148,6 +148,7 @@ st.session_state.setdefault("d5_occ_whys", [""] * 5)
 st.session_state.setdefault("d5_det_whys", [""] * 5)
 st.session_state.setdefault("d5_occ_selected", [])
 st.session_state.setdefault("d5_det_selected", [])
+st.session_state.setdefault("active_tab", 0)  # <-- track active tab
 
 # ---------------------------
 # Restore from URL (st.query_params)
@@ -173,18 +174,20 @@ st.session_state.prepared_by = st.text_input(f"{t[lang_key]['Prepared_By']}", va
 tab_labels = []
 for step, _, _ in npqp_steps:
     if st.session_state[step]["answer"].strip() != "":
-        tab_labels.append(f"🟢 {t[lang_key][step]}")
-    else:
-        tab_labels.append(f"🔴 {t[lang_key][step]}")
-
-tabs = st.tabs(tab_labels)
-# ---------------------------
+        tab_labels.append(f"🟢 {t[lang_key][step]
+       # ---------------------------
 # Render Tabs (D1–D8)
 # ---------------------------
+tabs = st.tabs(tab_labels)
+
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     with tabs[i]:
+        if st.session_state.active_tab != i:
+            continue  # Only render the active tab to prevent jumping
+
         st.markdown(f"### {t[lang_key][step]}")
 
+        # --------------------------- D1–D4 ---------------------------
         if step not in ["D5","D6","D7","D8"]:
             note_text = note_dict[lang_key]
             example_text = example_dict[lang_key]
@@ -207,8 +210,8 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                 "Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}"
             )
 
-        # --------------------------- D5 5-Why Section ---------------------------
-        if step == "D5":
+        # --------------------------- D5 ---------------------------
+        elif step == "D5":
             st.markdown(f"""
             <div style="
                 background-color:#b3e0ff; 
@@ -224,6 +227,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             </div>
             """, unsafe_allow_html=True)
 
+            # Occurrence Analysis
             st.markdown("#### Occurrence Analysis")
             occurrence_categories = {
                 "Machine / Equipment-related": [
@@ -280,10 +284,12 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
 
             if st.button("➕ Add another Occurrence Why"):
                 st.session_state.d5_occ_whys.append("")
+                st.session_state.active_tab = i
                 st.experimental_rerun()
 
             st.session_state["d5_occ_selected"] = selected_occ
 
+            # Detection Analysis
             st.markdown("#### Detection Analysis")
             detection_categories = {
                 "QA / Inspection-related": [
@@ -326,6 +332,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
 
             if st.button("➕ Add another Detection Why"):
                 st.session_state.d5_det_whys.append("")
+                st.session_state.active_tab = i
                 st.experimental_rerun()
 
             st.session_state["d5_det_selected"] = selected_det
@@ -414,14 +421,12 @@ def generate_excel():
         r = ws.max_row
         for c in range(1, 4):
             cell = ws.cell(row=r, column=c)
-            cell.alignment = Alignment(wrap_text=True, vertical="top")
-            cell.font = Font(bold=True if c == 2 else False)
-            cell.border = border
-
-    # --------------------------- Dynamic Column Width ---------------------------
+            cell.alignment = Alignment(wrap_text=True, vertical="
+            # ---------------------------
+# Finish Excel formatting
+# ---------------------------
     for col in range(1, 4):
-        max_len = max([len(str(ws.cell(row=r, column=col).value)) for r in range(1, ws.max_row+1)])
-        ws.column_dimensions[get_column_letter(col)].width = min(max(max_len*1.2, 20), 60)
+        ws.column_dimensions[get_column_letter(col)].width = 40
 
     output = io.BytesIO()
     wb.save(output)
@@ -470,10 +475,14 @@ with st.sidebar:
     if st.button("🗑️ Clear All"):
         for step, _, _ in npqp_steps:
             st.session_state[step] = {"answer": "", "extra": ""}
+        st.session_state["D5"] = {"answer": "", "extra": ""}
         st.session_state["d5_occ_whys"] = [""] * 5
         st.session_state["d5_det_whys"] = [""] * 5
         st.session_state["d5_occ_selected"] = []
         st.session_state["d5_det_selected"] = []
         st.session_state["report_date"] = datetime.datetime.today().strftime("%B %d, %Y")
         st.session_state["prepared_by"] = ""
+        st.session_state["active_tab"] = 0
+        for step in ["D1","D2","D3","D4","D5","D6","D7","D8"]:
+            st.session_state.setdefault(step, {"answer":"", "extra":""})
         st.success("✅ All data has been reset!")
