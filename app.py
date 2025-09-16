@@ -104,7 +104,6 @@ t = {
         "FMEA_Failure": "Ocurrencia de falla FMEA"
     }
 }
-
 # ---------------------------
 # NPQP 8D steps with examples
 # ---------------------------
@@ -155,7 +154,7 @@ st.session_state.setdefault("d5_occ_whys", [""] * 5)
 st.session_state.setdefault("d5_det_whys", [""] * 5)
 st.session_state.setdefault("d5_occ_selected", [])
 st.session_state.setdefault("d5_det_selected", [])
-# --------------------------- Part 2 ---------------------------
+
 # ---------------------------
 # Restore from URL (st.query_params)
 # ---------------------------
@@ -185,7 +184,6 @@ for step, _, _ in npqp_steps:
         tab_labels.append(f"🔴 {t[lang_key][step]}")
 
 tabs = st.tabs(tab_labels)
-
 # ---------------------------
 # Render Tabs (D1–D8)
 # ---------------------------
@@ -193,7 +191,6 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     with tabs[i]:
         st.markdown(f"### {t[lang_key][step]}")
 
-        # --------------------------- D1–D4 ---------------------------
         if step not in ["D5","D6","D7","D8"]:
             note_text = note_dict[lang_key]
             example_text = example_dict[lang_key]
@@ -233,9 +230,8 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             </div>
             """, unsafe_allow_html=True)
 
-            # Use form to prevent reruns on each selectbox change
             with st.form(key="d5_form", clear_on_submit=False):
-                # Occurrence Section
+                # ---------------- Occurrence Analysis ----------------
                 st.markdown("#### Occurrence Analysis")
                 occurrence_categories = {
                     "Machine / Equipment-related": [
@@ -294,8 +290,8 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                     pass
 
                 st.session_state["d5_occ_selected"] = selected_occ
-                # --------------------------- Part 3 ---------------------------
-                # Detection Section
+
+                # ---------------- Detection Analysis ----------------
                 st.markdown("#### Detection Analysis")
                 detection_categories = {
                     "QA / Inspection-related": [
@@ -341,8 +337,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
 
                 st.session_state["d5_det_selected"] = selected_det
 
-                # Suggested Root Cause
-                st.markdown("#### Suggested Root Cause")
+                # ---------------- Suggested Root Cause ----------------
                 suggested_occ_rc = (
                     "The root cause that allowed this issue to occur may be related to: "
                     + ", ".join(selected_occ)
@@ -387,8 +382,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             st.session_state[step]["answer"] = st.text_area(
                 "Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}"
             )
-            # --------------------------- Part 4 ---------------------------
-# ---------------------------
+            # ---------------------------
 # Collect answers for Excel
 # ---------------------------
 data_rows = [(step, st.session_state[step]["answer"], st.session_state[step]["extra"]) for step, _, _ in npqp_steps]
@@ -489,7 +483,6 @@ with st.sidebar:
     if st.button("🗑️ Clear All"):
         for step, _, _ in npqp_steps:
             st.session_state[step] = {"answer": "", "extra": ""}
-        # Properly clear D5 whys
         st.session_state["d5_occ_whys"] = [""] * 5
         st.session_state["d5_det_whys"] = [""] * 5
         st.session_state["d5_occ_selected"] = []
