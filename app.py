@@ -148,7 +148,7 @@ st.session_state.setdefault("d5_occ_whys", [""] * 5)
 st.session_state.setdefault("d5_det_whys", [""] * 5)
 st.session_state.setdefault("d5_occ_selected", [])
 st.session_state.setdefault("d5_det_selected", [])
-st.session_state.setdefault("active_tab", 0)  # track active tab
+st.session_state.setdefault("active_tab", 0)  # Fix D5 jumping
 # ---------------------------
 # Restore from URL (st.query_params)
 # ---------------------------
@@ -184,13 +184,15 @@ tabs = st.tabs(tab_labels)
 # ---------------------------
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     with tabs[i]:
-        if st.session_state.active_tab != i:
-            continue  # Only render the active tab to prevent jumping
+        # Only render the active tab to prevent jumping
+        st.session_state["active_tab"] = st.session_state.get("active_tab", 0)
+        if i != st.session_state["active_tab"]:
+            continue
 
         st.markdown(f"### {t[lang_key][step]}")
 
         # --------------------------- D1–D4 ---------------------------
-        if step not in ["D5","D6","D7","D8"]:
+        if step not in ["D5", "D6", "D7", "D8"]:
             note_text = note_dict[lang_key]
             example_text = example_dict[lang_key]
             st.markdown(f"""
@@ -229,7 +231,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             </div>
             """, unsafe_allow_html=True)
 
-            # Occurrence Analysis
+            # --------------------------- Occurrence Analysis ---------------------------
             st.markdown("#### Occurrence Analysis")
             occurrence_categories = {
                 "Machine / Equipment-related": [
@@ -286,12 +288,11 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
 
             if st.button("➕ Add another Occurrence Why"):
                 st.session_state.d5_occ_whys.append("")
-                st.session_state.active_tab = i
                 st.experimental_rerun()
 
             st.session_state["d5_occ_selected"] = selected_occ
 
-            # Detection Analysis
+            # --------------------------- Detection Analysis ---------------------------
             st.markdown("#### Detection Analysis")
             detection_categories = {
                 "QA / Inspection-related": [
@@ -334,12 +335,11 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
 
             if st.button("➕ Add another Detection Why"):
                 st.session_state.d5_det_whys.append("")
-                st.session_state.active_tab = i
                 st.experimental_rerun()
 
             st.session_state["d5_det_selected"] = selected_det
 
-            # Suggested Root Cause
+            # --------------------------- Suggested Root Cause ---------------------------
             suggested_occ_rc = (
                 "The root cause that allowed this issue to occur may be related to: "
                 + ", ".join(selected_occ)
@@ -350,13 +350,13 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                 + ", ".join(selected_det)
                 if selected_det else ""
             )
-
             st.session_state.D5["answer"] = f"{suggested_occ_rc}\n\n{suggested_det_rc}"
+            st.text_area("Final Root Cause Summary", value=st.session_state.D5["answer"], height=120)
 
 # ---------------------------
-# D6–D8
+# D6–D8 rendering
 # ---------------------------
-        elif step in ["D6","D7","D8"]:
+        elif step in ["D6", "D7", "D8"]:
             note_text = note_dict[lang_key]
             example_text = example_dict[lang_key]
             st.markdown(f"""
@@ -403,6 +403,8 @@ def generate_excel():
         except:
             pass
 
+    ws.merge_cells(start_row=3, start_column=1, end_row=3, end_column
+    # --------------------------- Excel export continued ---------------------------
     ws.merge_cells(start_row=3, start_column=1, end_row=3, end_column=3)
     ws.cell(row=3, column=1, value="📋 8D Report Assistant").font = Font(bold=True, size=14)
 
@@ -425,8 +427,7 @@ def generate_excel():
         r = ws.max_row
         for c in range(1, 4):
             cell = ws.cell(row=r, column=c)
-            cell.alignment = Alignment(wrap_text=True
-            =True, vertical="top")
+            cell.alignment = Alignment(wrap_text=True, vertical="top")
             cell.font = Font(bold=True if c == 2 else False)
             cell.border = border
 
@@ -444,9 +445,7 @@ st.download_button(
     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 )
 
-# ---------------------------
-# Sidebar: JSON Backup / Restore + Reset
-# ---------------------------
+# --------------------------- Sidebar ---------------------------
 with st.sidebar:
     st.markdown("## Backup / Restore")
 
