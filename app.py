@@ -23,34 +23,12 @@ st.set_page_config(
 # ---------------------------
 st.markdown("""
     <style>
-    .stApp {
-        background: linear-gradient(to right, #f0f8ff, #e6f2ff);
-        color: #000000 !important;
-    }
-    .stTabs [data-baseweb="tab"] {
-        font-weight: bold;
-        color: #000000 !important;
-    }
-    textarea {
-        background-color: #ffffff !important;
-        border: 1px solid #1E90FF !important;
-        border-radius: 5px;
-        color: #000000 !important;
-    }
-    .stInfo {
-        background-color: #e6f7ff !important;
-        border-left: 5px solid #1E90FF !important;
-        color: #000000 !important;
-    }
-    .css-1d391kg {
-        color: #1E90FF !important;
-        font-weight: bold !important;
-    }
-    button[kind="primary"] {
-        background-color: #87AFC7 !important;
-        color: white !important;
-        font-weight: bold;
-    }
+    .stApp { background: linear-gradient(to right, #f0f8ff, #e6f2ff); color: #000000 !important; }
+    .stTabs [data-baseweb="tab"] { font-weight: bold; color: #000000 !important; }
+    textarea { background-color: #ffffff !important; border: 1px solid #1E90FF !important; border-radius: 5px; color: #000000 !important; }
+    .stInfo { background-color: #e6f7ff !important; border-left: 5px solid #1E90FF !important; color: #000000 !important; }
+    .css-1d391kg { color: #1E90FF !important; font-weight: bold !important; }
+    button[kind="primary"] { background-color: #87AFC7 !important; color: white !important; font-weight: bold; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -64,7 +42,6 @@ st.markdown("<h1 style='text-align: center; color: #1E90FF;'>📋 8D Report Assi
 # ---------------------------
 version_number = "v1.0.7"
 last_updated = "September 14, 2025"
-
 st.markdown(f"""
 <hr style='border:1px solid #1E90FF; margin-top:10px; margin-bottom:5px;'>
 <p style='font-size:12px; font-style:italic; text-align:center; color:#555555;'>
@@ -193,6 +170,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     with tabs[i]:
         st.markdown(f"### {t[lang_key][step]}")
 
+        # --------------------------- D1–D4 ---------------------------
         if step not in ["D5","D6","D7","D8"]:
             note_text = note_dict[lang_key]
             example_text = example_dict[lang_key]
@@ -215,7 +193,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                 "Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}"
             )
 
-        # --------------------------- D5 ---------------------------
+        # --------------------------- D5 Section ---------------------------
         if step == "D5":
             st.markdown(f"""
             <div style="
@@ -233,10 +211,10 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             """, unsafe_allow_html=True)
 
             # ---------------------------
-            # D5 form with Occurrence and Detection whys
+            # Occurrence and Detection Forms
             # ---------------------------
             with st.form(key="d5_form", clear_on_submit=False):
-                # ----- Occurrence Analysis -----
+                # ---- Occurrence Analysis ----
                 st.markdown("#### Occurrence Analysis")
                 occurrence_categories = {
                     "Machine / Equipment-related": [
@@ -295,8 +273,8 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                     pass
 
                 st.session_state["d5_occ_selected"] = selected_occ
-                # --------------------------- Part 3 ---------------------------
-# ----- Detection Analysis -----
+
+                # ---- Detection Analysis ----
                 st.markdown("#### Detection Analysis")
                 detection_categories = {
                     "QA / Inspection-related": [
@@ -342,7 +320,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
 
                 st.session_state["d5_det_selected"] = selected_det
 
-                # ----- Suggested Root Cause -----
+                # ---- Suggested Root Cause ----
                 st.markdown("#### Suggested Root Cause")
                 suggested_occ_rc = (
                     "The root cause that allowed this issue to occur may be related to: "
@@ -365,30 +343,36 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                     value=suggested_det_rc,
                     key="root_cause_det"
                 )
+                # --------------------------- Part 3 ---------------------------
+# ---------------------------
+# D6–D8 Tabs
+# ---------------------------
+for step in ["D6","D7","D8"]:
+    note_dict = dict(npqp_steps)[step][1]
+    example_dict = dict(npqp_steps)[step][2]
 
-        # --------------------------- D6–D8 ---------------------------
-        elif step in ["D6","D7","D8"]:
-            note_text = note_dict[lang_key]
-            example_text = example_dict[lang_key]
-            st.markdown(f"""
-            <div style="
-                background-color:#b3e0ff; 
-                color:black; 
-                padding:12px; 
-                border-left:5px solid #1E90FF; 
-                border-radius:6px;
-                width:100%;
-                font-size:14px;
-                line-height:1.5;
-            ">
-            <b>{t[lang_key]['Training_Guidance']}:</b> {note_text}<br><br>
-            💡 <b>{t[lang_key]['Example']}:</b> {example_text}
-            </div>
-            """, unsafe_allow_html=True)
-            st.session_state[step]["answer"] = st.text_area(
-                "Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}"
-            )
-            # --------------------------- Part 4 ---------------------------
+    st.markdown(f"### {t[lang_key][step]}")
+    note_text = note_dict[lang_key]
+    example_text = example_dict[lang_key]
+    st.markdown(f"""
+    <div style="
+        background-color:#b3e0ff; 
+        color:black; 
+        padding:12px; 
+        border-left:5px solid #1E90FF; 
+        border-radius:6px;
+        width:100%;
+        font-size:14px;
+        line-height:1.5;
+    ">
+    <b>{t[lang_key]['Training_Guidance']}:</b> {note_text}<br><br>
+    💡 <b>{t[lang_key]['Example']}:</b> {example_text}
+    </div>
+    """, unsafe_allow_html=True)
+    st.session_state[step]["answer"] = st.text_area(
+        "Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}"
+    )
+
 # ---------------------------
 # Collect answers for Excel
 # ---------------------------
@@ -453,7 +437,7 @@ st.download_button(
     file_name=f"8D_Report_{st.session_state.report_date.replace(' ', '_')}.xlsx",
     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 )
-
+# --------------------------- Part 4 ---------------------------
 # ---------------------------
 # Sidebar: JSON Backup / Restore + Reset
 # ---------------------------
@@ -490,6 +474,7 @@ with st.sidebar:
     if st.button("🗑️ Clear All"):
         for step, _, _ in npqp_steps:
             st.session_state[step] = {"answer": "", "extra": ""}
+        # Clear D5 whys separately
         st.session_state["d5_occ_whys"] = [""] * 5
         st.session_state["d5_det_whys"] = [""] * 5
         st.session_state["d5_occ_selected"] = []
