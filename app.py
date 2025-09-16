@@ -155,7 +155,7 @@ st.session_state.setdefault("d5_occ_whys", [""] * 5)
 st.session_state.setdefault("d5_det_whys", [""] * 5)
 st.session_state.setdefault("d5_occ_selected", [])
 st.session_state.setdefault("d5_det_selected", [])
-
+# --------------------------- Part 2 ---------------------------
 # ---------------------------
 # Restore from URL (st.query_params)
 # ---------------------------
@@ -214,7 +214,8 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             st.session_state[step]["answer"] = st.text_area(
                 "Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}"
             )
-                    # --------------------------- D5 Fixed Section ---------------------------
+
+        # --------------------------- D5 FIXED ---------------------------
         if step == "D5":
             st.markdown(f"""
             <div style="
@@ -231,162 +232,138 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             </div>
             """, unsafe_allow_html=True)
 
-            # Initialize session_state for D5 if not present
-            st.session_state.setdefault("d5_occ_whys", [""] * 5)
-            st.session_state.setdefault("d5_det_whys", [""] * 5)
-            st.session_state.setdefault("d5_occ_selected", [])
-            st.session_state.setdefault("d5_det_selected", [])
+            # Use form to prevent reruns on each selectbox change
+            with st.form(key="d5_form", clear_on_submit=False):
+                # Occurrence Section
+                st.markdown("#### Occurrence Analysis")
+                occurrence_categories = {
+                    "Machine / Equipment-related": [
+                        "Mechanical failure or breakdown",
+                        "Calibration issues (incorrect settings)",
+                        "Tooling or fixture failure",
+                        "Machine wear and tear",
+                        "Failure not identified in FMEA"
+                    ],
+                    "Material / Component-related": [
+                        "Wrong material delivered",
+                        "Material defects or impurities",
+                        "Damage during storage or transport",
+                        "Incorrect specifications or tolerance errors"
+                    ],
+                    "Process / Method-related": [
+                        "Incorrect process steps due to poor process design",
+                        "Inefficient workflow or bottlenecks",
+                        "Lack of standardized procedures",
+                        "Outdated or incomplete work instructions"
+                    ],
+                    "Environmental / External Factors": [
+                        "Temperature, humidity, or other environmental conditions",
+                        "Power fluctuations or outages",
+                        "Contamination (dust, oil, chemicals)",
+                        "Regulatory or compliance changes"
+                    ]
+                }
 
-            # ---------------------------
-            # Occurrence Section
-            # ---------------------------
-            st.markdown("#### Occurrence Analysis")
-            occurrence_categories = {
-                "Machine / Equipment-related": [
-                    "Mechanical failure or breakdown",
-                    "Calibration issues (incorrect settings)",
-                    "Tooling or fixture failure",
-                    "Machine wear and tear",
-                    "Failure not identified in FMEA"
-                ],
-                "Material / Component-related": [
-                    "Wrong material delivered",
-                    "Material defects or impurities",
-                    "Damage during storage or transport",
-                    "Incorrect specifications or tolerance errors"
-                ],
-                "Process / Method-related": [
-                    "Incorrect process steps due to poor process design",
-                    "Inefficient workflow or bottlenecks",
-                    "Lack of standardized procedures",
-                    "Outdated or incomplete work instructions"
-                ],
-                "Environmental / External Factors": [
-                    "Temperature, humidity, or other environmental conditions",
-                    "Power fluctuations or outages",
-                    "Contamination (dust, oil, chemicals)",
-                    "Regulatory or compliance changes"
-                ]
-            }
+                selected_occ = []
+                for idx, val in enumerate(st.session_state.d5_occ_whys):
+                    remaining_options = []
+                    for cat, items in occurrence_categories.items():
+                        for item in items:
+                            full_item = f"{cat}: {item}"
+                            if full_item not in selected_occ:
+                                remaining_options.append(full_item)
+                    if val and val not in remaining_options:
+                        remaining_options.append(val)
 
-            selected_occ = st.session_state["d5_occ_selected"]
-
-            for idx in range(len(st.session_state.d5_occ_whys)):
-                remaining_options = []
-                for cat, items in occurrence_categories.items():
-                    for item in items:
-                        full_item = f"{cat}: {item}"
-                        if full_item not in selected_occ or full_item == st.session_state.d5_occ_whys[idx]:
-                            remaining_options.append(full_item)
-
-                options = [""] + sorted(remaining_options)
-                current_value = st.session_state.d5_occ_whys[idx]
-                # Use form_container to prevent rerun jumping
-                container_occ = st.container()
-                with container_occ:
+                    options = [""] + sorted(remaining_options)
+                    current_value = st.session_state.d5_occ_whys[idx]
                     st.session_state.d5_occ_whys[idx] = st.selectbox(
                         f"{t[lang_key]['Occurrence_Why']} {idx+1}",
                         options,
                         index=options.index(current_value) if current_value in options else 0,
                         key=f"occ_{idx}"
                     )
-                    free_text = st.text_input(
-                        f"Or enter your own Occurrence Why {idx+1}",
-                        value=st.session_state.d5_occ_whys[idx],
-                        key=f"occ_txt_{idx}"
-                    )
+                    free_text = st.text_input(f"Or enter your own Occurrence Why {idx+1}", value=st.session_state.d5_occ_whys[idx], key=f"occ_txt_{idx}")
                     if free_text.strip():
                         st.session_state.d5_occ_whys[idx] = free_text
+                    if st.session_state.d5_occ_whys[idx]:
+                        selected_occ.append(st.session_state.d5_occ_whys[idx])
 
-                # Update selected_occ without causing tab jumping
-                if st.session_state.d5_occ_whys[idx] and st.session_state.d5_occ_whys[idx] not in selected_occ:
-                    selected_occ.append(st.session_state.d5_occ_whys[idx])
+                if st.form_submit_button("➕ Add another Occurrence Why", on_click=lambda: st.session_state.d5_occ_whys.append("")):
+                    pass
 
-            if st.button("➕ Add another Occurrence Why", key="add_occ_why"):
-                st.session_state.d5_occ_whys.append("")
+                st.session_state["d5_occ_selected"] = selected_occ
 
-            st.session_state["d5_occ_selected"] = selected_occ
+                # Detection Section
+                st.markdown("#### Detection Analysis")
+                detection_categories = {
+                    "QA / Inspection-related": [
+                        "QA checklist incomplete",
+                        "No automated test",
+                        "Missed inspection due to process gap",
+                        "Tooling or equipment inspection not scheduled"
+                    ],
+                    "Validation / Process-related": [
+                        "Insufficient validation steps",
+                        "Design verification not complete",
+                        "Inspection documentation missing or outdated"
+                    ]
+                }
 
-            # ---------------------------
-            # Detection Section
-            # ---------------------------
-            st.markdown("#### Detection Analysis")
-            detection_categories = {
-                "QA / Inspection-related": [
-                    "QA checklist incomplete",
-                    "No automated test",
-                    "Missed inspection due to process gap",
-                    "Tooling or equipment inspection not scheduled"
-                ],
-                "Validation / Process-related": [
-                    "Insufficient validation steps",
-                    "Design verification not complete",
-                    "Inspection documentation missing or outdated"
-                ]
-            }
+                selected_det = []
+                for idx, val in enumerate(st.session_state.d5_det_whys):
+                    remaining_options = []
+                    for cat, items in detection_categories.items():
+                        for item in items:
+                            full_item = f"{cat}: {item}"
+                            if full_item not in selected_det:
+                                remaining_options.append(full_item)
+                    if val and val not in remaining_options:
+                        remaining_options.append(val)
 
-            selected_det = st.session_state["d5_det_selected"]
-
-            for idx in range(len(st.session_state.d5_det_whys)):
-                remaining_options = []
-                for cat, items in detection_categories.items():
-                    for item in items:
-                        full_item = f"{cat}: {item}"
-                        if full_item not in selected_det or full_item == st.session_state.d5_det_whys[idx]:
-                            remaining_options.append(full_item)
-
-                options_det = [""] + sorted(remaining_options)
-                current_value = st.session_state.d5_det_whys[idx]
-                container_det = st.container()
-                with container_det:
+                    options_det = [""] + sorted(remaining_options)
+                    current_value = st.session_state.d5_det_whys[idx]
                     st.session_state.d5_det_whys[idx] = st.selectbox(
                         f"{t[lang_key]['Detection_Why']} {idx+1}",
                         options_det,
                         index=options_det.index(current_value) if current_value in options_det else 0,
                         key=f"det_{idx}"
                     )
-                    free_text_det = st.text_input(
-                        f"Or enter your own Detection Why {idx+1}",
-                        value=st.session_state.d5_det_whys[idx],
-                        key=f"det_txt_{idx}"
-                    )
+                    free_text_det = st.text_input(f"Or enter your own Detection Why {idx+1}", value=st.session_state.d5_det_whys[idx], key=f"det_txt_{idx}")
                     if free_text_det.strip():
                         st.session_state.d5_det_whys[idx] = free_text_det
+                    if st.session_state.d5_det_whys[idx]:
+                        selected_det.append(st.session_state.d5_det_whys[idx])
 
-                if st.session_state.d5_det_whys[idx] and st.session_state.d5_det_whys[idx] not in selected_det:
-                    selected_det.append(st.session_state.d5_det_whys[idx])
+                if st.form_submit_button("➕ Add another Detection Why", on_click=lambda: st.session_state.d5_det_whys.append("")):
+                    pass
 
-            if st.button("➕ Add another Detection Why", key="add_det_why"):
-                st.session_state.d5_det_whys.append("")
+                st.session_state["d5_det_selected"] = selected_det
 
-            st.session_state["d5_det_selected"] = selected_det
+                # Suggested Root Cause
+                st.markdown("#### Suggested Root Cause")
+                suggested_occ_rc = (
+                    "The root cause that allowed this issue to occur may be related to: "
+                    + ", ".join(selected_occ)
+                    if selected_occ else ""
+                )
+                suggested_det_rc = (
+                    "The root cause that allowed this issue to escape detection may be related to: "
+                    + ", ".join(selected_det)
+                    if selected_det else ""
+                )
 
-            # ---------------------------
-            # Suggested Root Cause (save under ANSWER)
-            # ---------------------------
-            st.markdown("#### Suggested Root Cause")
-            suggested_occ_rc = (
-                "The root cause that allowed this issue to occur may be related to: "
-                + ", ".join(selected_occ)
-                if selected_occ else ""
-            )
-            suggested_det_rc = (
-                "The root cause that allowed this issue to escape detection may be related to: "
-                + ", ".join(selected_det)
-                if selected_det else ""
-            )
-
-            st.session_state.D5["answer"] = st.text_area(
-                f"{t[lang_key]['Root_Cause_Occ']}",
-                value=suggested_occ_rc,
-                key="root_cause_occ"
-            )
-            st.text_area(
-                f"{t[lang_key]['Root_Cause_Det']}",
-                value=suggested_det_rc,
-                key="root_cause_det"
-            )
-
+                st.session_state.D5["answer"] = st.text_area(
+                    f"{t[lang_key]['Root_Cause_Occ']}",
+                    value=suggested_occ_rc,
+                    key="root_cause_occ"
+                )
+                st.text_area(
+                    f"{t[lang_key]['Root_Cause_Det']}",
+                    value=suggested_det_rc,
+                    key="root_cause_det"
+                )
+                # --------------------------- Part 3 ---------------------------
         # --------------------------- D6–D8 ---------------------------
         elif step in ["D6","D7","D8"]:
             note_text = note_dict[lang_key]
@@ -409,7 +386,8 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             st.session_state[step]["answer"] = st.text_area(
                 "Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}"
             )
-            # ---------------------------
+
+# ---------------------------
 # Collect answers for Excel
 # ---------------------------
 data_rows = [(step, st.session_state[step]["answer"], st.session_state[step]["extra"]) for step, _, _ in npqp_steps]
