@@ -1,3 +1,5 @@
+# --------------------------- Full 8D App v1.0.7 + Improvements ---------------------------
+
 # --------------------------- Part 1 ---------------------------
 import streamlit as st
 from openpyxl import Workbook
@@ -62,8 +64,8 @@ st.markdown("<h1 style='text-align: center; color: #1E90FF;'>📋 8D Report Assi
 # ---------------------------
 # Version info
 # ---------------------------
-version_number = "v1.0.8"
-last_updated = "September 15, 2025"
+version_number = "v1.0.7"
+last_updated = "September 14, 2025"
 
 st.markdown(f"""
 <hr style='border:1px solid #1E90FF; margin-top:10px; margin-bottom:5px;'>
@@ -155,9 +157,9 @@ st.session_state.setdefault("d5_occ_whys", [""] * 5)
 st.session_state.setdefault("d5_det_whys", [""] * 5)
 st.session_state.setdefault("d5_occ_selected", [])
 st.session_state.setdefault("d5_det_selected", [])
-# --------------------------- Part 2 ---------------------------
+
 # ---------------------------
-# Restore from URL (st.query_params)
+# Part 2: Restore from URL, Report info, Tabs
 # ---------------------------
 if "backup" in st.query_params:
     try:
@@ -167,27 +169,17 @@ if "backup" in st.query_params:
     except Exception:
         pass
 
-# ---------------------------
-# Report info
-# ---------------------------
 st.subheader(f"{t[lang_key]['Report_Date']}")
 st.session_state.report_date = st.text_input(f"{t[lang_key]['Report_Date']}", value=st.session_state.report_date)
 st.session_state.prepared_by = st.text_input(f"{t[lang_key]['Prepared_By']}", value=st.session_state.prepared_by)
 
-# ---------------------------
-# Tabs with ✅ / 🔴 status indicators
-# ---------------------------
 tab_labels = []
 for step, _, _ in npqp_steps:
-    if st.session_state[step]["answer"].strip() != "":
-        tab_labels.append(f"🟢 {t[lang_key][step]}")
-    else:
-        tab_labels.append(f"🔴 {t[lang_key][step]}")
-
+    tab_labels.append(f"🟢 {t[lang_key][step]}" if st.session_state[step]["answer"].strip() else f"🔴 {t[lang_key][step]}")
 tabs = st.tabs(tab_labels)
 
 # ---------------------------
-# Render Tabs (D1–D8)
+# Part 3: Render Tabs D1–D8 (with D5 free-text selectboxes and Clear fix)
 # ---------------------------
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     with tabs[i]:
@@ -215,7 +207,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                 "Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}"
             )
 
-        # --------------------------- D5 with Free-Text Selectboxes ---------------------------
+        # --------------------------- D5 ---------------------------
         if step == "D5":
             st.markdown(f"""
             <div style="
@@ -233,7 +225,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             """, unsafe_allow_html=True)
 
             with st.form(key="d5_form", clear_on_submit=False):
-                # Occurrence Section
+                # --------------------------- Occurrence ---------------------------
                 st.markdown("#### Occurrence Analysis")
                 occurrence_categories = {
                     "Machine / Equipment-related": [
@@ -273,7 +265,6 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                                 remaining_options.append(full_item)
                     if val and val not in remaining_options:
                         remaining_options.append(val)
-
                     options = [""] + sorted(remaining_options)
                     current_value = st.session_state.d5_occ_whys[idx]
                     st.session_state.d5_occ_whys[idx] = st.selectbox(
@@ -287,13 +278,12 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                         st.session_state.d5_occ_whys[idx] = free_text
                     if st.session_state.d5_occ_whys[idx]:
                         selected_occ.append(st.session_state.d5_occ_whys[idx])
+                st.session_state["d5_occ_selected"] = selected_occ
 
                 if st.form_submit_button("➕ Add another Occurrence Why", on_click=lambda: st.session_state.d5_occ_whys.append("")):
                     pass
 
-                st.session_state["d5_occ_selected"] = selected_occ
-
-                # Detection Section
+                # --------------------------- Detection ---------------------------
                 st.markdown("#### Detection Analysis")
                 detection_categories = {
                     "QA / Inspection-related": [
@@ -319,7 +309,6 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                                 remaining_options.append(full_item)
                     if val and val not in remaining_options:
                         remaining_options.append(val)
-
                     options_det = [""] + sorted(remaining_options)
                     current_value = st.session_state.d5_det_whys[idx]
                     st.session_state.d5_det_whys[idx] = st.selectbox(
@@ -333,14 +322,12 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                         st.session_state.d5_det_whys[idx] = free_text_det
                     if st.session_state.d5_det_whys[idx]:
                         selected_det.append(st.session_state.d5_det_whys[idx])
+                st.session_state["d5_det_selected"] = selected_det
 
                 if st.form_submit_button("➕ Add another Detection Why", on_click=lambda: st.session_state.d5_det_whys.append("")):
                     pass
 
-                st.session_state["d5_det_selected"] = selected_det
-
-                # Suggested Root Cause
-                st.markdown("#### Suggested Root Cause")
+                # --------------------------- Suggested Root Cause ---------------------------
                 suggested_occ_rc = (
                     "The root cause that allowed this issue to occur may be related to: "
                     + ", ".join(selected_occ)
@@ -363,7 +350,6 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                     key="root_cause_det"
                 )
 
-# --------------------------- Part 3 ---------------------------
         # --------------------------- D6–D8 ---------------------------
         elif step in ["D6","D7","D8"]:
             note_text = note_dict[lang_key]
@@ -388,6 +374,8 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             )
 
 # ---------------------------
+# Excel
+# ---------------------------
 # Collect answers for Excel
 # ---------------------------
 data_rows = [(step, st.session_state[step]["answer"], st.session_state[step]["extra"]) for step, _, _ in npqp_steps]
@@ -403,6 +391,7 @@ def generate_excel():
     thin = Side(border_style="thin", color="000000")
     border = Border(left=thin, right=thin, top=thin, bottom=thin)
 
+    # Add logo if exists
     if os.path.exists("logo.png"):
         try:
             img = XLImage("logo.png")
@@ -445,6 +434,9 @@ def generate_excel():
     wb.save(output)
     return output.getvalue()
 
+# ---------------------------
+# Download button
+# ---------------------------
 st.download_button(
     label=f"{t[lang_key]['Download']}",
     data=generate_excel(),
@@ -486,10 +478,9 @@ with st.sidebar:
     st.markdown("### Reset All Data")
 
     if st.button("🗑️ Clear All"):
+        # Clear all steps including D5 Why boxes
         for step, _, _ in npqp_steps:
-            if step != "D5":
-                st.session_state[step] = {"answer": "", "extra": ""}
-        st.session_state["D5"] = {"answer": "", "extra": ""}
+            st.session_state[step] = {"answer": "", "extra": ""}
         st.session_state["d5_occ_whys"] = [""] * 5
         st.session_state["d5_det_whys"] = [""] * 5
         st.session_state["d5_occ_selected"] = []
