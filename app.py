@@ -9,7 +9,7 @@ import json
 import os
 
 # ---------------------------
-# Page config and branding
+# Page config
 # ---------------------------
 st.set_page_config(
     page_title="8D Report Assistant",
@@ -18,52 +18,25 @@ st.set_page_config(
 )
 
 # ---------------------------
-# App colors and styles
+# Styling
 # ---------------------------
 st.markdown("""
-    <style>
-    .stApp {
-        background: linear-gradient(to right, #f0f8ff, #e6f2ff);
-        color: #000000 !important;
-    }
-    .stTabs [data-baseweb="tab"] {
-        font-weight: bold;
-        color: #000000 !important;
-    }
-    textarea {
-        background-color: #ffffff !important;
-        border: 1px solid #1E90FF !important;
-        border-radius: 5px;
-        color: #000000 !important;
-    }
-    .stInfo {
-        background-color: #e6f7ff !important;
-        border-left: 5px solid #1E90FF !important;
-        color: #000000 !important;
-    }
-    .css-1d391kg {
-        color: #1E90FF !important;
-        font-weight: bold !important;
-    }
-    button[kind="primary"] {
-        background-color: #87AFC7 !important;
-        color: white !important;
-        font-weight: bold;
-    }
-    </style>
+<style>
+.stApp { background: linear-gradient(to right, #f0f8ff, #e6f2ff); color: #000 !important; }
+.stTabs [data-baseweb="tab"] { font-weight: bold; color: #000 !important; }
+textarea { background-color: #fff !important; border: 1px solid #1E90FF !important; border-radius: 5px; color: #000 !important; }
+.stInfo { background-color: #e6f7ff !important; border-left: 5px solid #1E90FF !important; color: #000 !important; }
+.css-1d391kg { color: #1E90FF !important; font-weight: bold !important; }
+button[kind="primary"] { background-color: #87AFC7 !important; color: white !important; font-weight: bold; }
+</style>
 """, unsafe_allow_html=True)
 
 # ---------------------------
-# Main title
+# Title & version
 # ---------------------------
 st.markdown("<h1 style='text-align: center; color: #1E90FF;'>📋 8D Report Assistant</h1>", unsafe_allow_html=True)
-
-# ---------------------------
-# Version info
-# ---------------------------
-version_number = "v1.0.8"
-last_updated = "September 15, 2025"
-
+version_number = "v1.0.7"
+last_updated = "September 14, 2025"
 st.markdown(f"""
 <hr style='border:1px solid #1E90FF; margin-top:10px; margin-bottom:5px;'>
 <p style='font-size:12px; font-style:italic; text-align:center; color:#555555;'>
@@ -123,22 +96,7 @@ npqp_steps = [
     ("D4", {"en":"Define temporary containment actions to prevent the customer from seeing the problem while permanent actions are developed.",
             "es":"Defina acciones de contención temporales para evitar que el cliente vea el problema mientras se desarrollan acciones permanentes."},
      {"en":"100% inspection of amplifiers before shipment; temporary shielding.",
-      "es":"Inspección 100% de amplificadores antes del envío; blindaje temporal."}),
-    ("D5", {"en":"Use 5-Why analysis to determine the root cause. Separate Occurrence and Detection. Include FMEA failure occurrence if applicable.",
-            "es":"Use el análisis de 5 Porqués para determinar la causa raíz. Separe Ocurrencia y Detección. Incluya la ocurrencia de falla FMEA si aplica."},
-     {"en":"","es":""}),
-    ("D6", {"en":"Define corrective actions that eliminate the root cause permanently and prevent recurrence.",
-            "es":"Defina acciones correctivas que eliminen la causa raíz permanentemente y eviten recurrencia."},
-     {"en":"Update soldering process, redesign fixture, improve component handling.",
-      "es":"Actualizar proceso de soldadura, rediseñar herramienta, mejorar manejo de componentes."}),
-    ("D7", {"en":"Verify that corrective actions effectively resolve the issue long-term.",
-            "es":"Verifique que las acciones correctivas resuelvan efectivamente el problema a largo plazo."},
-     {"en":"Functional tests on corrected amplifiers, accelerated life testing.",
-      "es":"Pruebas funcionales en amplificadores corregidos, pruebas de vida aceleradas."}),
-    ("D8", {"en":"Document lessons learned, update standards, procedures, FMEAs, and training to prevent recurrence.",
-            "es":"Documente lecciones aprendidas, actualice estándares, procedimientos, FMEAs y capacitación para prevenir recurrencia."},
-     {"en":"Update SOPs, PFMEA, work instructions, and maintenance procedures.",
-      "es":"Actualizar SOPs, PFMEA, instrucciones de trabajo y procedimientos de mantenimiento."})
+      "es":"Inspección 100% de amplificadores antes del envío; blindaje temporal."})
 ]
 
 # ---------------------------
@@ -154,9 +112,7 @@ st.session_state.setdefault("d5_occ_whys", [""] * 5)
 st.session_state.setdefault("d5_det_whys", [""] * 5)
 st.session_state.setdefault("d5_occ_selected", [])
 st.session_state.setdefault("d5_det_selected", [])
-# ---------------------------
-# NEW: Track active tab to prevent D5 jump
-st.session_state.setdefault("active_tab", 0)
+
 # ---------------------------
 # Restore from URL (st.query_params)
 # ---------------------------
@@ -176,7 +132,7 @@ st.session_state.report_date = st.text_input(f"{t[lang_key]['Report_Date']}", va
 st.session_state.prepared_by = st.text_input(f"{t[lang_key]['Prepared_By']}", value=st.session_state.prepared_by)
 
 # ---------------------------
-# Tabs with ✅ / 🔴 status indicators
+# Tabs with ✅ / 🔴
 # ---------------------------
 tab_labels = []
 for step, _, _ in npqp_steps:
@@ -185,47 +141,55 @@ for step, _, _ in npqp_steps:
     else:
         tab_labels.append(f"🔴 {t[lang_key][step]}")
 
-# ---------------------------
-# Render Tabs (D1–D8) with active_tab tracking
-# ---------------------------
 tabs = st.tabs(tab_labels)
-active_tab_index = st.session_state.get("active_tab", 0)
 
+# ---------------------------
+# Render D1–D4 tabs
+# ---------------------------
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     with tabs[i]:
-        st.session_state["active_tab"] = i  # Remember last active tab
         st.markdown(f"### {t[lang_key][step]}")
-
-        # Render guidance and examples for all tabs except D5
-        if step not in ["D5"]:
-            note_text = note_dict[lang_key]
-            example_text = example_dict[lang_key]
-            st.markdown(f"""
-            <div style="
-                background-color:#b3e0ff; 
-                color:black; 
-                padding:12px; 
-                border-left:5px solid #1E90FF; 
-                border-radius:6px;
-                width:100%;
-                font-size:14px;
-                line-height:1.5;
-            ">
-            <b>{t[lang_key]['Training_Guidance']}:</b> {note_text}<br><br>
-            💡 <b>{t[lang_key]['Example']}:</b> {example_text}
-            </div>
-            """, unsafe_allow_html=True)
-            st.session_state[step]["answer"] = st.text_area(
-                "Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}"
-            )
+        note_text = note_dict[lang_key]
+        example_text = example_dict[lang_key]
+        st.markdown(f"""
+        <div style="
+            background-color:#b3e0ff; 
+            color:black; 
+            padding:12px; 
+            border-left:5px solid #1E90FF; 
+            border-radius:6px;
+            width:100%;
+            font-size:14px;
+            line-height:1.5;
+        ">
+        <b>{t[lang_key]['Training_Guidance']}:</b> {note_text}<br><br>
+        💡 <b>{t[lang_key]['Example']}:</b> {example_text}
+        </div>
+        """, unsafe_allow_html=True)
+        st.session_state[step]["answer"] = st.text_area(
+            "Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}"
+        )
+        import streamlit as st
 
 # ---------------------------
-# D5: Final Analysis (fixed)
+# D5 Tab
 # ---------------------------
-with tabs[4]:
-    st.session_state["active_tab"] = 4
-    step = "D5"
-    note_text = npqp_steps[4][1][lang_key]
+# Find D5 tab index
+d5_index = None
+for i, tab in enumerate(st.tabs([])):  # dummy tabs to get proper index if needed
+    if "D5" in tab:
+        d5_index = i
+        break
+
+# You can also render D5 directly if Part 1 already created tabs
+for step_data in [("D5",)]:
+    step = step_data[0]
+    # Only render D5 tab content
+    st.markdown(f"### {st.session_state.get('D5', {}).get('title', 'D5: Final Analysis')}")
+
+    note_text = "Use 5-Why analysis to determine the root cause. Separate Occurrence and Detection. Include FMEA failure occurrence if applicable."
+    example_text = ""
+
     st.markdown(f"""
     <div style="
         background-color:#b3e0ff; 
@@ -237,12 +201,14 @@ with tabs[4]:
         font-size:14px;
         line-height:1.5;
     ">
-    <b>{t[lang_key]['Training_Guidance']}:</b> {note_text}
+    <b>Training Guidance:</b> {note_text}
     </div>
     """, unsafe_allow_html=True)
 
+    # ---------------------------
+    # Occurrence Analysis
+    # ---------------------------
     with st.form(key="d5_form", clear_on_submit=False):
-        # Occurrence Analysis
         st.markdown("#### Occurrence Analysis")
         occurrence_categories = {
             "Machine / Equipment-related": [
@@ -286,7 +252,7 @@ with tabs[4]:
             options = [""] + sorted(remaining_options)
             current_value = st.session_state.d5_occ_whys[idx]
             st.session_state.d5_occ_whys[idx] = st.selectbox(
-                f"{t[lang_key]['Occurrence_Why']} {idx+1}",
+                f"Occurrence Why {idx+1}",
                 options,
                 index=options.index(current_value) if current_value in options else 0,
                 key=f"occ_{idx}"
@@ -302,7 +268,9 @@ with tabs[4]:
 
         st.session_state["d5_occ_selected"] = selected_occ
 
+        # ---------------------------
         # Detection Analysis
+        # ---------------------------
         st.markdown("#### Detection Analysis")
         detection_categories = {
             "QA / Inspection-related": [
@@ -332,7 +300,7 @@ with tabs[4]:
             options_det = [""] + sorted(remaining_options)
             current_value = st.session_state.d5_det_whys[idx]
             st.session_state.d5_det_whys[idx] = st.selectbox(
-                f"{t[lang_key]['Detection_Why']} {idx+1}",
+                f"Detection Why {idx+1}",
                 options_det,
                 index=options_det.index(current_value) if current_value in options_det else 0,
                 key=f"det_{idx}"
@@ -348,7 +316,9 @@ with tabs[4]:
 
         st.session_state["d5_det_selected"] = selected_det
 
+        # ---------------------------
         # Suggested Root Cause
+        # ---------------------------
         suggested_occ_rc = (
             "The root cause that allowed this issue to occur may be related to: "
             + ", ".join(selected_occ)
@@ -361,49 +331,70 @@ with tabs[4]:
         )
 
         st.session_state.D5["answer"] = st.text_area(
-            f"{t[lang_key]['Root_Cause_Occ']}",
+            "Root Cause (Occurrence)",
             value=suggested_occ_rc,
             key="root_cause_occ"
         )
         st.text_area(
-            f"{t[lang_key]['Root_Cause_Det']}",
+            "Root Cause (Detection)",
             value=suggested_det_rc,
             key="root_cause_det"
         )
-        # ---------------------------
-# D6–D8 Rendering
+        import streamlit as st
+from openpyxl import Workbook
+from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
+from openpyxl.utils import get_column_letter
+from openpyxl.drawing.image import Image as XLImage
+import io
+import json
+import os
+import datetime
+
 # ---------------------------
-for i, step in enumerate(["D6", "D7", "D8"], start=5):
-    with tabs[i]:
-        st.session_state["active_tab"] = i
-        note_text = npqp_steps[i][1][lang_key]
-        example_text = npqp_steps[i][2][lang_key]
-        st.markdown(f"""
-        <div style="
-            background-color:#b3e0ff; 
-            color:black; 
-            padding:12px; 
-            border-left:5px solid #1E90FF; 
-            border-radius:6px;
-            width:100%;
-            font-size:14px;
-            line-height:1.5;
-        ">
-        <b>{t[lang_key]['Training_Guidance']}:</b> {note_text}<br><br>
-        💡 <b>{t[lang_key]['Example']}:</b> {example_text}
-        </div>
-        """, unsafe_allow_html=True)
-        st.session_state[step]["answer"] = st.text_area(
-            "Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}"
-        )
+# D6–D8 Tabs
+# ---------------------------
+d6_to_d8 = ["D6", "D7", "D8"]
+for step in d6_to_d8:
+    note_text = {
+        "D6": "Define corrective actions that eliminate the root cause permanently and prevent recurrence.",
+        "D7": "Verify that corrective actions effectively resolve the issue long-term.",
+        "D8": "Document lessons learned, update standards, procedures, FMEAs, and training to prevent recurrence."
+    }[step]
+
+    example_text = {
+        "D6": "Update soldering process, redesign fixture, improve component handling.",
+        "D7": "Functional tests on corrected amplifiers, accelerated life testing.",
+        "D8": "Update SOPs, PFMEA, work instructions, and maintenance procedures."
+    }[step]
+
+    st.markdown(f"### {st.session_state.get(step, {}).get('title', step)}")
+    st.markdown(f"""
+    <div style="
+        background-color:#b3e0ff; 
+        color:black; 
+        padding:12px; 
+        border-left:5px solid #1E90FF; 
+        border-radius:6px;
+        width:100%;
+        font-size:14px;
+        line-height:1.5;
+    ">
+    <b>Training Guidance:</b> {note_text}<br><br>
+    💡 <b>Example:</b> {example_text}
+    </div>
+    """, unsafe_allow_html=True)
+    st.session_state[step]["answer"] = st.text_area(
+        "Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}"
+    )
 
 # ---------------------------
 # Collect answers for Excel
 # ---------------------------
-data_rows = [(step, st.session_state[step]["answer"], st.session_state[step]["extra"]) for step, _, _ in npqp_steps]
+npqp_steps = ["D1","D2","D3","D4","D5","D6","D7","D8"]
+data_rows = [(step, st.session_state[step]["answer"], st.session_state[step].get("extra", "")) for step in npqp_steps]
 
 # ---------------------------
-# Save / Download Excel
+# Excel generation
 # ---------------------------
 def generate_excel():
     wb = Workbook()
@@ -413,6 +404,7 @@ def generate_excel():
     thin = Side(border_style="thin", color="000000")
     border = Border(left=thin, right=thin, top=thin, bottom=thin)
 
+    # Add logo if exists
     if os.path.exists("logo.png"):
         try:
             img = XLImage("logo.png")
@@ -425,8 +417,8 @@ def generate_excel():
     ws.merge_cells(start_row=3, start_column=1, end_row=3, end_column=3)
     ws.cell(row=3, column=1, value="📋 8D Report Assistant").font = Font(bold=True, size=14)
 
-    ws.append([t[lang_key]['Report_Date'], st.session_state.report_date])
-    ws.append([t[lang_key]['Prepared_By'], st.session_state.prepared_by])
+    ws.append(["Report Date", st.session_state.report_date])
+    ws.append(["Prepared By", st.session_state.prepared_by])
     ws.append([])
 
     header_row = ws.max_row + 1
@@ -440,7 +432,7 @@ def generate_excel():
         cell.border = border
 
     for step, answer, extra in data_rows:
-        ws.append([t[lang_key][step], answer, extra])
+        ws.append([step, answer, extra])
         r = ws.max_row
         for c in range(1, 4):
             cell = ws.cell(row=r, column=c)
@@ -456,14 +448,14 @@ def generate_excel():
     return output.getvalue()
 
 st.download_button(
-    label=f"{t[lang_key]['Download']}",
+    label="📥 Download XLSX",
     data=generate_excel(),
     file_name=f"8D_Report_{st.session_state.report_date.replace(' ', '_')}.xlsx",
     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 )
 
 # ---------------------------
-# Sidebar: JSON Backup / Restore + Reset
+# Sidebar: JSON Backup / Restore / Reset
 # ---------------------------
 with st.sidebar:
     st.markdown("## Backup / Restore")
@@ -481,7 +473,6 @@ with st.sidebar:
 
     st.markdown("---")
     st.markdown("### Restore from JSON")
-
     uploaded_file = st.file_uploader("Upload JSON file to restore", type="json")
     if uploaded_file:
         try:
@@ -494,9 +485,8 @@ with st.sidebar:
 
     st.markdown("---")
     st.markdown("### Reset All Data")
-
     if st.button("🗑️ Clear All"):
-        for step, _, _ in npqp_steps:
+        for step in npqp_steps:
             st.session_state[step] = {"answer": "", "extra": ""}
         st.session_state["d5_occ_whys"] = [""] * 5
         st.session_state["d5_det_whys"] = [""] * 5
@@ -504,5 +494,4 @@ with st.sidebar:
         st.session_state["d5_det_selected"] = []
         st.session_state["report_date"] = datetime.datetime.today().strftime("%B %d, %Y")
         st.session_state["prepared_by"] = ""
-        st.session_state["active_tab"] = 0
         st.success("✅ All data has been reset!")
