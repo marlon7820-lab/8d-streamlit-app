@@ -62,8 +62,8 @@ st.markdown("<h1 style='text-align: center; color: #1E90FF;'>📋 8D Report Assi
 # ---------------------------
 # Version info
 # ---------------------------
-version_number = "v1.0.7"
-last_updated = "September 14, 2025"
+version_number = "v1.0.8"
+last_updated = "September 15, 2025"
 
 st.markdown(f"""
 <hr style='border:1px solid #1E90FF; margin-top:10px; margin-bottom:5px;'>
@@ -215,7 +215,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                 "Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}"
             )
 
-        # --------------------------- D5 FIXED ---------------------------
+        # --------------------------- D5 with Free-Text Selectboxes ---------------------------
         if step == "D5":
             st.markdown(f"""
             <div style="
@@ -232,7 +232,6 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             </div>
             """, unsafe_allow_html=True)
 
-            # Use form to prevent reruns on each selectbox change
             with st.form(key="d5_form", clear_on_submit=False):
                 # Occurrence Section
                 st.markdown("#### Occurrence Analysis")
@@ -363,7 +362,8 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                     value=suggested_det_rc,
                     key="root_cause_det"
                 )
-                # --------------------------- Part 3 ---------------------------
+
+# --------------------------- Part 3 ---------------------------
         # --------------------------- D6–D8 ---------------------------
         elif step in ["D6","D7","D8"]:
             note_text = note_dict[lang_key]
