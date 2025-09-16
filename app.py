@@ -148,8 +148,7 @@ st.session_state.setdefault("d5_occ_whys", [""] * 5)
 st.session_state.setdefault("d5_det_whys", [""] * 5)
 st.session_state.setdefault("d5_occ_selected", [])
 st.session_state.setdefault("d5_det_selected", [])
-st.session_state.setdefault("active_tab", 0)  # <-- track active tab
-
+st.session_state.setdefault("active_tab", 0)  # track active tab
 # ---------------------------
 # Restore from URL (st.query_params)
 # ---------------------------
@@ -174,12 +173,15 @@ st.session_state.prepared_by = st.text_input(f"{t[lang_key]['Prepared_By']}", va
 tab_labels = []
 for step, _, _ in npqp_steps:
     if st.session_state[step]["answer"].strip() != "":
-        tab_labels.append(f"🟢 {t[lang_key][step]
-       # ---------------------------
-# Render Tabs (D1–D8)
-# ---------------------------
+        tab_labels.append(f"🟢 {t[lang_key][step]}")
+    else:
+        tab_labels.append(f"🔴 {t[lang_key][step]}")
+
 tabs = st.tabs(tab_labels)
 
+# ---------------------------
+# Render Tabs (D1–D8) with D5 fix
+# ---------------------------
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     with tabs[i]:
         if st.session_state.active_tab != i:
@@ -351,7 +353,9 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
 
             st.session_state.D5["answer"] = f"{suggested_occ_rc}\n\n{suggested_det_rc}"
 
-        # --------------------------- D6–D8 ---------------------------
+# ---------------------------
+# D6–D8
+# ---------------------------
         elif step in ["D6","D7","D8"]:
             note_text = note_dict[lang_key]
             example_text = example_dict[lang_key]
@@ -421,10 +425,11 @@ def generate_excel():
         r = ws.max_row
         for c in range(1, 4):
             cell = ws.cell(row=r, column=c)
-            cell.alignment = Alignment(wrap_text=True, vertical="
-            # ---------------------------
-# Finish Excel formatting
-# ---------------------------
+            cell.alignment = Alignment(wrap_text=True
+            =True, vertical="top")
+            cell.font = Font(bold=True if c == 2 else False)
+            cell.border = border
+
     for col in range(1, 4):
         ws.column_dimensions[get_column_letter(col)].width = 40
 
