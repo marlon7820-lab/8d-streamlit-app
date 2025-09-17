@@ -22,14 +22,14 @@ st.set_page_config(
 # App colors and styles
 # ---------------------------
 st.markdown("""
-<style>
-.stApp { background: linear-gradient(to right, #f0f8ff, #e6f2ff); color: #000000 !important; }
-.stTabs [data-baseweb="tab"] { font-weight: bold; color: #000000 !important; }
-textarea { background-color: #ffffff !important; border: 1px solid #1E90FF !important; border-radius: 5px; color: #000000 !important; }
-.stInfo { background-color: #e6f7ff !important; border-left: 5px solid #1E90FF !important; color: #000000 !important; }
-.css-1d391kg { color: #1E90FF !important; font-weight: bold !important; }
-button[kind="primary"] { background-color: #87AFC7 !important; color: white !important; font-weight: bold; }
-</style>
+    <style>
+    .stApp {background: linear-gradient(to right, #f0f8ff, #e6f2ff); color: #000000 !important;}
+    .stTabs [data-baseweb="tab"] {font-weight: bold; color: #000000 !important;}
+    textarea {background-color: #ffffff !important; border: 1px solid #1E90FF !important; border-radius: 5px; color: #000000 !important;}
+    .stInfo {background-color: #e6f7ff !important; border-left: 5px solid #1E90FF !important; color: #000000 !important;}
+    .css-1d391kg {color: #1E90FF !important; font-weight: bold !important;}
+    button[kind="primary"] {background-color: #87AFC7 !important; color: white !important; font-weight: bold;}
+    </style>
 """, unsafe_allow_html=True)
 
 # ---------------------------
@@ -42,6 +42,7 @@ st.markdown("<h1 style='text-align: center; color: #1E90FF;'>📋 8D Report Assi
 # ---------------------------
 version_number = "v1.0.8"
 last_updated = "September 17, 2025"
+
 st.markdown(f"""
 <hr style='border:1px solid #1E90FF; margin-top:10px; margin-bottom:5px;'>
 <p style='font-size:12px; font-style:italic; text-align:center; color:#555555;'>
@@ -103,114 +104,147 @@ npqp_steps = [
     ("D4", {"en":"Define temporary containment actions to prevent the customer from seeing the problem while permanent actions are developed.",
             "es":"Defina acciones de contención temporales para evitar que el cliente vea el problema mientras se desarrollan acciones permanentes."},
      {"en":"100% inspection of amplifiers before shipment; temporary shielding.",
-      "es":"Inspección 100% de amplificadores antes del envío; blindaje temporal."}),
-    ("D5", {"en":"Use 5-Why analysis to determine the root cause. Separate Occurrence, Detection, and Systemic. Include FMEA failure occurrence if applicable.",
-            "es":"Use el análisis de 5 Porqués para determinar la causa raíz. Separe Ocurrencia, Detección y Sistémica. Incluya la ocurrencia de falla FMEA si aplica."},
-     {"en":"","es":""}),
-    ("D6", {"en":"Define corrective actions that eliminate the root cause permanently and prevent recurrence.",
-            "es":"Defina acciones correctivas que eliminen la causa raíz permanentemente y eviten recurrencia."},
-     {"en":"Update soldering process, redesign fixture, improve component handling.",
-      "es":"Actualizar proceso de soldadura, rediseñar herramienta, mejorar manejo de componentes."}),
-    ("D7", {"en":"Verify that corrective actions effectively resolve the issue long-term.",
-            "es":"Verifique que las acciones correctivas resuelvan efectivamente el problema a largo plazo."},
-     {"en":"Functional tests on corrected amplifiers, accelerated life testing.",
-      "es":"Pruebas funcionales en amplificadores corregidos, pruebas de vida aceleradas."}),
-    ("D8", {"en":"Document lessons learned, update standards, procedures, FMEAs, and training to prevent recurrence.",
-            "es":"Documente lecciones aprendidas, actualice estándares, procedimientos, FMEAs y capacitación para prevenir recurrencia."},
-     {"en":"Update SOPs, PFMEA, work instructions, and maintenance procedures.",
-      "es":"Actualizar SOPs, PFMEA, instrucciones de trabajo y procedimientos de mantenimiento."})
+      "es":"Inspección 100% de amplificadores antes del envío; blindaje temporal."})
 ]
 
 # ---------------------------
 # Initialize session state
 # ---------------------------
 for step, _, _ in npqp_steps:
-    if step not in st.session_state:
-        st.session_state[step] = {"answer": "", "extra": ""}
+    st.session_state.setdefault(step, {"answer": "", "extra": ""})
 
 st.session_state.setdefault("report_date", datetime.datetime.today().strftime("%B %d, %Y"))
 st.session_state.setdefault("prepared_by", "")
-st.session_state.setdefault("d5_occ_whys", [""] * 5)
-st.session_state.setdefault("d5_det_whys", [""] * 5)
-st.session_state.setdefault("d5_sys_whys", [""] * 5)
-st.session_state.setdefault("d5_occ_selected", [])
-st.session_state.setdefault("d5_det_selected", [])
-st.session_state.setdefault("d5_sys_selected", [])
 # --------------------------- Part 2 ---------------------------
-# Main Tabs for 8D
-tab_names = [t[lang_key][step] for step, _, _ in npqp_steps]
-tabs = st.tabs(tab_names)
+# D5 Tab: Final Analysis
+st.markdown(f"## {t[lang_key]['D5']}")
 
-for idx, (step, guidance_dict, example_dict) in enumerate(npqp_steps):
-    with tabs[idx]:
-        st.markdown(f"### {t[lang_key][step]}")
-        st.markdown(f"**{t[lang_key]['Training_Guidance']}**: {guidance_dict[lang_key]}")
-        st.info(f"{t[lang_key]['Example']}: {example_dict[lang_key]}")
+# Buttons for clearing D5
+col1, col2 = st.columns([1,4])
+with col1:
+    if st.button("🧹 Clear D5 Section"):
+        for i in range(5):
+            st.session_state[f"occurrence_{i}"] = ""
+            st.session_state[f"detection_{i}"] = ""
+            st.session_state[f"systemic_{i}"] = ""
 
-        # Text input / area for answers
-        st.session_state[step]["answer"] = st.text_area(
-            f"{t[lang_key][step]} - Your Answer",
-            value=st.session_state[step]["answer"],
-            key=f"{step}_answer",
-            height=120
-        )
+# Occurrence section
+st.markdown("### Occurrence Root Cause")
+for idx in range(5):
+    key_occ = f"occurrence_{idx}"
+    st.session_state.setdefault(key_occ, "")
+    st.session_state[key_occ] = st.text_area(
+        f"{t[lang_key]['Occurrence_Why']} {idx+1}",
+        value=st.session_state[key_occ],
+        key=f"{key_occ}_text"
+    )
 
-        # ---------------------------
-        # D5 Special Section: 5-Why Analysis
-        # ---------------------------
-        if step == "D5":
-            st.markdown("---")
-            st.markdown("#### Root Cause Analysis (5-Why)")
+# Detection section
+st.markdown("### Detection Root Cause")
+for idx in range(5):
+    key_det = f"detection_{idx}"
+    st.session_state.setdefault(key_det, "")
+    st.session_state[key_det] = st.text_area(
+        f"{t[lang_key]['Detection_Why']} {idx+1}",
+        value=st.session_state[key_det],
+        key=f"{key_det}_text"
+    )
 
-            # Occurrence
-            st.markdown("**Occurrence Root Cause**")
-            for i in range(5):
-                st.session_state["d5_occ_whys"][i] = st.text_input(
-                    f"{t[lang_key]['Occurrence_Why']} {i+1}",
-                    value=st.session_state["d5_occ_whys"][i],
-                    key=f"d5_occ_{i}"
-                )
+# Systemic section
+st.markdown("### Systemic Root Cause")
+for idx in range(5):
+    key_sys = f"systemic_{idx}"
+    st.session_state.setdefault(key_sys, "")
+    st.session_state[key_sys] = st.text_area(
+        f"{t[lang_key]['Systemic_Why']} {idx+1}",
+        value=st.session_state[key_sys],
+        key=f"{key_sys}_text"
+    )
 
-            # Detection
-            st.markdown("**Detection Root Cause**")
-            for i in range(5):
-                st.session_state["d5_det_whys"][i] = st.text_input(
-                    f"{t[lang_key]['Detection_Why']} {i+1}",
-                    value=st.session_state["d5_det_whys"][i],
-                    key=f"d5_det_{i}"
-                )
+# Optional guidance/note
+st.markdown(f"**{t[lang_key]['Training_Guidance']}:** Use this section to guide the team through systemic improvements and lessons learned.")
+# --------------------------- Part 3 ---------------------------
+# D6–D8 Tabs
+for step in ["D6", "D7", "D8"]:
+    st.markdown(f"## {t[lang_key][step]}")
+    st.session_state.setdefault(step, {"answer": "", "extra": ""})
+    st.session_state[step]["answer"] = st.text_area(
+        f"{t[lang_key][step]} - Your Answer",
+        value=st.session_state[step]["answer"],
+        key=f"{step}_answer"
+    )
+    st.session_state[step]["extra"] = st.text_area(
+        "Extra / Notes",
+        value=st.session_state[step]["extra"],
+        key=f"{step}_extra"
+    )
 
-            # Systemic
-            st.markdown("**Systemic Root Cause**")
-            for i in range(5):
-                st.session_state["d5_sys_whys"][i] = st.text_input(
-                    f"{t[lang_key]['Systemic_Why']} {i+1}",
-                    value=st.session_state["d5_sys_whys"][i],
-                    key=f"d5_sys_{i}"
-                )
-
-            st.markdown("---")
-            # --------------------------- Part 3 ---------------------------
 # ---------------------------
-# Sidebar: Backup / Restore / Clear
+# Collect all answers for Excel
+# ---------------------------
+data_rows = []
+
+# D1–D8 answers
+for step in ["D1","D2","D3","D4","D5","D6","D7","D8"]:
+    if step == "D5":
+        occ_answers = [st.session_state.get(f"occurrence_{i}", "") for i in range(5)]
+        det_answers = [st.session_state.get(f"detection_{i}", "") for i in range(5)]
+        sys_answers = [st.session_state.get(f"systemic_{i}", "") for i in range(5)]
+        answer_text = f"Occurrence:\n" + "\n".join(occ_answers) + \
+                      f"\n\nDetection:\n" + "\n".join(det_answers) + \
+                      f"\n\nSystemic:\n" + "\n".join(sys_answers)
+        extra_text = ""
+        data_rows.append((t[lang_key][step], answer_text, extra_text))
+    else:
+        answer_text = st.session_state[step]["answer"]
+        extra_text = st.session_state[step]["extra"]
+        data_rows.append((t[lang_key][step], answer_text, extra_text))
+
+# ---------------------------
+# Generate Excel
+# ---------------------------
+def generate_excel():
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "8D Report"
+
+    # Header row
+    headers = ["Step", "Answer", "Extra / Notes"]
+    ws.append(headers)
+
+    for step, answer, extra in data_rows:
+        ws.append([step, answer, extra])
+
+    for col in range(1, 4):
+        ws.column_dimensions[get_column_letter(col)].width = 50
+
+    output = io.BytesIO()
+    wb.save(output)
+    return output.getvalue()
+
+st.download_button(
+    label=f"{t[lang_key]['Download']}",
+    data=generate_excel(),
+    file_name=f"8D_Report_{datetime.datetime.today().strftime('%Y%m%d')}.xlsx",
+    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+)
+
+# ---------------------------
+# Sidebar: JSON Backup / Restore
 # ---------------------------
 with st.sidebar:
-    st.markdown("## Backup / Restore / Reset")
-
-    # Generate JSON backup
+    st.markdown("## Backup / Restore")
     def generate_json():
-        save_data = {k: v for k, v in st.session_state.items() if not k.startswith("_")}
-        return json.dumps(save_data, indent=4)
+        return json.dumps({k:v for k,v in st.session_state.items() if not k.startswith("_")}, indent=4)
 
     st.download_button(
         label="💾 Save Progress (JSON)",
         data=generate_json(),
-        file_name=f"8D_Backup_{st.session_state.report_date.replace(' ', '_')}.json",
+        file_name=f"8D_Backup_{datetime.datetime.today().strftime('%Y%m%d')}.json",
         mime="application/json"
     )
 
-    # Restore JSON
-    uploaded_file = st.file_uploader("Upload JSON to restore", type="json")
+    uploaded_file = st.file_uploader("Upload JSON to Restore", type="json")
     if uploaded_file:
         try:
             restore_data = json.load(uploaded_file)
@@ -220,76 +254,13 @@ with st.sidebar:
         except Exception as e:
             st.error(f"Error restoring JSON: {e}")
 
-    # Clear all
-    if st.button("🗑️ Clear All"):
-        for step, _, _ in npqp_steps:
+    if st.button("🗑️ Clear All Data"):
+        for step in ["D1","D2","D3","D4","D5","D6","D7","D8"]:
             st.session_state[step] = {"answer": "", "extra": ""}
-        st.session_state["d5_occ_whys"] = [""] * 5
-        st.session_state["d5_det_whys"] = [""] * 5
-        st.session_state["d5_sys_whys"] = [""] * 5
+        for i in range(5):
+            st.session_state[f"occurrence_{i}"] = ""
+            st.session_state[f"detection_{i}"] = ""
+            st.session_state[f"systemic_{i}"] = ""
         st.session_state["report_date"] = datetime.datetime.today().strftime("%B %d, %Y")
         st.session_state["prepared_by"] = ""
-        st.success("✅ All fields cleared!")
-
-# ---------------------------
-# Generate Excel file
-# ---------------------------
-def generate_excel():
-    wb = Workbook()
-    ws = wb.active
-    ws.title = "NPQP 8D Report"
-
-    # Add logo
-    if os.path.exists("logo.png"):
-        try:
-            img = XLImage("logo.png")
-            img.width = 140
-            img.height = 40
-            ws.add_image(img, "A1")
-        except:
-            pass
-
-    # Report info
-    ws.append([t[lang_key]['Report_Date'], st.session_state.report_date])
-    ws.append([t[lang_key]['Prepared_By'], st.session_state.prepared_by])
-    ws.append([])
-
-    # Headers
-    headers = ["Step", "Answer", "Extra / Notes"]
-    for c_idx, h in enumerate(headers, start=1):
-        cell = ws.cell(row=4, column=c_idx, value=h)
-        cell.font = Font(bold=True)
-        cell.alignment = Alignment(horizontal="center", vertical="center")
-
-    # Step data
-    row = 5
-    for step, _, _ in npqp_steps:
-        answer = st.session_state[step]["answer"]
-        extra = st.session_state[step].get("extra", "")
-        ws.append([t[lang_key][step], answer, extra])
-        row += 1
-
-    # D5 Whys
-    ws.append([])
-    ws.append(["D5 Occurrence Whys"] + st.session_state["d5_occ_whys"])
-    ws.append(["D5 Detection Whys"] + st.session_state["d5_det_whys"])
-    ws.append(["D5 Systemic Whys"] + st.session_state["d5_sys_whys"])
-
-    # Adjust column width
-    for col in range(1, 4):
-        ws.column_dimensions[get_column_letter(col)].width = 40
-
-    # Save workbook to BytesIO
-    output = io.BytesIO()
-    wb.save(output)
-    return output.getvalue()
-
-# ---------------------------
-# Download Excel
-# ---------------------------
-st.download_button(
-    label=f"{t[lang_key]['Download']}",
-    data=generate_excel(),
-    file_name=f"8D_Report_{st.session_state.report_date.replace(' ', '_')}.xlsx",
-    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-)
+        st.success("✅ All data cleared!")
