@@ -1,4 +1,3 @@
-# --------------------------- Part 1 ---------------------------
 import streamlit as st
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
@@ -155,7 +154,6 @@ st.session_state.setdefault("d5_occ_whys", [""] * 5)
 st.session_state.setdefault("d5_det_whys", [""] * 5)
 st.session_state.setdefault("d5_occ_selected", [])
 st.session_state.setdefault("d5_det_selected", [])
-# --------------------------- Part 2 ---------------------------
 # ---------------------------
 # Restore from URL (st.query_params)
 # ---------------------------
@@ -215,7 +213,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                 "Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}"
             )
 
-        # --------------------------- D5 ---------------------------
+        # --------------------------- D5 Tab ---------------------------
         if step == "D5":
             st.markdown(f"""
             <div style="
@@ -232,7 +230,6 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             </div>
             """, unsafe_allow_html=True)
 
-            # Use form to prevent reruns on each selectbox change
             with st.form(key="d5_form", clear_on_submit=False):
                 # Occurrence Section
                 st.markdown("#### Occurrence Analysis")
@@ -293,8 +290,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                     pass
 
                 st.session_state["d5_occ_selected"] = selected_occ
-                # --------------------------- Part 3 ---------------------------
-                # Detection Section
+                                # Detection Section
                 st.markdown("#### Detection Analysis")
                 detection_categories = {
                     "QA / Inspection-related": [
@@ -364,7 +360,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                     key="root_cause_det"
                 )
 
-        # --------------------------- D6–D8 ---------------------------
+        # --------------------------- D6–D8 Tabs ---------------------------
         elif step in ["D6","D7","D8"]:
             note_text = note_dict[lang_key]
             example_text = example_dict[lang_key]
@@ -453,7 +449,7 @@ st.download_button(
 )
 
 # ---------------------------
-# Sidebar: JSON Backup / Restore + Reset
+# Sidebar: JSON Backup / Restore + Reset with App Rerun
 # ---------------------------
 with st.sidebar:
     st.markdown("## Backup / Restore")
@@ -478,7 +474,7 @@ with st.sidebar:
             restore_data = json.load(uploaded_file)
             for k, v in restore_data.items():
                 st.session_state[k] = v
-            st.success("✅ Session restored from JSON!")
+            st.experimental_rerun()
         except Exception as e:
             st.error(f"Error restoring JSON: {e}")
 
@@ -486,13 +482,4 @@ with st.sidebar:
     st.markdown("### Reset All Data")
 
     if st.button("🗑️ Clear All"):
-        # Reset all steps and D5 lists
-        for step, _, _ in npqp_steps:
-            st.session_state[step] = {"answer": "", "extra": ""}
-        st.session_state["d5_occ_whys"] = [""] * 5
-        st.session_state["d5_det_whys"] = [""] * 5
-        st.session_state["d5_occ_selected"] = []
-        st.session_state["d5_det_selected"] = []
-        st.session_state["report_date"] = datetime.datetime.today().strftime("%B %d, %Y")
-        st.session_state["prepared_by"] = ""
-        st.success("✅ All data has been reset!")
+        st.experimental_rerun()  # refresh page to fully reset session_state
