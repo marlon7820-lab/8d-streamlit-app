@@ -123,8 +123,8 @@ npqp_steps = [
             "es":"Defina acciones de contención temporales para evitar que el cliente vea el problema mientras se desarrollan acciones permanentes."},
      {"en":"100% inspection of amplifiers before shipment; temporary shielding.",
       "es":"Inspección 100% de amplificadores antes del envío; blindaje temporal."}),
-    ("D5", {"en":"Use 5-Why analysis to determine the root cause. Separate Occurrence, Detection, and Systemic. Include FMEA failure occurrence if applicable.",
-            "es":"Use el análisis de 5 Porqués para determinar la causa raíz. Separe Ocurrencia, Detección y Sistémica. Incluya la ocurrencia de falla FMEA si aplica."},
+    ("D5", {"en":"Use 5-Why analysis to determine the root cause. Separate Occurrence and Detection. Include FMEA failure occurrence if applicable.",
+            "es":"Use el análisis de 5 Porqués para determinar la causa raíz. Separe Ocurrencia y Detección. Incluya la ocurrencia de falla FMEA si aplica."},
      {"en":"","es":""}),
     ("D6", {"en":"Define corrective actions that eliminate the root cause permanently and prevent recurrence.",
             "es":"Defina acciones correctivas que eliminen la causa raíz permanentemente y eviten recurrencia."},
@@ -150,10 +150,10 @@ st.session_state.setdefault("report_date", datetime.datetime.today().strftime("%
 st.session_state.setdefault("prepared_by", "")
 st.session_state.setdefault("d5_occ_whys", [""] * 5)
 st.session_state.setdefault("d5_det_whys", [""] * 5)
-st.session_state.setdefault("d5_systemic_whys", [""] * 5)
+st.session_state.setdefault("d5_sys_whys", [""] * 5)
 st.session_state.setdefault("d5_occ_selected", [])
 st.session_state.setdefault("d5_det_selected", [])
-st.session_state.setdefault("d5_systemic_selected", [])
+st.session_state.setdefault("d5_sys_selected", [])
 # --------------------------- Part 2 ---------------------------
 # ---------------------------
 # Restore from URL (st.query_params)
@@ -210,11 +210,11 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             💡 <b>{t[lang_key]['Example']}:</b> {example_text}
             </div>
             """, unsafe_allow_html=True)
-            st.text_area(
+            st.session_state[step]["answer"] = st.text_area(
                 "Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}"
             )
 
-        # --------------------------- D5 Section ---------------------------
+        # --------------------------- D5 with Systemic Analysis ---------------------------
         if step == "D5":
             st.markdown(f"""
             <div style="
@@ -231,11 +231,8 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             </div>
             """, unsafe_allow_html=True)
 
-            # ---------------------------
-            # Use a form to prevent jumping
-            # ---------------------------
             with st.form(key="d5_form", clear_on_submit=False):
-                # ----- Occurrence Analysis -----
+                # ------------------- Occurrence -------------------
                 st.markdown("#### Occurrence Analysis")
                 occurrence_categories = {
                     "Machine / Equipment-related": [
@@ -247,23 +244,24 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                     ],
                     "Material / Component-related": [
                         "Wrong material delivered",
-                        "Material defects",
+                        "Material defects or impurities",
                         "Damage during storage or transport",
-                        "Incorrect specs or tolerance errors"
+                        "Incorrect specifications or tolerance errors"
                     ],
                     "Process / Method-related": [
-                        "Incorrect process steps",
-                        "Inefficient workflow",
+                        "Incorrect process steps due to poor process design",
+                        "Inefficient workflow or bottlenecks",
                         "Lack of standardized procedures",
-                        "Outdated work instructions"
+                        "Outdated or incomplete work instructions"
                     ],
                     "Environmental / External Factors": [
-                        "Temperature/humidity issues",
-                        "Power fluctuations",
-                        "Contamination",
-                        "Regulatory changes"
+                        "Temperature, humidity, or other environmental conditions",
+                        "Power fluctuations or outages",
+                        "Contamination (dust, oil, chemicals)",
+                        "Regulatory or compliance changes"
                     ]
                 }
+
                 selected_occ = []
                 for idx, val in enumerate(st.session_state.d5_occ_whys):
                     remaining_options = []
@@ -274,6 +272,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                                 remaining_options.append(full_item)
                     if val and val not in remaining_options:
                         remaining_options.append(val)
+
                     options = [""] + sorted(remaining_options)
                     current_value = st.session_state.d5_occ_whys[idx]
                     st.session_state.d5_occ_whys[idx] = st.selectbox(
@@ -292,21 +291,22 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                     pass
                 st.session_state["d5_occ_selected"] = selected_occ
 
-                # ----- Detection Analysis -----
+                # ------------------- Detection -------------------
                 st.markdown("#### Detection Analysis")
                 detection_categories = {
                     "QA / Inspection-related": [
                         "QA checklist incomplete",
                         "No automated test",
                         "Missed inspection due to process gap",
-                        "Tooling/equipment inspection not scheduled"
+                        "Tooling or equipment inspection not scheduled"
                     ],
                     "Validation / Process-related": [
                         "Insufficient validation steps",
-                        "Design verification incomplete",
-                        "Inspection documentation missing"
+                        "Design verification not complete",
+                        "Inspection documentation missing or outdated"
                     ]
                 }
+
                 selected_det = []
                 for idx, val in enumerate(st.session_state.d5_det_whys):
                     remaining_options = []
@@ -317,6 +317,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                                 remaining_options.append(full_item)
                     if val and val not in remaining_options:
                         remaining_options.append(val)
+
                     options_det = [""] + sorted(remaining_options)
                     current_value = st.session_state.d5_det_whys[idx]
                     st.session_state.d5_det_whys[idx] = st.selectbox(
@@ -335,27 +336,28 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                     pass
                 st.session_state["d5_det_selected"] = selected_det
 
-                # ----- Systemic Analysis -----
+                # ------------------- Systemic Analysis -------------------
                 st.markdown("#### Systemic Analysis")
                 systemic_categories = {
-                    "Management / Organizational": [
-                        "Inadequate training",
-                        "Poor communication",
-                        "Insufficient supervision"
+                    "Organizational": [
+                        "Insufficient training",
+                        "Lack of standard procedures",
+                        "Poor communication channels"
                     ],
-                    "Process / Procedure": [
-                        "Missing work instructions",
-                        "Process gaps",
-                        "Inefficient workflows"
+                    "Process Design": [
+                        "Inefficient workflow",
+                        "No fail-safes",
+                        "Process not validated for variations"
                     ],
-                    "Tools / Resources": [
-                        "Outdated equipment",
-                        "Insufficient tooling",
-                        "Resource allocation issues"
+                    "Technology / Tools": [
+                        "Outdated software",
+                        "Lack of monitoring tools",
+                        "Insufficient automation"
                     ]
                 }
+
                 selected_sys = []
-                for idx, val in enumerate(st.session_state.d5_systemic_whys):
+                for idx, val in enumerate(st.session_state.d5_sys_whys):
                     remaining_options = []
                     for cat, items in systemic_categories.items():
                         for item in items:
@@ -364,76 +366,89 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                                 remaining_options.append(full_item)
                     if val and val not in remaining_options:
                         remaining_options.append(val)
+
                     options_sys = [""] + sorted(remaining_options)
-                    current_value = st.session_state.d5_systemic_whys[idx]
-                    st.session_state.d5_systemic_whys[idx] = st.selectbox(
+                    current_value = st.session_state.d5_sys_whys[idx]
+                    st.session_state.d5_sys_whys[idx] = st.selectbox(
                         f"Systemic Why {idx+1}",
                         options_sys,
                         index=options_sys.index(current_value) if current_value in options_sys else 0,
                         key=f"sys_{idx}"
                     )
-                    free_text_sys = st.text_input(f"Or enter your own Systemic Why {idx+1}", value=st.session_state.d5_systemic_whys[idx], key=f"sys_txt_{idx}")
+                    free_text_sys = st.text_input(f"Or enter your own Systemic Why {idx+1}", value=st.session_state.d5_sys_whys[idx], key=f"sys_txt_{idx}")
                     if free_text_sys.strip():
-                        st.session_state.d5_systemic_whys[idx] = free_text_sys
-                    if st.session_state.d5_systemic_whys[idx]:
-                        selected_sys.append(st.session_state.d5_systemic_whys[idx])
+                        st.session_state.d5_sys_whys[idx] = free_text_sys
+                    if st.session_state.d5_sys_whys[idx]:
+                        selected_sys.append(st.session_state.d5_sys_whys[idx])
 
-                if st.form_submit_button("➕ Add another Systemic Why", on_click=lambda: st.session_state.d5_systemic_whys.append("")):
+                if st.form_submit_button("➕ Add another Systemic Why", on_click=lambda: st.session_state.d5_sys_whys.append("")):
                     pass
-                st.session_state["d5_systemic_selected"] = selected_sys
+                st.session_state["d5_sys_selected"] = selected_sys
+                # --------------------------- Part 3 ---------------------------
+# --------------------------- D5 Suggested Root Cause ---------------------------
+st.markdown("#### Suggested Root Cause")
+suggested_occ_rc = (
+    "The root cause that allowed this issue to occur may be related to: "
+    + ", ".join(st.session_state.get("d5_occ_selected", []))
+    if st.session_state.get("d5_occ_selected")
+    else ""
+)
+suggested_det_rc = (
+    "The root cause that allowed this issue to escape detection may be related to: "
+    + ", ".join(st.session_state.get("d5_det_selected", []))
+    if st.session_state.get("d5_det_selected")
+    else ""
+)
+suggested_sys_rc = (
+    "Systemic factors that contributed may include: "
+    + ", ".join(st.session_state.get("d5_sys_selected", []))
+    if st.session_state.get("d5_sys_selected")
+    else ""
+)
 
-                # ----- Suggested Root Cause -----
-                suggested_occ_rc = "The root cause that allowed this issue to occur may be related to: " + ", ".join(selected_occ) if selected_occ else ""
-                suggested_det_rc = "The root cause that allowed this issue to escape detection may be related to: " + ", ".join(selected_det) if selected_det else ""
-                suggested_sys_rc = "Systemic factors may include: " + ", ".join(selected_sys) if selected_sys else ""
+st.session_state.D5["answer"] = st.text_area(
+    f"{t[lang_key]['Root_Cause_Occ']}",
+    value=suggested_occ_rc,
+    key="root_cause_occ"
+)
+st.text_area(
+    f"{t[lang_key]['Root_Cause_Det']}",
+    value=suggested_det_rc,
+    key="root_cause_det"
+)
+st.text_area(
+    "Systemic Root Cause",
+    value=suggested_sys_rc,
+    key="root_cause_sys"
+)
 
-                st.session_state.D5["answer"] = st.text_area(
-                    f"{t[lang_key]['Root_Cause_Occ']}",
-                    value=suggested_occ_rc,
-                    key="root_cause_occ"
-                )
-                st.text_area(
-                    f"{t[lang_key]['Root_Cause_Det']}",
-                    value=suggested_det_rc,
-                    key="root_cause_det"
-                )
-                st.text_area(
-                    "Systemic Root Cause",
-                    value=suggested_sys_rc,
-                    key="root_cause_sys"
-                )
+# --------------------------- D6–D8 Tabs ---------------------------
+for step in ["D6","D7","D8"]:
+    note_text = next(nd[1][lang_key] for nd in npqp_steps if nd[0]==step)
+    example_text = next(nd[2][lang_key] for nd in npqp_steps if nd[0]==step)
+    st.markdown(f"""
+    <div style="
+        background-color:#b3e0ff; 
+        color:black; 
+        padding:12px; 
+        border-left:5px solid #1E90FF; 
+        border-radius:6px;
+        width:100%;
+        font-size:14px;
+        line-height:1.5;
+    ">
+    <b>{t[lang_key]['Training_Guidance']}:</b> {note_text}<br><br>
+    💡 <b>{t[lang_key]['Example']}:</b> {example_text}
+    </div>
+    """, unsafe_allow_html=True)
+    st.session_state[step]["answer"] = st.text_area(
+        "Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}"
+    )
 
-        # --------------------------- D6–D8 ---------------------------
-        elif step in ["D6","D7","D8"]:
-            note_text = note_dict[lang_key]
-            example_text = example_dict[lang_key]
-            st.markdown(f"""
-            <div style="
-                background-color:#b3e0ff; 
-                color:black; 
-                padding:12px; 
-                border-left:5px solid #1E90FF; 
-                border-radius:6px;
-                width:100%;
-                font-size:14px;
-                line-height:1.5;
-            ">
-            <b>{t[lang_key]['Training_Guidance']}:</b> {note_text}<br><br>
-            💡 <b>{t[lang_key]['Example']}:</b> {example_text}
-            </div>
-            """, unsafe_allow_html=True)
-            st.text_area(
-                "Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}"
-            )
-            # --------------------------- Part 3 ---------------------------
-# ---------------------------
-# Collect answers for Excel
-# ---------------------------
+# --------------------------- Collect answers for Excel ---------------------------
 data_rows = [(step, st.session_state[step]["answer"], st.session_state[step]["extra"]) for step, _, _ in npqp_steps]
 
-# ---------------------------
-# Save / Download Excel
-# ---------------------------
+# --------------------------- Save / Download Excel ---------------------------
 def generate_excel():
     wb = Workbook()
     ws = wb.active
@@ -491,9 +506,7 @@ st.download_button(
     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 )
 
-# ---------------------------
-# Sidebar: JSON Backup / Restore + Reset
-# ---------------------------
+# --------------------------- Sidebar: JSON Backup / Restore + Reset ---------------------------
 with st.sidebar:
     st.markdown("## Backup / Restore")
 
@@ -527,16 +540,12 @@ with st.sidebar:
     if st.button("🗑️ Clear All"):
         for step, _, _ in npqp_steps:
             st.session_state[step] = {"answer": "", "extra": ""}
-        # Reset D5 lists
         st.session_state["d5_occ_whys"] = [""] * 5
         st.session_state["d5_det_whys"] = [""] * 5
-        st.session_state["d5_systemic_whys"] = [""] * 5
+        st.session_state["d5_sys_whys"] = [""] * 5
         st.session_state["d5_occ_selected"] = []
         st.session_state["d5_det_selected"] = []
-        st.session_state["d5_systemic_selected"] = []
+        st.session_state["d5_sys_selected"] = []
         st.session_state["report_date"] = datetime.datetime.today().strftime("%B %d, %Y")
         st.session_state["prepared_by"] = ""
-        # Ensure all steps exist
-        for step in ["D1","D2","D3","D4","D5","D6","D7","D8"]:
-            st.session_state.setdefault(step, {"answer":"", "extra":""})
         st.success("✅ All data has been reset!")
