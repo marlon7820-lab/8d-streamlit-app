@@ -61,8 +61,8 @@ st.markdown("<h1 style='text-align: center; color: #1E90FF;'>📋 8D Report Assi
 # ---------------------------
 # Version info
 # ---------------------------
-version_number = "v1.0.7"
-last_updated = "September 14, 2025"
+version_number = "v1.0.8"
+last_updated = "September 17, 2025"
 
 st.markdown(f"""
 <hr style='border:1px solid #1E90FF; margin-top:10px; margin-bottom:5px;'>
@@ -123,22 +123,7 @@ npqp_steps = [
     ("D4", {"en":"Define temporary containment actions to prevent the customer from seeing the problem while permanent actions are developed.",
             "es":"Defina acciones de contención temporales para evitar que el cliente vea el problema mientras se desarrollan acciones permanentes."},
      {"en":"100% inspection of amplifiers before shipment; temporary shielding.",
-      "es":"Inspección 100% de amplificadores antes del envío; blindaje temporal."}),
-    ("D5", {"en":"Use 5-Why analysis to determine the root cause. Separate Occurrence and Detection. Include FMEA failure occurrence if applicable.",
-            "es":"Use el análisis de 5 Porqués para determinar la causa raíz. Separe Ocurrencia y Detección. Incluya la ocurrencia de falla FMEA si aplica."},
-     {"en":"","es":""}),
-    ("D6", {"en":"Define corrective actions that eliminate the root cause permanently and prevent recurrence.",
-            "es":"Defina acciones correctivas que eliminen la causa raíz permanentemente y eviten recurrencia."},
-     {"en":"Update soldering process, redesign fixture, improve component handling.",
-      "es":"Actualizar proceso de soldadura, rediseñar herramienta, mejorar manejo de componentes."}),
-    ("D7", {"en":"Verify that corrective actions effectively resolve the issue long-term.",
-            "es":"Verifique que las acciones correctivas resuelvan efectivamente el problema a largo plazo."},
-     {"en":"Functional tests on corrected amplifiers, accelerated life testing.",
-      "es":"Pruebas funcionales en amplificadores corregidos, pruebas de vida aceleradas."}),
-    ("D8", {"en":"Document lessons learned, update standards, procedures, FMEAs, and training to prevent recurrence.",
-            "es":"Documente lecciones aprendidas, actualice estándares, procedimientos, FMEAs y capacitación para prevenir recurrencia."},
-     {"en":"Update SOPs, PFMEA, work instructions, and maintenance procedures.",
-      "es":"Actualizar SOPs, PFMEA, instrucciones de trabajo y procedimientos de mantenimiento."})
+      "es":"Inspección 100% de amplificadores antes del envío; blindaje temporal."})
 ]
 
 # ---------------------------
@@ -150,28 +135,6 @@ for step, _, _ in npqp_steps:
 
 st.session_state.setdefault("report_date", datetime.datetime.today().strftime("%B %d, %Y"))
 st.session_state.setdefault("prepared_by", "")
-st.session_state.setdefault("d5_occ_whys", [""] * 5)
-st.session_state.setdefault("d5_det_whys", [""] * 5)
-st.session_state.setdefault("d5_occ_selected", [])
-st.session_state.setdefault("d5_det_selected", [])
-# ---------------------------
-# Restore from URL (st.query_params)
-# ---------------------------
-if "backup" in st.query_params:
-    try:
-        data = json.loads(st.query_params["backup"][0])
-        for k, v in data.items():
-            st.session_state[k] = v
-    except Exception:
-        pass
-
-# ---------------------------
-# Report info
-# ---------------------------
-st.subheader(f"{t[lang_key]['Report_Date']}")
-st.session_state.report_date = st.text_input(f"{t[lang_key]['Report_Date']}", value=st.session_state.report_date)
-st.session_state.prepared_by = st.text_input(f"{t[lang_key]['Prepared_By']}", value=st.session_state.prepared_by)
-
 # ---------------------------
 # Tabs with ✅ / 🔴 status indicators
 # ---------------------------
@@ -213,7 +176,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                 "Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}"
             )
 
-        # --------------------------- D5 Tab ---------------------------
+        # --------------------------- D5 ---------------------------
         if step == "D5":
             st.markdown(f"""
             <div style="
@@ -230,6 +193,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             </div>
             """, unsafe_allow_html=True)
 
+            # Use form to prevent reruns on selectbox changes
             with st.form(key="d5_form", clear_on_submit=False):
                 # Occurrence Section
                 st.markdown("#### Occurrence Analysis")
@@ -262,7 +226,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                 }
 
                 selected_occ = []
-                for idx, val in enumerate(st.session_state.d5_occ_whys):
+                for idx, val in enumerate(st.session_state.get("d5_occ_whys", [""] * 5)):
                     remaining_options = []
                     for cat, items in occurrence_categories.items():
                         for item in items:
@@ -286,11 +250,9 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                     if st.session_state.d5_occ_whys[idx]:
                         selected_occ.append(st.session_state.d5_occ_whys[idx])
 
-                if st.form_submit_button("➕ Add another Occurrence Why", on_click=lambda: st.session_state.d5_occ_whys.append("")):
-                    pass
-
                 st.session_state["d5_occ_selected"] = selected_occ
-                                # Detection Section
+
+                # Detection Section
                 st.markdown("#### Detection Analysis")
                 detection_categories = {
                     "QA / Inspection-related": [
@@ -307,7 +269,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                 }
 
                 selected_det = []
-                for idx, val in enumerate(st.session_state.d5_det_whys):
+                for idx, val in enumerate(st.session_state.get("d5_det_whys", [""] * 5)):
                     remaining_options = []
                     for cat, items in detection_categories.items():
                         for item in items:
@@ -330,9 +292,6 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                         st.session_state.d5_det_whys[idx] = free_text_det
                     if st.session_state.d5_det_whys[idx]:
                         selected_det.append(st.session_state.d5_det_whys[idx])
-
-                if st.form_submit_button("➕ Add another Detection Why", on_click=lambda: st.session_state.d5_det_whys.append("")):
-                    pass
 
                 st.session_state["d5_det_selected"] = selected_det
 
@@ -360,7 +319,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                     key="root_cause_det"
                 )
 
-        # --------------------------- D6–D8 Tabs ---------------------------
+        # --------------------------- D6–D8 ---------------------------
         elif step in ["D6","D7","D8"]:
             note_text = note_dict[lang_key]
             example_text = example_dict[lang_key]
@@ -387,7 +346,6 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
 # Collect answers for Excel
 # ---------------------------
 data_rows = [(step, st.session_state[step]["answer"], st.session_state[step]["extra"]) for step, _, _ in npqp_steps]
-
 # ---------------------------
 # Save / Download Excel
 # ---------------------------
@@ -399,6 +357,7 @@ def generate_excel():
     thin = Side(border_style="thin", color="000000")
     border = Border(left=thin, right=thin, top=thin, bottom=thin)
 
+    # Add logo if exists
     if os.path.exists("logo.png"):
         try:
             img = XLImage("logo.png")
@@ -415,6 +374,7 @@ def generate_excel():
     ws.append([t[lang_key]['Prepared_By'], st.session_state.prepared_by])
     ws.append([])
 
+    # Header row
     header_row = ws.max_row + 1
     headers = ["Step", "Answer", "Extra / Notes"]
     fill = PatternFill(start_color="1E90FF", end_color="1E90FF", fill_type="solid")
@@ -425,6 +385,7 @@ def generate_excel():
         cell.alignment = Alignment(horizontal="center", vertical="center")
         cell.border = border
 
+    # Data rows
     for step, answer, extra in data_rows:
         ws.append([t[lang_key][step], answer, extra])
         r = ws.max_row
@@ -449,7 +410,7 @@ st.download_button(
 )
 
 # ---------------------------
-# Sidebar: JSON Backup / Restore + Reset with App Rerun
+# Sidebar: JSON Backup / Restore
 # ---------------------------
 with st.sidebar:
     st.markdown("## Backup / Restore")
@@ -474,12 +435,6 @@ with st.sidebar:
             restore_data = json.load(uploaded_file)
             for k, v in restore_data.items():
                 st.session_state[k] = v
-            st.experimental_rerun()
+            st.success("✅ Session restored from JSON!")
         except Exception as e:
             st.error(f"Error restoring JSON: {e}")
-
-    st.markdown("---")
-    st.markdown("### Reset All Data")
-
-    if st.button("🗑️ Clear All"):
-        st.experimental_rerun()  # refresh page to fully reset session_state
