@@ -1,5 +1,4 @@
-# --------------------------- Full 8D Report Assistant App ---------------------------
-
+# --------------------------- Part 1 ---------------------------
 import streamlit as st
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
@@ -63,7 +62,7 @@ st.markdown("<h1 style='text-align: center; color: #1E90FF;'>📋 8D Report Assi
 # ---------------------------
 # Version info
 # ---------------------------
-version_number = "v1.0.7"
+version_number = "v1.0.8"
 last_updated = "September 16, 2025"
 
 st.markdown(f"""
@@ -144,11 +143,10 @@ npqp_steps = [
 ]
 
 # ---------------------------
-# Initialize session state
+# Initialize session state safely
 # ---------------------------
 for step, _, _ in npqp_steps:
-    if step not in st.session_state:
-        st.session_state[step] = {"answer": "", "extra": ""}
+    st.session_state.setdefault(step, {"answer": "", "extra": ""})
 
 st.session_state.setdefault("report_date", datetime.datetime.today().strftime("%B %d, %Y"))
 st.session_state.setdefault("prepared_by", "")
@@ -156,13 +154,13 @@ st.session_state.setdefault("d5_occ_whys", [""] * 5)
 st.session_state.setdefault("d5_det_whys", [""] * 5)
 st.session_state.setdefault("d5_occ_selected", [])
 st.session_state.setdefault("d5_det_selected", [])
-
+# --------------------------- Part 2 ---------------------------
 # ---------------------------
-# Restore from URL (optional)
+# Restore from URL (st.query_params)
 # ---------------------------
-if "backup" in st.query_params:
+if "backup" in st.session_state:
     try:
-        data = json.loads(st.query_params["backup"][0])
+        data = st.session_state["backup"]
         for k, v in data.items():
             st.session_state[k] = v
     except Exception:
@@ -172,11 +170,11 @@ if "backup" in st.query_params:
 # Report info inputs
 # ---------------------------
 st.subheader(f"{t[lang_key]['Report_Date']}")
-st.session_state.report_date = st.text_input(f"{t[lang_key]['Report_Date']}", value=st.session_state.report_date, key="report_date")
-st.session_state.prepared_by = st.text_input(f"{t[lang_key]['Prepared_By']}", value=st.session_state.prepared_by, key="prepared_by")
+st.text_input(f"{t[lang_key]['Report_Date']}", value=st.session_state.report_date, key="report_date")
+st.text_input(f"{t[lang_key]['Prepared_By']}", value=st.session_state.prepared_by, key="prepared_by")
 
 # ---------------------------
-# Tabs
+# Tabs with status indicators
 # ---------------------------
 tab_labels = []
 for step, _, _ in npqp_steps:
@@ -188,22 +186,14 @@ for step, _, _ in npqp_steps:
 tabs = st.tabs(tab_labels)
 
 # ---------------------------
-# Render Tabs + D5 improvements
-# ---------------------------
-# (The Part 3 code I just sent goes here; insert the D5 dropdowns, free text, root cause, D6–D8, Excel download, sidebar)
-# ---------------------------
-
-# Paste the full Part 3 code here from my previous message.
-# --------------------------- Part 3 ---------------------------
-# ---------------------------
-# Render Tabs (continued)
+# Render Tabs (D1–D8)
 # ---------------------------
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     with tabs[i]:
         st.markdown(f"### {t[lang_key][step]}")
 
-        # D1–D4 normal text areas
-        if step not in ["D5", "D6", "D7", "D8"]:
+        # Non-D5/D6/D7/D8 steps
+        if step not in ["D5","D6","D7","D8"]:
             note_text = note_dict[lang_key]
             example_text = example_dict[lang_key]
             st.markdown(f"""
@@ -242,8 +232,9 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             </div>
             """, unsafe_allow_html=True)
 
+            # Use form to prevent reruns on each input
             with st.form(key="d5_form", clear_on_submit=False):
-                # Occurrence Analysis
+                # ---------- Occurrence Analysis ----------
                 st.markdown("#### Occurrence Analysis")
                 occurrence_categories = {
                     "Machine / Equipment-related": [
@@ -275,6 +266,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
 
                 selected_occ = []
                 for idx, val in enumerate(st.session_state.d5_occ_whys):
+                    # Build options excluding already selected
                     remaining_options = []
                     for cat, items in occurrence_categories.items():
                         for item in items:
@@ -300,9 +292,10 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
 
                 if st.form_submit_button("➕ Add another Occurrence Why", on_click=lambda: st.session_state.d5_occ_whys.append("")):
                     pass
+
                 st.session_state["d5_occ_selected"] = selected_occ
 
-                # Detection Analysis
+                # ---------- Detection Analysis ----------
                 st.markdown("#### Detection Analysis")
                 detection_categories = {
                     "QA / Inspection-related": [
@@ -345,10 +338,10 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
 
                 if st.form_submit_button("➕ Add another Detection Why", on_click=lambda: st.session_state.d5_det_whys.append("")):
                     pass
+
                 st.session_state["d5_det_selected"] = selected_det
 
-                # Suggested Root Causes
-                st.markdown("#### Suggested Root Cause")
+                # ---------- Suggested Root Cause ----------
                 suggested_occ_rc = (
                     "The root cause that allowed this issue to occur may be related to: "
                     + ", ".join(selected_occ)
@@ -370,9 +363,14 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                     value=suggested_det_rc,
                     key="root_cause_det"
                 )
-
-        # --------------------------- D6–D8 Tabs ---------------------------
-        elif step in ["D6", "D7", "D8"]:
+                # --------------------------- Part 3 ---------------------------
+# ---------------------------
+# D6–D8 Tabs
+# ---------------------------
+for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
+    if step in ["D6","D7","D8"]:
+        with tabs[i]:
+            st.markdown(f"### {t[lang_key][step]}")
             note_text = note_dict[lang_key]
             example_text = example_dict[lang_key]
             st.markdown(f"""
@@ -400,7 +398,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
 data_rows = [(step, st.session_state[step]["answer"], st.session_state[step]["extra"]) for step, _, _ in npqp_steps]
 
 # ---------------------------
-# Save / Download Excel
+# Generate Excel
 # ---------------------------
 def generate_excel():
     wb = Workbook()
@@ -410,6 +408,7 @@ def generate_excel():
     thin = Side(border_style="thin", color="000000")
     border = Border(left=thin, right=thin, top=thin, bottom=thin)
 
+    # Add logo if exists
     if os.path.exists("logo.png"):
         try:
             img = XLImage("logo.png")
@@ -460,7 +459,7 @@ st.download_button(
 )
 
 # ---------------------------
-# Sidebar: Backup / Restore + Clear All
+# Sidebar: JSON Backup / Restore + Reset
 # ---------------------------
 with st.sidebar:
     st.markdown("## Backup / Restore")
@@ -491,12 +490,15 @@ with st.sidebar:
     st.markdown("---")
     st.markdown("### Reset All Data")
     if st.button("🗑️ Clear All"):
+        # Reset all steps
         for step, _, _ in npqp_steps:
             st.session_state[step] = {"answer": "", "extra": ""}
+        # Reset D5-specific session_state
         st.session_state["d5_occ_whys"] = [""] * 5
         st.session_state["d5_det_whys"] = [""] * 5
         st.session_state["d5_occ_selected"] = []
         st.session_state["d5_det_selected"] = []
+        # Reset report info
         st.session_state["report_date"] = datetime.datetime.today().strftime("%B %d, %Y")
         st.session_state["prepared_by"] = ""
         st.success("✅ All data has been reset!")
