@@ -1,3 +1,4 @@
+# --------------------------- Part 1 ---------------------------
 import streamlit as st
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
@@ -103,6 +104,7 @@ t = {
         "FMEA_Failure": "Ocurrencia de falla FMEA"
     }
 }
+# --------------------------- Part 2 ---------------------------
 # ---------------------------
 # NPQP 8D steps with examples
 # ---------------------------
@@ -183,6 +185,7 @@ for step, _, _ in npqp_steps:
         tab_labels.append(f"🔴 {t[lang_key][step]}")
 
 tabs = st.tabs(tab_labels)
+# --------------------------- Part 3 ---------------------------
 # ---------------------------
 # Render Tabs (D1–D4)
 # ---------------------------
@@ -235,6 +238,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             </div>
             """, unsafe_allow_html=True)
 
+            # Use form to avoid reruns on every change
             with st.form(key="d5_form", clear_on_submit=False):
                 # ---------------------------
                 # Occurrence Section
@@ -347,7 +351,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                 st.session_state["d5_det_selected"] = selected_det
 
                 # ---------------------------
-                # Suggested Root Cause (dynamic)
+                # Suggested Root Cause (dynamic update)
                 # ---------------------------
                 suggested_occ_rc = (
                     "The root cause that allowed this issue to occur may be related to: "
@@ -360,17 +364,21 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                     if selected_det else ""
                 )
 
-                st.session_state.D5["answer"] = st.text_area(
-                    f"{t[lang_key]['Root_Cause_Occ']}",
-                    value=suggested_occ_rc,
-                    key="root_cause_occ"
-                )
-                st.text_area(
-                    f"{t[lang_key]['Root_Cause_Det']}",
-                    value=suggested_det_rc,
-                    key="root_cause_det"
-                )
-                # ---------------------------
+                # Directly update text areas
+                if "root_cause_occ" not in st.session_state:
+                    st.session_state["root_cause_occ"] = suggested_occ_rc
+                else:
+                    st.session_state["root_cause_occ"] = suggested_occ_rc
+
+                if "root_cause_det" not in st.session_state:
+                    st.session_state["root_cause_det"] = suggested_det_rc
+                else:
+                    st.session_state["root_cause_det"] = suggested_det_rc
+
+                st.text_area(f"{t[lang_key]['Root_Cause_Occ']}", value=st.session_state["root_cause_occ"], key="root_cause_occ")
+                st.text_area(f"{t[lang_key]['Root_Cause_Det']}", value=st.session_state["root_cause_det"], key="root_cause_det")
+                # --------------------------- Part 4 ---------------------------
+# ---------------------------
 # Render D6–D8 Tabs
 # ---------------------------
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
@@ -395,6 +403,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             💡 <b>{t[lang_key]['Example']}:</b> {example_text}
             </div>
             """, unsafe_allow_html=True)
+            
             st.session_state[step]["answer"] = st.text_area(
                 "Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}"
             )
