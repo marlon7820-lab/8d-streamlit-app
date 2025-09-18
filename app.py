@@ -184,6 +184,35 @@ for step, _, _ in npqp_steps:
 
 tabs = st.tabs(tab_labels)
 # ---------------------------
+# Render Tabs (D1–D4)
+# ---------------------------
+for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
+    with tabs[i]:
+        st.markdown(f"### {t[lang_key][step]}")
+
+        if step not in ["D5","D6","D7","D8"]:
+            note_text = note_dict[lang_key]
+            example_text = example_dict[lang_key]
+            st.markdown(f"""
+            <div style="
+                background-color:#b3e0ff; 
+                color:black; 
+                padding:12px; 
+                border-left:5px solid #1E90FF; 
+                border-radius:6px;
+                width:100%;
+                font-size:14px;
+                line-height:1.5;
+            ">
+            <b>{t[lang_key]['Training_Guidance']}:</b> {note_text}<br><br>
+            💡 <b>{t[lang_key]['Example']}:</b> {example_text}
+            </div>
+            """, unsafe_allow_html=True)
+            st.session_state[step]["answer"] = st.text_area(
+                "Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}"
+            )
+
+# ---------------------------
 # Render D5 Tab
 # ---------------------------
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
@@ -208,7 +237,9 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
 
             # Use form to avoid reruns on every change
             with st.form(key="d5_form", clear_on_submit=False):
+                # ---------------------------
                 # Occurrence Section
+                # ---------------------------
                 st.markdown("#### Occurrence Analysis")
                 occurrence_categories = {
                     "Machine / Equipment-related": [
@@ -268,7 +299,9 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
 
                 st.session_state["d5_occ_selected"] = selected_occ
 
+                # ---------------------------
                 # Detection Section
+                # ---------------------------
                 st.markdown("#### Detection Analysis")
                 detection_categories = {
                     "QA / Inspection-related": [
@@ -314,7 +347,9 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
 
                 st.session_state["d5_det_selected"] = selected_det
 
-                # Suggested Root Cause (Immediate)
+                # ---------------------------
+                # Suggested Root Cause
+                # ---------------------------
                 suggested_occ_rc = (
                     "The root cause that allowed this issue to occur may be related to: "
                     + ", ".join(selected_occ)
