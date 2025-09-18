@@ -185,16 +185,15 @@ for step, _, _ in npqp_steps:
         tab_labels.append(f"🔴 {t[lang_key][step]}")
 
 tabs = st.tabs(tab_labels)
-# --------------------------- Part 3 ---------------------------
+
 # ---------------------------
-# Render Tabs (D1–D8)
+# Render Tabs (D1–D4)
 # ---------------------------
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     with tabs[i]:
         st.markdown(f"### {t[lang_key][step]}")
 
-        # --------------------------- D1–D4 ---------------------------
-        if step not in ["D5", "D6", "D7", "D8"]:
+        if step not in ["D5","D6","D7","D8"]:
             note_text = note_dict[lang_key]
             example_text = example_dict[lang_key]
             st.markdown(f"""
@@ -212,13 +211,18 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             💡 <b>{t[lang_key]['Example']}:</b> {example_text}
             </div>
             """, unsafe_allow_html=True)
-
             st.session_state[step]["answer"] = st.text_area(
                 "Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}"
             )
+            # --------------------------- Part 3 ---------------------------
+# ---------------------------
+# Render D5 Tab
+# ---------------------------
+for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
+    if step == "D5":
+        with tabs[i]:
+            st.markdown(f"### {t[lang_key][step]}")
 
-        # --------------------------- D5 ---------------------------
-        elif step == "D5":
             st.markdown(f"""
             <div style="
                 background-color:#b3e0ff; 
@@ -234,11 +238,11 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             </div>
             """, unsafe_allow_html=True)
 
-            # ---------------------------
-            # D5 5-Why Analysis Form
-            # ---------------------------
+            # Use form to avoid reruns on every change
             with st.form(key="d5_form", clear_on_submit=False):
+                # ---------------------------
                 # Occurrence Section
+                # ---------------------------
                 st.markdown("#### Occurrence Analysis")
                 occurrence_categories = {
                     "Machine / Equipment-related": [
@@ -298,7 +302,9 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
 
                 st.session_state["d5_occ_selected"] = selected_occ
 
+                # ---------------------------
                 # Detection Section
+                # ---------------------------
                 st.markdown("#### Detection Analysis")
                 detection_categories = {
                     "QA / Inspection-related": [
@@ -344,8 +350,9 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
 
                 st.session_state["d5_det_selected"] = selected_det
 
+                # ---------------------------
                 # Suggested Root Cause
-                st.markdown("#### Suggested Root Cause")
+                # ---------------------------
                 suggested_occ_rc = (
                     "The root cause that allowed this issue to occur may be related to: "
                     + ", ".join(selected_occ)
@@ -369,15 +376,15 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                 )
                 # --------------------------- Part 4 ---------------------------
 # ---------------------------
-# D6–D8 Tabs
+# Render D6–D8 Tabs
 # ---------------------------
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
-    if step in ["D6", "D7", "D8"]:
+    if step in ["D6","D7","D8"]:
         with tabs[i]:
             st.markdown(f"### {t[lang_key][step]}")
+
             note_text = note_dict[lang_key]
             example_text = example_dict[lang_key]
-
             st.markdown(f"""
             <div style="
                 background-color:#b3e0ff; 
@@ -393,7 +400,6 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             💡 <b>{t[lang_key]['Example']}:</b> {example_text}
             </div>
             """, unsafe_allow_html=True)
-
             st.session_state[step]["answer"] = st.text_area(
                 "Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}"
             )
@@ -456,12 +462,39 @@ def generate_excel():
     wb.save(output)
     return output.getvalue()
 
-# ---------------------------
-# Download Button
-# ---------------------------
 st.download_button(
     label=f"{t[lang_key]['Download']}",
     data=generate_excel(),
     file_name=f"8D_Report_{st.session_state.report_date.replace(' ', '_')}.xlsx",
     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 )
+
+# ---------------------------
+# Sidebar: JSON Backup / Restore
+# ---------------------------
+with st.sidebar:
+    st.markdown("## Backup / Restore")
+
+    def generate_json():
+        save_data = {k: v for k, v in st.session_state.items() if not k.startswith("_")}
+        return json.dumps(save_data, indent=4)
+
+    st.download_button(
+        label="💾 Save Progress (JSON)",
+        data=generate_json(),
+        file_name=f"8D_Report_Backup_{st.session_state.report_date.replace(' ', '_')}.json",
+        mime="application/json"
+    )
+
+    st.markdown("---")
+    st.markdown("### Restore from JSON")
+
+    uploaded_file = st.file_uploader("Upload JSON file to restore", type="json")
+    if uploaded_file:
+        try:
+            restore_data = json.load(uploaded_file)
+            for k, v in restore_data.items():
+                st.session_state[k] = v
+            st.success("✅ Session restored from JSON!")
+        except Exception as e:
+            st.error(f"Error restoring JSON: {e}")
