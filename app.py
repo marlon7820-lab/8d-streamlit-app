@@ -185,7 +185,7 @@ for step, _, _ in npqp_steps:
         tab_labels.append(f"🔴 {t[lang_key][step]}")
 
 tabs = st.tabs(tab_labels)
-# --------------------------- Part 3 ---------------------------
+
 # ---------------------------
 # Render Tabs (D1–D4)
 # ---------------------------
@@ -214,14 +214,14 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             st.session_state[step]["answer"] = st.text_area(
                 "Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}"
             )
-
+            # --------------------------- Part 3 ---------------------------
 # ---------------------------
 # Render D5 Tab
 # ---------------------------
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     if step == "D5":
         with tabs[i]:
-            # Only one main title here (duplicate removed)
+            # Only one title now
             st.markdown(f"### {t[lang_key][step]}")
 
             st.markdown(f"""
@@ -241,7 +241,9 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
 
             # Use form to avoid reruns on every change
             with st.form(key="d5_form", clear_on_submit=False):
+                # ---------------------------
                 # Occurrence Section
+                # ---------------------------
                 st.markdown("#### Occurrence Analysis")
                 occurrence_categories = {
                     "Machine / Equipment-related": [
@@ -301,7 +303,9 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
 
                 st.session_state["d5_occ_selected"] = selected_occ
 
+                # ---------------------------
                 # Detection Section
+                # ---------------------------
                 st.markdown("#### Detection Analysis")
                 detection_categories = {
                     "QA / Inspection-related": [
@@ -347,7 +351,9 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
 
                 st.session_state["d5_det_selected"] = selected_det
 
+                # ---------------------------
                 # Suggested Root Cause
+                # ---------------------------
                 suggested_occ_rc = (
                     "The root cause that allowed this issue to occur may be related to: "
                     + ", ".join(selected_occ)
@@ -376,7 +382,6 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     if step in ["D6","D7","D8"]:
         with tabs[i]:
-            # Only one main title (duplicate removed)
             st.markdown(f"### {t[lang_key][step]}")
 
             note_text = note_dict[lang_key]
