@@ -213,7 +213,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             )
 
 # ---------------------------
-# Render D5 Tab
+# Render D5 Tab with dynamic root cause update
 # ---------------------------
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     if step == "D5":
@@ -348,7 +348,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                 st.session_state["d5_det_selected"] = selected_det
 
                 # ---------------------------
-                # Suggested Root Cause
+                # Suggested Root Cause dynamically updates
                 # ---------------------------
                 suggested_occ_rc = (
                     "The root cause that allowed this issue to occur may be related to: "
