@@ -104,7 +104,6 @@ t = {
         "FMEA_Failure": "Ocurrencia de falla FMEA"
     }
 }
-# --------------------------- Part 2 ---------------------------
 # ---------------------------
 # NPQP 8D steps with examples
 # ---------------------------
@@ -214,8 +213,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             st.session_state[step]["answer"] = st.text_area(
                 "Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}"
             )
-            # --------------------------- Part 3 ---------------------------
-# ---------------------------
+            # ---------------------------
 # Render D5 Tab
 # ---------------------------
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
@@ -374,8 +372,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                     value=suggested_det_rc,
                     key="root_cause_det"
                 )
-                # --------------------------- Part 4 ---------------------------
-# ---------------------------
+                # ---------------------------
 # Render D6–D8 Tabs
 # ---------------------------
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
@@ -383,6 +380,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
         with tabs[i]:
             st.markdown(f"### {t[lang_key][step]}")
 
+            # Display only guidance and example, no duplicated step title
             note_text = note_dict[lang_key]
             example_text = example_dict[lang_key]
             st.markdown(f"""
@@ -400,6 +398,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             💡 <b>{t[lang_key]['Example']}:</b> {example_text}
             </div>
             """, unsafe_allow_html=True)
+
             st.session_state[step]["answer"] = st.text_area(
                 "Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}"
             )
