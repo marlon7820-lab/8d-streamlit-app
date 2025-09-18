@@ -219,7 +219,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     if step == "D5":
         with tabs[i]:
-            st.markdown(f"### {t[lang_key][step]}")
+            # Removed duplicate title here
 
             st.markdown(f"""
             <div style="
@@ -378,9 +378,8 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     if step in ["D6","D7","D8"]:
         with tabs[i]:
-            st.markdown(f"### {t[lang_key][step]}")
+            # Removed duplicate title here
 
-            # Display only guidance and example, no duplicated step title
             note_text = note_dict[lang_key]
             example_text = example_dict[lang_key]
             st.markdown(f"""
@@ -398,102 +397,6 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             💡 <b>{t[lang_key]['Example']}:</b> {example_text}
             </div>
             """, unsafe_allow_html=True)
-
             st.session_state[step]["answer"] = st.text_area(
                 "Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}"
             )
-
-# ---------------------------
-# Collect answers for Excel
-# ---------------------------
-data_rows = [(step, st.session_state[step]["answer"], st.session_state[step]["extra"]) for step, _, _ in npqp_steps]
-
-# ---------------------------
-# Save / Download Excel
-# ---------------------------
-def generate_excel():
-    wb = Workbook()
-    ws = wb.active
-    ws.title = "NPQP 8D Report"
-
-    thin = Side(border_style="thin", color="000000")
-    border = Border(left=thin, right=thin, top=thin, bottom=thin)
-
-    if os.path.exists("logo.png"):
-        try:
-            img = XLImage("logo.png")
-            img.width = 140
-            img.height = 40
-            ws.add_image(img, "A1")
-        except:
-            pass
-
-    ws.merge_cells(start_row=3, start_column=1, end_row=3, end_column=3)
-    ws.cell(row=3, column=1, value="📋 8D Report Assistant").font = Font(bold=True, size=14)
-
-    ws.append([t[lang_key]['Report_Date'], st.session_state.report_date])
-    ws.append([t[lang_key]['Prepared_By'], st.session_state.prepared_by])
-    ws.append([])
-
-    header_row = ws.max_row + 1
-    headers = ["Step", "Answer", "Extra / Notes"]
-    fill = PatternFill(start_color="1E90FF", end_color="1E90FF", fill_type="solid")
-    for c_idx, h in enumerate(headers, start=1):
-        cell = ws.cell(row=header_row, column=c_idx, value=h)
-        cell.fill = fill
-        cell.font = Font(bold=True, color="FFFFFF")
-        cell.alignment = Alignment(horizontal="center", vertical="center")
-        cell.border = border
-
-    for step, answer, extra in data_rows:
-        ws.append([t[lang_key][step], answer, extra])
-        r = ws.max_row
-        for c in range(1, 4):
-            cell = ws.cell(row=r, column=c)
-            cell.alignment = Alignment(wrap_text=True, vertical="top")
-            cell.font = Font(bold=True if c == 2 else False)
-            cell.border = border
-
-    for col in range(1, 4):
-        ws.column_dimensions[get_column_letter(col)].width = 40
-
-    output = io.BytesIO()
-    wb.save(output)
-    return output.getvalue()
-
-st.download_button(
-    label=f"{t[lang_key]['Download']}",
-    data=generate_excel(),
-    file_name=f"8D_Report_{st.session_state.report_date.replace(' ', '_')}.xlsx",
-    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-)
-
-# ---------------------------
-# Sidebar: JSON Backup / Restore
-# ---------------------------
-with st.sidebar:
-    st.markdown("## Backup / Restore")
-
-    def generate_json():
-        save_data = {k: v for k, v in st.session_state.items() if not k.startswith("_")}
-        return json.dumps(save_data, indent=4)
-
-    st.download_button(
-        label="💾 Save Progress (JSON)",
-        data=generate_json(),
-        file_name=f"8D_Report_Backup_{st.session_state.report_date.replace(' ', '_')}.json",
-        mime="application/json"
-    )
-
-    st.markdown("---")
-    st.markdown("### Restore from JSON")
-
-    uploaded_file = st.file_uploader("Upload JSON file to restore", type="json")
-    if uploaded_file:
-        try:
-            restore_data = json.load(uploaded_file)
-            for k, v in restore_data.items():
-                st.session_state[k] = v
-            st.success("✅ Session restored from JSON!")
-        except Exception as e:
-            st.error(f"Error restoring JSON: {e}")
