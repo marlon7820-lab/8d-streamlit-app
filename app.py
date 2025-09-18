@@ -213,7 +213,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             )
 
 # ---------------------------
-# Render D5 Tab with dynamic root cause update
+# Render D5 Tab
 # ---------------------------
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     if step == "D5":
@@ -235,7 +235,6 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             </div>
             """, unsafe_allow_html=True)
 
-            # Use form to avoid reruns on every change
             with st.form(key="d5_form", clear_on_submit=False):
                 # ---------------------------
                 # Occurrence Section
@@ -348,7 +347,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                 st.session_state["d5_det_selected"] = selected_det
 
                 # ---------------------------
-                # Suggested Root Cause dynamically updates
+                # Suggested Root Cause (dynamic)
                 # ---------------------------
                 suggested_occ_rc = (
                     "The root cause that allowed this issue to occur may be related to: "
