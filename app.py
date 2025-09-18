@@ -221,7 +221,6 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     if step == "D5":
         with tabs[i]:
-            # Only one title now
             st.markdown(f"### {t[lang_key][step]}")
 
             st.markdown(f"""
@@ -375,7 +374,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                     value=suggested_det_rc,
                     key="root_cause_det"
                 )
-                # --------------------------- Part 4 ---------------------------
+
 # ---------------------------
 # Render D6–D8 Tabs
 # ---------------------------
@@ -404,7 +403,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             st.session_state[step]["answer"] = st.text_area(
                 "Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}"
             )
-
+            # --------------------------- Part 4 ---------------------------
 # ---------------------------
 # Collect answers for Excel
 # ---------------------------
