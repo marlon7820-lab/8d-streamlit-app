@@ -1,4 +1,3 @@
-# --------------------------- Part 1 ---------------------------
 import streamlit as st
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
@@ -104,7 +103,6 @@ t = {
         "FMEA_Failure": "Ocurrencia de falla FMEA"
     }
 }
-# --------------------------- Part 2 ---------------------------
 # ---------------------------
 # NPQP 8D steps with examples
 # ---------------------------
@@ -185,15 +183,14 @@ for step, _, _ in npqp_steps:
         tab_labels.append(f"🔴 {t[lang_key][step]}")
 
 tabs = st.tabs(tab_labels)
-
 # ---------------------------
 # Render Tabs (D1–D4)
 # ---------------------------
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     with tabs[i]:
-        st.markdown(f"### {t[lang_key][step]}")
-
         if step not in ["D5","D6","D7","D8"]:
+            st.markdown(f"### {t[lang_key][step]}")
+
             note_text = note_dict[lang_key]
             example_text = example_dict[lang_key]
             st.markdown(f"""
@@ -214,14 +211,14 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             st.session_state[step]["answer"] = st.text_area(
                 "Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}"
             )
-            # --------------------------- Part 3 ---------------------------
+
 # ---------------------------
-# Render D5 Tab
+# Render D5 Tab (no duplicated title)
 # ---------------------------
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     if step == "D5":
         with tabs[i]:
-            st.markdown(f"### {t[lang_key][step]}")
+            st.markdown(f"### {t[lang_key][step]}")  # Only once
 
             st.markdown(f"""
             <div style="
@@ -238,11 +235,8 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             </div>
             """, unsafe_allow_html=True)
 
-            # Use form to avoid reruns on every change
             with st.form(key="d5_form", clear_on_submit=False):
-                # ---------------------------
                 # Occurrence Section
-                # ---------------------------
                 st.markdown("#### Occurrence Analysis")
                 occurrence_categories = {
                     "Machine / Equipment-related": [
@@ -302,9 +296,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
 
                 st.session_state["d5_occ_selected"] = selected_occ
 
-                # ---------------------------
                 # Detection Section
-                # ---------------------------
                 st.markdown("#### Detection Analysis")
                 detection_categories = {
                     "QA / Inspection-related": [
@@ -350,9 +342,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
 
                 st.session_state["d5_det_selected"] = selected_det
 
-                # ---------------------------
                 # Suggested Root Cause
-                # ---------------------------
                 suggested_occ_rc = (
                     "The root cause that allowed this issue to occur may be related to: "
                     + ", ".join(selected_occ)
@@ -374,14 +364,13 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                     value=suggested_det_rc,
                     key="root_cause_det"
                 )
-
-# ---------------------------
-# Render D6–D8 Tabs
+                # ---------------------------
+# Render D6–D8 Tabs (titles appear only once)
 # ---------------------------
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     if step in ["D6","D7","D8"]:
         with tabs[i]:
-            st.markdown(f"### {t[lang_key][step]}")
+            st.markdown(f"### {t[lang_key][step]}")  # Only once
 
             note_text = note_dict[lang_key]
             example_text = example_dict[lang_key]
@@ -403,7 +392,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             st.session_state[step]["answer"] = st.text_area(
                 "Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}"
             )
-            # --------------------------- Part 4 ---------------------------
+
 # ---------------------------
 # Collect answers for Excel
 # ---------------------------
