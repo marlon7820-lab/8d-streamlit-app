@@ -83,6 +83,7 @@ t = {
         "FMEA_Failure": "Ocurrencia de falla FMEA"
     }
 }
+
 # ---------------------------
 # NPQP 8D steps with examples
 # ---------------------------
@@ -135,7 +136,6 @@ st.session_state.setdefault("d5_sys_whys", [""] * 5)
 st.session_state.setdefault("d5_occ_selected", [])
 st.session_state.setdefault("d5_det_selected", [])
 st.session_state.setdefault("d5_sys_selected", [])
-
 # ---------------------------
 # Restore from URL (st.query_params)
 # ---------------------------
@@ -153,6 +153,7 @@ if "backup" in st.query_params:
 st.subheader(f"{t[lang_key]['Report_Date']}")
 st.session_state.report_date = st.text_input(f"{t[lang_key]['Report_Date']}", value=st.session_state.report_date)
 st.session_state.prepared_by = st.text_input(f"{t[lang_key]['Prepared_By']}", value=st.session_state.prepared_by)
+
 # ---------------------------
 # Tabs with ✅ / 🔴 status indicators
 # ---------------------------
@@ -194,7 +195,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             )
 
 # ---------------------------
-# Render D5 Tab (Occurrence, Detection, Systemic) with live Root Cause suggestions
+# Render D5 Tab (Occurrence, Detection, Systemic)
 # ---------------------------
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     if step == "D5":
@@ -216,7 +217,6 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             """, unsafe_allow_html=True)
 
             with st.form(key="d5_form", clear_on_submit=False):
-
                 # ---------------------------
                 # Occurrence Section
                 # ---------------------------
@@ -248,8 +248,14 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                         "Regulatory or compliance changes"
                     ]
                 }
-
+                                # Initialize selection lists
                 selected_occ = []
+                selected_det = []
+                selected_sys = []
+
+                # ---------------------------
+                # Occurrence Why Inputs
+                # ---------------------------
                 for idx, val in enumerate(st.session_state.d5_occ_whys):
                     remaining_options = []
                     for cat, items in occurrence_categories.items():
@@ -268,20 +274,28 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                         index=options.index(current_value) if current_value in options else 0,
                         key=f"occ_{idx}"
                     )
-                    free_text = st.text_input(f"Or enter your own Occurrence Why {idx+1}", value=st.session_state.d5_occ_whys[idx], key=f"occ_txt_{idx}")
+                    free_text = st.text_input(
+                        f"Or enter your own Occurrence Why {idx+1}",
+                        value=st.session_state.d5_occ_whys[idx],
+                        key=f"occ_txt_{idx}"
+                    )
                     if free_text.strip():
                         st.session_state.d5_occ_whys[idx] = free_text
                     if st.session_state.d5_occ_whys[idx]:
                         selected_occ.append(st.session_state.d5_occ_whys[idx])
 
-                if st.form_submit_button("➕ Add another Occurrence Why"):
-                    st.session_state.d5_occ_whys.append("")
+                # Add button to append more Occurrence Whys
+                if st.form_submit_button(
+                    "➕ Add another Occurrence Why",
+                    on_click=lambda: st.session_state.d5_occ_whys.append("")
+                ):
+                    pass
 
                 st.session_state["d5_occ_selected"] = selected_occ
-                                # ---------------------------
-                # Detection Section
+
                 # ---------------------------
-                st.markdown("#### Detection Analysis")
+                # Detection Why Inputs
+                # ---------------------------
                 detection_categories = {
                     "QA / Inspection-related": [
                         "QA checklist incomplete",
@@ -296,7 +310,6 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                     ]
                 }
 
-                selected_det = []
                 for idx, val in enumerate(st.session_state.d5_det_whys):
                     remaining_options = []
                     for cat, items in detection_categories.items():
@@ -315,21 +328,26 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                         index=options_det.index(current_value) if current_value in options_det else 0,
                         key=f"det_{idx}"
                     )
-                    free_text_det = st.text_input(f"Or enter your own Detection Why {idx+1}", value=st.session_state.d5_det_whys[idx], key=f"det_txt_{idx}")
+                    free_text_det = st.text_input(
+                        f"Or enter your own Detection Why {idx+1}",
+                        value=st.session_state.d5_det_whys[idx],
+                        key=f"det_txt_{idx}"
+                    )
                     if free_text_det.strip():
                         st.session_state.d5_det_whys[idx] = free_text_det
                     if st.session_state.d5_det_whys[idx]:
                         selected_det.append(st.session_state.d5_det_whys[idx])
 
-                if st.form_submit_button("➕ Add another Detection Why"):
-                    st.session_state.d5_det_whys.append("")
+                if st.form_submit_button(
+                    "➕ Add another Detection Why",
+                    on_click=lambda: st.session_state.d5_det_whys.append("")
+                ):
+                    pass
 
                 st.session_state["d5_det_selected"] = selected_det
-
+                                # ---------------------------
+                # Systemic Why Inputs
                 # ---------------------------
-                # Systemic Section
-                # ---------------------------
-                st.markdown("#### Systemic Analysis")
                 systemic_categories = {
                     "Management / Organizational": [
                         "Lack of training or skill gaps",
@@ -350,7 +368,6 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                     ]
                 }
 
-                selected_sys = []
                 for idx, val in enumerate(st.session_state.d5_sys_whys):
                     remaining_options = []
                     for cat, items in systemic_categories.items():
@@ -369,41 +386,65 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                         index=options_sys.index(current_value) if current_value in options_sys else 0,
                         key=f"sys_{idx}"
                     )
-                    free_text_sys = st.text_input(f"Or enter your own Systemic Why {idx+1}", value=st.session_state.d5_sys_whys[idx], key=f"sys_txt_{idx}")
+                    free_text_sys = st.text_input(
+                        f"Or enter your own Systemic Why {idx+1}",
+                        value=st.session_state.d5_sys_whys[idx],
+                        key=f"sys_txt_{idx}"
+                    )
                     if free_text_sys.strip():
                         st.session_state.d5_sys_whys[idx] = free_text_sys
                     if st.session_state.d5_sys_whys[idx]:
                         selected_sys.append(st.session_state.d5_sys_whys[idx])
 
-                if st.form_submit_button("➕ Add another Systemic Why"):
-                    st.session_state.d5_sys_whys.append("")
+                # Add button to append more Systemic Whys
+                if st.form_submit_button(
+                    "➕ Add another Systemic Why",
+                    on_click=lambda: st.session_state.d5_sys_whys.append("")
+                ):
+                    pass
 
                 st.session_state["d5_sys_selected"] = selected_sys
 
                 # ---------------------------
-                # Suggested Root Causes (live update)
+                # Dynamic Root Cause Suggestions
                 # ---------------------------
-                st.session_state.D5["answer"] = ", ".join(selected_occ)
-                st.text_area(
+                suggested_occ_rc = (
+                    "The root cause that allowed this issue to occur may be related to: "
+                    + ", ".join(selected_occ)
+                    if selected_occ else ""
+                )
+                suggested_det_rc = (
+                    "The root cause that allowed this issue to escape detection may be related to: "
+                    + ", ".join(selected_det)
+                    if selected_det else ""
+                )
+                suggested_sys_rc = (
+                    "Systemic root causes may include: "
+                    + ", ".join(selected_sys)
+                    if selected_sys else ""
+                )
+
+                # Display suggestions in text areas
+                st.session_state.D5["answer"] = st.text_area(
                     f"{t[lang_key]['Root_Cause_Occ']}",
-                    value="The root cause that allowed this issue to occur may be related to: " + ", ".join(selected_occ) if selected_occ else "",
+                    value=suggested_occ_rc,
                     key="root_cause_occ"
                 )
                 st.text_area(
                     f"{t[lang_key]['Root_Cause_Det']}",
-                    value="The root cause that allowed this issue to escape detection may be related to: " + ", ".join(selected_det) if selected_det else "",
+                    value=suggested_det_rc,
                     key="root_cause_det"
                 )
                 st.text_area(
                     f"{t[lang_key]['Root_Cause_Sys']}",
-                    value="Systemic root causes may include: " + ", ".join(selected_sys) if selected_sys else "",
+                    value=suggested_sys_rc,
                     key="root_cause_sys"
                 )
                 # ---------------------------
 # Render D6–D8 Tabs
 # ---------------------------
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
-    if step in ["D6", "D7", "D8"]:
+    if step in ["D6","D7","D8"]:
         with tabs[i]:
             st.markdown(f"### {t[lang_key][step]}")
             note_text = note_dict[lang_key]
