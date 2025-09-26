@@ -9,7 +9,7 @@ import json
 import os
 
 # ---------------------------
-# Page config and branding
+# Page config
 # ---------------------------
 st.set_page_config(
     page_title="8D Report Assistant",
@@ -21,14 +21,14 @@ st.set_page_config(
 # App colors and styles
 # ---------------------------
 st.markdown("""
-    <style>
-    .stApp { background: linear-gradient(to right, #f0f8ff, #e6f2ff); color: #000000 !important; }
-    .stTabs [data-baseweb="tab"] { font-weight: bold; color: #000000 !important; }
-    textarea { background-color: #ffffff !important; border: 1px solid #1E90FF !important; border-radius: 5px; color: #000000 !important; }
-    .stInfo { background-color: #e6f7ff !important; border-left: 5px solid #1E90FF !important; color: #000000 !important; }
-    .css-1d391kg { color: #1E90FF !important; font-weight: bold !important; }
-    button[kind="primary"] { background-color: #87AFC7 !important; color: white !important; font-weight: bold; }
-    </style>
+<style>
+.stApp {background: linear-gradient(to right, #f0f8ff, #e6f2ff); color: #000000 !important;}
+.stTabs [data-baseweb="tab"] {font-weight: bold; color: #000000 !important;}
+textarea {background-color: #ffffff !important; border: 1px solid #1E90FF !important; border-radius: 5px; color: #000000 !important;}
+.stInfo {background-color: #e6f7ff !important; border-left: 5px solid #1E90FF !important; color: #000000 !important;}
+.css-1d391kg {color: #1E90FF !important; font-weight: bold !important;}
+button[kind="primary"] {background-color: #87AFC7 !important; color: white !important; font-weight: bold;}
+</style>
 """, unsafe_allow_html=True)
 
 # ---------------------------
@@ -41,7 +41,6 @@ st.markdown("<h1 style='text-align: center; color: #1E90FF;'>📋 8D Report Assi
 # ---------------------------
 version_number = "v1.0.7"
 last_updated = "September 14, 2025"
-
 st.markdown(f"""
 <hr style='border:1px solid #1E90FF; margin-top:10px; margin-bottom:5px;'>
 <p style='font-size:12px; font-style:italic; text-align:center; color:#555555;'>
@@ -55,6 +54,9 @@ Version {version_number} | Last updated: {last_updated}
 lang = st.selectbox("Select Language / Seleccionar Idioma", ["English", "Español"])
 lang_key = "en" if lang == "English" else "es"
 
+# ---------------------------
+# Language dictionary
+# ---------------------------
 t = {
     "en": {
         "D1": "D1: Concern Details", "D2": "D2: Similar Part Considerations",
@@ -62,8 +64,7 @@ t = {
         "D5": "D5: Final Analysis", "D6": "D6: Permanent Corrective Actions",
         "D7": "D7: Countermeasure Confirmation", "D8": "D8: Follow-up Activities (Lessons Learned / Recurrence Prevention)",
         "Report_Date": "Report Date", "Prepared_By": "Prepared By",
-        "Root_Cause_Occ": "Root Cause (Occurrence)", "Root_Cause_Det": "Root Cause (Detection)",
-        "Root_Cause_Sys": "Root Cause (Systemic)",
+        "Root_Cause_Occ": "Root Cause (Occurrence)", "Root_Cause_Det": "Root Cause (Detection)", "Root_Cause_Sys": "Root Cause (Systemic)",
         "Occurrence_Why": "Occurrence Why", "Detection_Why": "Detection Why", "Systemic_Why": "Systemic Why",
         "Save": "💾 Save 8D Report", "Download": "📥 Download XLSX",
         "Training_Guidance": "Training Guidance", "Example": "Example",
@@ -75,9 +76,8 @@ t = {
         "D5": "D5: Análisis final", "D6": "D6: Acciones correctivas permanentes",
         "D7": "D7: Confirmación de contramedidas", "D8": "D8: Actividades de seguimiento (Lecciones aprendidas / Prevención de recurrencia)",
         "Report_Date": "Fecha del informe", "Prepared_By": "Preparado por",
-        "Root_Cause_Occ": "Causa raíz (Ocurrencia)", "Root_Cause_Det": "Causa raíz (Detección)",
-        "Root_Cause_Sys": "Causa raíz (Sistémica)",
-        "Occurrence_Why": "Por qué Ocurrencia", "Detection_Why": "Por qué Detección", "Systemic_Why": "Por qué Sistémica",
+        "Root_Cause_Occ": "Causa raíz (Ocurrencia)", "Root_Cause_Det": "Causa raíz (Detección)", "Root_Cause_Sys": "Causa raíz (Sistémica)",
+        "Occurrence_Why": "Por qué Ocurrencia", "Detection_Why": "Por qué Detección", "Systemic_Why": "Por qué Sistémico",
         "Save": "💾 Guardar Informe 8D", "Download": "📥 Descargar XLSX",
         "Training_Guidance": "Guía de Entrenamiento", "Example": "Ejemplo",
         "FMEA_Failure": "Ocurrencia de falla FMEA"
@@ -130,13 +130,12 @@ for step, _, _ in npqp_steps:
 
 st.session_state.setdefault("report_date", datetime.datetime.today().strftime("%B %d, %Y"))
 st.session_state.setdefault("prepared_by", "")
-st.session_state.setdefault("d5_occ_whys", [""])
-st.session_state.setdefault("d5_det_whys", [""])
-st.session_state.setdefault("d5_sys_whys", [""])
+st.session_state.setdefault("d5_occ_whys", [""] * 5)
+st.session_state.setdefault("d5_det_whys", [""] * 5)
+st.session_state.setdefault("d5_sys_whys", [""] * 5)  # ✅ Systemic added
 st.session_state.setdefault("d5_occ_selected", [])
 st.session_state.setdefault("d5_det_selected", [])
-st.session_state.setdefault("d5_sys_selected", [])
-
+st.session_state.setdefault("d5_sys_selected", [])  # ✅ Systemic selected
 # ---------------------------
 # Restore from URL (st.query_params)
 # ---------------------------
@@ -147,8 +146,9 @@ if "backup" in st.query_params:
             st.session_state[k] = v
     except Exception:
         pass
-        # ---------------------------
-# Report info (date & prepared by)
+
+# ---------------------------
+# Report info
 # ---------------------------
 st.subheader(f"{t[lang_key]['Report_Date']}")
 st.session_state.report_date = st.text_input(f"{t[lang_key]['Report_Date']}", value=st.session_state.report_date)
@@ -167,13 +167,12 @@ for step, _, _ in npqp_steps:
 tabs = st.tabs(tab_labels)
 
 # ---------------------------
-# Render Tabs D1–D4
+# Render D1–D4 Tabs
 # ---------------------------
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
-    if step not in ["D5", "D6", "D7", "D8"]:
+    if step not in ["D5","D6","D7","D8"]:
         with tabs[i]:
             st.markdown(f"### {t[lang_key][step]}")
-
             note_text = note_dict[lang_key]
             example_text = example_dict[lang_key]
             st.markdown(f"""
@@ -191,18 +190,17 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             💡 <b>{t[lang_key]['Example']}:</b> {example_text}
             </div>
             """, unsafe_allow_html=True)
-
             st.session_state[step]["answer"] = st.text_area(
                 "Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}"
             )
-            # ---------------------------
-# Render D5 Tab with Occurrence, Detection, Systemic
+
+# ---------------------------
+# Render D5 Tab (Occurrence, Detection, Systemic)
 # ---------------------------
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     if step == "D5":
         with tabs[i]:
             st.markdown(f"### {t[lang_key][step]}")
-
             st.markdown(f"""
             <div style="
                 background-color:#b3e0ff; 
@@ -280,8 +278,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                     pass
 
                 st.session_state["d5_occ_selected"] = selected_occ
-
-                # ---------------------------
+                                # ---------------------------
                 # Detection Section
                 # ---------------------------
                 st.markdown("#### Detection Analysis")
@@ -328,7 +325,8 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                     pass
 
                 st.session_state["d5_det_selected"] = selected_det
-                                # ---------------------------
+
+                # ---------------------------
                 # Systemic Section
                 # ---------------------------
                 st.markdown("#### Systemic Analysis")
@@ -416,15 +414,13 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                     value=suggested_sys_rc,
                     key="root_cause_sys"
                 )
-
-# ---------------------------
-# Render D6–D8 Tabs (titles appear only once)
+                # ---------------------------
+# Render D6–D8 Tabs
 # ---------------------------
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
-    if step in ["D6", "D7", "D8"]:
+    if step in ["D6","D7","D8"]:
         with tabs[i]:
-            st.markdown(f"### {t[lang_key][step]}")  # Only once
-
+            st.markdown(f"### {t[lang_key][step]}")
             note_text = note_dict[lang_key]
             example_text = example_dict[lang_key]
             st.markdown(f"""
@@ -442,7 +438,6 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             💡 <b>{t[lang_key]['Example']}:</b> {example_text}
             </div>
             """, unsafe_allow_html=True)
-
             st.session_state[step]["answer"] = st.text_area(
                 "Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}"
             )
@@ -475,12 +470,11 @@ def generate_excel():
     ws.merge_cells(start_row=3, start_column=1, end_row=3, end_column=3)
     ws.cell(row=3, column=1, value="📋 8D Report Assistant").font = Font(bold=True, size=14)
 
-    # Report info
     ws.append([t[lang_key]['Report_Date'], st.session_state.report_date])
     ws.append([t[lang_key]['Prepared_By'], st.session_state.prepared_by])
     ws.append([])
 
-    # Headers
+    # Header row
     header_row = ws.max_row + 1
     headers = ["Step", "Answer", "Extra / Notes"]
     fill = PatternFill(start_color="1E90FF", end_color="1E90FF", fill_type="solid")
@@ -491,7 +485,7 @@ def generate_excel():
         cell.alignment = Alignment(horizontal="center", vertical="center")
         cell.border = border
 
-    # Data rows
+    # Append step answers
     for step, answer, extra in data_rows:
         ws.append([t[lang_key][step], answer, extra])
         r = ws.max_row
@@ -501,7 +495,6 @@ def generate_excel():
             cell.font = Font(bold=True if c == 2 else False)
             cell.border = border
 
-    # Set column widths
     for col in range(1, 4):
         ws.column_dimensions[get_column_letter(col)].width = 40
 
