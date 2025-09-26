@@ -170,7 +170,7 @@ tabs = st.tabs(tab_labels)
 # Render D1–D4 Tabs
 # ---------------------------
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
-    if step not in ["D5", "D6", "D7", "D8"]:
+    if step not in ["D5","D6","D7","D8"]:
         with tabs[i]:
             st.markdown(f"### {t[lang_key][step]}")
             note_text = note_dict[lang_key]
@@ -267,20 +267,14 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                         index=options.index(current_value) if current_value in options else 0,
                         key=f"occ_{idx}"
                     )
-                    free_text = st.text_input(
-                        f"Or enter your own Occurrence Why {idx+1}",
-                        value=st.session_state.d5_occ_whys[idx],
-                        key=f"occ_txt_{idx}"
-                    )
+                    free_text = st.text_input(f"Or enter your own Occurrence Why {idx+1}", value=st.session_state.d5_occ_whys[idx], key=f"occ_txt_{idx}")
                     if free_text.strip():
                         st.session_state.d5_occ_whys[idx] = free_text
                     if st.session_state.d5_occ_whys[idx]:
                         selected_occ.append(st.session_state.d5_occ_whys[idx])
 
-                # ✅ FIX: safe way to add extra “Why”
-                add_occ = st.form_submit_button("➕ Add another Occurrence Why")
-                if add_occ:
-                    st.session_state.d5_occ_whys.append("")
+                if st.form_submit_button("➕ Add another Occurrence Why", on_click=lambda: st.session_state.d5_occ_whys.append("")):
+                    pass
 
                 st.session_state["d5_occ_selected"] = selected_occ
 
@@ -321,24 +315,17 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                         index=options_det.index(current_value) if current_value in options_det else 0,
                         key=f"det_{idx}"
                     )
-                    free_text_det = st.text_input(
-                        f"Or enter your own Detection Why {idx+1}",
-                        value=st.session_state.d5_det_whys[idx],
-                        key=f"det_txt_{idx}"
-                    )
+                    free_text_det = st.text_input(f"Or enter your own Detection Why {idx+1}", value=st.session_state.d5_det_whys[idx], key=f"det_txt_{idx}")
                     if free_text_det.strip():
                         st.session_state.d5_det_whys[idx] = free_text_det
                     if st.session_state.d5_det_whys[idx]:
                         selected_det.append(st.session_state.d5_det_whys[idx])
 
-                # ✅ FIX
-                add_det = st.form_submit_button("➕ Add another Detection Why")
-                if add_det:
-                    st.session_state.d5_det_whys.append("")
+                if st.form_submit_button("➕ Add another Detection Why", on_click=lambda: st.session_state.d5_det_whys.append("")):
+                    pass
 
                 st.session_state["d5_det_selected"] = selected_det
-
-                # ---------------------------
+                                # ---------------------------
                 # Systemic Section
                 # ---------------------------
                 st.markdown("#### Systemic Analysis")
@@ -381,40 +368,28 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                         index=options_sys.index(current_value) if current_value in options_sys else 0,
                         key=f"sys_{idx}"
                     )
-                    free_text_sys = st.text_input(
-                        f"Or enter your own Systemic Why {idx+1}",
-                        value=st.session_state.d5_sys_whys[idx],
-                        key=f"sys_txt_{idx}"
-                    )
+                    free_text_sys = st.text_input(f"Or enter your own Systemic Why {idx+1}", value=st.session_state.d5_sys_whys[idx], key=f"sys_txt_{idx}")
                     if free_text_sys.strip():
                         st.session_state.d5_sys_whys[idx] = free_text_sys
                     if st.session_state.d5_sys_whys[idx]:
                         selected_sys.append(st.session_state.d5_sys_whys[idx])
 
-                # ✅ FIX
-                add_sys = st.form_submit_button("➕ Add another Systemic Why")
-                if add_sys:
-                    st.session_state.d5_sys_whys.append("")
+                if st.form_submit_button("➕ Add another Systemic Why", on_click=lambda: st.session_state.d5_sys_whys.append("")):
+                    pass
 
                 st.session_state["d5_sys_selected"] = selected_sys
 
                 # ---------------------------
-                # Suggested Root Causes
+                # Smart Root Cause Suggestions
                 # ---------------------------
-                suggested_occ_rc = (
-                    "The root cause that allowed this issue to occur may be related to: "
-                    + ", ".join(selected_occ)
-                    if selected_occ else ""
-                )
-                suggested_det_rc = (
-                    "The root cause that allowed this issue to escape detection may be related to: "
-                    + ", ".join(selected_det)
-                    if selected_det else ""
-                )
-                suggested_sys_rc = (
-                    "Systemic root causes may include: "
-                    + ", ".join(selected_sys)
-                    if selected_sys else ""
+                def generate_suggested_rc(occ, det, sys):
+                    occ_text = f"The root cause that allowed this issue to occur may be related to: {', '.join(occ)}" if occ else ""
+                    det_text = f"The root cause that allowed this issue to escape detection may be related to: {', '.join(det)}" if det else ""
+                    sys_text = f"Systemic root causes may include: {', '.join(sys)}" if sys else ""
+                    return occ_text, det_text, sys_text
+
+                suggested_occ_rc, suggested_det_rc, suggested_sys_rc = generate_suggested_rc(
+                    selected_occ, selected_det, selected_sys
                 )
 
                 st.session_state.D5["answer"] = st.text_area(
@@ -432,7 +407,8 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                     value=suggested_sys_rc,
                     key="root_cause_sys"
                 )
-                # ---------------------------
+
+# ---------------------------
 # Render D6–D8 Tabs
 # ---------------------------
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
@@ -457,18 +433,12 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             </div>
             """, unsafe_allow_html=True)
             st.session_state[step]["answer"] = st.text_area(
-                "Your Answer",
-                value=st.session_state[step]["answer"],
-                key=f"ans_{step}"
+                "Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}"
             )
-
-# ---------------------------
+            # ---------------------------
 # Collect answers for Excel
 # ---------------------------
-data_rows = [
-    (step, st.session_state[step]["answer"], st.session_state[step]["extra"])
-    for step, _, _ in npqp_steps
-]
+data_rows = [(step, st.session_state[step]["answer"], st.session_state[step]["extra"]) for step, _, _ in npqp_steps]
 
 # ---------------------------
 # Save / Download Excel
@@ -526,27 +496,23 @@ def generate_excel():
     wb.save(output)
     return output.getvalue()
 
-# ---------------------------
-# Download button
-# ---------------------------
 st.download_button(
     label=f"{t[lang_key]['Download']}",
     data=generate_excel(),
     file_name=f"8D_Report_{st.session_state.report_date.replace(' ', '_')}.xlsx",
     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 )
+
 # ---------------------------
 # Sidebar: JSON Backup / Restore
 # ---------------------------
 with st.sidebar:
     st.markdown("## Backup / Restore")
 
-    # Function to generate JSON of session state
     def generate_json():
         save_data = {k: v for k, v in st.session_state.items() if not k.startswith("_")}
         return json.dumps(save_data, indent=4)
 
-    # Download button to save progress
     st.download_button(
         label="💾 Save Progress (JSON)",
         data=generate_json(),
@@ -557,7 +523,6 @@ with st.sidebar:
     st.markdown("---")
     st.markdown("### Restore from JSON")
 
-    # File uploader to restore session from JSON
     uploaded_file = st.file_uploader("Upload JSON file to restore", type="json")
     if uploaded_file:
         try:
