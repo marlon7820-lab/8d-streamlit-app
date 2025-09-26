@@ -131,7 +131,7 @@ st.session_state.setdefault("report_date", datetime.datetime.today().strftime("%
 st.session_state.setdefault("prepared_by", "")
 st.session_state.setdefault("d5_occ_whys", [""] * 5)
 st.session_state.setdefault("d5_det_whys", [""] * 5)
-st.session_state.setdefault("d5_sys_whys", [""] * 5)
+st.session_state.setdefault("d5_sys_whys", [""] * 5)  # Systemic whys
 st.session_state.setdefault("d5_occ_selected", [])
 st.session_state.setdefault("d5_det_selected", [])
 st.session_state.setdefault("d5_sys_selected", [])
@@ -139,7 +139,7 @@ st.session_state.setdefault("d5_sys_selected", [])
 # ---------------------------
 # Restore from URL (st.query_params)
 # ---------------------------
-if "backup" in st.query_params:
+if "backup" in st.session_params:
     try:
         data = json.loads(st.query_params["backup"][0])
         for k, v in data.items():
@@ -194,7 +194,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                 "Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}"
             )
             # ---------------------------
-# Render D5 Tab (Occurrence, Detection, Systemic) with smart suggestions
+# Render D5 Tab (Occurrence, Detection, Systemic) with live Root Cause suggestions
 # ---------------------------
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     if step == "D5":
@@ -217,7 +217,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
 
             with st.form(key="d5_form", clear_on_submit=False):
                 # ---------------------------
-                # Occurrence Section
+                # Occurrence Analysis
                 # ---------------------------
                 st.markdown("#### Occurrence Analysis")
                 occurrence_categories = {
@@ -248,6 +248,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                     ]
                 }
 
+                # Track selected reasons for Root Cause suggestions
                 selected_occ = []
                 for idx, val in enumerate(st.session_state.d5_occ_whys):
                     remaining_options = []
@@ -267,7 +268,9 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                         index=options.index(current_value) if current_value in options else 0,
                         key=f"occ_{idx}"
                     )
-                    free_text = st.text_input(f"Or enter your own Occurrence Why {idx+1}", value=st.session_state.d5_occ_whys[idx], key=f"occ_txt_{idx}")
+                    free_text = st.text_input(f"Or enter your own Occurrence Why {idx+1}",
+                                              value=st.session_state.d5_occ_whys[idx],
+                                              key=f"occ_txt_{idx}")
                     if free_text.strip():
                         st.session_state.d5_occ_whys[idx] = free_text
                     if st.session_state.d5_occ_whys[idx]:
@@ -278,7 +281,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
 
                 st.session_state["d5_occ_selected"] = selected_occ
                                 # ---------------------------
-                # Detection Section
+                # Detection Analysis
                 # ---------------------------
                 st.markdown("#### Detection Analysis")
                 detection_categories = {
@@ -314,7 +317,9 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                         index=options_det.index(current_value) if current_value in options_det else 0,
                         key=f"det_{idx}"
                     )
-                    free_text_det = st.text_input(f"Or enter your own Detection Why {idx+1}", value=st.session_state.d5_det_whys[idx], key=f"det_txt_{idx}")
+                    free_text_det = st.text_input(f"Or enter your own Detection Why {idx+1}",
+                                                  value=st.session_state.d5_det_whys[idx],
+                                                  key=f"det_txt_{idx}")
                     if free_text_det.strip():
                         st.session_state.d5_det_whys[idx] = free_text_det
                     if st.session_state.d5_det_whys[idx]:
@@ -326,7 +331,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                 st.session_state["d5_det_selected"] = selected_det
 
                 # ---------------------------
-                # Systemic Section
+                # Systemic Analysis
                 # ---------------------------
                 st.markdown("#### Systemic Analysis")
                 systemic_categories = {
@@ -368,7 +373,9 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                         index=options_sys.index(current_value) if current_value in options_sys else 0,
                         key=f"sys_{idx}"
                     )
-                    free_text_sys = st.text_input(f"Or enter your own Systemic Why {idx+1}", value=st.session_state.d5_sys_whys[idx], key=f"sys_txt_{idx}")
+                    free_text_sys = st.text_input(f"Or enter your own Systemic Why {idx+1}",
+                                                  value=st.session_state.d5_sys_whys[idx],
+                                                  key=f"sys_txt_{idx}")
                     if free_text_sys.strip():
                         st.session_state.d5_sys_whys[idx] = free_text_sys
                     if st.session_state.d5_sys_whys[idx]:
@@ -380,47 +387,33 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                 st.session_state["d5_sys_selected"] = selected_sys
 
                 # ---------------------------
-                # Suggested Root Causes
+                # Update Root Cause Text Areas live
                 # ---------------------------
-                suggested_occ_rc = (
-                    "The root cause that allowed this issue to occur may be related to: "
-                    + ", ".join(selected_occ)
-                    if selected_occ else ""
-                )
-                suggested_det_rc = (
-                    "The root cause that allowed this issue to escape detection may be related to: "
-                    + ", ".join(selected_det)
-                    if selected_det else ""
-                )
-                suggested_sys_rc = (
-                    "Systemic root causes may include: "
-                    + ", ".join(selected_sys)
-                    if selected_sys else ""
+                st.session_state.D5["answer"] = st.text_area(
+                    f"{t[lang_key]['Root_Cause_Occ']}",
+                    value=("The root cause that allowed this issue to occur may be related to: "
+                           + ", ".join(selected_occ)) if selected_occ else "",
+                    key="root_cause_occ"
                 )
 
                 st.text_area(
-                    f"{t[lang_key]['Root_Cause_Occ']}",
-                    value=suggested_occ_rc,
-                    key="root_cause_occ",
-                    height=80
-                )
-                st.text_area(
                     f"{t[lang_key]['Root_Cause_Det']}",
-                    value=suggested_det_rc,
-                    key="root_cause_det",
-                    height=80
+                    value=("The root cause that allowed this issue to escape detection may be related to: "
+                           + ", ".join(selected_det)) if selected_det else "",
+                    key="root_cause_det"
                 )
+
                 st.text_area(
                     f"{t[lang_key]['Root_Cause_Sys']}",
-                    value=suggested_sys_rc,
-                    key="root_cause_sys",
-                    height=80
+                    value=("Systemic root causes may include: "
+                           + ", ".join(selected_sys)) if selected_sys else "",
+                    key="root_cause_sys"
                 )
                 # ---------------------------
 # Render D6–D8 Tabs
 # ---------------------------
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
-    if step in ["D6","D7","D8"]:
+    if step in ["D6", "D7", "D8"]:
         with tabs[i]:
             st.markdown(f"### {t[lang_key][step]}")
             note_text = note_dict[lang_key]
