@@ -83,7 +83,6 @@ t = {
         "FMEA_Failure": "Ocurrencia de falla FMEA"
     }
 }
-
 # ---------------------------
 # NPQP 8D steps with examples
 # ---------------------------
@@ -120,6 +119,7 @@ npqp_steps = [
      {"en":"Update SOPs, PFMEA, work instructions, and maintenance procedures.",
       "es":"Actualizar SOPs, PFMEA, instrucciones de trabajo y procedimientos de mantenimiento."})
 ]
+
 # ---------------------------
 # Initialize session state
 # ---------------------------
@@ -165,7 +165,6 @@ for step, _, _ in npqp_steps:
         tab_labels.append(f"🔴 {t[lang_key][step]}")
 
 tabs = st.tabs(tab_labels)
-
 # ---------------------------
 # Render D1–D4 Tabs
 # ---------------------------
@@ -193,8 +192,9 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             st.session_state[step]["answer"] = st.text_area(
                 "Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}"
             )
-            # ---------------------------
-# Render D5 Tab (Occurrence, Detection, Systemic)
+
+# ---------------------------
+# Render D5 Tab (Occurrence, Detection, Systemic) with dynamic suggestions
 # ---------------------------
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     if step == "D5":
@@ -215,6 +215,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             </div>
             """, unsafe_allow_html=True)
 
+            # Use a single form to ensure proper on_click behavior
             with st.form(key="d5_form", clear_on_submit=False):
                 # ---------------------------
                 # Occurrence Section
@@ -273,9 +274,9 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                     if st.session_state.d5_occ_whys[idx]:
                         selected_occ.append(st.session_state.d5_occ_whys[idx])
 
+                # Button to add more Occurrence Why entries
                 if st.form_submit_button("➕ Add another Occurrence Why", on_click=lambda: st.session_state.d5_occ_whys.append("")):
                     pass
-
                 st.session_state["d5_occ_selected"] = selected_occ
 
                 # ---------------------------
@@ -323,7 +324,6 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
 
                 if st.form_submit_button("➕ Add another Detection Why", on_click=lambda: st.session_state.d5_det_whys.append("")):
                     pass
-
                 st.session_state["d5_det_selected"] = selected_det
                                 # ---------------------------
                 # Systemic Section
@@ -376,20 +376,25 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
 
                 if st.form_submit_button("➕ Add another Systemic Why", on_click=lambda: st.session_state.d5_sys_whys.append("")):
                     pass
-
                 st.session_state["d5_sys_selected"] = selected_sys
 
                 # ---------------------------
-                # Smart Root Cause Suggestions
+                # Suggested Root Causes (dynamic)
                 # ---------------------------
-                def generate_suggested_rc(occ, det, sys):
-                    occ_text = f"The root cause that allowed this issue to occur may be related to: {', '.join(occ)}" if occ else ""
-                    det_text = f"The root cause that allowed this issue to escape detection may be related to: {', '.join(det)}" if det else ""
-                    sys_text = f"Systemic root causes may include: {', '.join(sys)}" if sys else ""
-                    return occ_text, det_text, sys_text
-
-                suggested_occ_rc, suggested_det_rc, suggested_sys_rc = generate_suggested_rc(
-                    selected_occ, selected_det, selected_sys
+                suggested_occ_rc = (
+                    "The root cause that allowed this issue to occur may be related to: "
+                    + ", ".join(selected_occ)
+                    if selected_occ else ""
+                )
+                suggested_det_rc = (
+                    "The root cause that allowed this issue to escape detection may be related to: "
+                    + ", ".join(selected_det)
+                    if selected_det else ""
+                )
+                suggested_sys_rc = (
+                    "Systemic root causes may include: "
+                    + ", ".join(selected_sys)
+                    if selected_sys else ""
                 )
 
                 st.session_state.D5["answer"] = st.text_area(
