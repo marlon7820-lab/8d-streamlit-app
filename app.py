@@ -120,7 +120,6 @@ npqp_steps = [
      {"en":"Update SOPs, PFMEA, work instructions, and maintenance procedures.",
       "es":"Actualizar SOPs, PFMEA, instrucciones de trabajo y procedimientos de mantenimiento."})
 ]
-
 # ---------------------------
 # Initialize session state
 # ---------------------------
@@ -132,10 +131,10 @@ st.session_state.setdefault("report_date", datetime.datetime.today().strftime("%
 st.session_state.setdefault("prepared_by", "")
 st.session_state.setdefault("d5_occ_whys", [""] * 5)
 st.session_state.setdefault("d5_det_whys", [""] * 5)
-st.session_state.setdefault("d5_sys_whys", [""] * 5)
+st.session_state.setdefault("d5_sys_whys", [""] * 5)  # ✅ Systemic added
 st.session_state.setdefault("d5_occ_selected", [])
 st.session_state.setdefault("d5_det_selected", [])
-st.session_state.setdefault("d5_sys_selected", [])
+st.session_state.setdefault("d5_sys_selected", [])  # ✅ Systemic selected
 
 # ---------------------------
 # Restore from URL (st.query_params)
@@ -147,7 +146,8 @@ if "backup" in st.query_params:
             st.session_state[k] = v
     except Exception:
         pass
-        # ---------------------------
+
+# ---------------------------
 # Report info
 # ---------------------------
 st.subheader(f"{t[lang_key]['Report_Date']}")
@@ -193,9 +193,8 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             st.session_state[step]["answer"] = st.text_area(
                 "Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}"
             )
-
-# ---------------------------
-# Render D5 Tab (Occurrence, Detection, Systemic) with smart RC suggestions
+            # ---------------------------
+# Render D5 Tab (Occurrence, Detection, Systemic)
 # ---------------------------
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     if step == "D5":
@@ -248,7 +247,8 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                         "Regulatory or compliance changes"
                     ]
                 }
-                                selected_occ = []
+
+                selected_occ = []
                 for idx, val in enumerate(st.session_state.d5_occ_whys):
                     remaining_options = []
                     for cat, items in occurrence_categories.items():
@@ -277,8 +277,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                     pass
 
                 st.session_state["d5_occ_selected"] = selected_occ
-
-                # ---------------------------
+                                # ---------------------------
                 # Detection Section
                 # ---------------------------
                 st.markdown("#### Detection Analysis")
@@ -325,7 +324,8 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                     pass
 
                 st.session_state["d5_det_selected"] = selected_det
-                                # ---------------------------
+
+                # ---------------------------
                 # Systemic Section
                 # ---------------------------
                 st.markdown("#### Systemic Analysis")
@@ -380,7 +380,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                 st.session_state["d5_sys_selected"] = selected_sys
 
                 # ---------------------------
-                # Suggested Root Causes (SMART LIVE UPDATE)
+                # Suggested Root Causes (dynamic)
                 # ---------------------------
                 suggested_occ_rc = (
                     "The root cause that allowed this issue to occur may be related to: "
@@ -398,10 +398,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                     if selected_sys else ""
                 )
 
-                # Update D5 answers live
                 st.session_state.D5["answer"] = f"{suggested_occ_rc}\n{suggested_det_rc}\n{suggested_sys_rc}"
-
-                # Display root cause suggestions
                 st.text_area(
                     f"{t[lang_key]['Root_Cause_Occ']}",
                     value=suggested_occ_rc,
