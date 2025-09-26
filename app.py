@@ -83,7 +83,6 @@ t = {
         "FMEA_Failure": "Ocurrencia de falla FMEA"
     }
 }
-
 # ---------------------------
 # NPQP 8D steps with examples
 # ---------------------------
@@ -136,6 +135,7 @@ st.session_state.setdefault("d5_sys_whys", [""] * 5)  # ✅ Systemic added
 st.session_state.setdefault("d5_occ_selected", [])
 st.session_state.setdefault("d5_det_selected", [])
 st.session_state.setdefault("d5_sys_selected", [])  # ✅ Systemic selected
+
 # ---------------------------
 # Restore from URL (st.query_params)
 # ---------------------------
@@ -195,7 +195,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             )
 
 # ---------------------------
-# Render D5 Tab (Occurrence, Detection, Systemic)
+# Render D5 Tab (Occurrence, Detection, Systemic) with smart root cause
 # ---------------------------
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     if step == "D5":
@@ -214,9 +214,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             ">
             <b>{t[lang_key]['Training_Guidance']}:</b> {note_dict[lang_key]}
             </div>
-            """, unsafe_allow_html=True)
-
-            with st.form(key="d5_form", clear_on_submit=False):
+                        with st.form(key="d5_form", clear_on_submit=False):
                 # ---------------------------
                 # Occurrence Section
                 # ---------------------------
@@ -278,7 +276,8 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                     pass
 
                 st.session_state["d5_occ_selected"] = selected_occ
-                                # ---------------------------
+
+                # ---------------------------
                 # Detection Section
                 # ---------------------------
                 st.markdown("#### Detection Analysis")
@@ -379,42 +378,58 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                     pass
 
                 st.session_state["d5_sys_selected"] = selected_sys
+                            # ---------------------------
+                # Suggested Root Causes (Smart Suggestions)
+                # ---------------------------
+                def generate_root_cause(selected_list, category_type):
+                    if not selected_list:
+                        return ""
+                    if category_type == "Occurrence":
+                        return (
+                            "The root cause that allowed this issue to occur may be related to: "
+                            + "; ".join(selected_list)
+                        )
+                    elif category_type == "Detection":
+                        return (
+                            "The root cause that allowed this issue to escape detection may be related to: "
+                            + "; ".join(selected_list)
+                        )
+                    elif category_type == "Systemic":
+                        return (
+                            "Potential systemic root causes include: "
+                            + "; ".join(selected_list)
+                        )
+                    return ""
+
+                suggested_occ_rc = generate_root_cause(selected_occ, "Occurrence")
+                suggested_det_rc = generate_root_cause(selected_det, "Detection")
+                suggested_sys_rc = generate_root_cause(selected_sys, "Systemic")
 
                 # ---------------------------
-                # Suggested Root Causes
+                # Display suggested Root Causes
                 # ---------------------------
-                suggested_occ_rc = (
-                    "The root cause that allowed this issue to occur may be related to: "
-                    + ", ".join(selected_occ)
-                    if selected_occ else ""
-                )
-                suggested_det_rc = (
-                    "The root cause that allowed this issue to escape detection may be related to: "
-                    + ", ".join(selected_det)
-                    if selected_det else ""
-                )
-                suggested_sys_rc = (
-                    "Systemic root causes may include: "
-                    + ", ".join(selected_sys)
-                    if selected_sys else ""
-                )
-
+                st.markdown("### Suggested Root Causes")
                 st.session_state.D5["answer"] = st.text_area(
                     f"{t[lang_key]['Root_Cause_Occ']}",
                     value=suggested_occ_rc,
-                    key="root_cause_occ"
+                    key="root_cause_occ",
+                    height=100
                 )
                 st.text_area(
                     f"{t[lang_key]['Root_Cause_Det']}",
                     value=suggested_det_rc,
-                    key="root_cause_det"
+                    key="root_cause_det",
+                    height=100
                 )
                 st.text_area(
                     f"{t[lang_key]['Root_Cause_Sys']}",
                     value=suggested_sys_rc,
-                    key="root_cause_sys"
+                    key="root_cause_sys",
+                    height=100
                 )
-                # ---------------------------
+
+                st.form_submit_button("💡 Update Root Causes")
+            # ---------------------------
 # Render D6–D8 Tabs
 # ---------------------------
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
@@ -446,6 +461,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
 # Collect answers for Excel
 # ---------------------------
 data_rows = [(step, st.session_state[step]["answer"], st.session_state[step]["extra"]) for step, _, _ in npqp_steps]
+
 # ---------------------------
 # Save / Download Excel
 # ---------------------------
@@ -538,3 +554,4 @@ with st.sidebar:
             st.success("✅ Session restored from JSON!")
         except Exception as e:
             st.error(f"Error restoring JSON: {e}")
+            
