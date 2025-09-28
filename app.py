@@ -127,11 +127,15 @@ npqp_steps = [
 for step, _, _ in npqp_steps:
     if step not in st.session_state:
         st.session_state[step] = {"answer": "", "extra": ""}
+
 st.session_state.setdefault("report_date", datetime.datetime.today().strftime("%B %d, %Y"))
 st.session_state.setdefault("prepared_by", "")
 st.session_state.setdefault("d5_occ_whys", [""] * 5)
 st.session_state.setdefault("d5_det_whys", [""] * 5)
-st.session_state.setdefault("d5_sys_whys", [""] * 5)
+st.session_state.setdefault("d5_sys_whys", [""] * 5)  # ✅ Systemic added
+st.session_state.setdefault("d5_occ_selected", [])
+st.session_state.setdefault("d5_det_selected", [])
+st.session_state.setdefault("d5_sys_selected", [])  # ✅ Systemic selected
 # ---------------------------
 # Restore from URL (st.query_params)
 # ---------------------------
@@ -190,7 +194,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                 "Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}"
             )
             # ---------------------------
-# Render D5 Tab (Fully Dynamic)
+# Render D5 Tab (Occurrence, Detection, Systemic)
 # ---------------------------
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     if step == "D5":
@@ -211,150 +215,216 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             </div>
             """, unsafe_allow_html=True)
 
-            # ---------------------------
-            # Occurrence Analysis
-            # ---------------------------
-            st.markdown("#### Occurrence Analysis")
-            occurrence_categories = {
-                "Machine / Equipment-related": [
-                    "Mechanical failure or breakdown",
-                    "Calibration issues (incorrect settings)",
-                    "Tooling or fixture failure",
-                    "Machine wear and tear",
-                    "Failure not identified in FMEA"
-                ],
-                "Material / Component-related": [
-                    "Wrong material delivered",
-                    "Material defects or impurities",
-                    "Damage during storage or transport",
-                    "Incorrect specifications or tolerance errors"
-                ],
-                "Process / Method-related": [
-                    "Incorrect process steps due to poor process design",
-                    "Inefficient workflow or bottlenecks",
-                    "Lack of standardized procedures",
-                    "Outdated or incomplete work instructions"
-                ],
-                "Environmental / External Factors": [
-                    "Temperature, humidity, or other environmental conditions",
-                    "Power fluctuations or outages",
-                    "Contamination (dust, oil, chemicals)",
-                    "Regulatory or compliance changes"
-                ]
-            }
+            with st.form(key="d5_form", clear_on_submit=False):
 
-            for idx, _ in enumerate(st.session_state.d5_occ_whys):
-                options = [""] + [f"{cat}: {item}" for cat, items in occurrence_categories.items() for item in items]
-                current_val = st.session_state.d5_occ_whys[idx]
-                st.session_state.d5_occ_whys[idx] = st.selectbox(
-                    f"{t[lang_key]['Occurrence_Why']} {idx+1}",
-                    options,
-                    index=options.index(current_val) if current_val in options else 0,
-                    key=f"occ_{idx}"
+                # ---------------------------
+                # Occurrence Section
+                # ---------------------------
+                st.markdown("#### Occurrence Analysis")
+                occurrence_categories = {
+                    "Machine / Equipment-related": [
+                        "Mechanical failure or breakdown",
+                        "Calibration issues (incorrect settings)",
+                        "Tooling or fixture failure",
+                        "Machine wear and tear",
+                        "Failure not identified in FMEA"
+                    ],
+                    "Material / Component-related": [
+                        "Wrong material delivered",
+                        "Material defects or impurities",
+                        "Damage during storage or transport",
+                        "Incorrect specifications or tolerance errors"
+                    ],
+                    "Process / Method-related": [
+                        "Incorrect process steps due to poor process design",
+                        "Inefficient workflow or bottlenecks",
+                        "Lack of standardized procedures",
+                        "Outdated or incomplete work instructions"
+                    ],
+                    "Environmental / External Factors": [
+                        "Temperature, humidity, or other environmental conditions",
+                        "Power fluctuations or outages",
+                        "Contamination (dust, oil, chemicals)",
+                        "Regulatory or compliance changes"
+                    ]
+                }
+
+                selected_occ = []
+                category_count_occ = {}
+                for idx, val in enumerate(st.session_state.d5_occ_whys):
+                    remaining_options = []
+                    for cat, items in occurrence_categories.items():
+                        for item in items:
+                            full_item = f"{cat}: {item}"
+                            if full_item not in selected_occ:
+                                remaining_options.append(full_item)
+                    if val and val not in remaining_options:
+                        remaining_options.append(val)
+
+                    options = [""] + sorted(remaining_options)
+                    current_value = st.session_state.d5_occ_whys[idx]
+                    st.session_state.d5_occ_whys[idx] = st.selectbox(
+                        f"{t[lang_key]['Occurrence_Why']} {idx+1}",
+                        options,
+                        index=options.index(current_value) if current_value in options else 0,
+                        key=f"occ_{idx}"
+                    )
+                    free_text = st.text_input(f"Or enter your own Occurrence Why {idx+1}", value=st.session_state.d5_occ_whys[idx], key=f"occ_txt_{idx}")
+                    if free_text.strip():
+                        st.session_state.d5_occ_whys[idx] = free_text
+                    if st.session_state.d5_occ_whys[idx]:
+                        selected_occ.append(st.session_state.d5_occ_whys[idx])
+                        # Count category for primary driver detection
+                        for cat in occurrence_categories:
+                            if cat in st.session_state.d5_occ_whys[idx]:
+                                category_count_occ[cat] = category_count_occ.get(cat, 0) + 1
+
+                if st.form_submit_button("➕ Add another Occurrence Why", on_click=lambda: st.session_state.d5_occ_whys.append("")):
+                    pass
+
+                st.session_state["d5_occ_selected"] = selected_occ
+
+                # ---------------------------
+                # Detection Section
+                # ---------------------------
+                st.markdown("#### Detection Analysis")
+                detection_categories = {
+                    "QA / Inspection-related": [
+                        "QA checklist incomplete",
+                        "No automated test",
+                        "Missed inspection due to process gap",
+                        "Tooling or equipment inspection not scheduled"
+                    ],
+                    "Validation / Process-related": [
+                        "Insufficient validation steps",
+                        "Design verification not complete",
+                        "Inspection documentation missing or outdated"
+                    ]
+                }
+
+                selected_det = []
+                category_count_det = {}
+                for idx, val in enumerate(st.session_state.d5_det_whys):
+                    remaining_options = []
+                    for cat, items in detection_categories.items():
+                        for item in items:
+                            full_item = f"{cat}: {item}"
+                            if full_item not in selected_det:
+                                remaining_options.append(full_item)
+                    if val and val not in remaining_options:
+                        remaining_options.append(val)
+
+                    options_det = [""] + sorted(remaining_options)
+                    current_value = st.session_state.d5_det_whys[idx]
+                    st.session_state.d5_det_whys[idx] = st.selectbox(
+                        f"{t[lang_key]['Detection_Why']} {idx+1}",
+                        options_det,
+                        index=options_det.index(current_value) if current_value in options_det else 0,
+                        key=f"det_{idx}"
+                    )
+                    free_text_det = st.text_input(f"Or enter your own Detection Why {idx+1}", value=st.session_state.d5_det_whys[idx], key=f"det_txt_{idx}")
+                    if free_text_det.strip():
+                        st.session_state.d5_det_whys[idx] = free_text_det
+                    if st.session_state.d5_det_whys[idx]:
+                        selected_det.append(st.session_state.d5_det_whys[idx])
+                        for cat in detection_categories:
+                            if cat in st.session_state.d5_det_whys[idx]:
+                                category_count_det[cat] = category_count_det.get(cat, 0) + 1
+
+                if st.form_submit_button("➕ Add another Detection Why", on_click=lambda: st.session_state.d5_det_whys.append("")):
+                    pass
+
+                st.session_state["d5_det_selected"] = selected_det
+                                # ---------------------------
+                # Systemic Section
+                # ---------------------------
+                st.markdown("#### Systemic Analysis")
+                systemic_categories = {
+                    "Management / Organizational": [
+                        "Lack of training or skill gaps",
+                        "Inadequate resource allocation",
+                        "Poor communication between departments",
+                        "Missing policies or standards"
+                    ],
+                    "Process / Procedure-related": [
+                        "Outdated procedures or SOPs",
+                        "Inefficient process design",
+                        "Inconsistent work instructions",
+                        "Failure to follow PFMEA or control plan"
+                    ],
+                    "Supplier / External": [
+                        "Supplier quality issues",
+                        "Logistics / transportation failures",
+                        "External regulations or compliance changes"
+                    ]
+                }
+
+                selected_sys = []
+                category_count_sys = {}
+                for idx, val in enumerate(st.session_state.d5_sys_whys):
+                    remaining_options = []
+                    for cat, items in systemic_categories.items():
+                        for item in items:
+                            full_item = f"{cat}: {item}"
+                            if full_item not in selected_sys:
+                                remaining_options.append(full_item)
+                    if val and val not in remaining_options:
+                        remaining_options.append(val)
+
+                    options_sys = [""] + sorted(remaining_options)
+                    current_value = st.session_state.d5_sys_whys[idx]
+                    st.session_state.d5_sys_whys[idx] = st.selectbox(
+                        f"{t[lang_key]['Systemic_Why']} {idx+1}",
+                        options_sys,
+                        index=options_sys.index(current_value) if current_value in options_sys else 0,
+                        key=f"sys_{idx}"
+                    )
+                    free_text_sys = st.text_input(f"Or enter your own Systemic Why {idx+1}", value=st.session_state.d5_sys_whys[idx], key=f"sys_txt_{idx}")
+                    if free_text_sys.strip():
+                        st.session_state.d5_sys_whys[idx] = free_text_sys
+                    if st.session_state.d5_sys_whys[idx]:
+                        selected_sys.append(st.session_state.d5_sys_whys[idx])
+                        for cat in systemic_categories:
+                            if cat in st.session_state.d5_sys_whys[idx]:
+                                category_count_sys[cat] = category_count_sys.get(cat, 0) + 1
+
+                if st.form_submit_button("➕ Add another Systemic Why", on_click=lambda: st.session_state.d5_sys_whys.append("")):
+                    pass
+
+                st.session_state["d5_sys_selected"] = selected_sys
+
+                # ---------------------------
+                # Suggested Root Causes with Primary Driver
+                # ---------------------------
+                def generate_root_cause(selected, category_count, default_text):
+                    if not selected:
+                        return default_text
+                    # Determine primary driver (most frequent category)
+                    primary_driver = max(category_count, key=category_count.get) if category_count else None
+                    primary_driver_sentence = f"**Primary driver:** This issue is mainly related to {primary_driver.lower()}." if primary_driver else ""
+                    contributing_factors = ", ".join(selected)
+                    return f"{primary_driver_sentence} Contributing factors identified include: {contributing_factors}."
+
+                occ_rc_text = generate_root_cause(selected_occ, category_count_occ, "No occurrence reasons provided yet.")
+                det_rc_text = generate_root_cause(selected_det, category_count_det, "No detection reasons provided yet.")
+                sys_rc_text = generate_root_cause(selected_sys, category_count_sys, "No systemic reasons provided yet.")
+
+                st.session_state.D5["answer"] = st.text_area(
+                    f"{t[lang_key]['Root_Cause_Occ']}",
+                    value=occ_rc_text,
+                    key="root_cause_occ"
                 )
-                free_text = st.text_input(f"Or enter your own Occurrence Why {idx+1}", value=st.session_state.d5_occ_whys[idx], key=f"occ_txt_{idx}")
-                if free_text.strip():
-                    st.session_state.d5_occ_whys[idx] = free_text
-
-            if st.button("➕ Add another Occurrence Why"):
-                st.session_state.d5_occ_whys.append("")
-
-            # ---------------------------
-            # Detection Analysis
-            # ---------------------------
-            st.markdown("#### Detection Analysis")
-            detection_categories = {
-                "QA / Inspection-related": [
-                    "QA checklist incomplete",
-                    "No automated test",
-                    "Missed inspection due to process gap",
-                    "Tooling or equipment inspection not scheduled"
-                ],
-                "Validation / Process-related": [
-                    "Insufficient validation steps",
-                    "Design verification not complete",
-                    "Inspection documentation missing or outdated"
-                ]
-            }
-
-            for idx, _ in enumerate(st.session_state.d5_det_whys):
-                options = [""] + [f"{cat}: {item}" for cat, items in detection_categories.items() for item in items]
-                current_val = st.session_state.d5_det_whys[idx]
-                st.session_state.d5_det_whys[idx] = st.selectbox(
-                    f"{t[lang_key]['Detection_Why']} {idx+1}",
-                    options,
-                    index=options.index(current_val) if current_val in options else 0,
-                    key=f"det_{idx}"
+                st.text_area(
+                    f"{t[lang_key]['Root_Cause_Det']}",
+                    value=det_rc_text,
+                    key="root_cause_det"
                 )
-                free_text = st.text_input(f"Or enter your own Detection Why {idx+1}", value=st.session_state.d5_det_whys[idx], key=f"det_txt_{idx}")
-                if free_text.strip():
-                    st.session_state.d5_det_whys[idx] = free_text
-
-            if st.button("➕ Add another Detection Why"):
-                st.session_state.d5_det_whys.append("")
-
-            # ---------------------------
-            # Systemic Analysis
-            # ---------------------------
-            st.markdown("#### Systemic Analysis")
-            systemic_categories = {
-                "Management / Organizational": [
-                    "Lack of training or skill gaps",
-                    "Inadequate resource allocation",
-                    "Poor communication between departments",
-                    "Missing policies or standards"
-                ],
-                "Process / Procedure-related": [
-                    "Outdated procedures or SOPs",
-                    "Inefficient process design",
-                    "Inconsistent work instructions",
-                    "Failure to follow PFMEA or control plan"
-                ],
-                "Supplier / External": [
-                    "Supplier quality issues",
-                    "Logistics / transportation failures",
-                    "External regulations or compliance changes"
-                ]
-            }
-
-            for idx, _ in enumerate(st.session_state.d5_sys_whys):
-                options = [""] + [f"{cat}: {item}" for cat, items in systemic_categories.items() for item in items]
-                current_val = st.session_state.d5_sys_whys[idx]
-                st.session_state.d5_sys_whys[idx] = st.selectbox(
-                    f"{t[lang_key]['Systemic_Why']} {idx+1}",
-                    options,
-                    index=options.index(current_val) if current_val in options else 0,
-                    key=f"sys_{idx}"
+                st.text_area(
+                    f"{t[lang_key]['Root_Cause_Sys']}",
+                    value=sys_rc_text,
+                    key="root_cause_sys"
                 )
-                free_text = st.text_input(f"Or enter your own Systemic Why {idx+1}", value=st.session_state.d5_sys_whys[idx], key=f"sys_txt_{idx}")
-                if free_text.strip():
-                    st.session_state.d5_sys_whys[idx] = free_text
-
-            if st.button("➕ Add another Systemic Why"):
-                st.session_state.d5_sys_whys.append("")
-
-            # ---------------------------
-            # Fully Dynamic Root Cause Text
-            # ---------------------------
-            st.text_area(
-                f"{t[lang_key]['Root_Cause_Occ']}",
-                value="The root cause that allowed this issue to occur may be related: " + ", ".join([w for w in st.session_state.d5_occ_whys if w]),
-                height=80,
-                key="dynamic_occ_rc"
-            )
-            st.text_area(
-                f"{t[lang_key]['Root_Cause_Det']}",
-                value="The root cause that allowed this issue to escape detection may be related: " + ", ".join([w for w in st.session_state.d5_det_whys if w]),
-                height=80,
-                key="dynamic_det_rc"
-            )
-            st.text_area(
-                f"{t[lang_key]['Root_Cause_Sys']}",
-                value="Systemic root causes may include: " + ", ".join([w for w in st.session_state.d5_sys_whys if w]),
-                height=80,
-                key="dynamic_sys_rc"
-            )
-            # ---------------------------
+                # ---------------------------
 # Render D6–D8 Tabs
 # ---------------------------
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
@@ -386,6 +456,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
 # Collect answers for Excel
 # ---------------------------
 data_rows = [(step, st.session_state[step]["answer"], st.session_state[step]["extra"]) for step, _, _ in npqp_steps]
+
 # ---------------------------
 # Save / Download Excel
 # ---------------------------
