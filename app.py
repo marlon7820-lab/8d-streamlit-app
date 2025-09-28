@@ -83,7 +83,6 @@ t = {
         "FMEA_Failure": "Ocurrencia de falla FMEA"
     }
 }
-
 # ---------------------------
 # NPQP 8D steps with examples
 # ---------------------------
@@ -120,6 +119,7 @@ npqp_steps = [
      {"en":"Update SOPs, PFMEA, work instructions, and maintenance procedures.",
       "es":"Actualizar SOPs, PFMEA, instrucciones de trabajo y procedimientos de mantenimiento."})
 ]
+
 # ---------------------------
 # Initialize session state
 # ---------------------------
@@ -149,6 +149,47 @@ if "backup" in st.query_params:
 st.subheader(f"{t[lang_key]['Report_Date']}")
 st.session_state.report_date = st.text_input(f"{t[lang_key]['Report_Date']}", value=st.session_state.report_date)
 st.session_state.prepared_by = st.text_input(f"{t[lang_key]['Prepared_By']}", value=st.session_state.prepared_by)
+# ---------------------------
+# Rule-based Root Cause Suggestion (Expanded)
+# ---------------------------
+def suggest_root_cause(whys):
+    text = " ".join(whys).lower()
+
+    # Training / knowledge / people
+    if any(word in text for word in ["training", "knowledge", "not trained", "skill", "operator", "human error"]):
+        return "Lack of proper training / knowledge gap"
+
+    # Equipment / tooling / maintenance
+    if any(word in text for word in ["equipment", "tool", "machine", "fixture", "calibration", "maintenance", "wear", "breakdown"]):
+        return "Equipment, tooling, or maintenance issue"
+
+    # Procedure / process / standards
+    if any(word in text for word in ["procedure", "process", "standard", "work instruction", "sop", "policy"]):
+        return "Procedure or process not followed or inadequate"
+
+    # Communication / information flow
+    if any(word in text for word in ["communication", "information", "misunderstanding", "handover", "reporting", "coordination"]):
+        return "Poor communication or unclear information flow"
+
+    # Material / supplier / logistics
+    if any(word in text for word in ["material", "supplier", "vendor", "part", "component", "shipment", "logistics", "delivery", "storage"]):
+        return "Material, supplier, or logistics-related issue"
+
+    # Design / engineering
+    if any(word in text for word in ["design", "specification", "drawing", "tolerance", "engineering", "requirement"]):
+        return "Design or engineering issue"
+
+    # Management / resources
+    if any(word in text for word in ["management", "supervision", "oversight", "resource", "budget", "staffing", "schedule"]):
+        return "Management or resource-related issue"
+
+    # Environment / external
+    if any(word in text for word in ["temperature", "humidity", "contamination", "dust", "external", "environment", "power fluctuation"]):
+        return "Environmental or external factor"
+
+    # Default fallback
+    return "Systemic issue identified from analysis"
+
 
 # ---------------------------
 # Tabs with ✅ / 🔴 indicators
@@ -189,7 +230,8 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             st.session_state[step]["answer"] = st.text_area(
                 "Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}"
             )
-            # ---------------------------
+
+# ---------------------------
 # Render D5 Tab (Dynamic 5-Why)
 # ---------------------------
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
@@ -209,7 +251,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             ">
             <b>{t[lang_key]['Training_Guidance']}:</b> {note_dict[lang_key]}
             </div>
-            """, unsafe_allow_html=True)
+            """ , unsafe_allow_html=True)
 
             # ---------------------------
             # Define categories for dropdowns
@@ -270,9 +312,8 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                     "Regulatory changes"
                 ]
             }
-
-            # ---------------------------
-            # Helper to render 5-Why dropdowns
+                        # ---------------------------
+            # Helper to render 5-Why dropdowns with free text
             # ---------------------------
             def render_whys(why_list, categories, label_prefix):
                 for idx, _ in enumerate(why_list):
@@ -307,19 +348,21 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                 st.session_state.d5_sys_whys.append("")
 
             # ---------------------------
-            # Dynamic Root Cause Suggestions
+            # Dynamic Root Cause Suggestions (read-only)
             # ---------------------------
-            occ_rc_text = "The root cause that allowed this issue to occur may be related: " + \
-                (", ".join([w for w in st.session_state.d5_occ_whys if w]) or "No reason provided yet")
-            det_rc_text = "The root cause that allowed this issue to escape detection may be related: " + \
-                (", ".join([w for w in st.session_state.d5_det_whys if w]) or "No reason provided yet")
-            sys_rc_text = "Systemic root causes may include: " + \
-                (", ".join([w for w in st.session_state.d5_sys_whys if w]) or "No reason provided yet")
+            occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
+            det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
+            sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
 
-            st.text_area(f"{t[lang_key]['Root_Cause_Occ']}", value=occ_rc_text, height=80)
-            st.text_area(f"{t[lang_key]['Root_Cause_Det']}", value=det_rc_text, height=80)
-            st.text_area(f"{t[lang_key]['Root_Cause_Sys']}", value=sys_rc_text, height=80)
-            # ---------------------------
+            occ_rc_text = suggest_root_cause(occ_whys) if occ_whys else "No occurrence whys provided yet"
+            det_rc_text = suggest_root_cause(det_whys) if det_whys else "No detection whys provided yet"
+            sys_rc_text = suggest_root_cause(sys_whys) if sys_whys else "No systemic whys provided yet"
+
+            st.text_area(f"{t[lang_key]['Root_Cause_Occ']}", value=occ_rc_text, height=80, disabled=True)
+            st.text_area(f"{t[lang_key]['Root_Cause_Det']}", value=det_rc_text, height=80, disabled=True)
+            st.text_area(f"{t[lang_key]['Root_Cause_Sys']}", value=sys_rc_text, height=80, disabled=True)
+
+# ---------------------------
 # Render D6–D8 Tabs
 # ---------------------------
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
@@ -346,15 +389,30 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             st.session_state[step]["answer"] = st.text_area(
                 "Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}"
             )
-
-# ---------------------------
-# Collect answers for Excel
+            # ---------------------------
+# Collect answers for Excel (including root causes with Whys)
 # ---------------------------
 data_rows = []
+
+# Capture D5 root causes with whys in extra
+occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
+det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
+sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
+
+occ_rc_text = suggest_root_cause(occ_whys) if occ_whys else "No occurrence whys provided yet"
+det_rc_text = suggest_root_cause(det_whys) if det_whys else "No detection whys provided yet"
+sys_rc_text = suggest_root_cause(sys_whys) if sys_whys else "No systemic whys provided yet"
+
 for step, _, _ in npqp_steps:
     answer = st.session_state[step]["answer"]
     extra = st.session_state[step].get("extra", "")
-    data_rows.append((step, answer, extra))
+
+    if step == "D5":
+        data_rows.append(("D5 - Root Cause (Occurrence)", occ_rc_text, " | ".join(occ_whys)))
+        data_rows.append(("D5 - Root Cause (Detection)", det_rc_text, " | ".join(det_whys)))
+        data_rows.append(("D5 - Root Cause (Systemic)", sys_rc_text, " | ".join(sys_whys)))
+    else:
+        data_rows.append((step, answer, extra))
 
 # ---------------------------
 # Save / Download Excel
@@ -397,7 +455,7 @@ def generate_excel():
 
     # Append step answers
     for step, answer, extra in data_rows:
-        ws.append([t[lang_key][step], answer, extra])
+        ws.append([t[lang_key].get(step, step), answer, extra])
         r = ws.max_row
         for c in range(1, 4):
             cell = ws.cell(row=r, column=c)
@@ -418,6 +476,7 @@ st.download_button(
     file_name=f"8D_Report_{st.session_state.report_date.replace(' ', '_')}.xlsx",
     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 )
+
 # ---------------------------
 # Sidebar: JSON Backup / Restore
 # ---------------------------
