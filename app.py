@@ -1,3 +1,6 @@
+# ---------------------------
+# PART 1 of 5
+# ---------------------------
 import streamlit as st
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
@@ -40,7 +43,7 @@ st.markdown("<h1 style='text-align: center; color: #1E90FF;'>📋 8D Report Assi
 # Version info
 # ---------------------------
 version_number = "v1.0.7"
-last_updated = "September 14, 2025"
+last_updated = "September 28, 2025"
 st.markdown(f"""
 <hr style='border:1px solid #1E90FF; margin-top:10px; margin-bottom:5px;'>
 <p style='font-size:12px; font-style:italic; text-align:center; color:#555555;'>
@@ -120,6 +123,7 @@ npqp_steps = [
      {"en":"Update SOPs, PFMEA, work instructions, and maintenance procedures.",
       "es":"Actualizar SOPs, PFMEA, instrucciones de trabajo y procedimientos de mantenimiento."})
 ]
+
 # ---------------------------
 # Initialize session state
 # ---------------------------
@@ -131,6 +135,9 @@ st.session_state.setdefault("prepared_by", "")
 st.session_state.setdefault("d5_occ_whys", [""] * 5)
 st.session_state.setdefault("d5_det_whys", [""] * 5)
 st.session_state.setdefault("d5_sys_whys", [""] * 5)
+# ---------------------------
+# PART 2 of 5
+# ---------------------------
 
 # ---------------------------
 # Restore from URL (st.query_params)
@@ -190,6 +197,10 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                 "Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}"
             )
             # ---------------------------
+# PART 3 of 5
+# ---------------------------
+
+# ---------------------------
 # Render D5 Tab (Fully Dynamic)
 # ---------------------------
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
@@ -355,6 +366,10 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                 key="dynamic_sys_rc"
             )
             # ---------------------------
+# PART 4 of 5
+# ---------------------------
+
+# ---------------------------
 # Render D6–D8 Tabs
 # ---------------------------
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
@@ -385,7 +400,8 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
 # ---------------------------
 # Collect answers for Excel
 # ---------------------------
-data_rows = [(step, st.session_state[step]["answer"], st.session_state[step]["extra"]) for step, _, _ in npqp_steps]
+data_rows = [(step, st.session_state[step]["answer"], st.session_state[step].get("extra", "")) for step, _, _ in npqp_steps]
+
 # ---------------------------
 # Save / Download Excel
 # ---------------------------
@@ -448,6 +464,9 @@ st.download_button(
     file_name=f"8D_Report_{st.session_state.report_date.replace(' ', '_')}.xlsx",
     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 )
+# ---------------------------
+# PART 5 of 5
+# ---------------------------
 
 # ---------------------------
 # Sidebar: JSON Backup / Restore
@@ -455,10 +474,12 @@ st.download_button(
 with st.sidebar:
     st.markdown("## Backup / Restore")
 
+    # Function to generate JSON of session state
     def generate_json():
         save_data = {k: v for k, v in st.session_state.items() if not k.startswith("_")}
         return json.dumps(save_data, indent=4)
 
+    # Download current session state as JSON
     st.download_button(
         label="💾 Save Progress (JSON)",
         data=generate_json(),
@@ -469,6 +490,7 @@ with st.sidebar:
     st.markdown("---")
     st.markdown("### Restore from JSON")
 
+    # Upload JSON file to restore session state
     uploaded_file = st.file_uploader("Upload JSON file to restore", type="json")
     if uploaded_file:
         try:
