@@ -147,8 +147,12 @@ if "backup" in st.query_params:
 # Report info
 # ---------------------------
 st.subheader(f"{t[lang_key]['Report_Date']}")
-st.session_state.report_date = st.text_input(f"{t[lang_key]['Report_Date']}", value=st.session_state.report_date)
-st.session_state.prepared_by = st.text_input(f"{t[lang_key]['Prepared_By']}", value=st.session_state.prepared_by)
+st.session_state.report_date = st.text_input(
+    f"{t[lang_key]['Report_Date']}", value=st.session_state.report_date
+)
+st.session_state.prepared_by = st.text_input(
+    f"{t[lang_key]['Prepared_By']}", value=st.session_state.prepared_by
+)
 
 # ---------------------------
 # Tabs with ✅ / 🔴 status indicators
@@ -166,7 +170,7 @@ tabs = st.tabs(tab_labels)
 # Render D1–D4 Tabs
 # ---------------------------
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
-    if step not in ["D5","D6","D7","D8"]:
+    if step not in ["D5", "D6", "D7", "D8"]:
         with tabs[i]:
             st.markdown(f"### {t[lang_key][step]}")
             note_text = note_dict[lang_key]
@@ -243,7 +247,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                 ]
             }
 
-            for idx, _ in enumerate(st.session_state.d5_occ_whys):
+            for idx in range(len(st.session_state.d5_occ_whys)):
                 options = [""] + [f"{cat}: {item}" for cat, items in occurrence_categories.items() for item in items]
                 current_val = st.session_state.d5_occ_whys[idx]
                 st.session_state.d5_occ_whys[idx] = st.selectbox(
@@ -252,7 +256,11 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                     index=options.index(current_val) if current_val in options else 0,
                     key=f"occ_{idx}"
                 )
-                free_text = st.text_input(f"Or enter your own Occurrence Why {idx+1}", value=st.session_state.d5_occ_whys[idx], key=f"occ_txt_{idx}")
+                free_text = st.text_input(
+                    f"Or enter your own Occurrence Why {idx+1}",
+                    value=st.session_state.d5_occ_whys[idx],
+                    key=f"occ_txt_{idx}"
+                )
                 if free_text.strip():
                     st.session_state.d5_occ_whys[idx] = free_text
 
@@ -277,7 +285,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                 ]
             }
 
-            for idx, _ in enumerate(st.session_state.d5_det_whys):
+            for idx in range(len(st.session_state.d5_det_whys)):
                 options = [""] + [f"{cat}: {item}" for cat, items in detection_categories.items() for item in items]
                 current_val = st.session_state.d5_det_whys[idx]
                 st.session_state.d5_det_whys[idx] = st.selectbox(
@@ -286,7 +294,11 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                     index=options.index(current_val) if current_val in options else 0,
                     key=f"det_{idx}"
                 )
-                free_text = st.text_input(f"Or enter your own Detection Why {idx+1}", value=st.session_state.d5_det_whys[idx], key=f"det_txt_{idx}")
+                free_text = st.text_input(
+                    f"Or enter your own Detection Why {idx+1}",
+                    value=st.session_state.d5_det_whys[idx],
+                    key=f"det_txt_{idx}"
+                )
                 if free_text.strip():
                     st.session_state.d5_det_whys[idx] = free_text
 
@@ -317,7 +329,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                 ]
             }
 
-            for idx, _ in enumerate(st.session_state.d5_sys_whys):
+            for idx in range(len(st.session_state.d5_sys_whys)):
                 options = [""] + [f"{cat}: {item}" for cat, items in systemic_categories.items() for item in items]
                 current_val = st.session_state.d5_sys_whys[idx]
                 st.session_state.d5_sys_whys[idx] = st.selectbox(
@@ -326,45 +338,40 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                     index=options.index(current_val) if current_val in options else 0,
                     key=f"sys_{idx}"
                 )
-                free_text = st.text_input(f"Or enter your own Systemic Why {idx+1}", value=st.session_state.d5_sys_whys[idx], key=f"sys_txt_{idx}")
+                free_text = st.text_input(
+                    f"Or enter your own Systemic Why {idx+1}",
+                    value=st.session_state.d5_sys_whys[idx],
+                    key=f"sys_txt_{idx}"
+                )
                 if free_text.strip():
                     st.session_state.d5_sys_whys[idx] = free_text
-                                # ---------------------------
+
+            if st.button("➕ Add another Systemic Why"):
+                st.session_state.d5_sys_whys.append("")
+
+            # ---------------------------
             # Fully Dynamic Root Cause Text
             # ---------------------------
-            st.markdown("#### Suggested Root Causes")
-
-            # Occurrence root cause
-            occ_reasons = [w for w in st.session_state.d5_occ_whys if w.strip()]
-            occ_text = "The root cause that allowed this issue to occur may be related: "
-            occ_text += ", ".join(occ_reasons) if occ_reasons else "No reason provided yet."
             st.text_area(
                 f"{t[lang_key]['Root_Cause_Occ']}",
-                value=occ_text,
+                value="The root cause that allowed this issue to occur may be related: " + \
+                    "; ".join([w for w in st.session_state.d5_occ_whys if w.strip() != ""]),
                 height=80,
-                key="rc_occ_dynamic"
+                key="dynamic_occ_rc"
             )
-
-            # Detection root cause
-            det_reasons = [w for w in st.session_state.d5_det_whys if w.strip()]
-            det_text = "The root cause that allowed this issue to escape detection may be related: "
-            det_text += ", ".join(det_reasons) if det_reasons else "No reason provided yet."
             st.text_area(
                 f"{t[lang_key]['Root_Cause_Det']}",
-                value=det_text,
+                value="The root cause that allowed this issue to escape detection may be related: " + \
+                    "; ".join([w for w in st.session_state.d5_det_whys if w.strip() != ""]),
                 height=80,
-                key="rc_det_dynamic"
+                key="dynamic_det_rc"
             )
-
-            # Systemic root cause
-            sys_reasons = [w for w in st.session_state.d5_sys_whys if w.strip()]
-            sys_text = "Systemic root causes may include: "
-            sys_text += ", ".join(sys_reasons) if sys_reasons else "No reason provided yet."
             st.text_area(
                 f"{t[lang_key]['Root_Cause_Sys']}",
-                value=sys_text,
+                value="Systemic root causes may include: " + \
+                    "; ".join([w for w in st.session_state.d5_sys_whys if w.strip() != ""]),
                 height=80,
-                key="rc_sys_dynamic"
+                key="dynamic_sys_rc"
             )
             # ---------------------------
 # Render D6–D8 Tabs
@@ -391,13 +398,18 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             </div>
             """, unsafe_allow_html=True)
             st.session_state[step]["answer"] = st.text_area(
-                "Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}"
+                "Your Answer",
+                value=st.session_state[step]["answer"],
+                key=f"ans_{step}"
             )
 
 # ---------------------------
 # Collect answers for Excel
 # ---------------------------
-data_rows = [(step, st.session_state[step]["answer"], st.session_state[step]["extra"]) for step, _, _ in npqp_steps]
+data_rows = [
+    (step, st.session_state[step]["answer"], st.session_state[step].get("extra", ""))
+    for step, _, _ in npqp_steps
+]
 
 # ---------------------------
 # Save / Download Excel
@@ -491,3 +503,73 @@ with st.sidebar:
             st.success("✅ Session restored from JSON!")
         except Exception as e:
             st.error(f"Error restoring JSON: {e}")
+            # ---------------------------
+# Fully Dynamic Root Cause Logic for D5
+# ---------------------------
+
+def update_dynamic_root_causes():
+    # Occurrence
+    occ_list = [w for w in st.session_state.d5_occ_whys if w.strip()]
+    det_list = [w for w in st.session_state.d5_det_whys if w.strip()]
+    sys_list = [w for w in st.session_state.d5_sys_whys if w.strip()]
+
+    st.session_state.dynamic_occ_rc = (
+        "The root cause that allowed this issue to occur may be related: "
+        + (", ".join(occ_list) if occ_list else "No reason provided yet")
+    )
+    st.session_state.dynamic_det_rc = (
+        "The root cause that allowed this issue to escape detection may be related: "
+        + (", ".join(det_list) if det_list else "No reason provided yet")
+    )
+    st.session_state.dynamic_sys_rc = (
+        "Systemic root causes may include: "
+        + (", ".join(sys_list) if sys_list else "No reason provided yet")
+    )
+
+# Initialize dynamic root causes if missing
+if "dynamic_occ_rc" not in st.session_state:
+    st.session_state.dynamic_occ_rc = ""
+if "dynamic_det_rc" not in st.session_state:
+    st.session_state.dynamic_det_rc = ""
+if "dynamic_sys_rc" not in st.session_state:
+    st.session_state.dynamic_sys_rc = ""
+
+# ---------------------------
+# D5 Tab: Display dynamic root causes
+# ---------------------------
+for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
+    if step == "D5":
+        with tabs[i]:
+            update_dynamic_root_causes()
+
+            st.text_area(
+                f"{t[lang_key]['Root_Cause_Occ']}",
+                value=st.session_state.dynamic_occ_rc,
+                height=80,
+                key="display_dynamic_occ_rc"
+            )
+            st.text_area(
+                f"{t[lang_key]['Root_Cause_Det']}",
+                value=st.session_state.dynamic_det_rc,
+                height=80,
+                key="display_dynamic_det_rc"
+            )
+            st.text_area(
+                f"{t[lang_key]['Root_Cause_Sys']}",
+                value=st.session_state.dynamic_sys_rc,
+                height=80,
+                key="display_dynamic_sys_rc"
+            )
+
+# ---------------------------
+# Optional: Update dynamically whenever any why changes
+# ---------------------------
+for idx in range(max(len(st.session_state.d5_occ_whys),
+                     len(st.session_state.d5_det_whys),
+                     len(st.session_state.d5_sys_whys))):
+    if f"occ_{idx}" in st.session_state or f"occ_txt_{idx}" in st.session_state:
+        update_dynamic_root_causes()
+    if f"det_{idx}" in st.session_state or f"det_txt_{idx}" in st.session_state:
+        update_dynamic_root_causes()
+    if f"sys_{idx}" in st.session_state or f"sys_txt_{idx}" in st.session_state:
+        update_dynamic_root_causes()
