@@ -132,6 +132,7 @@ st.session_state.setdefault("prepared_by", "")
 st.session_state.setdefault("d5_occ_whys", [""] * 5)
 st.session_state.setdefault("d5_det_whys", [""] * 5)
 st.session_state.setdefault("d5_sys_whys", [""] * 5)
+
 # ---------------------------
 # Restore from URL (st.query_params)
 # ---------------------------
@@ -189,9 +190,8 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             st.session_state[step]["answer"] = st.text_area(
                 "Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}"
             )
-
-# ---------------------------
-# Render D5 Tab (Dynamic 5-Why Inputs)
+            # ---------------------------
+# Render D5 Tab (Fully Dynamic)
 # ---------------------------
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     if step == "D5":
@@ -210,18 +210,40 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             ">
             <b>{t[lang_key]['Training_Guidance']}:</b> {note_dict[lang_key]}
             </div>
-            """ , unsafe_allow_html=True)
+            """, unsafe_allow_html=True)
 
             # ---------------------------
             # Occurrence Analysis
             # ---------------------------
             st.markdown("#### Occurrence Analysis")
             occurrence_categories = {
-                "Machine / Equipment": ["Mechanical failure", "Calibration issue", "Tooling failure", "Machine wear"],
-                "Material / Component": ["Wrong material", "Material defect", "Damage during transport", "Spec tolerance issue"],
-                "Process / Method": ["Incorrect process steps", "Inefficient workflow", "Lack of procedures", "Incomplete instructions"],
-                "Environmental / External": ["Temperature/humidity issue", "Power fluctuation", "Contamination", "Compliance change"]
+                "Machine / Equipment-related": [
+                    "Mechanical failure or breakdown",
+                    "Calibration issues (incorrect settings)",
+                    "Tooling or fixture failure",
+                    "Machine wear and tear",
+                    "Failure not identified in FMEA"
+                ],
+                "Material / Component-related": [
+                    "Wrong material delivered",
+                    "Material defects or impurities",
+                    "Damage during storage or transport",
+                    "Incorrect specifications or tolerance errors"
+                ],
+                "Process / Method-related": [
+                    "Incorrect process steps due to poor process design",
+                    "Inefficient workflow or bottlenecks",
+                    "Lack of standardized procedures",
+                    "Outdated or incomplete work instructions"
+                ],
+                "Environmental / External Factors": [
+                    "Temperature, humidity, or other environmental conditions",
+                    "Power fluctuations or outages",
+                    "Contamination (dust, oil, chemicals)",
+                    "Regulatory or compliance changes"
+                ]
             }
+
             for idx, _ in enumerate(st.session_state.d5_occ_whys):
                 options = [""] + [f"{cat}: {item}" for cat, items in occurrence_categories.items() for item in items]
                 current_val = st.session_state.d5_occ_whys[idx]
@@ -235,16 +257,27 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                 if free_text.strip():
                     st.session_state.d5_occ_whys[idx] = free_text
 
-            if st.button("➕ Add another Occurrence Why"):
+            if st.button("➕ Add another Occurrence Why", key="add_occ"):
                 st.session_state.d5_occ_whys.append("")
-                            # ---------------------------
+
+            # ---------------------------
             # Detection Analysis
             # ---------------------------
             st.markdown("#### Detection Analysis")
             detection_categories = {
-                "QA / Inspection": ["QA checklist incomplete", "No automated test", "Missed inspection", "Tooling inspection missed"],
-                "Validation / Process": ["Insufficient validation", "Design verification incomplete", "Documentation missing"]
+                "QA / Inspection-related": [
+                    "QA checklist incomplete",
+                    "No automated test",
+                    "Missed inspection due to process gap",
+                    "Tooling or equipment inspection not scheduled"
+                ],
+                "Validation / Process-related": [
+                    "Insufficient validation steps",
+                    "Design verification not complete",
+                    "Inspection documentation missing or outdated"
+                ]
             }
+
             for idx, _ in enumerate(st.session_state.d5_det_whys):
                 options = [""] + [f"{cat}: {item}" for cat, items in detection_categories.items() for item in items]
                 current_val = st.session_state.d5_det_whys[idx]
@@ -258,7 +291,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                 if free_text.strip():
                     st.session_state.d5_det_whys[idx] = free_text
 
-            if st.button("➕ Add another Detection Why"):
+            if st.button("➕ Add another Detection Why", key="add_det"):
                 st.session_state.d5_det_whys.append("")
 
             # ---------------------------
@@ -266,10 +299,25 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             # ---------------------------
             st.markdown("#### Systemic Analysis")
             systemic_categories = {
-                "Management / Org": ["Lack of training", "Inadequate resources", "Poor communication", "Missing policies"],
-                "Process / Procedure": ["Outdated procedures", "Inefficient design", "Inconsistent instructions", "PFMEA/control plan not followed"],
-                "Supplier / External": ["Supplier quality issues", "Logistics failures", "External compliance changes"]
+                "Management / Organizational": [
+                    "Lack of training or skill gaps",
+                    "Inadequate resource allocation",
+                    "Poor communication between departments",
+                    "Missing policies or standards"
+                ],
+                "Process / Procedure-related": [
+                    "Outdated procedures or SOPs",
+                    "Inefficient process design",
+                    "Inconsistent work instructions",
+                    "Failure to follow PFMEA or control plan"
+                ],
+                "Supplier / External": [
+                    "Supplier quality issues",
+                    "Logistics / transportation failures",
+                    "External regulations or compliance changes"
+                ]
             }
+
             for idx, _ in enumerate(st.session_state.d5_sys_whys):
                 options = [""] + [f"{cat}: {item}" for cat, items in systemic_categories.items() for item in items]
                 current_val = st.session_state.d5_sys_whys[idx]
@@ -283,40 +331,28 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                 if free_text.strip():
                     st.session_state.d5_sys_whys[idx] = free_text
 
-            if st.button("➕ Add another Systemic Why"):
+            if st.button("➕ Add another Systemic Why", key="add_sys"):
                 st.session_state.d5_sys_whys.append("")
-                            # ---------------------------
-            # Dynamic Root Cause Summaries
-            # ---------------------------
-            def build_root_cause_text(why_list, context):
-                reasons = [w for w in why_list if w.strip()]
-                if not reasons:
-                    return f"No {context.lower()} reason provided yet."
-                # Construct a simple full-sentence summary
-                sentence = f"The root cause that contributed to {context.lower()} includes: " + "; ".join(reasons) + "."
-                return sentence
 
-            # Occurrence Root Cause
+            # ---------------------------
+            # Fully Dynamic Root Cause Text
+            # ---------------------------
             st.text_area(
                 f"{t[lang_key]['Root_Cause_Occ']}",
-                value=build_root_cause_text(st.session_state.d5_occ_whys, "Occurrence"),
-                height=100,
+                value="The root cause that allowed this issue to occur may be related: " + ", ".join([w for w in st.session_state.d5_occ_whys if w]),
+                height=80,
                 key="dynamic_occ_rc"
             )
-
-            # Detection Root Cause
             st.text_area(
                 f"{t[lang_key]['Root_Cause_Det']}",
-                value=build_root_cause_text(st.session_state.d5_det_whys, "Detection"),
-                height=100,
+                value="The root cause that allowed this issue to escape detection may be related: " + ", ".join([w for w in st.session_state.d5_det_whys if w]),
+                height=80,
                 key="dynamic_det_rc"
             )
-
-            # Systemic Root Cause
             st.text_area(
                 f"{t[lang_key]['Root_Cause_Sys']}",
-                value=build_root_cause_text(st.session_state.d5_sys_whys, "Systemic"),
-                height=100,
+                value="Systemic root causes may include: " + ", ".join([w for w in st.session_state.d5_sys_whys if w]),
+                height=80,
                 key="dynamic_sys_rc"
             )
             # ---------------------------
@@ -350,7 +386,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
 # ---------------------------
 # Collect answers for Excel
 # ---------------------------
-data_rows = [(step, st.session_state[step]["answer"], st.session_state[step].get("extra", "")) for step, _, _ in npqp_steps]
+data_rows = [(step, st.session_state[step]["answer"], st.session_state[step]["extra"]) for step, _, _ in npqp_steps]
 
 # ---------------------------
 # Save / Download Excel
@@ -408,19 +444,24 @@ def generate_excel():
     wb.save(output)
     return output.getvalue()
 
+# ---------------------------
+# Download Button
+# ---------------------------
 st.download_button(
     label=f"{t[lang_key]['Download']}",
     data=generate_excel(),
     file_name=f"8D_Report_{st.session_state.report_date.replace(' ', '_')}.xlsx",
     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 )
-
 # ---------------------------
 # Sidebar: JSON Backup / Restore
 # ---------------------------
 with st.sidebar:
     st.markdown("## Backup / Restore")
 
+    # ---------------------------
+    # Generate JSON backup
+    # ---------------------------
     def generate_json():
         save_data = {k: v for k, v in st.session_state.items() if not k.startswith("_")}
         return json.dumps(save_data, indent=4)
@@ -435,6 +476,9 @@ with st.sidebar:
     st.markdown("---")
     st.markdown("### Restore from JSON")
 
+    # ---------------------------
+    # Restore from uploaded JSON
+    # ---------------------------
     uploaded_file = st.file_uploader("Upload JSON file to restore", type="json")
     if uploaded_file:
         try:
@@ -444,3 +488,58 @@ with st.sidebar:
             st.success("✅ Session restored from JSON!")
         except Exception as e:
             st.error(f"Error restoring JSON: {e}")
+
+# ---------------------------
+# Dynamic text updates trigger
+# ---------------------------
+# Ensure D5 dynamic root causes always reflect latest input
+st.session_state.dynamic_occ_rc = "The root cause that allowed this issue to occur may be related: " + \
+                                  ", ".join([w for w in st.session_state.d5_occ_whys if w])
+st.session_state.dynamic_det_rc = "The root cause that allowed this issue to escape detection may be related: " + \
+                                  ", ".join([w for w in st.session_state.d5_det_whys if w])
+st.session_state.dynamic_sys_rc = "Systemic root causes may include: " + \
+                                  ", ".join([w for w in st.session_state.d5_sys_whys if w])
+# ---------------------------
+# Fully Dynamic Root Cause Display for D5
+# ---------------------------
+for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
+    if step == "D5":
+        with tabs[i]:
+            st.markdown("#### Suggested Root Causes (Auto-updated)")
+
+            # Occurrence Root Cause
+            st.text_area(
+                f"{t[lang_key]['Root_Cause_Occ']}",
+                value=st.session_state.dynamic_occ_rc,
+                height=80,
+                key="display_occ_rc"
+            )
+
+            # Detection Root Cause
+            st.text_area(
+                f"{t[lang_key]['Root_Cause_Det']}",
+                value=st.session_state.dynamic_det_rc,
+                height=80,
+                key="display_det_rc"
+            )
+
+            # Systemic Root Cause
+            st.text_area(
+                f"{t[lang_key]['Root_Cause_Sys']}",
+                value=st.session_state.dynamic_sys_rc,
+                height=80,
+                key="display_sys_rc"
+            )
+
+            # ---------------------------
+            # Update dynamic text immediately when any Why is changed
+            # ---------------------------
+            for idx in range(len(st.session_state.d5_occ_whys)):
+                st.session_state.dynamic_occ_rc = "The root cause that allowed this issue to occur may be related: " + \
+                    ", ".join([w for w in st.session_state.d5_occ_whys if w])
+            for idx in range(len(st.session_state.d5_det_whys)):
+                st.session_state.dynamic_det_rc = "The root cause that allowed this issue to escape detection may be related: " + \
+                    ", ".join([w for w in st.session_state.d5_det_whys if w])
+            for idx in range(len(st.session_state.d5_sys_whys)):
+                st.session_state.dynamic_sys_rc = "Systemic root causes may include: " + \
+                    ", ".join([w for w in st.session_state.d5_sys_whys if w])
