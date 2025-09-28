@@ -1,7 +1,3 @@
-# ---------------------------
-# Part 1 of 5
-# ---------------------------
-
 import streamlit as st
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
@@ -43,8 +39,8 @@ st.markdown("<h1 style='text-align: center; color: #1E90FF;'>📋 8D Report Assi
 # ---------------------------
 # Version info
 # ---------------------------
-version_number = "v1.0.8"
-last_updated = "September 28, 2025"
+version_number = "v1.0.7"
+last_updated = "September 14, 2025"
 st.markdown(f"""
 <hr style='border:1px solid #1E90FF; margin-top:10px; margin-bottom:5px;'>
 <p style='font-size:12px; font-style:italic; text-align:center; color:#555555;'>
@@ -124,9 +120,6 @@ npqp_steps = [
      {"en":"Update SOPs, PFMEA, work instructions, and maintenance procedures.",
       "es":"Actualizar SOPs, PFMEA, instrucciones de trabajo y procedimientos de mantenimiento."})
 ]
-# ---------------------------
-# Part 2 of 5
-# ---------------------------
 
 # ---------------------------
 # Initialize session state
@@ -139,7 +132,6 @@ st.session_state.setdefault("prepared_by", "")
 st.session_state.setdefault("d5_occ_whys", [""] * 5)
 st.session_state.setdefault("d5_det_whys", [""] * 5)
 st.session_state.setdefault("d5_sys_whys", [""] * 5)
-
 # ---------------------------
 # Restore from URL (st.query_params)
 # ---------------------------
@@ -197,12 +189,9 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             st.session_state[step]["answer"] = st.text_area(
                 "Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}"
             )
-            # ---------------------------
-# Part 3 of 5
-# ---------------------------
 
 # ---------------------------
-# Render D5 Tab (Fully Dynamic)
+# Render D5 Tab (Dynamic 5-Why Inputs)
 # ---------------------------
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     if step == "D5":
@@ -221,41 +210,18 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             ">
             <b>{t[lang_key]['Training_Guidance']}:</b> {note_dict[lang_key]}
             </div>
-            """, unsafe_allow_html=True)
+            """ , unsafe_allow_html=True)
 
             # ---------------------------
             # Occurrence Analysis
             # ---------------------------
             st.markdown("#### Occurrence Analysis")
             occurrence_categories = {
-                "Machine / Equipment-related": [
-                    "Mechanical failure or breakdown",
-                    "Calibration issues (incorrect settings)",
-                    "Tooling or fixture failure",
-                    "Machine wear and tear",
-                    "Failure not identified in FMEA"
-                ],
-                "Material / Component-related": [
-                    "Wrong material delivered",
-                    "Material defects or impurities",
-                    "Damage during storage or transport",
-                    "Incorrect specifications or tolerance errors"
-                ],
-                "Process / Method-related": [
-                    "Incorrect process steps due to poor process design",
-                    "Inefficient workflow or bottlenecks",
-                    "Lack of standardized procedures",
-                    "Outdated or incomplete work instructions"
-                ],
-                "Environmental / External Factors": [
-                    "Temperature, humidity, or other environmental conditions",
-                    "Power fluctuations or outages",
-                    "Contamination (dust, oil, chemicals)",
-                    "Regulatory or compliance changes"
-                ]
+                "Machine / Equipment": ["Mechanical failure", "Calibration issue", "Tooling failure", "Machine wear"],
+                "Material / Component": ["Wrong material", "Material defect", "Damage during transport", "Spec tolerance issue"],
+                "Process / Method": ["Incorrect process steps", "Inefficient workflow", "Lack of procedures", "Incomplete instructions"],
+                "Environmental / External": ["Temperature/humidity issue", "Power fluctuation", "Contamination", "Compliance change"]
             }
-
-            # Occurrence Why selection + free text
             for idx, _ in enumerate(st.session_state.d5_occ_whys):
                 options = [""] + [f"{cat}: {item}" for cat, items in occurrence_categories.items() for item in items]
                 current_val = st.session_state.d5_occ_whys[idx]
@@ -271,25 +237,14 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
 
             if st.button("➕ Add another Occurrence Why"):
                 st.session_state.d5_occ_whys.append("")
-
-            # ---------------------------
+                            # ---------------------------
             # Detection Analysis
             # ---------------------------
             st.markdown("#### Detection Analysis")
             detection_categories = {
-                "QA / Inspection-related": [
-                    "QA checklist incomplete",
-                    "No automated test",
-                    "Missed inspection due to process gap",
-                    "Tooling or equipment inspection not scheduled"
-                ],
-                "Validation / Process-related": [
-                    "Insufficient validation steps",
-                    "Design verification not complete",
-                    "Inspection documentation missing or outdated"
-                ]
+                "QA / Inspection": ["QA checklist incomplete", "No automated test", "Missed inspection", "Tooling inspection missed"],
+                "Validation / Process": ["Insufficient validation", "Design verification incomplete", "Documentation missing"]
             }
-
             for idx, _ in enumerate(st.session_state.d5_det_whys):
                 options = [""] + [f"{cat}: {item}" for cat, items in detection_categories.items() for item in items]
                 current_val = st.session_state.d5_det_whys[idx]
@@ -311,25 +266,10 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             # ---------------------------
             st.markdown("#### Systemic Analysis")
             systemic_categories = {
-                "Management / Organizational": [
-                    "Lack of training or skill gaps",
-                    "Inadequate resource allocation",
-                    "Poor communication between departments",
-                    "Missing policies or standards"
-                ],
-                "Process / Procedure-related": [
-                    "Outdated procedures or SOPs",
-                    "Inefficient process design",
-                    "Inconsistent work instructions",
-                    "Failure to follow PFMEA or control plan"
-                ],
-                "Supplier / External": [
-                    "Supplier quality issues",
-                    "Logistics / transportation failures",
-                    "External regulations or compliance changes"
-                ]
+                "Management / Org": ["Lack of training", "Inadequate resources", "Poor communication", "Missing policies"],
+                "Process / Procedure": ["Outdated procedures", "Inefficient design", "Inconsistent instructions", "PFMEA/control plan not followed"],
+                "Supplier / External": ["Supplier quality issues", "Logistics failures", "External compliance changes"]
             }
-
             for idx, _ in enumerate(st.session_state.d5_sys_whys):
                 options = [""] + [f"{cat}: {item}" for cat, items in systemic_categories.items() for item in items]
                 current_val = st.session_state.d5_sys_whys[idx]
@@ -345,41 +285,41 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
 
             if st.button("➕ Add another Systemic Why"):
                 st.session_state.d5_sys_whys.append("")
-
+                            # ---------------------------
+            # Dynamic Root Cause Summaries
             # ---------------------------
-            # Dynamic Smart Root Cause Text
-            # ---------------------------
-            def generate_smart_root_cause(why_list, context):
-                # Only include non-empty reasons and generate simple explanatory sentence
-                if not any(why_list):
-                    return "No reason provided yet."
-                else:
-                    reasons = "; ".join([w for w in why_list if w])
-                    return f"The root cause that {context} may be related to the following factors: {reasons}."
+            def build_root_cause_text(why_list, context):
+                reasons = [w for w in why_list if w.strip()]
+                if not reasons:
+                    return f"No {context.lower()} reason provided yet."
+                # Construct a simple full-sentence summary
+                sentence = f"The root cause that contributed to {context.lower()} includes: " + "; ".join(reasons) + "."
+                return sentence
 
+            # Occurrence Root Cause
             st.text_area(
                 f"{t[lang_key]['Root_Cause_Occ']}",
-                value=generate_smart_root_cause(st.session_state.d5_occ_whys, "allowed this issue to occur"),
+                value=build_root_cause_text(st.session_state.d5_occ_whys, "Occurrence"),
                 height=100,
                 key="dynamic_occ_rc"
             )
+
+            # Detection Root Cause
             st.text_area(
                 f"{t[lang_key]['Root_Cause_Det']}",
-                value=generate_smart_root_cause(st.session_state.d5_det_whys, "allowed this issue to escape detection"),
+                value=build_root_cause_text(st.session_state.d5_det_whys, "Detection"),
                 height=100,
                 key="dynamic_det_rc"
             )
+
+            # Systemic Root Cause
             st.text_area(
                 f"{t[lang_key]['Root_Cause_Sys']}",
-                value=generate_smart_root_cause(st.session_state.d5_sys_whys, "contributed systemically"),
+                value=build_root_cause_text(st.session_state.d5_sys_whys, "Systemic"),
                 height=100,
                 key="dynamic_sys_rc"
             )
             # ---------------------------
-# Part 4 of 5
-# ---------------------------
-
-# ---------------------------
 # Render D6–D8 Tabs
 # ---------------------------
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
@@ -410,7 +350,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
 # ---------------------------
 # Collect answers for Excel
 # ---------------------------
-data_rows = [(step, st.session_state[step]["answer"], st.session_state[step]["extra"]) for step, _, _ in npqp_steps]
+data_rows = [(step, st.session_state[step]["answer"], st.session_state[step].get("extra", "")) for step, _, _ in npqp_steps]
 
 # ---------------------------
 # Save / Download Excel
@@ -468,18 +408,12 @@ def generate_excel():
     wb.save(output)
     return output.getvalue()
 
-# ---------------------------
-# Download button
-# ---------------------------
 st.download_button(
     label=f"{t[lang_key]['Download']}",
     data=generate_excel(),
     file_name=f"8D_Report_{st.session_state.report_date.replace(' ', '_')}.xlsx",
     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 )
-# ---------------------------
-# Part 5 of 5
-# ---------------------------
 
 # ---------------------------
 # Sidebar: JSON Backup / Restore
@@ -510,7 +444,3 @@ with st.sidebar:
             st.success("✅ Session restored from JSON!")
         except Exception as e:
             st.error(f"Error restoring JSON: {e}")
-
-# ---------------------------
-# End of App
-# ---------------------------
