@@ -500,46 +500,168 @@ st.session_state.dynamic_det_rc = "The root cause that allowed this issue to esc
 st.session_state.dynamic_sys_rc = "Systemic root causes may include: " + \
                                   ", ".join([w for w in st.session_state.d5_sys_whys if w])
 # ---------------------------
-# Fully Dynamic Root Cause Display for D5
+# Render D5 Tab (Fully Dynamic with Working Root Cause)
 # ---------------------------
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     if step == "D5":
         with tabs[i]:
-            st.markdown("#### Suggested Root Causes (Auto-updated)")
+            st.markdown(f"### {t[lang_key][step]}")
+            st.markdown(f"""
+            <div style="
+                background-color:#b3e0ff; 
+                color:black; 
+                padding:12px; 
+                border-left:5px solid #1E90FF; 
+                border-radius:6px;
+                width:100%;
+                font-size:14px;
+                line-height:1.5;
+            ">
+            <b>{t[lang_key]['Training_Guidance']}:</b> {note_dict[lang_key]}
+            </div>
+            """, unsafe_allow_html=True)
 
-            # Occurrence Root Cause
-            st.text_area(
-                f"{t[lang_key]['Root_Cause_Occ']}",
-                value=st.session_state.dynamic_occ_rc,
-                height=80,
-                key="display_occ_rc"
-            )
-
-            # Detection Root Cause
-            st.text_area(
-                f"{t[lang_key]['Root_Cause_Det']}",
-                value=st.session_state.dynamic_det_rc,
-                height=80,
-                key="display_det_rc"
-            )
-
-            # Systemic Root Cause
-            st.text_area(
-                f"{t[lang_key]['Root_Cause_Sys']}",
-                value=st.session_state.dynamic_sys_rc,
-                height=80,
-                key="display_sys_rc"
-            )
+            # Initialize dynamic text variables
+            st.session_state.setdefault("dynamic_occ_rc", "The root cause that allowed this issue to occur may be related: ")
+            st.session_state.setdefault("dynamic_det_rc", "The root cause that allowed this issue to escape detection may be related: ")
+            st.session_state.setdefault("dynamic_sys_rc", "Systemic root causes may include: ")
 
             # ---------------------------
-            # Update dynamic text immediately when any Why is changed
+            # Occurrence Analysis
             # ---------------------------
+            st.markdown("#### Occurrence Analysis")
+            occurrence_categories = {
+                "Machine / Equipment-related": [
+                    "Mechanical failure or breakdown",
+                    "Calibration issues (incorrect settings)",
+                    "Tooling or fixture failure",
+                    "Machine wear and tear",
+                    "Failure not identified in FMEA"
+                ],
+                "Material / Component-related": [
+                    "Wrong material delivered",
+                    "Material defects or impurities",
+                    "Damage during storage or transport",
+                    "Incorrect specifications or tolerance errors"
+                ],
+                "Process / Method-related": [
+                    "Incorrect process steps due to poor process design",
+                    "Inefficient workflow or bottlenecks",
+                    "Lack of standardized procedures",
+                    "Outdated or incomplete work instructions"
+                ],
+                "Environmental / External Factors": [
+                    "Temperature, humidity, or other environmental conditions",
+                    "Power fluctuations or outages",
+                    "Contamination (dust, oil, chemicals)",
+                    "Regulatory or compliance changes"
+                ]
+            }
+
             for idx in range(len(st.session_state.d5_occ_whys)):
-                st.session_state.dynamic_occ_rc = "The root cause that allowed this issue to occur may be related: " + \
-                    ", ".join([w for w in st.session_state.d5_occ_whys if w])
+                options = [""] + [f"{cat}: {item}" for cat, items in occurrence_categories.items() for item in items]
+                current_val = st.session_state.d5_occ_whys[idx]
+                selected = st.selectbox(
+                    f"{t[lang_key]['Occurrence_Why']} {idx+1}",
+                    options,
+                    index=options.index(current_val) if current_val in options else 0,
+                    key=f"occ_{idx}"
+                )
+                free_text = st.text_input(f"Or enter your own Occurrence Why {idx+1}", value=selected, key=f"occ_txt_{idx}")
+                st.session_state.d5_occ_whys[idx] = free_text.strip()
+
+            if st.button("➕ Add another Occurrence Why"):
+                st.session_state.d5_occ_whys.append("")
+
+            # ---------------------------
+            # Detection Analysis
+            # ---------------------------
+            st.markdown("#### Detection Analysis")
+            detection_categories = {
+                "QA / Inspection-related": [
+                    "QA checklist incomplete",
+                    "No automated test",
+                    "Missed inspection due to process gap",
+                    "Tooling or equipment inspection not scheduled"
+                ],
+                "Validation / Process-related": [
+                    "Insufficient validation steps",
+                    "Design verification not complete",
+                    "Inspection documentation missing or outdated"
+                ]
+            }
+
             for idx in range(len(st.session_state.d5_det_whys)):
-                st.session_state.dynamic_det_rc = "The root cause that allowed this issue to escape detection may be related: " + \
-                    ", ".join([w for w in st.session_state.d5_det_whys if w])
+                options = [""] + [f"{cat}: {item}" for cat, items in detection_categories.items() for item in items]
+                current_val = st.session_state.d5_det_whys[idx]
+                selected = st.selectbox(
+                    f"{t[lang_key]['Detection_Why']} {idx+1}",
+                    options,
+                    index=options.index(current_val) if current_val in options else 0,
+                    key=f"det_{idx}"
+                )
+                free_text = st.text_input(f"Or enter your own Detection Why {idx+1}", value=selected, key=f"det_txt_{idx}")
+                st.session_state.d5_det_whys[idx] = free_text.strip()
+
+            if st.button("➕ Add another Detection Why"):
+                st.session_state.d5_det_whys.append("")
+
+            # ---------------------------
+            # Systemic Analysis
+            # ---------------------------
+            st.markdown("#### Systemic Analysis")
+            systemic_categories = {
+                "Management / Organizational": [
+                    "Lack of training or skill gaps",
+                    "Inadequate resource allocation",
+                    "Poor communication between departments",
+                    "Missing policies or standards"
+                ],
+                "Process / Procedure-related": [
+                    "Outdated procedures or SOPs",
+                    "Inefficient process design",
+                    "Inconsistent work instructions",
+                    "Failure to follow PFMEA or control plan"
+                ],
+                "Supplier / External": [
+                    "Supplier quality issues",
+                    "Logistics / transportation failures",
+                    "External regulations or compliance changes"
+                ]
+            }
+
             for idx in range(len(st.session_state.d5_sys_whys)):
-                st.session_state.dynamic_sys_rc = "Systemic root causes may include: " + \
-                    ", ".join([w for w in st.session_state.d5_sys_whys if w])
+                options = [""] + [f"{cat}: {item}" for cat, items in systemic_categories.items() for item in items]
+                current_val = st.session_state.d5_sys_whys[idx]
+                selected = st.selectbox(
+                    f"{t[lang_key]['Systemic_Why']} {idx+1}",
+                    options,
+                    index=options.index(current_val) if current_val in options else 0,
+                    key=f"sys_{idx}"
+                )
+                free_text = st.text_input(f"Or enter your own Systemic Why {idx+1}", value=selected, key=f"sys_txt_{idx}")
+                st.session_state.d5_sys_whys[idx] = free_text.strip()
+
+            if st.button("➕ Add another Systemic Why"):
+                st.session_state.d5_sys_whys.append("")
+
+            # ---------------------------
+            # Update dynamic root cause texts
+            # ---------------------------
+            st.session_state.dynamic_occ_rc = (
+                "The root cause that allowed this issue to occur may be related: "
+                + ", ".join([w for w in st.session_state.d5_occ_whys if w])
+            )
+            st.session_state.dynamic_det_rc = (
+                "The root cause that allowed this issue to escape detection may be related: "
+                + ", ".join([w for w in st.session_state.d5_det_whys if w])
+            )
+            st.session_state.dynamic_sys_rc = (
+                "Systemic root causes may include: "
+                + ", ".join([w for w in st.session_state.d5_sys_whys if w])
+            )
+
+            # Display dynamic text areas
+            st.text_area(f"{t[lang_key]['Root_Cause_Occ']}", value=st.session_state.dynamic_occ_rc, height=80, key="dynamic_occ_rc_display")
+            st.text_area(f"{t[lang_key]['Root_Cause_Det']}", value=st.session_state.dynamic_det_rc, height=80, key="dynamic_det_rc_display")
+            st.text_area(f"{t[lang_key]['Root_Cause_Sys']}", value=st.session_state.dynamic_sys_rc, height=80, key="dynamic_sys_rc_display")
