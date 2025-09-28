@@ -39,8 +39,8 @@ st.markdown("<h1 style='text-align: center; color: #1E90FF;'>📋 8D Report Assi
 # ---------------------------
 # Version info
 # ---------------------------
-version_number = "v1.0.8"
-last_updated = "September 27, 2025"
+version_number = "v1.0.7"
+last_updated = "September 14, 2025"
 st.markdown(f"""
 <hr style='border:1px solid #1E90FF; margin-top:10px; margin-bottom:5px;'>
 <p style='font-size:12px; font-style:italic; text-align:center; color:#555555;'>
@@ -83,6 +83,7 @@ t = {
         "FMEA_Failure": "Ocurrencia de falla FMEA"
     }
 }
+
 # ---------------------------
 # NPQP 8D steps with examples
 # ---------------------------
@@ -126,16 +127,11 @@ npqp_steps = [
 for step, _, _ in npqp_steps:
     if step not in st.session_state:
         st.session_state[step] = {"answer": "", "extra": ""}
-
 st.session_state.setdefault("report_date", datetime.datetime.today().strftime("%B %d, %Y"))
 st.session_state.setdefault("prepared_by", "")
 st.session_state.setdefault("d5_occ_whys", [""] * 5)
 st.session_state.setdefault("d5_det_whys", [""] * 5)
-st.session_state.setdefault("d5_sys_whys", [""] * 5)  # Systemic added
-st.session_state.setdefault("d5_occ_selected", [])
-st.session_state.setdefault("d5_det_selected", [])
-st.session_state.setdefault("d5_sys_selected", [])
-
+st.session_state.setdefault("d5_sys_whys", [""] * 5)
 # ---------------------------
 # Restore from URL (st.query_params)
 # ---------------------------
@@ -194,7 +190,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                 "Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}"
             )
             # ---------------------------
-# Render D5 Tab (Dynamic Root Causes)
+# Render D5 Tab (Fully Dynamic)
 # ---------------------------
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     if step == "D5":
@@ -247,31 +243,21 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                 ]
             }
 
-            selected_occ = []
-            for idx, val in enumerate(st.session_state.d5_occ_whys):
-                remaining_options = [f"{cat}: {item}" for cat, items in occurrence_categories.items() for item in items if f"{cat}: {item}" not in selected_occ]
-                if val and val not in remaining_options:
-                    remaining_options.append(val)
-
-                options = [""] + sorted(remaining_options)
-                current_value = st.session_state.d5_occ_whys[idx]
+            for idx, _ in enumerate(st.session_state.d5_occ_whys):
+                options = [""] + [f"{cat}: {item}" for cat, items in occurrence_categories.items() for item in items]
+                current_val = st.session_state.d5_occ_whys[idx]
                 st.session_state.d5_occ_whys[idx] = st.selectbox(
                     f"{t[lang_key]['Occurrence_Why']} {idx+1}",
                     options,
-                    index=options.index(current_value) if current_value in options else 0,
+                    index=options.index(current_val) if current_val in options else 0,
                     key=f"occ_{idx}"
                 )
-
                 free_text = st.text_input(f"Or enter your own Occurrence Why {idx+1}", value=st.session_state.d5_occ_whys[idx], key=f"occ_txt_{idx}")
                 if free_text.strip():
                     st.session_state.d5_occ_whys[idx] = free_text
-                if st.session_state.d5_occ_whys[idx]:
-                    selected_occ.append(st.session_state.d5_occ_whys[idx])
 
             if st.button("➕ Add another Occurrence Why"):
                 st.session_state.d5_occ_whys.append("")
-
-            st.session_state["d5_occ_selected"] = selected_occ
 
             # ---------------------------
             # Detection Analysis
@@ -291,31 +277,21 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                 ]
             }
 
-            selected_det = []
-            for idx, val in enumerate(st.session_state.d5_det_whys):
-                remaining_options = [f"{cat}: {item}" for cat, items in detection_categories.items() for item in items if f"{cat}: {item}" not in selected_det]
-                if val and val not in remaining_options:
-                    remaining_options.append(val)
-
-                options_det = [""] + sorted(remaining_options)
-                current_value = st.session_state.d5_det_whys[idx]
+            for idx, _ in enumerate(st.session_state.d5_det_whys):
+                options = [""] + [f"{cat}: {item}" for cat, items in detection_categories.items() for item in items]
+                current_val = st.session_state.d5_det_whys[idx]
                 st.session_state.d5_det_whys[idx] = st.selectbox(
                     f"{t[lang_key]['Detection_Why']} {idx+1}",
-                    options_det,
-                    index=options_det.index(current_value) if current_value in options_det else 0,
+                    options,
+                    index=options.index(current_val) if current_val in options else 0,
                     key=f"det_{idx}"
                 )
-
-                free_text_det = st.text_input(f"Or enter your own Detection Why {idx+1}", value=st.session_state.d5_det_whys[idx], key=f"det_txt_{idx}")
-                if free_text_det.strip():
-                    st.session_state.d5_det_whys[idx] = free_text_det
-                if st.session_state.d5_det_whys[idx]:
-                    selected_det.append(st.session_state.d5_det_whys[idx])
+                free_text = st.text_input(f"Or enter your own Detection Why {idx+1}", value=st.session_state.d5_det_whys[idx], key=f"det_txt_{idx}")
+                if free_text.strip():
+                    st.session_state.d5_det_whys[idx] = free_text
 
             if st.button("➕ Add another Detection Why"):
                 st.session_state.d5_det_whys.append("")
-
-            st.session_state["d5_det_selected"] = selected_det
 
             # ---------------------------
             # Systemic Analysis
@@ -341,50 +317,40 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                 ]
             }
 
-            selected_sys = []
-            for idx, val in enumerate(st.session_state.d5_sys_whys):
-                remaining_options = [f"{cat}: {item}" for cat, items in systemic_categories.items() for item in items if f"{cat}: {item}" not in selected_sys]
-                if val and val not in remaining_options:
-                    remaining_options.append(val)
-
-                options_sys = [""] + sorted(remaining_options)
-                current_value = st.session_state.d5_sys_whys[idx]
+            for idx, _ in enumerate(st.session_state.d5_sys_whys):
+                options = [""] + [f"{cat}: {item}" for cat, items in systemic_categories.items() for item in items]
+                current_val = st.session_state.d5_sys_whys[idx]
                 st.session_state.d5_sys_whys[idx] = st.selectbox(
                     f"{t[lang_key]['Systemic_Why']} {idx+1}",
-                    options_sys,
-                    index=options_sys.index(current_value) if current_value in options_sys else 0,
+                    options,
+                    index=options.index(current_val) if current_val in options else 0,
                     key=f"sys_{idx}"
                 )
-
-                free_text_sys = st.text_input(f"Or enter your own Systemic Why {idx+1}", value=st.session_state.d5_sys_whys[idx], key=f"sys_txt_{idx}")
-                if free_text_sys.strip():
-                    st.session_state.d5_sys_whys[idx] = free_text_sys
-                if st.session_state.d5_sys_whys[idx]:
-                    selected_sys.append(st.session_state.d5_sys_whys[idx])
+                free_text = st.text_input(f"Or enter your own Systemic Why {idx+1}", value=st.session_state.d5_sys_whys[idx], key=f"sys_txt_{idx}")
+                if free_text.strip():
+                    st.session_state.d5_sys_whys[idx] = free_text
 
             if st.button("➕ Add another Systemic Why"):
                 st.session_state.d5_sys_whys.append("")
 
-            st.session_state["d5_sys_selected"] = selected_sys
-
             # ---------------------------
-            # Dynamic Root Causes Text Areas
+            # Fully Dynamic Root Cause Text
             # ---------------------------
             st.text_area(
                 f"{t[lang_key]['Root_Cause_Occ']}",
-                value="The root cause that allowed this issue to occur may be related to: " + ", ".join(selected_occ) if selected_occ else "",
+                value="The root cause that allowed this issue to occur may be related: " + ", ".join([w for w in st.session_state.d5_occ_whys if w]),
                 height=80,
                 key="dynamic_occ_rc"
             )
             st.text_area(
                 f"{t[lang_key]['Root_Cause_Det']}",
-                value="The root cause that allowed this issue to escape detection may be related to: " + ", ".join(selected_det) if selected_det else "",
+                value="The root cause that allowed this issue to escape detection may be related: " + ", ".join([w for w in st.session_state.d5_det_whys if w]),
                 height=80,
                 key="dynamic_det_rc"
             )
             st.text_area(
                 f"{t[lang_key]['Root_Cause_Sys']}",
-                value="Systemic root causes may include: " + ", ".join(selected_sys) if selected_sys else "",
+                value="Systemic root causes may include: " + ", ".join([w for w in st.session_state.d5_sys_whys if w]),
                 height=80,
                 key="dynamic_sys_rc"
             )
@@ -420,9 +386,8 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
 # Collect answers for Excel
 # ---------------------------
 data_rows = [(step, st.session_state[step]["answer"], st.session_state[step]["extra"]) for step, _, _ in npqp_steps]
-
 # ---------------------------
-# Generate Excel
+# Save / Download Excel
 # ---------------------------
 def generate_excel():
     wb = Workbook()
@@ -483,6 +448,7 @@ st.download_button(
     file_name=f"8D_Report_{st.session_state.report_date.replace(' ', '_')}.xlsx",
     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 )
+
 # ---------------------------
 # Sidebar: JSON Backup / Restore
 # ---------------------------
@@ -512,9 +478,3 @@ with st.sidebar:
             st.success("✅ Session restored from JSON!")
         except Exception as e:
             st.error(f"Error restoring JSON: {e}")
-
-# ---------------------------
-# End of app
-# ---------------------------
-st.markdown("<hr style='border:1px solid #1E90FF;'>", unsafe_allow_html=True)
-st.markdown("<p style='text-align:center; color:#555555; font-size:12px;'>📌 8D Report Assistant - All data is saved dynamically in session or via JSON backup.</p>", unsafe_allow_html=True)
