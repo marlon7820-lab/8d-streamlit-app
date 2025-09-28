@@ -1,6 +1,7 @@
 # ---------------------------
-# PART 1 of 5
+# Part 1 of 5
 # ---------------------------
+
 import streamlit as st
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
@@ -42,7 +43,7 @@ st.markdown("<h1 style='text-align: center; color: #1E90FF;'>📋 8D Report Assi
 # ---------------------------
 # Version info
 # ---------------------------
-version_number = "v1.0.7"
+version_number = "v1.0.8"
 last_updated = "September 28, 2025"
 st.markdown(f"""
 <hr style='border:1px solid #1E90FF; margin-top:10px; margin-bottom:5px;'>
@@ -123,6 +124,9 @@ npqp_steps = [
      {"en":"Update SOPs, PFMEA, work instructions, and maintenance procedures.",
       "es":"Actualizar SOPs, PFMEA, instrucciones de trabajo y procedimientos de mantenimiento."})
 ]
+# ---------------------------
+# Part 2 of 5
+# ---------------------------
 
 # ---------------------------
 # Initialize session state
@@ -135,9 +139,6 @@ st.session_state.setdefault("prepared_by", "")
 st.session_state.setdefault("d5_occ_whys", [""] * 5)
 st.session_state.setdefault("d5_det_whys", [""] * 5)
 st.session_state.setdefault("d5_sys_whys", [""] * 5)
-# ---------------------------
-# PART 2 of 5
-# ---------------------------
 
 # ---------------------------
 # Restore from URL (st.query_params)
@@ -197,7 +198,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                 "Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}"
             )
             # ---------------------------
-# PART 3 of 5
+# Part 3 of 5
 # ---------------------------
 
 # ---------------------------
@@ -254,6 +255,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                 ]
             }
 
+            # Occurrence Why selection + free text
             for idx, _ in enumerate(st.session_state.d5_occ_whys):
                 options = [""] + [f"{cat}: {item}" for cat, items in occurrence_categories.items() for item in items]
                 current_val = st.session_state.d5_occ_whys[idx]
@@ -345,35 +347,43 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                 st.session_state.d5_sys_whys.append("")
 
             # ---------------------------
-            # Fully Dynamic Root Cause Text
+            # Dynamic Smart Root Cause Text
             # ---------------------------
+            def generate_smart_root_cause(why_list, context):
+                # Only include non-empty reasons and generate simple explanatory sentence
+                if not any(why_list):
+                    return "No reason provided yet."
+                else:
+                    reasons = "; ".join([w for w in why_list if w])
+                    return f"The root cause that {context} may be related to the following factors: {reasons}."
+
             st.text_area(
                 f"{t[lang_key]['Root_Cause_Occ']}",
-                value="The root cause that allowed this issue to occur may be related: " + ", ".join([w for w in st.session_state.d5_occ_whys if w]),
-                height=80,
+                value=generate_smart_root_cause(st.session_state.d5_occ_whys, "allowed this issue to occur"),
+                height=100,
                 key="dynamic_occ_rc"
             )
             st.text_area(
                 f"{t[lang_key]['Root_Cause_Det']}",
-                value="The root cause that allowed this issue to escape detection may be related: " + ", ".join([w for w in st.session_state.d5_det_whys if w]),
-                height=80,
+                value=generate_smart_root_cause(st.session_state.d5_det_whys, "allowed this issue to escape detection"),
+                height=100,
                 key="dynamic_det_rc"
             )
             st.text_area(
                 f"{t[lang_key]['Root_Cause_Sys']}",
-                value="Systemic root causes may include: " + ", ".join([w for w in st.session_state.d5_sys_whys if w]),
-                height=80,
+                value=generate_smart_root_cause(st.session_state.d5_sys_whys, "contributed systemically"),
+                height=100,
                 key="dynamic_sys_rc"
             )
             # ---------------------------
-# PART 4 of 5
+# Part 4 of 5
 # ---------------------------
 
 # ---------------------------
 # Render D6–D8 Tabs
 # ---------------------------
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
-    if step in ["D6", "D7", "D8"]:
+    if step in ["D6","D7","D8"]:
         with tabs[i]:
             st.markdown(f"### {t[lang_key][step]}")
             note_text = note_dict[lang_key]
@@ -400,7 +410,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
 # ---------------------------
 # Collect answers for Excel
 # ---------------------------
-data_rows = [(step, st.session_state[step]["answer"], st.session_state[step].get("extra", "")) for step, _, _ in npqp_steps]
+data_rows = [(step, st.session_state[step]["answer"], st.session_state[step]["extra"]) for step, _, _ in npqp_steps]
 
 # ---------------------------
 # Save / Download Excel
@@ -458,6 +468,9 @@ def generate_excel():
     wb.save(output)
     return output.getvalue()
 
+# ---------------------------
+# Download button
+# ---------------------------
 st.download_button(
     label=f"{t[lang_key]['Download']}",
     data=generate_excel(),
@@ -465,7 +478,7 @@ st.download_button(
     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 )
 # ---------------------------
-# PART 5 of 5
+# Part 5 of 5
 # ---------------------------
 
 # ---------------------------
@@ -474,12 +487,10 @@ st.download_button(
 with st.sidebar:
     st.markdown("## Backup / Restore")
 
-    # Function to generate JSON of session state
     def generate_json():
         save_data = {k: v for k, v in st.session_state.items() if not k.startswith("_")}
         return json.dumps(save_data, indent=4)
 
-    # Download current session state as JSON
     st.download_button(
         label="💾 Save Progress (JSON)",
         data=generate_json(),
@@ -490,7 +501,6 @@ with st.sidebar:
     st.markdown("---")
     st.markdown("### Restore from JSON")
 
-    # Upload JSON file to restore session state
     uploaded_file = st.file_uploader("Upload JSON file to restore", type="json")
     if uploaded_file:
         try:
@@ -500,3 +510,7 @@ with st.sidebar:
             st.success("✅ Session restored from JSON!")
         except Exception as e:
             st.error(f"Error restoring JSON: {e}")
+
+# ---------------------------
+# End of App
+# ---------------------------
