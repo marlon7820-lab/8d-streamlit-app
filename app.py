@@ -32,13 +32,22 @@ button[kind="primary"] {background-color: #87AFC7 !important; color: white !impo
 """, unsafe_allow_html=True)
 
 # ---------------------------
-# Initialize session state for D5 whys
+# Main title
 # ---------------------------
-st.session_state.setdefault("d5_occ_whys", [""])
-st.session_state.setdefault("d5_det_whys", [""])
-st.session_state.setdefault("d5_sys_whys", [""])
-st.session_state.setdefault("report_date", datetime.datetime.today().strftime("%B %d, %Y"))
-st.session_state.setdefault("prepared_by", "")
+st.markdown("<h1 style='text-align: center; color: #1E90FF;'>📋 8D Report Assistant</h1>", unsafe_allow_html=True)
+
+# ---------------------------
+# Version info
+# ---------------------------
+version_number = "v1.0.8"
+last_updated = "October 10, 2025"
+st.markdown(f"""
+<hr style='border:1px solid #1E90FF; margin-top:10px; margin-bottom:5px;'>
+<p style='font-size:12px; font-style:italic; text-align:center; color:#555555;'>
+Version {version_number} | Last updated: {last_updated}
+</p>
+""", unsafe_allow_html=True)
+
 # ---------------------------
 # Language selection
 # ---------------------------
@@ -53,94 +62,95 @@ t = {
         "D1": "D1: Concern Details", "D2": "D2: Similar Part Considerations",
         "D3": "D3: Initial Analysis", "D4": "D4: Implement Containment",
         "D5": "D5: Final Analysis", "D6": "D6: Permanent Corrective Actions",
-        "D7": "D7: Countermeasure Confirmation", "D8": "D8: Follow-up Activities",
+        "D7": "D7: Countermeasure Confirmation", "D8": "D8: Follow-up Activities (Lessons Learned / Recurrence Prevention)",
         "Report_Date": "Report Date", "Prepared_By": "Prepared By",
         "Root_Cause_Occ": "Root Cause (Occurrence)", "Root_Cause_Det": "Root Cause (Detection)", "Root_Cause_Sys": "Root Cause (Systemic)",
         "Occurrence_Why": "Occurrence Why", "Detection_Why": "Detection Why", "Systemic_Why": "Systemic Why",
         "Save": "💾 Save 8D Report", "Download": "📥 Download XLSX",
-        "Training_Guidance": "Training Guidance", "Example": "Example"
+        "Training_Guidance": "Training Guidance", "Example": "Example",
+        "FMEA_Failure": "FMEA Failure Occurrence"
     },
     "es": {
         "D1": "D1: Detalles de la preocupación", "D2": "D2: Consideraciones de partes similares",
         "D3": "D3: Análisis inicial", "D4": "D4: Implementar contención",
         "D5": "D5: Análisis final", "D6": "D6: Acciones correctivas permanentes",
-        "D7": "D7: Confirmación de contramedidas", "D8": "D8: Actividades de seguimiento",
+        "D7": "D7: Confirmación de contramedidas", "D8": "D8: Actividades de seguimiento (Lecciones aprendidas / Prevención de recurrencia)",
         "Report_Date": "Fecha del informe", "Prepared_By": "Preparado por",
         "Root_Cause_Occ": "Causa raíz (Ocurrencia)", "Root_Cause_Det": "Causa raíz (Detección)", "Root_Cause_Sys": "Causa raíz (Sistémica)",
         "Occurrence_Why": "Por qué Ocurrencia", "Detection_Why": "Por qué Detección", "Systemic_Why": "Por qué Sistémico",
         "Save": "💾 Guardar Informe 8D", "Download": "📥 Descargar XLSX",
-        "Training_Guidance": "Guía de Entrenamiento", "Example": "Ejemplo"
+        "Training_Guidance": "Guía de Entrenamiento", "Example": "Ejemplo",
+        "FMEA_Failure": "Ocurrencia de falla FMEA"
     }
 }
-
 # ---------------------------
-# NPQP steps
+# NPQP 8D steps with examples
 # ---------------------------
 npqp_steps = [
-    ("D1", {"en":"Describe the customer concerns clearly.", "es":"Describa claramente las preocupaciones del cliente."}, {"en":"Customer reported static noise", "es":"El cliente reportó ruido estático"}),
-    ("D2", {"en":"Check for similar parts, models, generic parts.", "es":"Verifique partes similares, modelos, partes genéricas."}, {"en":"Similar model radio", "es":"Radio de modelo similar"}),
-    ("D3", {"en":"Perform initial investigation to identify issues.", "es":"Realice investigación inicial para identificar problemas."}, {"en":"Visual inspection of solder joints", "es":"Inspección visual de soldaduras"}),
-    ("D4", {"en":"Define temporary containment actions.", "es":"Defina acciones de contención temporales."}, {"en":"100% inspection before shipment", "es":"Inspección 100% antes del envío"}),
-    ("D5", {"en":"Use 5-Why analysis to determine root cause.", "es":"Use análisis de 5 Porqués para determinar causa raíz."}, {"en":"", "es":""}),
-    ("D6", {"en":"Define permanent corrective actions.", "es":"Defina acciones correctivas permanentes."}, {"en":"Update soldering process", "es":"Actualizar proceso de soldadura"}),
-    ("D7", {"en":"Verify corrective actions effectiveness.", "es":"Verifique efectividad de acciones correctivas."}, {"en":"Functional tests on corrected amplifiers", "es":"Pruebas funcionales en amplificadores corregidos"}),
-    ("D8", {"en":"Document lessons learned.", "es":"Documente lecciones aprendidas."}, {"en":"Update SOPs, PFMEA", "es":"Actualizar SOPs, PFMEA"})
+    ("D1", {"en":"Describe the customer concerns clearly. Include what the issue is, where it occurred, when, and any supporting data.",
+            "es":"Describa claramente las preocupaciones del cliente. Incluya cuál es el problema, dónde ocurrió, cuándo y cualquier dato de soporte."},
+     {"en":"Customer reported static noise in amplifier during end-of-line test.",
+      "es":"El cliente reportó ruido estático en el amplificador durante la prueba final."}),
+    ("D2", {"en":"Check for similar parts, models, generic parts, other colors, opposite hand, front/rear, etc.",
+            "es":"Verifique partes similares, modelos, partes genéricas, otros colores, mano opuesta, frente/trasero, etc."},
+     {"en":"Similar model radio, Front vs. rear speaker; for amplifiers consider 8, 12, or 24 channels.",
+      "es":"Radio de modelo similar, altavoz delantero vs trasero; para amplificadores considere 8, 12 o 24 canales."}),
+    ("D3", {"en":"Perform an initial investigation to identify obvious issues, collect data, and document initial findings.",
+            "es":"Realice una investigación inicial para identificar problemas evidentes, recopile datos y documente hallazgos iniciales."},
+     {"en":"Visual inspection of solder joints, initial functional tests, checking connectors, etc.",
+      "es":"Inspección visual de soldaduras, pruebas funcionales iniciales, revisión de conectores, etc."}),
+    ("D4", {"en":"Define temporary containment actions to prevent the customer from seeing the problem while permanent actions are developed.",
+            "es":"Defina acciones de contención temporales para evitar que el cliente vea el problema mientras se desarrollan acciones permanentes."},
+     {"en":"100% inspection of amplifiers before shipment; temporary shielding.",
+      "es":"Inspección 100% de amplificadores antes del envío; blindaje temporal."}),
+    ("D5", {"en":"Use 5-Why analysis to determine the root cause. Separate Occurrence, Detection, and Systemic. Include FMEA failure occurrence if applicable.",
+            "es":"Use el análisis de 5 Porqués para determinar la causa raíz. Separe Ocurrencia, Detección y Sistémica. Incluya la ocurrencia de falla FMEA si aplica."},
+     {"en":"","es":""}),
+    ("D6", {"en":"Define corrective actions that eliminate the root cause permanently and prevent recurrence.",
+            "es":"Defina acciones correctivas que eliminen la causa raíz permanentemente y eviten recurrencia."},
+     {"en":"Update soldering process, redesign fixture, improve component handling.",
+      "es":"Actualizar proceso de soldadura, rediseñar herramienta, mejorar manejo de componentes."}),
+    ("D7", {"en":"Verify that corrective actions effectively resolve the issue long-term.",
+            "es":"Verifique que las acciones correctivas resuelvan efectivamente el problema a largo plazo."},
+     {"en":"Functional tests on corrected amplifiers, accelerated life testing.",
+      "es":"Pruebas funcionales en amplificadores corregidos, pruebas de vida aceleradas."}),
+    ("D8", {"en":"Document lessons learned, update standards, procedures, FMEAs, and training to prevent recurrence.",
+            "es":"Documente lecciones aprendidas, actualice estándares, procedimientos, FMEAs y capacitación para prevenir recurrencia."},
+     {"en":"Update SOPs, PFMEA, work instructions, and maintenance procedures.",
+      "es":"Actualizar SOPs, PFMEA, instrucciones de trabajo y procedimientos de mantenimiento."})
 ]
 
 # ---------------------------
-# Initialize session state for each step
+# Initialize session state
 # ---------------------------
 for step, _, _ in npqp_steps:
     if step not in st.session_state:
         st.session_state[step] = {"answer": "", "extra": ""}
-
-# ---------------------------
-# Rule-based Root Cause Suggestion
-# ---------------------------
-def suggest_root_cause(whys):
-    text = " ".join(whys).lower()
-    if any(word in text for word in ["training", "knowledge", "operator", "human error"]):
-        return "Lack of proper training / knowledge gap"
-    if any(word in text for word in ["equipment", "tool", "machine", "maintenance", "fixture"]):
-        return "Equipment, tooling, or maintenance issue"
-    if any(word in text for word in ["procedure", "process", "standard", "sop"]):
-        return "Procedure or process not followed"
-    if any(word in text for word in ["communication", "handover", "reporting"]):
-        return "Poor communication or unclear info flow"
-    if any(word in text for word in ["material", "supplier", "component"]):
-        return "Material, supplier, or logistics issue"
-    if any(word in text for word in ["design", "drawing", "engineering"]):
-        return "Design or engineering issue"
-    if any(word in text for word in ["management", "oversight", "resource"]):
-        return "Management or resource-related issue"
-    if any(word in text for word in ["temperature", "humidity", "environment", "contamination"]):
-        return "Environmental or external factor"
-    return "Systemic issue identified from analysis"
-
-# ---------------------------
-# Render D1–D4 tabs
-# ---------------------------
-tab_labels = []
-for step, _, _ in npqp_steps:
-    tab_labels.append(f"🔴 {t[lang_key][step]}" if st.session_state[step]["answer"].strip()=="" else f"🟢 {t[lang_key][step]}")
-
-tabs = st.tabs(tab_labels)
-
-for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
-    if step not in ["D5","D6","D7","D8"]:
-        with tabs[i]:
-            st.markdown(f"### {t[lang_key][step]}")
-            st.markdown(f"<div style='background-color:#b3e0ff; padding:12px; border-left:5px solid #1E90FF;'>{note_dict[lang_key]}<br>💡 {example_dict[lang_key]}</div>", unsafe_allow_html=True)
-            st.session_state[step]["answer"] = st.text_area("Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}")
-            # ---------------------------
-# Initialize D5 Why lists
-# ---------------------------
+st.session_state.setdefault("report_date", datetime.datetime.today().strftime("%B %d, %Y"))
+st.session_state.setdefault("prepared_by", "")
 st.session_state.setdefault("d5_occ_whys", [""] * 5)
 st.session_state.setdefault("d5_det_whys", [""] * 5)
 st.session_state.setdefault("d5_sys_whys", [""] * 5)
 
 # ---------------------------
-# Expanded categories for dropdowns
+# Restore from URL (st.query_params)
+# ---------------------------
+if "backup" in st.query_params:
+    try:
+        data = json.loads(st.query_params["backup"][0])
+        for k, v in data.items():
+            st.session_state[k] = v
+    except Exception:
+        pass
+
+# ---------------------------
+# Report info inputs
+# ---------------------------
+st.subheader(f"{t[lang_key]['Report_Date']}")
+st.session_state.report_date = st.text_input(f"{t[lang_key]['Report_Date']}", value=st.session_state.report_date)
+st.session_state.prepared_by = st.text_input(f"{t[lang_key]['Prepared_By']}", value=st.session_state.prepared_by)
+# ---------------------------
+# Define categories for dropdowns (Expanded)
 # ---------------------------
 occurrence_categories = {
     "Machine / Equipment": [
@@ -281,49 +291,84 @@ systemic_categories = {
 }
 
 # ---------------------------
-# Render D5 tab
+# Helper function for 5-Why dropdowns with no repeats
+# ---------------------------
+def render_whys_no_repeat(why_list, categories, label_prefix):
+    selected_values = [w for w in why_list if w.strip()]
+    for idx in range(len(why_list)):
+        # Compute available options excluding already selected values
+        options = [""] + [f"{cat}: {item}" for cat, items in categories.items() for item in items if f"{cat}: {item}" not in selected_values]
+        current_val = why_list[idx]
+        why_list[idx] = st.selectbox(
+            f"{label_prefix} {idx+1}",
+            options,
+            index=options.index(current_val) if current_val in options else 0,
+            key=f"{label_prefix}_{idx}"
+        )
+        # Allow free text to override
+        free_text = st.text_input(f"Or enter your own {label_prefix} {idx+1}", value=why_list[idx], key=f"{label_prefix}_txt_{idx}")
+        if free_text.strip():
+            why_list[idx] = free_text
+            # ---------------------------
+# Render D5 Tab (Dynamic 5-Why with no repeats)
 # ---------------------------
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     if step == "D5":
         with tabs[i]:
             st.markdown(f"### {t[lang_key][step]}")
-            st.markdown(f"<div style='background-color:#b3e0ff; padding:12px; border-left:5px solid #1E90FF;'>{note_dict[lang_key]}</div>", unsafe_allow_html=True)
+            st.markdown(f"""
+            <div style="
+                background-color:#b3e0ff; 
+                color:black; 
+                padding:12px; 
+                border-left:5px solid #1E90FF; 
+                border-radius:6px;
+                width:100%;
+                font-size:14px;
+                line-height:1.5;
+            ">
+            <b>{t[lang_key]['Training_Guidance']}:</b> {note_dict[lang_key]}
+            </div>
+            """, unsafe_allow_html=True)
+
             # ---------------------------
-# Function: Render 5-Why dropdowns without repeating selections
-# ---------------------------
-def render_whys_no_repeat(why_list, categories, label_prefix):
-    """
-    Render a list of Why dropdowns with options grouped by categories.
-    Once an option is selected in one dropdown, it is removed from the remaining dropdowns.
-    """
-    # Flatten options with category prefix
-    all_options = [f"{cat}: {item}" for cat, items in categories.items() for item in items]
-
-    for idx in range(len(why_list)):
-        # Compute available options for this dropdown (exclude selections already made)
-        selected_values = [v for i, v in enumerate(why_list) if i != idx and v.strip()]
-        available_options = [""] + [opt for opt in all_options if opt not in selected_values]
-
-        # Ensure current value is in available_options
-        current_val = why_list[idx]
-        if current_val not in available_options and current_val.strip():
-            available_options.append(current_val)
-
-        # Render the selectbox
-        why_list[idx] = st.selectbox(
-            f"{label_prefix} {idx+1}",
-            options=available_options,
-            index=available_options.index(current_val) if current_val in available_options else 0,
-            key=f"{label_prefix}_{idx}"
-        )
-
-        # Optional free text entry
-        free_text = st.text_input(f"Or enter your own {label_prefix} {idx+1}", value=why_list[idx], key=f"{label_prefix}_txt_{idx}")
-        if free_text.strip():
-            why_list[idx] = free_text
+            # Render Occurrence, Detection, Systemic with no-repeat
             # ---------------------------
-# Capture D5 root causes after user selections
+            st.markdown("#### Occurrence Analysis")
+            render_whys_no_repeat(st.session_state.d5_occ_whys, occurrence_categories, t[lang_key]['Occurrence_Why'])
+            if st.button("➕ Add another Occurrence Why"):
+                st.session_state.d5_occ_whys.append("")
+
+            st.markdown("#### Detection Analysis")
+            render_whys_no_repeat(st.session_state.d5_det_whys, detection_categories, t[lang_key]['Detection_Why'])
+            if st.button("➕ Add another Detection Why"):
+                st.session_state.d5_det_whys.append("")
+
+            st.markdown("#### Systemic Analysis")
+            render_whys_no_repeat(st.session_state.d5_sys_whys, systemic_categories, t[lang_key]['Systemic_Why'])
+            if st.button("➕ Add another Systemic Why"):
+                st.session_state.d5_sys_whys.append("")
+
+            # ---------------------------
+            # Dynamic Root Cause Suggestions (read-only)
+            # ---------------------------
+            occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
+            det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
+            sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
+
+            occ_rc_text = suggest_root_cause(occ_whys) if occ_whys else "No occurrence whys provided yet"
+            det_rc_text = suggest_root_cause(det_whys) if det_whys else "No detection whys provided yet"
+            sys_rc_text = suggest_root_cause(sys_whys) if sys_whys else "No systemic whys provided yet"
+
+            st.text_area(f"{t[lang_key]['Root_Cause_Occ']}", value=occ_rc_text, height=80, disabled=True)
+            st.text_area(f"{t[lang_key]['Root_Cause_Det']}", value=det_rc_text, height=80, disabled=True)
+            st.text_area(f"{t[lang_key]['Root_Cause_Sys']}", value=sys_rc_text, height=80, disabled=True)
+            # ---------------------------
+# Collect answers for Excel (including D5 root causes with Whys)
 # ---------------------------
+data_rows = []
+
+# Capture D5 root causes with whys in extra
 occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
 det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
 sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
@@ -332,15 +377,6 @@ occ_rc_text = suggest_root_cause(occ_whys) if occ_whys else "No occurrence whys 
 det_rc_text = suggest_root_cause(det_whys) if det_whys else "No detection whys provided yet"
 sys_rc_text = suggest_root_cause(sys_whys) if sys_whys else "No systemic whys provided yet"
 
-# Display dynamic read-only root causes
-st.text_area(f"{t[lang_key]['Root_Cause_Occ']}", value=occ_rc_text, height=80, disabled=True)
-st.text_area(f"{t[lang_key]['Root_Cause_Det']}", value=det_rc_text, height=80, disabled=True)
-st.text_area(f"{t[lang_key]['Root_Cause_Sys']}", value=sys_rc_text, height=80, disabled=True)
-
-# ---------------------------
-# Collect all answers for Excel export
-# ---------------------------
-data_rows = []
 for step, _, _ in npqp_steps:
     answer = st.session_state[step]["answer"]
     extra = st.session_state[step].get("extra", "")
@@ -351,9 +387,8 @@ for step, _, _ in npqp_steps:
         data_rows.append(("D5 - Root Cause (Systemic)", sys_rc_text, " | ".join(sys_whys)))
     else:
         data_rows.append((step, answer, extra))
-
-# ---------------------------
-# Function to generate Excel
+        # ---------------------------
+# Save / Download Excel
 # ---------------------------
 def generate_excel():
     wb = Workbook()
@@ -408,15 +443,14 @@ def generate_excel():
     wb.save(output)
     return output.getvalue()
 
-# ---------------------------
-# Download button
-# ---------------------------
+
 st.download_button(
     label=f"{t[lang_key]['Download']}",
     data=generate_excel(),
     file_name=f"8D_Report_{st.session_state.report_date.replace(' ', '_')}.xlsx",
     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 )
+
 # ---------------------------
 # Sidebar: JSON Backup / Restore
 # ---------------------------
@@ -450,7 +484,7 @@ with st.sidebar:
             st.error(f"Error restoring JSON: {e}")
 
 # ---------------------------
-# Footer
+# End of App
 # ---------------------------
 st.markdown("<hr style='border:1px solid #1E90FF;'>", unsafe_allow_html=True)
-st.markdown("<p style='text-align:center; font-size:12px; color:#555555;'>End of 8D Report Assistant</p>", unsafe_allow_html=True)}
+st.markdown("<p style='text-align:center; font-size:12px; color:#555555;'>End of 8D Report Assistant</p>", unsafe_allow_html=True)
