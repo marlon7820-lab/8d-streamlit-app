@@ -39,7 +39,7 @@ st.markdown("<h1 style='text-align: center; color: #1E90FF;'>📋 8D Report Assi
 # ---------------------------
 # Version info
 # ---------------------------
-version_number = "v1.0.8"
+version_number = "v1.0.9"
 last_updated = "October 10, 2025"
 st.markdown(f"""
 <hr style='border:1px solid #1E90FF; margin-top:10px; margin-bottom:5px;'>
@@ -263,23 +263,37 @@ systemic_categories = {
 # Helper: Suggest root cause based on whys
 # ---------------------------
 def suggest_root_cause(whys):
+    """
+    UPDATED: Smarter mapping that respects the actual why-chain content.
+    Returns one or more suggestions (joined by '; ') based on keyword matches.
+    """
     text = " ".join(whys).lower()
-    if any(word in text for word in ["training", "knowledge", "human error"]):
-        return "Lack of proper training / knowledge gap"
-    if any(word in text for word in ["equipment", "tool", "machine", "fixture"]):
-        return "Equipment, tooling, or maintenance issue"
-    if any(word in text for word in ["procedure", "process", "standard"]):
-        return "Procedure or process not followed or inadequate"
-    if any(word in text for word in ["communication", "information", "handover"]):
-        return "Poor communication or unclear information flow"
-    if any(word in text for word in ["material", "supplier", "component", "part"]):
-        return "Material, supplier, or logistics-related issue"
-    if any(word in text for word in ["design", "specification", "drawing"]):
-        return "Design or engineering issue"
-    if any(word in text for word in ["management", "supervision", "resource"]):
-        return "Management or resource-related issue"
-    if any(word in text for word in ["temperature", "humidity", "contamination", "environment"]):
-        return "Environmental or external factor"
+    suggestions = []
+
+    mappings = [
+        (["leadership", "leader", "management", "supervisor", "supervision", "accountability"], "Inadequate leadership or ineffective management oversight"),
+        (["resource", "resources", "manpower", "staff", "capacity", "budget", "time constraint", "insufficient"], "Insufficient resource allocation or planning"),
+        (["document", "procedure", "process", "control plan", "document control", "sop", "instruction", "record", "revision"], "Insufficient document control or ineffective procedure management"),
+        (["communication", "information", "handover", "feedback", "report"], "Poor communication or unclear information flow"),
+        (["equipment", "tool", "fixture", "machine", "maintenance", "calibration", "tooling"], "Equipment, tooling, or maintenance issue"),
+        (["design", "drawing", "tolerance", "specification", "dimension", "engineering"], "Design or engineering specification weakness"),
+        (["supplier", "material", "component", "vendor", "incoming", "lot", "batch"], "Supplier or material-related issue"),
+        (["audit", "quality system", "qms", "internal audit"], "Weakness in quality management system or auditing process"),
+        (["training", "knowledge", "competence", "skill", "trained", "training records"], "Lack of proper training / knowledge gap"),
+        (["process", "method", "operator", "human", "error", "step", "follow", "work instruction"], "Process variation or human error due to inadequate process control"),
+        (["temperature", "humidity", "contamination", "environment", "esd", "vibration", "power"], "Environmental or external factor")
+    ]
+
+    for keys, label in mappings:
+        if any(k in text for k in keys):
+            suggestions.append(label)
+
+    # Remove duplicates while preserving order
+    unique_suggestions = list(dict.fromkeys(suggestions))
+
+    if unique_suggestions:
+        return "; ".join(unique_suggestions)
+    # fallback (keeps previous behaviour style)
     return "Systemic issue identified from analysis"
 
 # ---------------------------
@@ -319,7 +333,6 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             )
             # ---------------------------
 # Helper: Render 5-Why dropdowns without repeating selections
-# ---------------------------
 def render_whys_no_repeat(why_list, categories, label_prefix):
     for idx in range(len(why_list)):
         # Gather all selected values except current index
@@ -422,7 +435,6 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             )
             # ---------------------------
 # Collect answers for Excel (including D5 root causes with whys)
-# ---------------------------
 data_rows = []
 
 occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
@@ -540,7 +552,6 @@ with st.sidebar:
             st.error(f"Error restoring JSON: {e}")
             # ---------------------------
 # End of App Layout / Footer
-# ---------------------------
 st.markdown("<hr style='border:1px solid #1E90FF;'>", unsafe_allow_html=True)
 st.markdown(
     "<p style='text-align:center; font-size:12px; color:#555555;'>End of 8D Report Assistant</p>",
