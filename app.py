@@ -68,7 +68,8 @@ t = {
         "Occurrence_Why": "Occurrence Why", "Detection_Why": "Detection Why", "Systemic_Why": "Systemic Why",
         "Save": "💾 Save 8D Report", "Download": "📥 Download XLSX",
         "Training_Guidance": "Training Guidance", "Example": "Example",
-        "FMEA_Failure": "FMEA Failure Occurrence"
+        "FMEA_Failure": "FMEA Failure Occurrence",
+        "Location": "Material Location", "Status": "Activity Status"
     },
     "es": {
         "D1": "D1: Detalles de la preocupación", "D2": "D2: Consideraciones de partes similares",
@@ -80,60 +81,37 @@ t = {
         "Occurrence_Why": "Por qué Ocurrencia", "Detection_Why": "Por qué Detección", "Systemic_Why": "Por qué Sistémico",
         "Save": "💾 Guardar Informe 8D", "Download": "📥 Descargar XLSX",
         "Training_Guidance": "Guía de Entrenamiento", "Example": "Ejemplo",
-        "FMEA_Failure": "Ocurrencia de falla FMEA"
+        "FMEA_Failure": "Ocurrencia de falla FMEA",
+        "Location": "Ubicación del material", "Status": "Estado de la actividad"
     }
 }
 
 # ---------------------------
-# NPQP 8D steps with examples
-# ---------------------------
-npqp_steps = [
-    ("D1", {"en":"Describe the customer concerns clearly.","es":"Describa claramente las preocupaciones del cliente."},
-           {"en":"Customer reported static noise in amplifier during end-of-line test.",
-            "es":"El cliente reportó ruido estático en el amplificador durante la prueba final."}),
-    ("D2", {"en":"Check for similar parts, models, generic parts, other colors, etc.","es":"Verifique partes similares, modelos, partes genéricas, otros colores, etc."},
-           {"en":"Similar model radio, Front vs. rear speaker.","es":"Radio de modelo similar, altavoz delantero vs trasero."}),
-    ("D3", {"en":"Perform an initial investigation to identify obvious issues.","es":"Realice una investigación inicial para identificar problemas evidentes."},
-           {"en":"Visual inspection of solder joints, initial functional tests.","es":"Inspección visual de soldaduras, pruebas funcionales iniciales."}),
-    ("D4", {"en":"Define temporary containment actions.","es":"Defina acciones de contención temporales."},
-           {"en":"","es":""}),
-    ("D5", {"en":"Use 5-Why analysis to determine the root cause.","es":"Use el análisis de 5 Porqués para determinar la causa raíz."},
-           {"en":"","es":""}),
-    ("D6", {"en":"Define corrective actions that eliminate the root cause permanently.","es":"Defina acciones correctivas que eliminen la causa raíz permanentemente."},
-           {"en":"Update soldering process, redesign fixture.","es":"Actualizar proceso de soldadura, rediseñar herramienta."}),
-    ("D7", {"en":"Verify that corrective actions effectively resolve the issue.","es":"Verifique que las acciones correctivas resuelvan efectivamente el problema."},
-           {"en":"Functional tests on corrected amplifiers.","es":"Pruebas funcionales en amplificadores corregidos."}),
-    ("D8", {"en":"Document lessons learned, update standards, FMEAs.","es":"Documente lecciones aprendidas, actualice estándares, FMEAs."},
-           {"en":"Update SOPs, PFMEA, work instructions.","es":"Actualizar SOPs, PFMEA, instrucciones de trabajo."})
-]
-
-# ---------------------------
 # Initialize session state
 # ---------------------------
-for step, _, _ in npqp_steps:
+npqp_steps = ["D1","D2","D3","D4","D5","D6","D7","D8"]
+for step in npqp_steps:
     st.session_state.setdefault(step, {"answer": "", "extra": ""})
 
-# D4 Nissan-style
+# D4 specific
 st.session_state.setdefault("D4_location", "Work in Progress")
 st.session_state.setdefault("D4_status", "Pending")
-st.session_state.setdefault("D4_answer", "")
-
 # D5 whys
 st.session_state.setdefault("d5_occ_whys", [""]*5)
 st.session_state.setdefault("d5_det_whys", [""]*5)
 st.session_state.setdefault("d5_sys_whys", [""]*5)
-
-# D6/D7 separate actions
-for step in ["D6", "D7"]:
-    st.session_state.setdefault(step + "_occ_answer", "")
-    st.session_state.setdefault(step + "_det_answer", "")
-    st.session_state.setdefault(step + "_sys_answer", "")
-
-# Report metadata
+# D6 / D7 separate answers
+st.session_state.setdefault("D6_occ_answer", "")
+st.session_state.setdefault("D6_det_answer", "")
+st.session_state.setdefault("D6_sys_answer", "")
+st.session_state.setdefault("D7_occ_answer", "")
+st.session_state.setdefault("D7_det_answer", "")
+st.session_state.setdefault("D7_sys_answer", "")
+# General
 st.session_state.setdefault("report_date", datetime.datetime.today().strftime("%B %d, %Y"))
 st.session_state.setdefault("prepared_by", "")
 # ---------------------------
-# Expanded categories for D5 (Occurrence, Detection, Systemic)
+# Expanded categories for D5 (occurrence, detection, systemic)
 # ---------------------------
 occurrence_categories = {
     "Machine / Equipment": [
@@ -173,7 +151,7 @@ occurrence_categories = {
         "Component placement design error (DFMEA gap)",
         "Lack of design verification or validation testing"
     ],
-    # Human / Training section removed as per request
+    # Removed Human/Training section as requested
     "Environmental / External": [
         "Temperature or humidity out of control range",
         "Electrostatic discharge (ESD) not controlled",
@@ -267,7 +245,7 @@ systemic_categories = {
 }
 
 # ---------------------------
-# Suggest Root Cause helper
+# Helper: Suggest root cause based on whys
 # ---------------------------
 def suggest_root_cause(whys):
     text = " ".join(whys).lower()
@@ -290,191 +268,175 @@ def suggest_root_cause(whys):
     return "Systemic issue identified from analysis"
 
 # ---------------------------
-# Helper: 5-Why dropdowns with no repeat
+# Render D1–D4 tabs
 # ---------------------------
-def render_whys_no_repeat(why_list, categories, label_prefix):
+tab_labels = []
+for step in npqp_steps:
+    answer = st.session_state[step]["answer"]
+    tab_labels.append(f"🟢 {t[lang_key][step]}" if answer.strip() else f"🔴 {t[lang_key][step]}")
+
+tabs = st.tabs(tab_labels)
+
+# ---------------------------
+# D1–D3 standard tabs
+# ---------------------------
+for i, step in enumerate(npqp_steps[:3]):
+    with tabs[i]:
+        st.markdown(f"### {t[lang_key][step]}")
+        st.session_state[step]["answer"] = st.text_area(
+            "Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}"
+        )
+
+# ---------------------------
+# D4 tab (Nissan-style)
+# ---------------------------
+with tabs[3]:
+    st.markdown(f"### {t[lang_key]['D4']}")
+    # Material Location
+    location_options = ["Work in Progress", "Stores Stock", "Warehouse Stock", "Service Parts", "Other"]
+    st.session_state.D4_location = st.selectbox(
+        t[lang_key]["Location"], location_options, index=location_options.index(st.session_state.D4_location)
+    )
+    # Activity Status
+    status_options = ["Pending", "In Progress", "Completed", "Delayed"]
+    st.session_state.D4_status = st.selectbox(
+        t[lang_key]["Status"], status_options, index=status_options.index(st.session_state.D4_status)
+    )
+    # Containment actions
+    st.session_state.D4["answer"] = st.text_area(
+        "Containment Actions",
+        value=st.session_state.D4["answer"],
+        key="ans_D4"
+    )
+
+# ---------------------------
+# Helper: Render 5-Why dropdowns without duplicates
+# ---------------------------
+def render_whys_no_repeat(why_list, categories, label_prefix, key_prefix):
     for idx in range(len(why_list)):
+        # Exclude current selection to prevent duplicates
         selected_so_far = [w for i, w in enumerate(why_list) if w.strip() and i != idx]
         options = [""] + [f"{cat}: {item}" for cat, items in categories.items() for item in items if f"{cat}: {item}" not in selected_so_far]
+
         current_val = why_list[idx] if why_list[idx] in options else ""
         why_list[idx] = st.selectbox(
             f"{label_prefix} {idx+1}",
             options,
             index=options.index(current_val) if current_val in options else 0,
-            key=f"{label_prefix}_{idx}"
+            key=f"{key_prefix}_{idx}"
         )
-        free_text = st.text_input(f"Or enter your own {label_prefix} {idx+1}", value=why_list[idx], key=f"{label_prefix}_txt_{idx}")
+        free_text = st.text_input(f"Or enter your own {label_prefix} {idx+1}", value=why_list[idx], key=f"{key_prefix}_txt_{idx}")
         if free_text.strip():
             why_list[idx] = free_text
 
 # ---------------------------
-# Render Tabs D1-D8
+# D5 tab
 # ---------------------------
-tab_labels = []
-for step, _, _ in npqp_steps:
-    tab_labels.append(f"🔴 {t[lang_key][step]}" if st.session_state[step]["answer"].strip() == "" else f"🟢 {t[lang_key][step]}")
-tabs = st.tabs(tab_labels)
+with tabs[4]:
+    st.markdown(f"### {t[lang_key]['D5']}")
+    st.markdown("#### Occurrence Analysis")
+    render_whys_no_repeat(st.session_state.d5_occ_whys, occurrence_categories, t[lang_key]['Occurrence_Why'], "occ")
 
-# ---------------------------
-# D1-D3
-# ---------------------------
-for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
-    if step in ["D1","D2","D3"]:
-        with tabs[i]:
-            st.markdown(f"### {t[lang_key][step]}")
-            st.markdown(f"""
-            <div style="background-color:#b3e0ff; color:black; padding:12px; border-left:5px solid #1E90FF; border-radius:6px; width:100%; font-size:14px; line-height:1.5;">
-            <b>{t[lang_key]['Training_Guidance']}:</b> {note_dict[lang_key]}<br><br>
-            💡 <b>{t[lang_key]['Example']}:</b> {example_dict[lang_key]}
-            </div>
-            """, unsafe_allow_html=True)
-            st.session_state[step]["answer"] = st.text_area("Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}")
+    st.markdown("#### Detection Analysis")
+    render_whys_no_repeat(st.session_state.d5_det_whys, detection_categories, t[lang_key]['Detection_Why'], "det")
 
+    st.markdown("#### Systemic Analysis")
+    render_whys_no_repeat(st.session_state.d5_sys_whys, systemic_categories, t[lang_key]['Systemic_Why'], "sys")
+
+    # Dynamic Root Cause Suggestions (read-only)
+    occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
+    det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
+    sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
+
+    occ_rc_text = suggest_root_cause(occ_whys) if occ_whys else "No occurrence whys provided yet"
+    det_rc_text = suggest_root_cause(det_whys) if det_whys else "No detection whys provided yet"
+    sys_rc_text = suggest_root_cause(sys_whys) if sys_whys else "No systemic whys provided yet"
+
+    st.text_area(f"{t[lang_key]['Root_Cause_Occ']}", value=occ_rc_text, height=80, disabled=True)
+    st.text_area(f"{t[lang_key]['Root_Cause_Det']}", value=det_rc_text, height=80, disabled=True)
+    st.text_area(f"{t[lang_key]['Root_Cause_Sys']}", value=sys_rc_text, height=80, disabled=True)
+    # ---------------------------
+# D6–D8 Tabs
 # ---------------------------
-# D4 Nissan-style
-# ---------------------------
-for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
-    if step == "D4":
-        with tabs[i]:
-            st.markdown(f"### {t[lang_key][step]}")
-            st.markdown(f"""
-            <div style="background-color:#b3e0ff; color:black; padding:12px; border-left:5px solid #1E90FF; border-radius:6px; width:100%; font-size:14px; line-height:1.5;">
-            <b>{t[lang_key]['Training_Guidance']}:</b> {note_dict[lang_key]}
-            </div>
-            """, unsafe_allow_html=True)
-            st.session_state["D4_location"] = st.selectbox(
-                "Material Location",
-                ["Work in Progress", "Stores Stock", "Warehouse Stock", "Service Parts", "Other"],
-                index=["Work in Progress", "Stores Stock", "Warehouse Stock", "Service Parts", "Other"].index(
-                    st.session_state.get("D4_location", "Work in Progress")
-                )
+for i, step in enumerate(npqp_steps[5:]):  # D6, D7, D8
+    tab_index = i + 5  # Adjust for tabs[5], tabs[6], tabs[7]
+    with tabs[tab_index]:
+        st.markdown(f"### {t[lang_key][step]}")
+
+        note_text = npqp_steps[tab_index][1][lang_key]
+        example_text = npqp_steps[tab_index][2][lang_key]
+
+        st.markdown(f"""
+        <div style="
+            background-color:#b3e0ff; 
+            color:black; 
+            padding:12px; 
+            border-left:5px solid #1E90FF; 
+            border-radius:6px;
+            width:100%;
+            font-size:14px;
+            line-height:1.5;
+        ">
+        <b>{t[lang_key]['Training_Guidance']}:</b> {note_text}<br><br>
+        💡 <b>{t[lang_key]['Example']}:</b> {example_text}
+        </div>
+        """, unsafe_allow_html=True)
+
+        # For D6/D7, separate answers for Occurrence, Detection, Systemic
+        if step in ["D6", "D7"]:
+            st.session_state[step]["occ"] = st.text_area(
+                f"{step} - Actions for Occurrence Root Cause",
+                value=st.session_state[step].get("occ", ""),
+                key=f"{step}_occ"
             )
-            st.session_state["D4_status"] = st.selectbox(
-                "Status of Activities",
-                ["Pending", "In Progress", "Completed"],
-                index=["Pending", "In Progress", "Completed"].index(
-                    st.session_state.get("D4_status", "Pending")
-                )
+            st.session_state[step]["det"] = st.text_area(
+                f"{step} - Actions for Detection Root Cause",
+                value=st.session_state[step].get("det", ""),
+                key=f"{step}_det"
             )
-            st.session_state["D4_answer"] = st.text_area(
-                "Containment Actions",
-                value=st.session_state.get("D4_answer", ""),
-                key="D4_text"
+            st.session_state[step]["sys"] = st.text_area(
+                f"{step} - Actions for Systemic Root Cause",
+                value=st.session_state[step].get("sys", ""),
+                key=f"{step}_sys"
             )
-            # ---------------------------
-# D5 5-Why Analysis
-# ---------------------------
-for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
-    if step == "D5":
-        with tabs[i]:
-            st.markdown(f"### {t[lang_key][step]}")
-            st.markdown(f"""
-            <div style="background-color:#b3e0ff; color:black; padding:12px; border-left:5px solid #1E90FF; border-radius:6px; width:100%; font-size:14px; line-height:1.5;">
-            <b>{t[lang_key]['Training_Guidance']}:</b> {note_dict[lang_key]}
-            </div>
-            """, unsafe_allow_html=True)
-
-            # Occurrence Whys
-            st.markdown("#### Occurrence Analysis")
-            render_whys_no_repeat(st.session_state.d5_occ_whys, occurrence_categories, t[lang_key]['Occurrence_Why'])
-            if st.button("➕ Add another Occurrence Why", key="add_occ"):
-                st.session_state.d5_occ_whys.append("")
-
-            # Detection Whys
-            st.markdown("#### Detection Analysis")
-            render_whys_no_repeat(st.session_state.d5_det_whys, detection_categories, t[lang_key]['Detection_Why'])
-            if st.button("➕ Add another Detection Why", key="add_det"):
-                st.session_state.d5_det_whys.append("")
-
-            # Systemic Whys
-            st.markdown("#### Systemic Analysis")
-            render_whys_no_repeat(st.session_state.d5_sys_whys, systemic_categories, t[lang_key]['Systemic_Why'])
-            if st.button("➕ Add another Systemic Why", key="add_sys"):
-                st.session_state.d5_sys_whys.append("")
-
-            # Dynamic Root Cause Suggestions
-            occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
-            det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
-            sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
-
-            st.text_area(f"{t[lang_key]['Root_Cause_Occ']}", value=suggest_root_cause(occ_whys) if occ_whys else "No occurrence whys provided yet", height=80, disabled=True)
-            st.text_area(f"{t[lang_key]['Root_Cause_Det']}", value=suggest_root_cause(det_whys) if det_whys else "No detection whys provided yet", height=80, disabled=True)
-            st.text_area(f"{t[lang_key]['Root_Cause_Sys']}", value=suggest_root_cause(sys_whys) if sys_whys else "No systemic whys provided yet", height=80, disabled=True)
+        else:
+            st.session_state[step]["answer"] = st.text_area(
+                "Your Answer",
+                value=st.session_state[step]["answer"],
+                key=f"ans_{step}"
+            )
 
 # ---------------------------
-# D6: Corrective Actions (separate for Occ, Det, Sys)
-# ---------------------------
-for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
-    if step == "D6":
-        with tabs[i]:
-            st.markdown(f"### {t[lang_key][step]}")
-            st.markdown(f"""
-            <div style="background-color:#b3e0ff; color:black; padding:12px; border-left:5px solid #1E90FF; border-radius:6px; width:100%; font-size:14px; line-height:1.5;">
-            <b>{t[lang_key]['Training_Guidance']}:</b> {note_dict[lang_key]}<br><br>
-            💡 <b>{t[lang_key]['Example']}:</b> {example_dict[lang_key]}
-            </div>
-            """, unsafe_allow_html=True)
-            st.session_state["D6_occ"] = st.text_area("Corrective Actions for Occurrence Root Cause", value=st.session_state.get("D6_occ", ""))
-            st.session_state["D6_det"] = st.text_area("Corrective Actions for Detection Root Cause", value=st.session_state.get("D6_det", ""))
-            st.session_state["D6_sys"] = st.text_area("Corrective Actions for Systemic Root Cause", value=st.session_state.get("D6_sys", ""))
-
-# ---------------------------
-# D7: Countermeasure Confirmation
-# ---------------------------
-for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
-    if step == "D7":
-        with tabs[i]:
-            st.markdown(f"### {t[lang_key][step]}")
-            st.markdown(f"""
-            <div style="background-color:#b3e0ff; color:black; padding:12px; border-left:5px solid #1E90FF; border-radius:6px; width:100%; font-size:14px; line-height:1.5;">
-            <b>{t[lang_key]['Training_Guidance']}:</b> {note_dict[lang_key]}<br><br>
-            💡 <b>{t[lang_key]['Example']}:</b> {example_dict[lang_key]}
-            </div>
-            """, unsafe_allow_html=True)
-            st.session_state["D7_occ"] = st.text_area("Confirmation for Occurrence Root Cause", value=st.session_state.get("D7_occ", ""))
-            st.session_state["D7_det"] = st.text_area("Confirmation for Detection Root Cause", value=st.session_state.get("D7_det", ""))
-            st.session_state["D7_sys"] = st.text_area("Confirmation for Systemic Root Cause", value=st.session_state.get("D7_sys", ""))
-
-# ---------------------------
-# D8: Follow-up / Lessons Learned
-# ---------------------------
-for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
-    if step == "D8":
-        with tabs[i]:
-            st.markdown(f"### {t[lang_key][step]}")
-            st.markdown(f"""
-            <div style="background-color:#b3e0ff; color:black; padding:12px; border-left:5px solid #1E90FF; border-radius:6px; width:100%; font-size:14px; line-height:1.5;">
-            <b>{t[lang_key]['Training_Guidance']}:</b> {note_dict[lang_key]}<br><br>
-            💡 <b>{t[lang_key]['Example']}:</b> {example_dict[lang_key]}
-            </div>
-            """, unsafe_allow_html=True)
-            st.session_state[step]["answer"] = st.text_area("Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}")
-
-# ---------------------------
-# Collect all answers for Excel
+# Collect answers for Excel
 # ---------------------------
 data_rows = []
-for step, _, _ in npqp_steps:
+
+# Add D1–D5 normally
+for step, _, _ in npqp_steps[:5]:
     answer = st.session_state[step]["answer"]
-    extra = st.session_state[step].get("extra", "")
     if step == "D5":
-        data_rows.append(("D5 - Root Cause (Occurrence)", suggest_root_cause(st.session_state.d5_occ_whys), " | ".join([w for w in st.session_state.d5_occ_whys if w.strip()])))
-        data_rows.append(("D5 - Root Cause (Detection)", suggest_root_cause(st.session_state.d5_det_whys), " | ".join([w for w in st.session_state.d5_det_whys if w.strip()])))
-        data_rows.append(("D5 - Root Cause (Systemic)", suggest_root_cause(st.session_state.d5_sys_whys), " | ".join([w for w in st.session_state.d5_sys_whys if w.strip()])))
-    elif step == "D6":
-        data_rows.append(("D6 - Corrective Actions (Occurrence)", st.session_state.get("D6_occ", ""), ""))
-        data_rows.append(("D6 - Corrective Actions (Detection)", st.session_state.get("D6_det", ""), ""))
-        data_rows.append(("D6 - Corrective Actions (Systemic)", st.session_state.get("D6_sys", ""), ""))
-    elif step == "D7":
-        data_rows.append(("D7 - Countermeasure Confirmation (Occurrence)", st.session_state.get("D7_occ", ""), ""))
-        data_rows.append(("D7 - Countermeasure Confirmation (Detection)", st.session_state.get("D7_det", ""), ""))
-        data_rows.append(("D7 - Countermeasure Confirmation (Systemic)", st.session_state.get("D7_sys", ""), ""))
+        occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
+        det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
+        sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
+        data_rows.append(("D5 - Root Cause (Occurrence)", suggest_root_cause(occ_whys), " | ".join(occ_whys)))
+        data_rows.append(("D5 - Root Cause (Detection)", suggest_root_cause(det_whys), " | ".join(det_whys)))
+        data_rows.append(("D5 - Root Cause (Systemic)", suggest_root_cause(sys_whys), " | ".join(sys_whys)))
     elif step == "D4":
-        data_rows.append(("D4 - Material Location", st.session_state.get("D4_location",""), ""))
-        data_rows.append(("D4 - Status", st.session_state.get("D4_status",""), ""))
-        data_rows.append(("D4 - Containment Actions", st.session_state.get("D4_answer",""), ""))
-    else:
+        location = st.session_state.get("D4_location", "")
+        status = st.session_state.get("D4_status", "")
+        extra = f"Location: {location} | Status: {status}"
         data_rows.append((step, answer, extra))
+    else:
+        data_rows.append((step, answer, ""))
+
+# Add D6–D8
+for step, _, _ in npqp_steps[5:]:
+    if step in ["D6", "D7"]:
+        data_rows.append((f"{step} - Occurrence Actions", st.session_state[step].get("occ", ""), ""))
+        data_rows.append((f"{step} - Detection Actions", st.session_state[step].get("det", ""), ""))
+        data_rows.append((f"{step} - Systemic Actions", st.session_state[step].get("sys", ""), ""))
+    else:
+        data_rows.append((step, st.session_state[step]["answer"], ""))
 
 # ---------------------------
 # Generate Excel
@@ -483,6 +445,7 @@ def generate_excel():
     wb = Workbook()
     ws = wb.active
     ws.title = "NPQP 8D Report"
+
     thin = Side(border_style="thin", color="000000")
     border = Border(left=thin, right=thin, top=thin, bottom=thin)
 
@@ -498,10 +461,12 @@ def generate_excel():
 
     ws.merge_cells(start_row=3, start_column=1, end_row=3, end_column=3)
     ws.cell(row=3, column=1, value="📋 8D Report Assistant").font = Font(bold=True, size=14)
+
     ws.append([t[lang_key]['Report_Date'], st.session_state.report_date])
     ws.append([t[lang_key]['Prepared_By'], st.session_state.prepared_by])
     ws.append([])
 
+    # Header row
     header_row = ws.max_row + 1
     headers = ["Step", "Answer", "Extra / Notes"]
     fill = PatternFill(start_color="1E90FF", end_color="1E90FF", fill_type="solid")
@@ -512,8 +477,9 @@ def generate_excel():
         cell.alignment = Alignment(horizontal="center", vertical="center")
         cell.border = border
 
+    # Append step answers
     for step, answer, extra in data_rows:
-        ws.append([step, answer, extra])
+        ws.append([t[lang_key].get(step, step), answer, extra])
         r = ws.max_row
         for c in range(1, 4):
             cell = ws.cell(row=r, column=c)
@@ -540,17 +506,22 @@ st.download_button(
 # ---------------------------
 with st.sidebar:
     st.markdown("## Backup / Restore")
+
+    # Generate JSON backup
     def generate_json():
         save_data = {k: v for k, v in st.session_state.items() if not k.startswith("_")}
         return json.dumps(save_data, indent=4)
+
     st.download_button(
         label="💾 Save Progress (JSON)",
         data=generate_json(),
         file_name=f"8D_Report_Backup_{st.session_state.report_date.replace(' ', '_')}.json",
         mime="application/json"
     )
+
     st.markdown("---")
     st.markdown("### Restore from JSON")
+
     uploaded_file = st.file_uploader("Upload JSON file to restore", type="json")
     if uploaded_file:
         try:
@@ -565,4 +536,7 @@ with st.sidebar:
 # Footer
 # ---------------------------
 st.markdown("<hr style='border:1px solid #1E90FF;'>", unsafe_allow_html=True)
-st.markdown("<p style='text-align:center; font-size:12px; color:#555555;'>End of 8D Report Assistant</p>", unsafe_allow_html=True)
+st.markdown(
+    "<p style='text-align:center; font-size:12px; color:#555555;'>End of 8D Report Assistant</p>",
+    unsafe_allow_html=True
+)
