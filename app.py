@@ -39,7 +39,7 @@ st.markdown("<h1 style='text-align: center; color: #1E90FF;'>📋 8D Report Assi
 # ---------------------------
 # Version info
 # ---------------------------
-version_number = "v1.0.9"
+version_number = "v1.0.8"
 last_updated = "October 10, 2025"
 st.markdown(f"""
 <hr style='border:1px solid #1E90FF; margin-top:10px; margin-bottom:5px;'>
@@ -88,22 +88,23 @@ t = {
 # NPQP 8D steps with examples
 # ---------------------------
 npqp_steps = [
-    ("D1", {"en":"Describe the customer concerns clearly.","es":"Describa claramente las preocupaciones del cliente."},
-           {"en":"Customer reported static noise in amplifier during end-of-line test.","es":"El cliente reportó ruido estático en el amplificador durante la prueba final."}),
-    ("D2", {"en":"Check for similar parts, models, generic parts, other colors, etc.","es":"Verifique partes similares, modelos, partes genéricas, otros colores, etc."},
-           {"en":"Similar model radio, Front vs. rear speaker.","es":"Radio de modelo similar, altavoz delantero vs trasero."}),
-    ("D3", {"en":"Perform an initial investigation to identify obvious issues.","es":"Realice una investigación inicial para identificar problemas evidentes."},
-           {"en":"Visual inspection of solder joints, initial functional tests.","es":"Inspección visual de soldaduras, pruebas funcionales iniciales."}),
-    ("D4", {"en":"Define temporary containment actions.","es":"Defina acciones de contención temporales."},
-           {"en":"100% inspection of amplifiers before shipment.","es":"Inspección 100% de amplificadores antes del envío."}),
-    ("D5", {"en":"Use 5-Why analysis to determine the root cause.","es":"Use el análisis de 5 Porqués para determinar la causa raíz."},
+    ("D1", {"en":"Describe the customer concerns clearly.", "es":"Describa claramente las preocupaciones del cliente."},
+           {"en":"Customer reported static noise in amplifier during end-of-line test.",
+            "es":"El cliente reportó ruido estático en el amplificador durante la prueba final."}),
+    ("D2", {"en":"Check for similar parts, models, generic parts, other colors, etc.", "es":"Verifique partes similares, modelos, partes genéricas, otros colores, etc."},
+           {"en":"Similar model radio, Front vs. rear speaker.", "es":"Radio de modelo similar, altavoz delantero vs trasero."}),
+    ("D3", {"en":"Perform an initial investigation to identify obvious issues.", "es":"Realice una investigación inicial para identificar problemas evidentes."},
+           {"en":"Visual inspection of solder joints, initial functional tests.", "es":"Inspección visual de soldaduras, pruebas funcionales iniciales."}),
+    ("D4", {"en":"Define temporary containment actions.", "es":"Defina acciones de contención temporales."},
+           {"en":"100% inspection of amplifiers before shipment.", "es":"Inspección 100% de amplificadores antes del envío."}),
+    ("D5", {"en":"Use 5-Why analysis to determine the root cause.", "es":"Use el análisis de 5 Porqués para determinar la causa raíz."},
            {"en":"","es":""}),
-    ("D6", {"en":"Define corrective actions that eliminate the root cause permanently.","es":"Defina acciones correctivas que eliminen la causa raíz permanentemente."},
-           {"en":"Update soldering process, redesign fixture.","es":"Actualizar proceso de soldadura, rediseñar herramienta."}),
-    ("D7", {"en":"Verify that corrective actions effectively resolve the issue.","es":"Verifique que las acciones correctivas resuelvan efectivamente el problema."},
-           {"en":"Functional tests on corrected amplifiers.","es":"Pruebas funcionales en amplificadores corregidos."}),
-    ("D8", {"en":"Document lessons learned, update standards, FMEAs.","es":"Documente lecciones aprendidas, actualice estándares, FMEAs."},
-           {"en":"Update SOPs, PFMEA, work instructions.","es":"Actualizar SOPs, PFMEA, instrucciones de trabajo."})
+    ("D6", {"en":"Define corrective actions that eliminate the root cause permanently.", "es":"Defina acciones correctivas que eliminen la causa raíz permanentemente."},
+           {"en":"Update soldering process, redesign fixture.", "es":"Actualizar proceso de soldadura, rediseñar herramienta."}),
+    ("D7", {"en":"Verify that corrective actions effectively resolve the issue.", "es":"Verifique que las acciones correctivas resuelvan efectivamente el problema."},
+           {"en":"Functional tests on corrected amplifiers.", "es":"Pruebas funcionales en amplificadores corregidos."}),
+    ("D8", {"en":"Document lessons learned, update standards, FMEAs.", "es":"Documente lecciones aprendidas, actualice estándares, FMEAs."},
+           {"en":"Update SOPs, PFMEA, work instructions.", "es":"Actualizar SOPs, PFMEA, instrucciones de trabajo."})
 ]
 
 # ---------------------------
@@ -117,9 +118,8 @@ st.session_state.setdefault("prepared_by", "")
 st.session_state.setdefault("d5_occ_whys", [""]*5)
 st.session_state.setdefault("d5_det_whys", [""]*5)
 st.session_state.setdefault("d5_sys_whys", [""]*5)
-
 # ---------------------------
-# D5 categories
+# Expanded categories for D5
 # ---------------------------
 occurrence_categories = {
     "Machine / Equipment": [
@@ -159,14 +159,6 @@ occurrence_categories = {
         "Component placement design error (DFMEA gap)",
         "Lack of design verification or validation testing"
     ],
-    "Human / Training": [
-        "Operator not properly trained for this task",
-        "Human error due to fatigue or poor ergonomics",
-        "Workload too high causing mistakes",
-        "No standard method or checklist followed",
-        "Incorrect rework or repair method used",
-        "Training records not up to date"
-    ],
     "Environmental / External": [
         "Temperature or humidity out of control range",
         "Electrostatic discharge (ESD) not controlled",
@@ -176,9 +168,7 @@ occurrence_categories = {
         "Unstable environmental monitoring process"
     ]
 }
-# ---------------------------
-# Detection categories
-# ---------------------------
+
 detection_categories = {
     "QA / Inspection": [
         "QA checklist incomplete or not updated",
@@ -221,9 +211,6 @@ detection_categories = {
     ]
 }
 
-# ---------------------------
-# Systemic categories
-# ---------------------------
 systemic_categories = {
     "Management / Organization": [
         "Inadequate leadership or supervision structure",
@@ -288,7 +275,7 @@ def suggest_root_cause(whys):
     return "Systemic issue identified from analysis"
 
 # ---------------------------
-# Helper: Render 5-Why dropdowns without repeats
+# Helper: Render 5-Why dropdowns without repeating selections
 # ---------------------------
 def render_whys_no_repeat(why_list, categories, label_prefix):
     for idx in range(len(why_list)):
@@ -309,8 +296,7 @@ def render_whys_no_repeat(why_list, categories, label_prefix):
         free_text = st.text_input(f"Or enter your own {label_prefix} {idx+1}", value=why_list[idx], key=f"{label_prefix}_txt_{idx}")
         if free_text.strip():
             why_list[idx] = free_text
-
-# ---------------------------
+            # ---------------------------
 # Render D1–D4 tabs
 # ---------------------------
 tab_labels = []
@@ -322,7 +308,7 @@ for step, _, _ in npqp_steps:
 tabs = st.tabs(tab_labels)
 
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
-    if step not in ["D5","D6","D7","D8"]:
+    if step not in ["D5", "D6", "D7", "D8"]:
         with tabs[i]:
             st.markdown(f"### {t[lang_key][step]}")
             note_text = note_dict[lang_key]
@@ -366,7 +352,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             ">
             <b>{t[lang_key]['Training_Guidance']}:</b> {note_dict[lang_key]}
             </div>
-            """, unsafe_allow_html=True)
+            """ , unsafe_allow_html=True)
 
             # Occurrence Analysis
             st.markdown("#### Occurrence Analysis")
@@ -427,7 +413,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             )
 
 # ---------------------------
-# Collect answers for Excel (including D5 root causes)
+# Collect answers for Excel (including D5 root causes with whys)
 # ---------------------------
 data_rows = []
 
@@ -546,7 +532,7 @@ with st.sidebar:
             st.error(f"Error restoring JSON: {e}")
 
 # ---------------------------
-# Footer
+# End of App Layout / Footer
 # ---------------------------
 st.markdown("<hr style='border:1px solid #1E90FF;'>", unsafe_allow_html=True)
 st.markdown(
