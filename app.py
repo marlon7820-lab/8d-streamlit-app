@@ -118,7 +118,7 @@ st.session_state.setdefault("prepared_by", "")
 st.session_state.setdefault("d5_occ_whys", [""]*5)
 st.session_state.setdefault("d5_det_whys", [""]*5)
 st.session_state.setdefault("d5_sys_whys", [""]*5)
-
+# ---------------------------
 # ---------------------------
 # Expanded categories for D5
 # ---------------------------
@@ -261,46 +261,66 @@ systemic_categories = {
 }
 
 # ---------------------------
-# Helper: Suggest root cause based on whys
+# Phase 1: Root cause mappings
 # ---------------------------
-def suggest_root_cause(whys):
-    text = " ".join(whys).lower()
-    if any(word in text for word in ["training", "knowledge", "human error"]):
-        return "Lack of proper training / knowledge gap"
-    if any(word in text for word in ["equipment", "tool", "machine", "fixture"]):
-        return "Equipment, tooling, or maintenance issue"
-    if any(word in text for word in ["procedure", "process", "standard"]):
-        return "Procedure or process not followed or inadequate"
-    if any(word in text for word in ["communication", "information", "handover"]):
-        return "Poor communication or unclear information flow"
-    if any(word in text for word in ["material", "supplier", "component", "part"]):
-        return "Material, supplier, or logistics-related issue"
-    if any(word in text for word in ["design", "specification", "drawing"]):
-        return "Design or engineering issue"
-    if any(word in text for word in ["management", "supervision", "resource"]):
-        return "Management or resource-related issue"
-    if any(word in text for word in ["temperature", "humidity", "contamination", "environment"]):
-        return "Environmental or external factor"
-    return "Systemic issue identified from analysis"
+occurrence_root_cause_map = {
+    "Machine / Equipment": "Equipment, tooling, or maintenance issue",
+    "Material / Component": "Material or supplier-related issue",
+    "Process / Method": "Procedure or process not followed or inadequate",
+    "Design / Engineering": "Design or engineering issue",
+    "Human / Training": "Lack of proper training / knowledge gap",
+    "Environmental / External": "Environmental or external factor"
+}
+
+detection_root_cause_map = {
+    "QA / Inspection": "Inspection or QA process ineffective",
+    "Validation / Process": "Process validation or control issue",
+    "FMEA / Control Plan": "FMEA or control plan gap",
+    "Test / Equipment": "Test or measurement equipment issue",
+    "Systemic / Organizational": "Systemic organizational issue"
+}
+
+systemic_root_cause_map = {
+    "Management / Organization": "Inadequate leadership or insufficient resources",
+    "Process / Procedure": "Inefficient or missing processes / document control",
+    "Training / People": "Training gaps or skill insufficiency",
+    "Supplier / External": "Supplier process or quality issues",
+    "Quality System / Feedback": "Quality system or feedback loop deficiencies"
+}
 
 # ---------------------------
-# Helper: Render 5-Why dropdowns safely
+# Phase 1: Improved suggest_root_cause function
+# ---------------------------
+def suggest_root_cause(whys, categories_map, categories_dict):
+    """
+    whys: list of selected why strings, e.g., "Machine / Equipment: Calibration issues"
+    categories_map: dict mapping category -> suggested root cause
+    categories_dict: dict of all categories with their items
+    """
+    category_counts = {}
+
+    for why in whys:
+        if ": " in why:
+            cat, _ = why.split(": ", 1)
+            if cat in categories_map:
+                category_counts[cat] = category_counts.get(cat, 0) + 1
+
+    if not category_counts:
+        return "Systemic issue identified from analysis"
+
+    # Return the root cause corresponding to the most frequently selected category
+    top_category = max(category_counts, key=category_counts.get)
+    return categories_map[top_category]
+
+# ---------------------------
+# Helper: Render 5-Why dropdowns without repeating selections
 # ---------------------------
 def render_whys_no_repeat(why_list, categories, label_prefix):
     for idx in range(len(why_list)):
-        # Gather all selected values except current index
-        selected_so_far = [str(w) for i, w in enumerate(why_list) if str(w).strip() and i != idx]
+        selected_so_far = [w for i, w in enumerate(why_list) if w.strip() and i != idx]
+        options = [""] + [f"{cat}: {item}" for cat, items in categories.items() for item in items if f"{cat}: {item}" not in selected_so_far]
 
-        # Build options excluding already selected
-        options = [""] + [
-            f"{cat}: {item}" 
-            for cat, items in categories.items() 
-            if isinstance(items, list)
-            for item in items 
-            if f"{cat}: {item}" not in selected_so_far
-        ]
-
-        current_val = str(why_list[idx]) if str(why_list[idx]) in options else ""
+        current_val = why_list[idx] if why_list[idx] in options else ""
         why_list[idx] = st.selectbox(
             f"{label_prefix} {idx+1}",
             options,
@@ -372,19 +392,19 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             # Occurrence Analysis
             st.markdown("#### Occurrence Analysis")
             render_whys_no_repeat(st.session_state.d5_occ_whys, occurrence_categories, t[lang_key]['Occurrence_Why'])
-            if st.button("➕ Add another Occurrence Why"):
+            if st.button("➕ Add another Occurrence Why", key="add_occ"):
                 st.session_state.d5_occ_whys.append("")
 
             # Detection Analysis
             st.markdown("#### Detection Analysis")
             render_whys_no_repeat(st.session_state.d5_det_whys, detection_categories, t[lang_key]['Detection_Why'])
-            if st.button("➕ Add another Detection Why"):
+            if st.button("➕ Add another Detection Why", key="add_det"):
                 st.session_state.d5_det_whys.append("")
 
             # Systemic Analysis
             st.markdown("#### Systemic Analysis")
             render_whys_no_repeat(st.session_state.d5_sys_whys, systemic_categories, t[lang_key]['Systemic_Why'])
-            if st.button("➕ Add another Systemic Why"):
+            if st.button("➕ Add another Systemic Why", key="add_sys"):
                 st.session_state.d5_sys_whys.append("")
 
             # Dynamic Root Cause Suggestions (read-only)
@@ -392,9 +412,9 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
             sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
 
-            occ_rc_text = suggest_root_cause(occ_whys) if occ_whys else "No occurrence whys provided yet"
-            det_rc_text = suggest_root_cause(det_whys) if det_whys else "No detection whys provided yet"
-            sys_rc_text = suggest_root_cause(sys_whys) if sys_whys else "No systemic whys provided yet"
+            occ_rc_text = suggest_root_cause(occ_whys, occurrence_root_cause_map, occurrence_categories) if occ_whys else "No occurrence whys provided yet"
+            det_rc_text = suggest_root_cause(det_whys, detection_root_cause_map, detection_categories) if det_whys else "No detection whys provided yet"
+            sys_rc_text = suggest_root_cause(sys_whys, systemic_root_cause_map, systemic_categories) if sys_whys else "No systemic whys provided yet"
 
             st.text_area(f"{t[lang_key]['Root_Cause_Occ']}", value=occ_rc_text, height=80, disabled=True)
             st.text_area(f"{t[lang_key]['Root_Cause_Det']}", value=det_rc_text, height=80, disabled=True)
@@ -429,23 +449,23 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             )
 
 # ---------------------------
-# Collect answers for Excel (including D5 root causes with whys)
+# Prepare data for Excel
 # ---------------------------
 data_rows = []
-
-occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
-det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
-sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
-
-occ_rc_text = suggest_root_cause(occ_whys) if occ_whys else "No occurrence whys provided yet"
-det_rc_text = suggest_root_cause(det_whys) if det_whys else "No detection whys provided yet"
-sys_rc_text = suggest_root_cause(sys_whys) if sys_whys else "No systemic whys provided yet"
 
 for step, _, _ in npqp_steps:
     answer = st.session_state[step]["answer"]
     extra = st.session_state[step].get("extra", "")
 
     if step == "D5":
+        occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
+        det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
+        sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
+
+        occ_rc_text = suggest_root_cause(occ_whys, occurrence_root_cause_map, occurrence_categories) if occ_whys else "No occurrence whys provided yet"
+        det_rc_text = suggest_root_cause(det_whys, detection_root_cause_map, detection_categories) if det_whys else "No detection whys provided yet"
+        sys_rc_text = suggest_root_cause(sys_whys, systemic_root_cause_map, systemic_categories) if sys_whys else "No systemic whys provided yet"
+
         data_rows.append(("D5 - Root Cause (Occurrence)", occ_rc_text, " | ".join(occ_whys)))
         data_rows.append(("D5 - Root Cause (Detection)", det_rc_text, " | ".join(det_whys)))
         data_rows.append(("D5 - Root Cause (Systemic)", sys_rc_text, " | ".join(sys_whys)))
@@ -521,7 +541,6 @@ st.download_button(
 with st.sidebar:
     st.markdown("## Backup / Restore")
 
-    # Function to generate JSON backup
     def generate_json():
         save_data = {k: v for k, v in st.session_state.items() if not k.startswith("_")}
         return json.dumps(save_data, indent=4)
@@ -536,7 +555,6 @@ with st.sidebar:
     st.markdown("---")
     st.markdown("### Restore from JSON")
 
-    # File uploader for restoring JSON backup
     uploaded_file = st.file_uploader("Upload JSON file to restore", type="json")
     if uploaded_file:
         try:
@@ -548,7 +566,7 @@ with st.sidebar:
             st.error(f"Error restoring JSON: {e}")
 
 # ---------------------------
-# End of App Layout / Footer
+# Footer
 # ---------------------------
 st.markdown("<hr style='border:1px solid #1E90FF;'>", unsafe_allow_html=True)
 st.markdown(
