@@ -1,3 +1,6 @@
+# ---------------------------
+# PART 1: Imports, Page Config, Styles, Title, Version, Language
+# ---------------------------
 import streamlit as st
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
@@ -83,6 +86,7 @@ t = {
         "FMEA_Failure": "Ocurrencia de falla FMEA"
     }
 }
+
 # ---------------------------
 # NPQP 8D steps with examples
 # ---------------------------
@@ -119,6 +123,9 @@ npqp_steps = [
      {"en":"Update SOPs, PFMEA, work instructions, and maintenance procedures.",
       "es":"Actualizar SOPs, PFMEA, instrucciones de trabajo y procedimientos de mantenimiento."})
 ]
+# ---------------------------
+# PART 2: Session State, Report Inputs, Restore, Rule-Based Root Cause, D1–D4 Tabs
+# ---------------------------
 
 # ---------------------------
 # Initialize session state
@@ -149,45 +156,29 @@ if "backup" in st.query_params:
 st.subheader(f"{t[lang_key]['Report_Date']}")
 st.session_state.report_date = st.text_input(f"{t[lang_key]['Report_Date']}", value=st.session_state.report_date)
 st.session_state.prepared_by = st.text_input(f"{t[lang_key]['Prepared_By']}", value=st.session_state.prepared_by)
+
 # ---------------------------
 # Rule-based Root Cause Suggestion (Expanded)
 # ---------------------------
 def suggest_root_cause(whys):
     text = " ".join(whys).lower()
 
-    # Training / knowledge / people
     if any(word in text for word in ["training", "knowledge", "not trained", "skill", "operator", "human error"]):
         return "Lack of proper training / knowledge gap"
-
-    # Equipment / tooling / maintenance
     if any(word in text for word in ["equipment", "tool", "machine", "fixture", "calibration", "maintenance", "wear", "breakdown"]):
         return "Equipment, tooling, or maintenance issue"
-
-    # Procedure / process / standards
     if any(word in text for word in ["procedure", "process", "standard", "work instruction", "sop", "policy"]):
         return "Procedure or process not followed or inadequate"
-
-    # Communication / information flow
     if any(word in text for word in ["communication", "information", "misunderstanding", "handover", "reporting", "coordination"]):
         return "Poor communication or unclear information flow"
-
-    # Material / supplier / logistics
     if any(word in text for word in ["material", "supplier", "vendor", "part", "component", "shipment", "logistics", "delivery", "storage"]):
         return "Material, supplier, or logistics-related issue"
-
-    # Design / engineering
     if any(word in text for word in ["design", "specification", "drawing", "tolerance", "engineering", "requirement"]):
         return "Design or engineering issue"
-
-    # Management / resources
     if any(word in text for word in ["management", "supervision", "oversight", "resource", "budget", "staffing", "schedule"]):
         return "Management or resource-related issue"
-
-    # Environment / external
     if any(word in text for word in ["temperature", "humidity", "contamination", "dust", "external", "environment", "power fluctuation"]):
         return "Environmental or external factor"
-
-    # Default fallback
     return "Systemic issue identified from analysis"
 
 # ---------------------------
@@ -229,10 +220,10 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             st.session_state[step]["answer"] = st.text_area(
                 "Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}"
             )
+            # ---------------------------
+# PART 3: D5 Tab (Dynamic 5-Why with Expanded Options & No Repetition)
+# ---------------------------
 
-# ---------------------------
-# Render D5 Tab (Expanded 5-Why)
-# ---------------------------
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     if step == "D5":
         with tabs[i]:
@@ -253,37 +244,42 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             """, unsafe_allow_html=True)
 
             # ---------------------------
-            # Helper to render 5-Why dropdowns with free text
+            # Helper to render 5-Why dropdowns with dynamic removal
             # ---------------------------
-            def render_whys(why_list, categories, label_prefix):
-                for idx, _ in enumerate(why_list):
-                    options = [""] + [f"{cat}: {item}" for cat, items in categories.items() for item in items]
-                    current_val = why_list[idx]
+            def render_whys_no_repeat(why_list, categories, label_prefix):
+                for idx in range(len(why_list)):
+                    # Compute remaining options excluding previous selections
+                    selected_values = [w for w in why_list[:idx] if w.strip()]
+                    options = [""] + [f"{cat}: {item}" for cat, items in categories.items() for item in items if f"{cat}: {item}" not in selected_values]
+                    
+                    current_val = why_list[idx] if why_list[idx] in options else ""
                     why_list[idx] = st.selectbox(
                         f"{label_prefix} {idx+1}",
                         options,
                         index=options.index(current_val) if current_val in options else 0,
                         key=f"{label_prefix}_{idx}"
                     )
+
+                    # Free text input overrides dropdown
                     free_text = st.text_input(f"Or enter your own {label_prefix} {idx+1}", value=why_list[idx], key=f"{label_prefix}_txt_{idx}")
                     if free_text.strip():
                         why_list[idx] = free_text
 
             # ---------------------------
-            # Render Occurrence, Detection, Systemic using expanded categories
+            # Render Occurrence, Detection, Systemic
             # ---------------------------
             st.markdown("#### Occurrence Analysis")
-            render_whys(st.session_state.d5_occ_whys, occurrence_categories, t[lang_key]['Occurrence_Why'])
+            render_whys_no_repeat(st.session_state.d5_occ_whys, occurrence_categories, t[lang_key]['Occurrence_Why'])
             if st.button("➕ Add another Occurrence Why"):
                 st.session_state.d5_occ_whys.append("")
 
             st.markdown("#### Detection Analysis")
-            render_whys(st.session_state.d5_det_whys, detection_categories, t[lang_key]['Detection_Why'])
+            render_whys_no_repeat(st.session_state.d5_det_whys, detection_categories, t[lang_key]['Detection_Why'])
             if st.button("➕ Add another Detection Why"):
                 st.session_state.d5_det_whys.append("")
 
             st.markdown("#### Systemic Analysis")
-            render_whys(st.session_state.d5_sys_whys, systemic_categories, t[lang_key]['Systemic_Why'])
+            render_whys_no_repeat(st.session_state.d5_sys_whys, systemic_categories, t[lang_key]['Systemic_Why'])
             if st.button("➕ Add another Systemic Why"):
                 st.session_state.d5_sys_whys.append("")
 
@@ -302,10 +298,10 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             st.text_area(f"{t[lang_key]['Root_Cause_Det']}", value=det_rc_text, height=80, disabled=True)
             st.text_area(f"{t[lang_key]['Root_Cause_Sys']}", value=sys_rc_text, height=80, disabled=True)
             # ---------------------------
-# Render D6–D8 Tabs
+# PART 4: Render D6–D8 Tabs
 # ---------------------------
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
-    if step in ["D6","D7","D8"]:
+    if step in ["D6", "D7", "D8"]:
         with tabs[i]:
             st.markdown(f"### {t[lang_key][step]}")
             note_text = note_dict[lang_key]
@@ -330,7 +326,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             )
 
 # ---------------------------
-# Collect answers for Excel (including D5 root causes)
+# PART 4: Collect Answers for Excel (Including D5 Root Causes with Whys)
 # ---------------------------
 data_rows = []
 
@@ -352,9 +348,8 @@ for step, _, _ in npqp_steps:
         data_rows.append(("D5 - Root Cause (Systemic)", sys_rc_text, " | ".join(sys_whys)))
     else:
         data_rows.append((step, answer, extra))
-
-# ---------------------------
-# Save / Download Excel
+        # ---------------------------
+# PART 5: Save / Download Excel
 # ---------------------------
 def generate_excel():
     wb = Workbook()
@@ -417,12 +412,11 @@ st.download_button(
 )
 
 # ---------------------------
-# Sidebar: JSON Backup / Restore
+# PART 5: Sidebar - JSON Backup / Restore
 # ---------------------------
 with st.sidebar:
     st.markdown("## Backup / Restore")
 
-    # Function to generate JSON backup
     def generate_json():
         save_data = {k: v for k, v in st.session_state.items() if not k.startswith("_")}
         return json.dumps(save_data, indent=4)
@@ -436,7 +430,6 @@ with st.sidebar:
 
     st.markdown("---")
     st.markdown("### Restore from JSON")
-
     uploaded_file = st.file_uploader("Upload JSON file to restore", type="json")
     if uploaded_file:
         try:
