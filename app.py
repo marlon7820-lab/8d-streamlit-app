@@ -229,8 +229,9 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             st.session_state[step]["answer"] = st.text_area(
                 "Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}"
             )
-            # ---------------------------
-# Render D5 Tab (Dynamic 5-Why)
+
+# ---------------------------
+# Render D5 Tab (Expanded 5-Why)
 # ---------------------------
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     if step == "D5":
@@ -249,83 +250,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             ">
             <b>{t[lang_key]['Training_Guidance']}:</b> {note_dict[lang_key]}
             </div>
-            """ , unsafe_allow_html=True)
-
-            # ---------------------------
-            # Define categories for dropdowns
-            # ---------------------------
-            occurrence_categories = {
-                "Machine / Equipment": [
-                    "Mechanical failure or breakdown",
-                    "Calibration issues",
-                    "Tooling or fixture failure",
-                    "Machine wear and tear"
-                ],
-                "Material / Component": [
-                    "Wrong material delivered",
-                    "Material defects",
-                    "Damage during storage or transport",
-                    "Incorrect specifications"
-                ],
-                "Process / Method": [
-                    "Incorrect process steps",
-                    "Inefficient workflow",
-                    "Lack of standardized procedures",
-                    "Outdated instructions"
-                ],
-                "Environmental / External": [
-                    "Temperature or humidity issues",
-                    "Power fluctuations",
-                    "Contamination",
-                    "Regulatory changes"
-                ],
-                "Design / Engineering": [
-                    "Design specification mismatch",
-                    "Tolerance errors",
-                    "Drawing discrepancies",
-                    "Engineering oversight"
-                ]
-            }
-
-            detection_categories = {
-                "QA / Inspection": [
-                    "QA checklist incomplete",
-                    "No automated test",
-                    "Missed inspection",
-                    "Test equipment not calibrated"
-                ],
-                "Validation / Process": [
-                    "Insufficient validation steps",
-                    "Design verification not complete",
-                    "Inspection criteria unclear"
-                ],
-                "FMEA / Risk": [
-                    "Failure mode not identified in FMEA",
-                    "PFMEA severity underestimated",
-                    "Detection controls missing"
-                ]
-            }
-
-            systemic_categories = {
-                "Management / Org": [
-                    "Lack of training",
-                    "Inadequate resources",
-                    "Poor communication",
-                    "Supervision gaps"
-                ],
-                "Process / Procedure": [
-                    "Outdated procedures",
-                    "Inefficient process design",
-                    "Inconsistent work instructions",
-                    "Lack of standardization"
-                ],
-                "Supplier / External": [
-                    "Supplier quality issues",
-                    "Logistics failures",
-                    "Regulatory changes",
-                    "Component shortages"
-                ]
-            }
+            """, unsafe_allow_html=True)
 
             # ---------------------------
             # Helper to render 5-Why dropdowns with free text
@@ -345,7 +270,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                         why_list[idx] = free_text
 
             # ---------------------------
-            # Render Occurrence, Detection, Systemic
+            # Render Occurrence, Detection, Systemic using expanded categories
             # ---------------------------
             st.markdown("#### Occurrence Analysis")
             render_whys(st.session_state.d5_occ_whys, occurrence_categories, t[lang_key]['Occurrence_Why'])
@@ -405,11 +330,10 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             )
 
 # ---------------------------
-# Collect answers for Excel (including root causes with Whys)
+# Collect answers for Excel (including D5 root causes)
 # ---------------------------
 data_rows = []
 
-# Capture D5 root causes with whys in extra
 occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
 det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
 sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
@@ -491,6 +415,7 @@ st.download_button(
     file_name=f"8D_Report_{st.session_state.report_date.replace(' ', '_')}.xlsx",
     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 )
+
 # ---------------------------
 # Sidebar: JSON Backup / Restore
 # ---------------------------
@@ -512,7 +437,6 @@ with st.sidebar:
     st.markdown("---")
     st.markdown("### Restore from JSON")
 
-    # File uploader for restoring JSON backup
     uploaded_file = st.file_uploader("Upload JSON file to restore", type="json")
     if uploaded_file:
         try:
@@ -524,7 +448,7 @@ with st.sidebar:
             st.error(f"Error restoring JSON: {e}")
 
 # ---------------------------
-# End of App Footer
+# End of App
 # ---------------------------
 st.markdown("<hr style='border:1px solid #1E90FF;'>", unsafe_allow_html=True)
 st.markdown("<p style='text-align:center; font-size:12px; color:#555555;'>End of 8D Report Assistant</p>", unsafe_allow_html=True)
