@@ -190,7 +190,6 @@ def suggest_root_cause(whys):
     # Default fallback
     return "Systemic issue identified from analysis"
 
-
 # ---------------------------
 # Tabs with ✅ / 🔴 indicators
 # ---------------------------
@@ -230,8 +229,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             st.session_state[step]["answer"] = st.text_area(
                 "Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}"
             )
-
-# ---------------------------
+            # ---------------------------
 # Render D5 Tab (Dynamic 5-Why)
 # ---------------------------
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
@@ -280,6 +278,12 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                     "Power fluctuations",
                     "Contamination",
                     "Regulatory changes"
+                ],
+                "Design / Engineering": [
+                    "Design specification mismatch",
+                    "Tolerance errors",
+                    "Drawing discrepancies",
+                    "Engineering oversight"
                 ]
             }
 
@@ -287,11 +291,18 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                 "QA / Inspection": [
                     "QA checklist incomplete",
                     "No automated test",
-                    "Missed inspection"
+                    "Missed inspection",
+                    "Test equipment not calibrated"
                 ],
                 "Validation / Process": [
                     "Insufficient validation steps",
-                    "Design verification not complete"
+                    "Design verification not complete",
+                    "Inspection criteria unclear"
+                ],
+                "FMEA / Risk": [
+                    "Failure mode not identified in FMEA",
+                    "PFMEA severity underestimated",
+                    "Detection controls missing"
                 ]
             }
 
@@ -299,20 +310,24 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                 "Management / Org": [
                     "Lack of training",
                     "Inadequate resources",
-                    "Poor communication"
+                    "Poor communication",
+                    "Supervision gaps"
                 ],
                 "Process / Procedure": [
                     "Outdated procedures",
                     "Inefficient process design",
-                    "Inconsistent work instructions"
+                    "Inconsistent work instructions",
+                    "Lack of standardization"
                 ],
                 "Supplier / External": [
                     "Supplier quality issues",
                     "Logistics failures",
-                    "Regulatory changes"
+                    "Regulatory changes",
+                    "Component shortages"
                 ]
             }
-                        # ---------------------------
+
+            # ---------------------------
             # Helper to render 5-Why dropdowns with free text
             # ---------------------------
             def render_whys(why_list, categories, label_prefix):
@@ -361,8 +376,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             st.text_area(f"{t[lang_key]['Root_Cause_Occ']}", value=occ_rc_text, height=80, disabled=True)
             st.text_area(f"{t[lang_key]['Root_Cause_Det']}", value=det_rc_text, height=80, disabled=True)
             st.text_area(f"{t[lang_key]['Root_Cause_Sys']}", value=sys_rc_text, height=80, disabled=True)
-
-# ---------------------------
+            # ---------------------------
 # Render D6–D8 Tabs
 # ---------------------------
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
@@ -389,7 +403,8 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             st.session_state[step]["answer"] = st.text_area(
                 "Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}"
             )
-            # ---------------------------
+
+# ---------------------------
 # Collect answers for Excel (including root causes with Whys)
 # ---------------------------
 data_rows = []
@@ -476,7 +491,6 @@ st.download_button(
     file_name=f"8D_Report_{st.session_state.report_date.replace(' ', '_')}.xlsx",
     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 )
-
 # ---------------------------
 # Sidebar: JSON Backup / Restore
 # ---------------------------
@@ -510,7 +524,7 @@ with st.sidebar:
             st.error(f"Error restoring JSON: {e}")
 
 # ---------------------------
-# End of App
+# End of App Footer
 # ---------------------------
 st.markdown("<hr style='border:1px solid #1E90FF;'>", unsafe_allow_html=True)
 st.markdown("<p style='text-align:center; font-size:12px; color:#555555;'>End of 8D Report Assistant</p>", unsafe_allow_html=True)
