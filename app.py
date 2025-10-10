@@ -39,7 +39,7 @@ st.markdown("<h1 style='text-align: center; color: #1E90FF;'>📋 8D Report Assi
 # ---------------------------
 # Version info
 # ---------------------------
-version_number = "v1.0.8"
+version_number = "v1.0.9"
 last_updated = "October 10, 2025"
 st.markdown(f"""
 <hr style='border:1px solid #1E90FF; margin-top:10px; margin-bottom:5px;'>
@@ -159,6 +159,7 @@ occurrence_categories = {
         "Component placement design error (DFMEA gap)",
         "Lack of design verification or validation testing"
     ],
+    # "Human / Training" removed as requested
     "Environmental / External": [
         "Temperature or humidity out of control range",
         "Electrostatic discharge (ESD) not controlled",
@@ -281,10 +282,8 @@ def render_whys_no_repeat(why_list, categories, label_prefix):
     for idx in range(len(why_list)):
         # Gather all selected values except current index
         selected_so_far = [w for i, w in enumerate(why_list) if w.strip() and i != idx]
-        
         # Build options excluding already selected
         options = [""] + [f"{cat}: {item}" for cat, items in categories.items() for item in items if f"{cat}: {item}" not in selected_so_far]
-        
         current_val = why_list[idx] if why_list[idx] in options else ""
         why_list[idx] = st.selectbox(
             f"{label_prefix} {idx+1}",
@@ -292,11 +291,11 @@ def render_whys_no_repeat(why_list, categories, label_prefix):
             index=options.index(current_val) if current_val in options else 0,
             key=f"{label_prefix}_{idx}"
         )
-        
         free_text = st.text_input(f"Or enter your own {label_prefix} {idx+1}", value=why_list[idx], key=f"{label_prefix}_txt_{idx}")
         if free_text.strip():
             why_list[idx] = free_text
-            # ---------------------------
+
+# ---------------------------
 # Render D1–D4 tabs
 # ---------------------------
 tab_labels = []
@@ -308,7 +307,7 @@ for step, _, _ in npqp_steps:
 tabs = st.tabs(tab_labels)
 
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
-    if step not in ["D5", "D6", "D7", "D8"]:
+    if step in ["D1", "D2", "D3"]:
         with tabs[i]:
             st.markdown(f"### {t[lang_key][step]}")
             note_text = note_dict[lang_key]
@@ -333,6 +332,57 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             )
 
 # ---------------------------
+# Render D4 tab (Nissan 8D format)
+# ---------------------------
+for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
+    if step == "D4":
+        with tabs[i]:
+            st.markdown(f"### {t[lang_key][step]} (Nissan 8D Format)")
+            note_text = note_dict[lang_key]
+            example_text = example_dict[lang_key]
+            st.markdown(f"""
+            <div style="
+                background-color:#b3e0ff; 
+                color:black; 
+                padding:12px; 
+                border-left:5px solid #1E90FF; 
+                border-radius:6px;
+                width:100%;
+                font-size:14px;
+                line-height:1.5;
+            ">
+            <b>{t[lang_key]['Training_Guidance']}:</b> {note_text}<br><br>
+            💡 <b>{t[lang_key]['Example']}:</b> {example_text}
+            </div>
+            """, unsafe_allow_html=True)
+
+            # Material location
+            material_locations = ["Work in Progress", "Stores Stock", "Warehouse Stock", "Service Parts", "Other"]
+            st.session_state[step].setdefault("material_location", "")
+            st.session_state[step]["material_location"] = st.selectbox(
+                "Material Location",
+                material_locations,
+                index=material_locations.index(st.session_state[step]["material_location"])
+                if st.session_state[step]["material_location"] in material_locations else 0,
+            )
+
+            # Status of activities
+            activity_statuses = ["Not Started", "In Progress", "Completed", "Delayed"]
+            st.session_state[step].setdefault("activity_status", "")
+            st.session_state[step]["activity_status"] = st.selectbox(
+                "Status of Containment Activities",
+                activity_statuses,
+                index=activity_statuses.index(st.session_state[step]["activity_status"])
+                if st.session_state[step]["activity_status"] in activity_statuses else 0,
+            )
+
+            # Additional notes
+            st.session_state[step]["answer"] = st.text_area(
+                "Additional Notes",
+                value=st.session_state[step].get("answer", ""),
+                key=f"ans_{step}"
+            )
+            # ---------------------------
 # Render D5 tab
 # ---------------------------
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
@@ -352,7 +402,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             ">
             <b>{t[lang_key]['Training_Guidance']}:</b> {note_dict[lang_key]}
             </div>
-            """ , unsafe_allow_html=True)
+            """, unsafe_allow_html=True)
 
             # Occurrence Analysis
             st.markdown("#### Occurrence Analysis")
@@ -384,7 +434,8 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             st.text_area(f"{t[lang_key]['Root_Cause_Occ']}", value=occ_rc_text, height=80, disabled=True)
             st.text_area(f"{t[lang_key]['Root_Cause_Det']}", value=det_rc_text, height=80, disabled=True)
             st.text_area(f"{t[lang_key]['Root_Cause_Sys']}", value=sys_rc_text, height=80, disabled=True)
-            # ---------------------------
+
+# ---------------------------
 # Render D6–D8 Tabs
 # ---------------------------
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
@@ -413,10 +464,11 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             )
 
 # ---------------------------
-# Collect answers for Excel (including D5 root causes with whys)
+# Collect answers for Excel (including D4 location/status and D5 root causes)
 # ---------------------------
 data_rows = []
 
+# D5 whys and suggested root causes
 occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
 det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
 sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
@@ -427,8 +479,9 @@ sys_rc_text = suggest_root_cause(sys_whys) if sys_whys else "No systemic whys pr
 
 for step, _, _ in npqp_steps:
     answer = st.session_state[step]["answer"]
-    extra = st.session_state[step].get("extra", "")
-
+    extra = ""
+    if step == "D4":
+        extra = f"Location: {st.session_state[step].get('material_location','')} | Status: {st.session_state[step].get('activity_status','')}"
     if step == "D5":
         data_rows.append(("D5 - Root Cause (Occurrence)", occ_rc_text, " | ".join(occ_whys)))
         data_rows.append(("D5 - Root Cause (Detection)", det_rc_text, " | ".join(det_whys)))
@@ -505,7 +558,6 @@ st.download_button(
 with st.sidebar:
     st.markdown("## Backup / Restore")
 
-    # Function to generate JSON backup
     def generate_json():
         save_data = {k: v for k, v in st.session_state.items() if not k.startswith("_")}
         return json.dumps(save_data, indent=4)
@@ -519,8 +571,6 @@ with st.sidebar:
 
     st.markdown("---")
     st.markdown("### Restore from JSON")
-
-    # File uploader for restoring JSON backup
     uploaded_file = st.file_uploader("Upload JSON file to restore", type="json")
     if uploaded_file:
         try:
