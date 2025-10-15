@@ -7,6 +7,7 @@ import datetime
 import io
 import json
 import os
+import time
 
 # ---------------------------
 # Page config
@@ -60,17 +61,27 @@ lang = st.sidebar.selectbox("Select Language / Seleccionar Idioma", ["English", 
 lang_key = "en" if lang == "English" else "es"
 
 # ---------------------------
-# Smart Session Reset Button
+# Smart Session Reset Button (UPDATED)
 # ---------------------------
 def reset_8d_session():
     preserve_keys = ["lang", "lang_key", "current_tab"]
     preserved = {k: st.session_state[k] for k in preserve_keys if k in st.session_state}
+
     for key in list(st.session_state.keys()):
         if key not in preserve_keys:
             del st.session_state[key]
+
     for k, v in preserved.items():
         st.session_state[k] = v
-    st.experimental_rerun()
+
+    with st.sidebar:
+        st.success("✅ Session reset successfully! Reloading...")
+
+    time.sleep(0.8)
+    try:
+        st.rerun()
+    except AttributeError:
+        st.experimental_rerun()
 
 st.sidebar.markdown("---")
 st.sidebar.header("⚙️ App Controls")
@@ -394,7 +405,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             )
 
 # ---------------------------
-# Sidebar: JSON Backup / Restore + Full Session Reset
+# Sidebar: JSON Backup / Restore + Full Session Reset (UPDATED)
 # ---------------------------
 with st.sidebar:
     st.markdown("## Backup / Restore / Reset")
@@ -423,7 +434,15 @@ with st.sidebar:
 def full_reset_session():
     for key in list(st.session_state.keys()):
         del st.session_state[key]
-    st.experimental_rerun()
+
+    with st.sidebar:
+        st.success("✅ Full session reset successfully! Reloading...")
+
+    time.sleep(0.8)
+    try:
+        st.rerun()
+    except AttributeError:
+        st.experimental_rerun()
 
 if st.sidebar.button("🧹 Reset Session"):
     full_reset_session()
