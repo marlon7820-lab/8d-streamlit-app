@@ -49,28 +49,21 @@ Version {version_number} | Last updated: {last_updated}
 """, unsafe_allow_html=True)
 
 # ---------------------------
-# Sidebar: Language selection & reset
+# Sidebar: Language selection & safe reset
 # ---------------------------
 st.sidebar.title("8D Report Assistant")
 st.sidebar.markdown("---")
 st.sidebar.header("Settings")
 
-# Language selection
 lang = st.sidebar.selectbox("Select Language / Seleccionar Idioma", ["English", "Español"])
 lang_key = "en" if lang == "English" else "es"
 
-# ---------------------------
-# Smart Session Reset Button (Safe)
-# ---------------------------
-st.sidebar.markdown("---")
-st.sidebar.header("⚙️ App Controls")
-
 preserve_keys = ["lang", "lang_key", "current_tab"]
-
 if "reset_trigger" not in st.session_state:
     st.session_state.reset_trigger = False
 
-if st.sidebar.button("🔄 Reset 8D Session"):
+reset_clicked = st.sidebar.button("🔄 Reset 8D Session")
+if reset_clicked:
     preserved = {k: st.session_state[k] for k in preserve_keys if k in st.session_state}
     for key in list(st.session_state.keys()):
         if key not in preserve_keys:
@@ -78,9 +71,8 @@ if st.sidebar.button("🔄 Reset 8D Session"):
     for k, v in preserved.items():
         st.session_state[k] = v
     st.session_state.reset_trigger = True
-    st.sidebar.success("Session data cleared. All 8D inputs reset, but language and tab preserved.")
 
-if st.session_state.reset_trigger:
+if st.session_state.get("reset_trigger", False):
     st.session_state.reset_trigger = False
     st.experimental_rerun()
 
@@ -117,7 +109,7 @@ t = {
 }
 
 # ---------------------------
-# NPQP 8D steps with examples
+# NPQP 8D steps
 # ---------------------------
 npqp_steps = [
     ("D1", {"en":"Describe the customer concerns clearly.", "es":"Describa claramente las preocupaciones del cliente."},
@@ -150,14 +142,56 @@ st.session_state.setdefault("prepared_by", "")
 st.session_state.setdefault("d5_occ_whys", [""]*5)
 st.session_state.setdefault("d5_det_whys", [""]*5)
 st.session_state.setdefault("d5_sys_whys", [""]*5)
-
-# D4 fields
 st.session_state.setdefault("d4_location", "")
 st.session_state.setdefault("d4_status", "")
 st.session_state.setdefault("d4_containment", "")
 
 # ---------------------------
-# Root cause categories
+# Root cause helper
+# ---------------------------
+def suggest_root_cause(whys):
+    text = " ".join(whys).lower()
+    if any(word in text for word in ["training", "knowledge", "human error"]):
+        return "Lack of proper training / knowledge gap"
+    if any(word in text for word in ["equipment", "tool", "machine", "fixture"]):
+        return "Equipment, tooling, or maintenance issue"
+    if any(word in text for word in ["procedure", "process", "standard"]):
+        return "Procedure or process not followed or inadequate"
+    if any(word in text for word in ["communication", "information", "handover"]):
+        return "Poor communication or unclear information flow"
+    if any(word in text for word in ["material", "supplier", "component", "part"]):
+        return "Material, supplier, or logistics-related issue"
+    if any(word in text for word in ["design", "specification", "drawing"]):
+        return "Design or engineering issue"
+    if any(word in text for word in ["management", "supervision", "resource"]):
+        return "Management or resource-related issue"
+    if any(word in text for word in ["temperature", "humidity", "contamination", "environment"]):
+        return "Environmental or external factor"
+    return "Systemic issue identified from analysis"
+
+# ---------------------------
+# 5-Why render helper
+# ---------------------------
+def render_whys_no_repeat(why_list, categories, label_prefix):
+    for idx in range(len(why_list)):
+        selected_so_far = [w for i, w in enumerate(why_list) if w.strip() and i != idx]
+        options = [""] + [f"{cat}: {item}" for cat, items in categories.items() for item in items if f"{cat}: {item}" not in selected_so_far]
+        current_val = why_list[idx] if why_list[idx] in options else ""
+        why_list[idx] = st.selectbox(
+            f"{label_prefix} {idx+1}",
+            options,
+            index=options.index(current_val) if current_val in options else 0,
+            key=f"{label_prefix}_{idx}"
+        )
+        free_text = st.text_input(f"Or enter your own {label_prefix} {idx+1}", value=why_list[idx], key=f"{label_prefix}_txt_{idx}")
+        if free_text.strip():
+            why_list[idx] = free_text
+
+# ---------------------------
+# --- Continue with D1–D8 tab rendering, D4/D5 special handling,
+# --- Excel export, JSON backup/restore, exactly as in your last working code ---
+# ---------------------------
+# Expanded categories for D5
 # ---------------------------
 occurrence_categories = {
     "Machine / Equipment": [
@@ -290,47 +324,6 @@ systemic_categories = {
 }
 
 # ---------------------------
-# Suggest root cause
-# ---------------------------
-def suggest_root_cause(whys):
-    text = " ".join(whys).lower()
-    if any(word in text for word in ["training", "knowledge", "human error"]):
-        return "Lack of proper training / knowledge gap"
-    if any(word in text for word in ["equipment", "tool", "machine", "fixture"]):
-        return "Equipment, tooling, or maintenance issue"
-    if any(word in text for word in ["procedure", "process", "standard"]):
-        return "Procedure or process not followed or inadequate"
-    if any(word in text for word in ["communication", "information", "handover"]):
-        return "Poor communication or unclear information flow"
-    if any(word in text for word in ["material", "supplier", "component", "part"]):
-        return "Material, supplier, or logistics-related issue"
-    if any(word in text for word in ["design", "specification", "drawing"]):
-        return "Design or engineering issue"
-    if any(word in text for word in ["management", "supervision", "resource"]):
-        return "Management or resource-related issue"
-    if any(word in text for word in ["temperature", "humidity", "contamination", "environment"]):
-        return "Environmental or external factor"
-    return "Systemic issue identified from analysis"
-
-# ---------------------------
-# Render 5-Why dropdowns without repeats
-# ---------------------------
-def render_whys_no_repeat(why_list, categories, label_prefix):
-    for idx in range(len(why_list)):
-        selected_so_far = [w for i, w in enumerate(why_list) if w.strip() and i != idx]
-        options = [""] + [f"{cat}: {item}" for cat, items in categories.items() for item in items if f"{cat}: {item}" not in selected_so_far]
-        current_val = why_list[idx] if why_list[idx] in options else ""
-        why_list[idx] = st.selectbox(
-            f"{label_prefix} {idx+1}",
-            options,
-            index=options.index(current_val) if current_val in options else 0,
-            key=f"{label_prefix}_{idx}"
-        )
-        free_text = st.text_input(f"Or enter your own {label_prefix} {idx+1}", value=why_list[idx], key=f"{label_prefix}_txt_{idx}")
-        if free_text.strip():
-            why_list[idx] = free_text
-
-# ---------------------------
 # Render Tabs D1–D8
 # ---------------------------
 tab_labels = []
@@ -361,24 +354,26 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
         </div>
         """, unsafe_allow_html=True)
 
+        # D4 fields
         if step == "D4":
             st.session_state[step]["location"] = st.selectbox(
-                "Location of Material",
+                t[lang_key]["Location"],
                 ["", "Work in Progress", "Stores Stock", "Warehouse Stock", "Service Parts", "Other"],
                 index=0,
                 key="d4_location"
             )
             st.session_state[step]["status"] = st.selectbox(
-                "Status of Activities",
+                t[lang_key]["Status"],
                 ["", "Pending", "In Progress", "Completed", "Other"],
                 index=0,
                 key="d4_status"
             )
             st.session_state[step]["answer"] = st.text_area(
-                "Containment Actions / Notes",
+                t[lang_key]["Containment_Actions"],
                 value=st.session_state[step]["answer"],
                 key=f"ans_{step}"
             )
+        # D5 5-Why
         elif step == "D5":
             st.markdown("#### Occurrence Analysis")
             render_whys_no_repeat(st.session_state.d5_occ_whys, occurrence_categories, t[lang_key]['Occurrence_Why'])
@@ -387,6 +382,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             st.markdown("#### Systemic Analysis")
             render_whys_no_repeat(st.session_state.d5_sys_whys, systemic_categories, t[lang_key]['Systemic_Why'])
 
+            # Root cause text areas
             occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
             det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
             sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
@@ -400,10 +396,10 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             )
 
 # ---------------------------
-# Sidebar JSON Backup / Restore / Reset
+# JSON Backup / Restore
 # ---------------------------
 with st.sidebar:
-    st.markdown("## Backup / Restore / Reset")
+    st.markdown("## Backup / Restore")
     def generate_json():
         save_data = {k: v for k, v in st.session_state.items() if not k.startswith("_")}
         return json.dumps(save_data, indent=4)
@@ -425,13 +421,8 @@ with st.sidebar:
         except Exception as e:
             st.error(f"Error restoring JSON: {e}")
 
-    if st.button("🧹 Reset Session"):
-        for key in list(st.session_state.keys()):
-            del st.session_state[key]
-        st.experimental_rerun()
-
 # ---------------------------
-# Collect data for Excel
+# Prepare data for Excel
 # ---------------------------
 data_rows = []
 occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
@@ -465,7 +456,6 @@ def generate_excel():
     wb = Workbook()
     ws = wb.active
     ws.title = "NPQP 8D Report"
-
     thin = Side(border_style="thin", color="000000")
     border = Border(left=thin, right=thin, top=thin, bottom=thin)
 
@@ -485,6 +475,7 @@ def generate_excel():
     ws.append([t[lang_key]['Prepared_By'], st.session_state.prepared_by])
     ws.append([])
 
+    # Header
     header_row = ws.max_row + 1
     headers = ["Step", "Answer", "Extra / Notes"]
     fill = PatternFill(start_color="1E90FF", end_color="1E90FF", fill_type="solid")
@@ -495,6 +486,7 @@ def generate_excel():
         cell.alignment = Alignment(horizontal="center", vertical="center")
         cell.border = border
 
+    # Append data
     for step, answer, extra in data_rows:
         ws.append([t[lang_key].get(step, step), answer, extra])
         r = ws.max_row
