@@ -189,6 +189,95 @@ if st.sidebar.button("🧹 Reset Session"):
     st.experimental_rerun()
 
 # ---------------------------
-# Note: Here you would add the D1-D8 tab rendering, 5-Why dropdowns, and Excel export
-# (Keep your original rendering logic from the previous app for tabs and Excel generation)
+# Render D1-D8 tabs
 # ---------------------------
+tab_labels = []
+for step, _, _ in npqp_steps:
+    tab_labels.append(f"{t[lang_key][step]}")
+
+tabs = st.tabs(tab_labels)
+
+for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
+    with tabs[i]:
+        st.markdown(f"### {t[lang_key][step]}")
+        st.markdown(f"<div style='background-color:#b3e0ff;color:black;padding:12px;border-left:5px solid #1E90FF;border-radius:6px;'>{note_dict[lang_key]}<br><br>💡 {example_dict[lang_key]}</div>", unsafe_allow_html=True)
+        if step == "D4":
+            st.session_state[step]["location"] = st.selectbox("Location of Material", ["","Work in Progress","Stores Stock","Warehouse Stock","Service Parts","Other"], index=0)
+            st.session_state[step]["status"] = st.selectbox("Status of Activities", ["","Pending","In Progress","Completed","Other"], index=0)
+            st.session_state[step]["answer"] = st.text_area("Containment Actions / Notes", value=st.session_state[step]["answer"])
+        elif step == "D5":
+            st.markdown("#### Occurrence Analysis")
+            for idx in range(len(st.session_state.d5_occ_whys)):
+                st.session_state.d5_occ_whys[idx] = st.text_input(f"{t[lang_key]['Occurrence_Why']} {idx+1}", value=st.session_state.d5_occ_whys[idx])
+            st.markdown("#### Detection Analysis")
+            for idx in range(len(st.session_state.d5_det_whys)):
+                st.session_state.d5_det_whys[idx] = st.text_input(f"{t[lang_key]['Detection_Why']} {idx+1}", value=st.session_state.d5_det_whys[idx])
+            st.markdown("#### Systemic Analysis")
+            for idx in range(len(st.session_state.d5_sys_whys)):
+                st.session_state.d5_sys_whys[idx] = st.text_input(f"{t[lang_key]['Systemic_Why']} {idx+1}", value=st.session_state.d5_sys_whys[idx])
+            occ_rc_text = suggest_root_cause([w for w in st.session_state.d5_occ_whys if w.strip()])
+            det_rc_text = suggest_root_cause([w for w in st.session_state.d5_det_whys if w.strip()])
+            sys_rc_text = suggest_root_cause([w for w in st.session_state.d5_sys_whys if w.strip()])
+            st.text_area(f"{t[lang_key]['Root_Cause_Occ']}", value=occ_rc_text, height=80, disabled=True)
+            st.text_area(f"{t[lang_key]['Root_Cause_Det']}", value=det_rc_text, height=80, disabled=True)
+            st.text_area(f"{t[lang_key]['Root_Cause_Sys']}", value=sys_rc_text, height=80, disabled=True)
+        else:
+            st.session_state[step]["answer"] = st.text_area("Your Answer", value=st.session_state[step]["answer"])
+
+# ---------------------------
+# Excel generation
+# ---------------------------
+def generate_excel():
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "NPQP 8D Report"
+    thin = Side(border_style="thin", color="000000")
+    border = Border(left=thin,right=thin,top=thin,bottom=thin)
+    if os.path.exists("logo.png"):
+        try:
+            img = XLImage("logo.png")
+            img.width = 140
+            img.height = 40
+            ws.add_image(img, "A1")
+        except:
+            pass
+    ws.merge_cells(start_row=3,start_column=1,end_row=3,end_column=3)
+    ws.cell(row=3,column=1,value="📋 8D Report Assistant").font = Font(bold=True,size=14)
+    ws.append([t[lang_key]['Report_Date'], st.session_state.report_date])
+    ws.append([t[lang_key]['Prepared_By'], st.session_state.prepared_by])
+    ws.append([])
+    # Header
+    headers = ["Step","Answer","Extra / Notes"]
+    fill = PatternFill(start_color="1E90FF", end_color="1E90FF", fill_type="solid")
+    for c_idx,h in enumerate(headers,start=1):
+        cell = ws.cell(row=ws.max_row+1,column=c_idx,value=h)
+        cell.fill = fill
+        cell.font = Font(bold=True,color="FFFFFF")
+        cell.alignment = Alignment(horizontal="center",vertical="center")
+        cell.border = border
+    # Step answers
+    for step, _, _ in npqp_steps:
+        answer = st.session_state[step]["answer"]
+        extra = ""
+        if step=="D4":
+            extra = f"Location: {st.session_state[step]['location']} | Status: {st.session_state[step]['status']}"
+        elif step=="D5":
+            extra = f"Occurrence: {' | '.join(st.session_state.d5_occ_whys)}; Detection: {' | '.join(st.session_state.d5_det_whys)}; Systemic: {' | '.join(st.session_state.d5_sys_whys)}"
+        ws.append([t[lang_key][step], answer, extra])
+        for col in range(1,4):
+            cell = ws.cell(row=ws.max_row,column=col)
+            cell.alignment = Alignment(wrap_text=True,vertical="top")
+            cell.font = Font(bold=True if col==2 else False)
+            cell.border = border
+    for col in range(1,4):
+        ws.column_dimensions[get_column_letter(col)].width = 40
+    output = io.BytesIO()
+    wb.save(output)
+    return output.getvalue()
+
+st.download_button(
+    label=f"{t[lang_key]['Download']}",
+    data=generate_excel(),
+    file_name=f"8D_Report_{st.session_state.report_date.replace(' ','_')}.xlsx",
+    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+)
