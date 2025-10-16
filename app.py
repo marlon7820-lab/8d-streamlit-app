@@ -175,27 +175,29 @@ if uploaded_file:
     except Exception as e:
         st.error(f"Error restoring JSON: {e}")
 # ---------------------------
-# Smart Session Reset Button
+# ---------------------------
+# Sidebar: Reset Session
 # ---------------------------
 st.sidebar.header("⚙️ App Controls")
 
-# Keys to preserve on reset
+# Keys to preserve on reset (language, etc.)
 preserve_keys = ["lang", "lang_key"]
 
 if st.sidebar.button("🧹 Reset Session"):
     # Save preserved keys
     preserved = {k: st.session_state[k] for k in preserve_keys if k in st.session_state}
-    
-    # Clear all other keys
+
+    # Clear all keys
     for key in list(st.session_state.keys()):
-        if key not in preserve_keys:
-            del st.session_state[key]
-    
+        del st.session_state[key]
+
     # Restore preserved keys
     for k, v in preserved.items():
         st.session_state[k] = v
-    
-    # Rerun app safely
+
+    # Use st.experimental_rerun safely after clearing
+    import time
+    time.sleep(0.1)  # tiny delay to ensure session_state flushes
     st.experimental_rerun()
 
 # ---------------------------
