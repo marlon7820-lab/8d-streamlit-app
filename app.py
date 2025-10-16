@@ -176,28 +176,28 @@ if uploaded_file:
         st.error(f"Error restoring JSON: {e}")
 # ---------------------------
 # ---------------------------
-# Sidebar: Reset Session
+# ---------------------------
+# Sidebar: Safe Reset
 # ---------------------------
 st.sidebar.header("⚙️ App Controls")
 
-# Keys to preserve on reset (language, etc.)
-preserve_keys = ["lang", "lang_key"]
+# Keys you want to preserve (like language or tabs)
+preserve_keys = ["lang", "lang_key", "current_tab"]
 
 if st.sidebar.button("🧹 Reset Session"):
-    # Save preserved keys
+    # Save the preserved values
     preserved = {k: st.session_state[k] for k in preserve_keys if k in st.session_state}
 
-    # Clear all keys
-    for key in list(st.session_state.keys()):
-        del st.session_state[key]
+    # Clear everything else
+    keys_to_delete = [k for k in st.session_state.keys() if k not in preserve_keys]
+    for k in keys_to_delete:
+        del st.session_state[k]
 
-    # Restore preserved keys
+    # Restore preserved values
     for k, v in preserved.items():
         st.session_state[k] = v
 
-    # Use st.experimental_rerun safely after clearing
-    import time
-    time.sleep(0.1)  # tiny delay to ensure session_state flushes
+    # Rerun safely
     st.experimental_rerun()
 
 # ---------------------------
