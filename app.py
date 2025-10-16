@@ -60,25 +60,31 @@ lang = st.sidebar.selectbox("Select Language / Seleccionar Idioma", ["English", 
 lang_key = "en" if lang == "English" else "es"
 
 # ---------------------------
-# Smart Session Reset Button (refresh-style)
+# Smart Full Refresh Reset Button
 # ---------------------------
 st.sidebar.markdown("---")
 st.sidebar.header("⚙️ App Controls")
 
+# Keys to preserve on reset
 preserve_keys = ["lang", "lang_key", "current_tab"]
 
 if st.sidebar.button("🔄 Reset 8D Session"):
+    # Save preserved keys
     preserved = {k: st.session_state[k] for k in preserve_keys if k in st.session_state}
+    
+    # Clear everything else
     for key in list(st.session_state.keys()):
         if key not in preserve_keys:
             del st.session_state[key]
+    
+    # Restore preserved keys
     for k, v in preserved.items():
         st.session_state[k] = v
-    st.sidebar.success("✅ 8D session reset complete. All data cleared.")
-    try:
-        st.experimental_rerun()
-    except AttributeError:
-        pass
+
+    # Force full page reload using query parameter
+    query_params = st.experimental_get_query_params()
+    query_params["reset"] = ["1"]
+    st.experimental_set_query_params(**query_params)
 
 # ---------------------------
 # Language dictionary
@@ -152,7 +158,6 @@ st.session_state.setdefault("d4_containment", "")
 
 # ---------------------------
 # Expanded categories for D5
-# (same as in your previous code)
 # ---------------------------
 occurrence_categories = {
     "Machine / Equipment": [
@@ -285,7 +290,7 @@ systemic_categories = {
 }
 
 # ---------------------------
-# Helper functions (5-Why & root cause)
+# Helper: Suggest root cause based on whys
 # ---------------------------
 def suggest_root_cause(whys):
     text = " ".join(whys).lower()
@@ -307,10 +312,17 @@ def suggest_root_cause(whys):
         return "Environmental or external factor"
     return "Systemic issue identified from analysis"
 
+# ---------------------------
+# Helper: Render 5-Why dropdowns without repeating selections
+# ---------------------------
 def render_whys_no_repeat(why_list, categories, label_prefix):
     for idx in range(len(why_list)):
+        # Gather all selected values except current index
         selected_so_far = [w for i, w in enumerate(why_list) if w.strip() and i != idx]
+
+        # Build options excluding already selected
         options = [""] + [f"{cat}: {item}" for cat, items in categories.items() for item in items if f"{cat}: {item}" not in selected_so_far]
+
         current_val = why_list[idx] if why_list[idx] in options else ""
         why_list[idx] = st.selectbox(
             f"{label_prefix} {idx+1}",
@@ -318,12 +330,13 @@ def render_whys_no_repeat(why_list, categories, label_prefix):
             index=options.index(current_val) if current_val in options else 0,
             key=f"{label_prefix}_{idx}"
         )
+
         free_text = st.text_input(f"Or enter your own {label_prefix} {idx+1}", value=why_list[idx], key=f"{label_prefix}_txt_{idx}")
         if free_text.strip():
             why_list[idx] = free_text
 
 # ---------------------------
-# Render Tabs (D1–D8)
+# Render Tabs D1–D8
 # ---------------------------
 tab_labels = []
 for step, _, _ in npqp_steps:
@@ -353,6 +366,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
         </div>
         """, unsafe_allow_html=True)
 
+        # D4 special: Nissan-style fields
         if step == "D4":
             st.session_state[step]["location"] = st.selectbox(
                 "Location of Material",
@@ -371,6 +385,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                 value=st.session_state[step]["answer"],
                 key=f"ans_{step}"
             )
+        # D5 special: 5-Why dropdowns + dynamic root causes
         elif step == "D5":
             st.markdown("#### Occurrence Analysis")
             render_whys_no_repeat(st.session_state.d5_occ_whys, occurrence_categories, t[lang_key]['Occurrence_Why'])
@@ -387,6 +402,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             if st.button("➕ Add another Systemic Why"):
                 st.session_state.d5_sys_whys.append("")
 
+            # Dynamic Root Cause Suggestions (read-only)
             occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
             det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
             sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
@@ -394,16 +410,17 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             st.text_area(f"{t[lang_key]['Root_Cause_Occ']}", value=suggest_root_cause(occ_whys) if occ_whys else "No occurrence whys provided yet", height=80, disabled=True)
             st.text_area(f"{t[lang_key]['Root_Cause_Det']}", value=suggest_root_cause(det_whys) if det_whys else "No detection whys provided yet", height=80, disabled=True)
             st.text_area(f"{t[lang_key]['Root_Cause_Sys']}", value=suggest_root_cause(sys_whys) if sys_whys else "No systemic whys provided yet", height=80, disabled=True)
+        # D6–D8: text areas
         else:
             st.session_state[step]["answer"] = st.text_area(
                 "Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}"
             )
 
 # ---------------------------
-# Sidebar Backup / Restore / Reset
+# Sidebar: JSON Backup / Restore + Session Reset
 # ---------------------------
 with st.sidebar:
-    st.markdown("## Backup / Restore / Reset")
+    st.markdown("## Backup / Restore")
     
     # JSON Backup
     def generate_json():
@@ -429,10 +446,11 @@ with st.sidebar:
             st.error(f"Error restoring JSON: {e}")
 
 # ---------------------------
-# Collect answers and generate Excel
+# Collect answers for Excel
 # ---------------------------
 data_rows = []
 
+# D5 whys
 occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
 det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
 sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
@@ -446,6 +464,7 @@ for step, _, _ in npqp_steps:
     extra = st.session_state[step].get("extra", "")
 
     if step == "D4":
+        # Include Location, Status, and Containment
         location = st.session_state[step].get("location", "")
         status = st.session_state[step].get("status", "")
         extra_text = f"Location: {location} | Status: {status}"
@@ -457,6 +476,9 @@ for step, _, _ in npqp_steps:
     else:
         data_rows.append((step, answer, extra))
 
+# ---------------------------
+# Generate Excel
+# ---------------------------
 def generate_excel():
     wb = Workbook()
     ws = wb.active
@@ -465,6 +487,7 @@ def generate_excel():
     thin = Side(border_style="thin", color="000000")
     border = Border(left=thin, right=thin, top=thin, bottom=thin)
 
+    # Add logo if exists
     if os.path.exists("logo.png"):
         try:
             img = XLImage("logo.png")
@@ -481,6 +504,7 @@ def generate_excel():
     ws.append([t[lang_key]['Prepared_By'], st.session_state.prepared_by])
     ws.append([])
 
+    # Header row
     header_row = ws.max_row + 1
     headers = ["Step", "Answer", "Extra / Notes"]
     fill = PatternFill(start_color="1E90FF", end_color="1E90FF", fill_type="solid")
@@ -491,6 +515,7 @@ def generate_excel():
         cell.alignment = Alignment(horizontal="center", vertical="center")
         cell.border = border
 
+    # Append step answers
     for step, answer, extra in data_rows:
         ws.append([t[lang_key].get(step, step), answer, extra])
         r = ws.max_row
