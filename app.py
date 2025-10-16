@@ -56,55 +56,26 @@ st.sidebar.markdown("---")
 st.sidebar.header("Settings")
 
 # Language selection
-# persist the user's language in session_state so resets can preserve it
-if "lang" not in st.session_state:
-    st.session_state["lang"] = "English"
-lang = st.sidebar.selectbox("Select Language / Seleccionar Idioma", ["English", "Español"], index=0 if st.session_state["lang"] == "English" else 1)
-st.session_state["lang"] = lang
+lang = st.sidebar.selectbox("Select Language / Seleccionar Idioma", ["English", "Español"])
 lang_key = "en" if lang == "English" else "es"
-st.session_state["lang_key"] = lang_key
 
 # ---------------------------
-# Helper: clear/reset 8D session (preserve language optionally)
-# ---------------------------
-def clear_8d_session(preserve_keys=None):
-    """Clear all 8D-related session state and reinitialize defaults.
-       preserve_keys: list of keys to keep (e.g. ['lang', 'lang_key'])
-    """
-    if preserve_keys is None:
-        preserve_keys = ["lang", "lang_key"]
-    preserved = {k: st.session_state[k] for k in preserve_keys if k in st.session_state}
-    # clear everything
-    for key in list(st.session_state.keys()):
-        del st.session_state[key]
-    # restore preserved keys
-    for k, v in preserved.items():
-        st.session_state[k] = v
-
-    # Reinitialize core session keys (same defaults you had)
-    for step, _, _ in npqp_steps:
-        st.session_state[step] = {"answer": "", "extra": ""}
-    st.session_state.setdefault("report_date", datetime.datetime.today().strftime("%B %d, %Y"))
-    st.session_state.setdefault("prepared_by", "")
-    st.session_state.setdefault("d5_occ_whys", [""]*5)
-    st.session_state.setdefault("d5_det_whys", [""]*5)
-    st.session_state.setdefault("d5_sys_whys", [""]*5)
-    st.session_state.setdefault("d4_location", "")
-    st.session_state.setdefault("d4_status", "")
-    st.session_state.setdefault("d4_containment", "")
-    # keep language selections if preserved
-    # done by restored preserved dict above
-
-# ---------------------------
-# Smart Session Reset Button (top of sidebar)
+# Smart Session Reset Button
 # ---------------------------
 st.sidebar.markdown("---")
 st.sidebar.header("⚙️ App Controls")
 
+# Keys to preserve on reset
+preserve_keys = ["lang", "lang_key", "current_tab"]
+
 if st.sidebar.button("🔄 Reset 8D Session"):
-    # preserve language
-    clear_8d_session(preserve_keys=["lang", "lang_key"])
-    st.sidebar.success("Session data cleared. All 8D inputs reset, but language preserved.")
+    preserved = {k: st.session_state[k] for k in preserve_keys if k in st.session_state}
+    for key in list(st.session_state.keys()):
+        if key not in preserve_keys:
+            del st.session_state[key]
+    for k, v in preserved.items():
+        st.session_state[k] = v
+    st.sidebar.success("Session data cleared. All 8D inputs reset, but language and tab preserved.")
     st.experimental_rerun()
 
 # ---------------------------
@@ -163,30 +134,151 @@ npqp_steps = [
 ]
 
 # ---------------------------
-# Initialize session state (only if missing)
+# Initialize session state
 # ---------------------------
-if "initialized_8d" not in st.session_state:
-    # base step answers
-    for step, _, _ in npqp_steps:
+for step, _, _ in npqp_steps:
+    if step not in st.session_state:
         st.session_state[step] = {"answer": "", "extra": ""}
-    st.session_state.setdefault("report_date", datetime.datetime.today().strftime("%B %d, %Y"))
-    st.session_state.setdefault("prepared_by", "")
-    st.session_state.setdefault("d5_occ_whys", [""]*5)
-    st.session_state.setdefault("d5_det_whys", [""]*5)
-    st.session_state.setdefault("d5_sys_whys", [""]*5)
-    st.session_state.setdefault("d4_location", "")
-    st.session_state.setdefault("d4_status", "")
-    st.session_state.setdefault("d4_containment", "")
-    st.session_state["initialized_8d"] = True
-
+st.session_state.setdefault("report_date", datetime.datetime.today().strftime("%B %d, %Y"))
+st.session_state.setdefault("prepared_by", "")
+st.session_state.setdefault("d5_occ_whys", [""]*5)
+st.session_state.setdefault("d5_det_whys", [""]*5)
+st.session_state.setdefault("d5_sys_whys", [""]*5)
+st.session_state.setdefault("d4_location", "")
+st.session_state.setdefault("d4_status", "")
+st.session_state.setdefault("d4_containment", "")
 # ---------------------------
 # Expanded categories for D5
 # ---------------------------
-occurrence_categories = { ... }  # identical to your original lists (omitted here for brevity)
-detection_categories = { ... }
-systemic_categories = { ... }
+occurrence_categories = {
+    "Machine / Equipment": [
+        "Mechanical failure or breakdown",
+        "Calibration issues or drift",
+        "Tooling or fixture wear or damage",
+        "Machine parameters not optimized",
+        "Improper preventive maintenance schedule",
+        "Sensor malfunction or misalignment",
+        "Process automation fault not detected",
+        "Unstable process due to poor machine setup"
+    ],
+    "Material / Component": [
+        "Wrong material or component delivered",
+        "Supplier provided off-spec component",
+        "Material defect not visible during inspection",
+        "Damage during storage, handling, or transport",
+        "Incorrect labeling or lot traceability error",
+        "Material substitution without approval",
+        "Incorrect specifications or revision mismatch"
+    ],
+    "Process / Method": [
+        "Incorrect process step sequence",
+        "Critical process parameters not controlled",
+        "Work instructions unclear or missing detail",
+        "Process drift over time not detected",
+        "Control plan not followed on production floor",
+        "Incorrect torque, solder, or assembly process",
+        "Outdated or missing process FMEA linkage",
+        "Inadequate process capability (Cp/Cpk below target)"
+    ],
+    "Design / Engineering": [
+        "Design not robust to real-use conditions",
+        "Tolerance stack-up issue not evaluated",
+        "Late design change not communicated to production",
+        "Incorrect or unclear drawing specification",
+        "Component placement design error (DFMEA gap)",
+        "Lack of design verification or validation testing"
+    ],
+    "Environmental / External": [
+        "Temperature or humidity out of control range",
+        "Electrostatic discharge (ESD) not controlled",
+        "Contamination or dust affecting product",
+        "Power fluctuation or interruption",
+        "External vibration or noise interference",
+        "Unstable environmental monitoring process"
+    ]
+}
 
-# (To keep the example concise here, in your real file keep the original lists exactly as you had them above.)
+detection_categories = {
+    "QA / Inspection": [
+        "QA checklist incomplete or not updated",
+        "No automated inspection system in place",
+        "Manual inspection prone to human error",
+        "Inspection frequency too low to detect issue",
+        "Inspection criteria unclear or inconsistent",
+        "Measurement system not capable (GR&R issues)",
+        "Incoming inspection missed supplier issue",
+        "Final inspection missed due to sampling plan"
+    ],
+    "Validation / Process": [
+        "Process validation not updated after design/process change",
+        "Insufficient verification of new parameters or components",
+        "Design validation not complete or not representative of real conditions",
+        "Inadequate control plan coverage for potential failure modes",
+        "Lack of ongoing process monitoring (SPC / CpK tracking)",
+        "Incorrect or outdated process limits not aligned with FMEA"
+    ],
+    "FMEA / Control Plan": [
+        "Failure mode not captured in PFMEA",
+        "Detection controls missing or ineffective in PFMEA",
+        "Control plan not updated after corrective actions",
+        "FMEA not reviewed after customer complaint",
+        "Detection ranking not realistic to actual inspection capability",
+        "PFMEA and control plan not properly linked"
+    ],
+    "Test / Equipment": [
+        "Test equipment calibration overdue",
+        "Testing software parameters incorrect",
+        "Test setup does not detect this specific failure mode",
+        "Detection threshold too wide to capture failure",
+        "Test data not logged or reviewed regularly"
+    ],
+    "Systemic / Organizational": [
+        "Feedback loop from quality incidents not implemented",
+        "Lack of detection feedback in regular team meetings",
+        "Training gaps in inspection or test personnel",
+        "Quality alerts not properly communicated to operators"
+    ]
+}
+
+systemic_categories = {
+    "Management / Organization": [
+        "Inadequate leadership or supervision structure",
+        "Insufficient resource allocation to critical processes",
+        "Delayed response to known production issues",
+        "Lack of accountability or ownership of quality issues",
+        "Ineffective escalation process for recurring problems",
+        "Weak cross-functional communication between departments"
+    ],
+    "Process / Procedure": [
+        "Standard Operating Procedures (SOPs) outdated or missing",
+        "Process FMEA not reviewed regularly",
+        "Control plan not aligned with PFMEA or actual process",
+        "Lessons learned not integrated into similar processes",
+        "Inefficient document control system",
+        "Preventive maintenance procedures not standardized"
+    ],
+    "Training / People": [
+        "No defined training matrix or certification tracking",
+        "New hires not trained on critical control points",
+        "Training effectiveness not evaluated",
+        "Knowledge not shared between shifts or teams",
+        "Competence requirements not clearly defined"
+    ],
+    "Supplier / External": [
+        "Supplier not included in 8D or FMEA review process",
+        "Supplier corrective actions not verified for effectiveness",
+        "Inadequate incoming material audit process",
+        "Supplier process changes not communicated to customer",
+        "Long lead time for supplier quality issue closure"
+    ],
+    "Quality System / Feedback": [
+        "Internal audits ineffective or not completed",
+        "Quality KPI tracking not linked to root cause analysis",
+        "Ineffective use of 5-Why or fishbone tools",
+        "Customer complaints not feeding back into design reviews",
+        "No systemic review after multiple 8Ds in same area"
+    ]
+}
 
 # ---------------------------
 # Helper: Suggest root cause based on whys
@@ -210,17 +302,10 @@ def suggest_root_cause(whys):
     if any(word in text for word in ["temperature", "humidity", "contamination", "environment"]):
         return "Environmental or external factor"
     return "Systemic issue identified from analysis"
-
+    # ---------------------------
+# Helper: Render 5-Why dropdowns without repeating selections
 # ---------------------------
-# Helper: Render 5-Why dropdowns without repeating selections (unique keys)
-# ---------------------------
-def render_whys_no_repeat(why_list, categories, label_prefix, key_prefix):
-    """
-    why_list: list reference in session_state to be modified
-    categories: dict of category -> list(items)
-    label_prefix: human label for the selectboxes ("Occurrence Why", etc.)
-    key_prefix: unique short string used to build widget keys (e.g. "d5_occ")
-    """
+def render_whys_no_repeat(why_list, categories, label_prefix):
     for idx in range(len(why_list)):
         # Gather all selected values except current index
         selected_so_far = [w for i, w in enumerate(why_list) if w.strip() and i != idx]
@@ -233,10 +318,10 @@ def render_whys_no_repeat(why_list, categories, label_prefix, key_prefix):
             f"{label_prefix} {idx+1}",
             options,
             index=options.index(current_val) if current_val in options else 0,
-            key=f"{key_prefix}_select_{idx}"
+            key=f"{label_prefix}_{idx}"
         )
 
-        free_text = st.text_input(f"Or enter your own {label_prefix} {idx+1}", value=why_list[idx], key=f"{key_prefix}_txt_{idx}")
+        free_text = st.text_input(f"Or enter your own {label_prefix} {idx+1}", value=why_list[idx], key=f"{label_prefix}_txt_{idx}")
         if free_text.strip():
             why_list[idx] = free_text
 
@@ -293,18 +378,18 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
         # D5 special: 5-Why dropdowns + dynamic root causes
         elif step == "D5":
             st.markdown("#### Occurrence Analysis")
-            render_whys_no_repeat(st.session_state.d5_occ_whys, occurrence_categories, t[lang_key]['Occurrence_Why'], key_prefix="d5_occ")
-            if st.button("➕ Add another Occurrence Why", key="add_occ"):
+            render_whys_no_repeat(st.session_state.d5_occ_whys, occurrence_categories, t[lang_key]['Occurrence_Why'])
+            if st.button("➕ Add another Occurrence Why"):
                 st.session_state.d5_occ_whys.append("")
 
             st.markdown("#### Detection Analysis")
-            render_whys_no_repeat(st.session_state.d5_det_whys, detection_categories, t[lang_key]['Detection_Why'], key_prefix="d5_det")
-            if st.button("➕ Add another Detection Why", key="add_det"):
+            render_whys_no_repeat(st.session_state.d5_det_whys, detection_categories, t[lang_key]['Detection_Why'])
+            if st.button("➕ Add another Detection Why"):
                 st.session_state.d5_det_whys.append("")
 
             st.markdown("#### Systemic Analysis")
-            render_whys_no_repeat(st.session_state.d5_sys_whys, systemic_categories, t[lang_key]['Systemic_Why'], key_prefix="d5_sys")
-            if st.button("➕ Add another Systemic Why", key="add_sys"):
+            render_whys_no_repeat(st.session_state.d5_sys_whys, systemic_categories, t[lang_key]['Systemic_Why'])
+            if st.button("➕ Add another Systemic Why"):
                 st.session_state.d5_sys_whys.append("")
 
             # Dynamic Root Cause Suggestions (read-only)
@@ -312,9 +397,9 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
             sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
 
-            st.text_area(f"{t[lang_key]['Root_Cause_Occ']}", value=suggest_root_cause(occ_whys) if occ_whys else "No occurrence whys provided yet", height=80, disabled=True, key="rc_occ")
-            st.text_area(f"{t[lang_key]['Root_Cause_Det']}", value=suggest_root_cause(det_whys) if det_whys else "No detection whys provided yet", height=80, disabled=True, key="rc_det")
-            st.text_area(f"{t[lang_key]['Root_Cause_Sys']}", value=suggest_root_cause(sys_whys) if sys_whys else "No systemic whys provided yet", height=80, disabled=True, key="rc_sys")
+            st.text_area(f"{t[lang_key]['Root_Cause_Occ']}", value=suggest_root_cause(occ_whys) if occ_whys else "No occurrence whys provided yet", height=80, disabled=True)
+            st.text_area(f"{t[lang_key]['Root_Cause_Det']}", value=suggest_root_cause(det_whys) if det_whys else "No detection whys provided yet", height=80, disabled=True)
+            st.text_area(f"{t[lang_key]['Root_Cause_Sys']}", value=suggest_root_cause(sys_whys) if sys_whys else "No systemic whys provided yet", height=80, disabled=True)
         # D6–D8: text areas
         else:
             st.session_state[step]["answer"] = st.text_area(
@@ -347,16 +432,15 @@ with st.sidebar:
             for k, v in restore_data.items():
                 st.session_state[k] = v
             st.success("✅ Session restored from JSON!")
-            st.experimental_rerun()
         except Exception as e:
             st.error(f"Error restoring JSON: {e}")
 
-    # Session Reset (full but preserve language)
+    # Session Reset
     if st.button("🧹 Reset Session"):
-        clear_8d_session(preserve_keys=["lang", "lang_key"])
+        for key in list(st.session_state.keys()):
+            del st.session_state[key]
         st.experimental_rerun()
-
-# ---------------------------
+        # ---------------------------
 # Collect answers for Excel
 # ---------------------------
 data_rows = []
