@@ -60,32 +60,23 @@ lang = st.sidebar.selectbox("Select Language / Seleccionar Idioma", ["English", 
 lang_key = "en" if lang == "English" else "es"
 
 # ---------------------------
-# Safe reset functions
+# Smart Session Reset Button (refresh-style)
 # ---------------------------
-def reset_8d_session():
-    preserve_keys = ["lang", "lang_key", "current_tab"]
-    preserved = {k: st.session_state[k] for k in preserve_keys if k in st.session_state}
-    keys_to_delete = [k for k in st.session_state.keys() if k not in preserve_keys]
-    for k in keys_to_delete:
-        del st.session_state[k]
-    for k, v in preserved.items():
-        st.session_state[k] = v
-    st.experimental_rerun()
-
-def reset_full_session():
-    keys_to_delete = list(st.session_state.keys())
-    for k in keys_to_delete:
-        del st.session_state[k]
-    st.experimental_rerun()
-
 st.sidebar.markdown("---")
 st.sidebar.header("⚙️ App Controls")
 
-if st.sidebar.button("🔄 Reset 8D Session"):
-    reset_8d_session()
+# Keys to preserve on reset
+preserve_keys = ["lang", "lang_key", "current_tab"]
 
-if st.sidebar.button("🧹 Reset Full Session"):
-    reset_full_session()
+if st.sidebar.button("🔄 Reset 8D Session"):
+    preserved = {k: st.session_state[k] for k in preserve_keys if k in st.session_state}
+    for key in list(st.session_state.keys()):
+        if key not in preserve_keys:
+            del st.session_state[key]
+    for k, v in preserved.items():
+        st.session_state[k] = v
+    st.sidebar.success("✅ 8D session reset complete. All data cleared.")
+    st.experimental_rerun()
 
 # ---------------------------
 # Language dictionary
@@ -158,34 +149,140 @@ st.session_state.setdefault("d4_status", "")
 st.session_state.setdefault("d4_containment", "")
 
 # ---------------------------
-# D5 categories
+# Categories for D5 whys
 # ---------------------------
 occurrence_categories = {
-    "Machine / Equipment": ["Mechanical failure", "Calibration issues", "Tooling wear", "Machine parameters not optimized", "Maintenance schedule issue", "Sensor misalignment", "Automation fault", "Unstable process setup"],
-    "Material / Component": ["Wrong material delivered", "Supplier off-spec", "Material defect not visible", "Damage in storage/handling", "Labeling error", "Material substitution without approval", "Incorrect specs"],
-    "Process / Method": ["Incorrect process step", "Critical parameter not controlled", "Work instructions unclear", "Process drift not detected", "Control plan not followed", "Incorrect assembly process", "Outdated FMEA linkage", "Inadequate process capability"],
-    "Design / Engineering": ["Design not robust", "Tolerance stack-up issue", "Late design change not communicated", "Incorrect drawing spec", "Component placement error", "Lack of verification/testing"],
-    "Environmental / External": ["Temperature/humidity out of range", "ESD not controlled", "Contamination/dust", "Power fluctuation", "Vibration/noise", "Unstable environment monitoring"]
+    "Machine / Equipment": [
+        "Mechanical failure or breakdown",
+        "Calibration issues or drift",
+        "Tooling or fixture wear or damage",
+        "Machine parameters not optimized",
+        "Improper preventive maintenance schedule",
+        "Sensor malfunction or misalignment",
+        "Process automation fault not detected",
+        "Unstable process due to poor machine setup"
+    ],
+    "Material / Component": [
+        "Wrong material or component delivered",
+        "Supplier provided off-spec component",
+        "Material defect not visible during inspection",
+        "Damage during storage, handling, or transport",
+        "Incorrect labeling or lot traceability error",
+        "Material substitution without approval",
+        "Incorrect specifications or revision mismatch"
+    ],
+    "Process / Method": [
+        "Incorrect process step sequence",
+        "Critical process parameters not controlled",
+        "Work instructions unclear or missing detail",
+        "Process drift over time not detected",
+        "Control plan not followed on production floor",
+        "Incorrect torque, solder, or assembly process",
+        "Outdated or missing process FMEA linkage",
+        "Inadequate process capability (Cp/Cpk below target)"
+    ],
+    "Design / Engineering": [
+        "Design not robust to real-use conditions",
+        "Tolerance stack-up issue not evaluated",
+        "Late design change not communicated to production",
+        "Incorrect or unclear drawing specification",
+        "Component placement design error (DFMEA gap)",
+        "Lack of design verification or validation testing"
+    ],
+    "Environmental / External": [
+        "Temperature or humidity out of control range",
+        "Electrostatic discharge (ESD) not controlled",
+        "Contamination or dust affecting product",
+        "Power fluctuation or interruption",
+        "External vibration or noise interference",
+        "Unstable environmental monitoring process"
+    ]
 }
 
 detection_categories = {
-    "QA / Inspection": ["QA checklist incomplete", "No automated inspection", "Manual inspection error", "Inspection too infrequent", "Criteria unclear", "Measurement system not capable", "Incoming inspection missed", "Final inspection missed"],
-    "Validation / Process": ["Process validation outdated", "Insufficient verification", "Design validation incomplete", "Control plan coverage inadequate", "Lack of monitoring", "Process limits outdated"],
-    "FMEA / Control Plan": ["Failure mode not captured", "Detection controls missing", "Control plan not updated", "FMEA not reviewed", "Detection ranking unrealistic", "PFMEA and control plan not linked"],
-    "Test / Equipment": ["Test calibration overdue", "Testing software incorrect", "Test setup not detecting failure", "Detection threshold too wide", "Test data not reviewed"],
-    "Systemic / Organizational": ["Feedback loop not implemented", "Lack of detection feedback", "Training gaps", "Quality alerts not communicated"]
+    "QA / Inspection": [
+        "QA checklist incomplete or not updated",
+        "No automated inspection system in place",
+        "Manual inspection prone to human error",
+        "Inspection frequency too low to detect issue",
+        "Inspection criteria unclear or inconsistent",
+        "Measurement system not capable (GR&R issues)",
+        "Incoming inspection missed supplier issue",
+        "Final inspection missed due to sampling plan"
+    ],
+    "Validation / Process": [
+        "Process validation not updated after design/process change",
+        "Insufficient verification of new parameters or components",
+        "Design validation not complete or not representative of real conditions",
+        "Inadequate control plan coverage for potential failure modes",
+        "Lack of ongoing process monitoring (SPC / CpK tracking)",
+        "Incorrect or outdated process limits not aligned with FMEA"
+    ],
+    "FMEA / Control Plan": [
+        "Failure mode not captured in PFMEA",
+        "Detection controls missing or ineffective in PFMEA",
+        "Control plan not updated after corrective actions",
+        "FMEA not reviewed after customer complaint",
+        "Detection ranking not realistic to actual inspection capability",
+        "PFMEA and control plan not properly linked"
+    ],
+    "Test / Equipment": [
+        "Test equipment calibration overdue",
+        "Testing software parameters incorrect",
+        "Test setup does not detect this specific failure mode",
+        "Detection threshold too wide to capture failure",
+        "Test data not logged or reviewed regularly"
+    ],
+    "Systemic / Organizational": [
+        "Feedback loop from quality incidents not implemented",
+        "Lack of detection feedback in regular team meetings",
+        "Training gaps in inspection or test personnel",
+        "Quality alerts not properly communicated to operators"
+    ]
 }
 
 systemic_categories = {
-    "Management / Organization": ["Inadequate leadership", "Insufficient resources", "Delayed response", "Lack of accountability", "Ineffective escalation", "Weak cross-functional communication"],
-    "Process / Procedure": ["SOPs outdated", "Process FMEA not reviewed", "Control plan misaligned", "Lessons learned not integrated", "Inefficient document control", "Maintenance procedures not standardized"],
-    "Training / People": ["No training matrix", "New hires not trained", "Training effectiveness not evaluated", "Knowledge not shared", "Competence requirements unclear"],
-    "Supplier / External": ["Supplier not included in 8D/FMEA", "Supplier corrective actions not verified", "Incoming audit inadequate", "Supplier changes not communicated", "Long lead time for supplier closure"],
-    "Quality System / Feedback": ["Internal audits ineffective", "KPI not linked to root cause", "Ineffective 5-Why use", "Customer complaints not fed into design reviews", "No systemic review after multiple 8Ds"]
+    "Management / Organization": [
+        "Inadequate leadership or supervision structure",
+        "Insufficient resource allocation to critical processes",
+        "Delayed response to known production issues",
+        "Lack of accountability or ownership of quality issues",
+        "Ineffective escalation process for recurring problems",
+        "Weak cross-functional communication between departments"
+    ],
+    "Process / Procedure": [
+        "Standard Operating Procedures (SOPs) outdated or missing",
+        "Process FMEA not reviewed regularly",
+        "Control plan not aligned with PFMEA or actual process",
+        "Lessons learned not integrated into similar processes",
+        "Inefficient document control system",
+        "Preventive maintenance procedures not standardized"
+    ],
+    "Training / People": [
+        "No defined training matrix or certification tracking",
+        "New hires not trained on critical control points",
+        "Training effectiveness not evaluated",
+        "Knowledge not shared between shifts or teams",
+        "Competence requirements not clearly defined"
+    ],
+    "Supplier / External": [
+        "Supplier not included in 8D or FMEA review process",
+        "Supplier corrective actions not verified for effectiveness",
+        "Inadequate incoming material audit process",
+        "Supplier process changes not communicated to customer",
+        "Long lead time for supplier quality issue closure"
+    ],
+    "Quality System / Feedback": [
+        "Internal audits ineffective or not completed",
+        "Quality KPI tracking not linked to root cause analysis",
+        "Ineffective use of 5-Why or fishbone tools",
+        "Customer complaints not feeding back into design reviews",
+        "No systemic review after multiple 8Ds in same area"
+    ]
 }
 
 # ---------------------------
-# Helper functions
+# Helper: Suggest root cause based on whys
 # ---------------------------
 def suggest_root_cause(whys):
     text = " ".join(whys).lower()
@@ -207,7 +304,10 @@ def suggest_root_cause(whys):
         return "Environmental or external factor"
     return "Systemic issue identified from analysis"
 
-def render_whys_no_repeat(why_list, categories, label_prefix, key_prefix):
+# ---------------------------
+# Helper: Render 5-Why dropdowns without repeating selections
+# ---------------------------
+def render_whys_no_repeat(why_list, categories, label_prefix):
     for idx in range(len(why_list)):
         selected_so_far = [w for i, w in enumerate(why_list) if w.strip() and i != idx]
         options = [""] + [f"{cat}: {item}" for cat, items in categories.items() for item in items if f"{cat}: {item}" not in selected_so_far]
@@ -216,9 +316,9 @@ def render_whys_no_repeat(why_list, categories, label_prefix, key_prefix):
             f"{label_prefix} {idx+1}",
             options,
             index=options.index(current_val) if current_val in options else 0,
-            key=f"{key_prefix}_{idx}"
+            key=f"{label_prefix}_{idx}"
         )
-        free_text = st.text_input(f"Or enter your own {label_prefix} {idx+1}", value=why_list[idx], key=f"{key_prefix}_txt_{idx}")
+        free_text = st.text_input(f"Or enter your own {label_prefix} {idx+1}", value=why_list[idx], key=f"{label_prefix}_txt_{idx}")
         if free_text.strip():
             why_list[idx] = free_text
 
@@ -253,58 +353,82 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
         </div>
         """, unsafe_allow_html=True)
 
+        # D4 special: Nissan-style fields
         if step == "D4":
-            st.session_state[step]["location"] = st.selectbox("Location of Material", ["", "Work in Progress", "Stores Stock", "Warehouse Stock", "Service Parts", "Other"], index=0, key="d4_location")
-            st.session_state[step]["status"] = st.selectbox("Status of Activities", ["", "Pending", "In Progress", "Completed", "Other"], index=0, key="d4_status")
-            st.session_state[step]["answer"] = st.text_area("Containment Actions / Notes", value=st.session_state[step]["answer"], key=f"ans_{step}")
-        elif step == "D5":
-            st.markdown("#### Occurrence Analysis")
-            render_whys_no_repeat(st.session_state.d5_occ_whys, occurrence_categories, t[lang_key]['Occurrence_Why'], key_prefix="d5_occ")
-            if st.button("➕ Add another Occurrence Why", key="add_occ_why"):
-                st.session_state.d5_occ_whys.append("")
-            st.markdown("#### Detection Analysis")
-            render_whys_no_repeat(st.session_state.d5_det_whys, detection_categories, t[lang_key]['Detection_Why'], key_prefix="d5_det")
-            if st.button("➕ Add another Detection Why", key="add_det_why"):
-                st.session_state.d5_det_whys.append("")
-            st.markdown("#### Systemic Analysis")
-            render_whys_no_repeat(st.session_state.d5_sys_whys, systemic_categories, t[lang_key]['Systemic_Why'], key_prefix="d5_sys")
-            if st.button("➕ Add another Systemic Why", key="add_sys_why"):
-                st.session_state.d5_sys_whys.append("")
-            st.text_area(f"{t[lang_key]['Root_Cause_Occ']}", value=suggest_root_cause([w for w in st.session_state.d5_occ_whys if w.strip()]), height=80, disabled=True)
-            st.text_area(f"{t[lang_key]['Root_Cause_Det']}", value=suggest_root_cause([w for w in st.session_state.d5_det_whys if w.strip()]), height=80, disabled=True)
-            st.text_area(f"{t[lang_key]['Root_Cause_Sys']}", value=suggest_root_cause([w for w in st.session_state.d5_sys_whys if w.strip()]), height=80, disabled=True)
-        else:
-            st.session_state[step]["answer"] = st.text_area("Notes / Details", value=st.session_state[step]["answer"], key=f"ans_{step}")
+            st.session_state[step]["location"] = st.selectbox(
+                "Location of Material",
+                ["", "Work in Progress", "Stores Stock", "Warehouse Stock", "Service Parts", "Other"],
+                index=0,
+                key="d4_location"
+            )
+            st.session_state[step]["status"] = st.selectbox(
+                "Status of Activities",
+                ["", "Pending", "In Progress", "Completed", "Other"],
+                index=0,
+                key="d4_status"
+            )
+            st.session_state[step]["answer"] = st.text_area(
+                "Containment Actions / Notes",
+                value=st.session_state[step]["answer"],
+                key=f"{step}_answer"
+            )
+            continue
+
+        # D5 special: 5-Why dropdowns
+        if step == "D5":
+            st.markdown("#### Occurrence Why")
+            render_whys_no_repeat(st.session_state["d5_occ_whys"], occurrence_categories, "Occurrence Why")
+            st.markdown("#### Detection Why")
+            render_whys_no_repeat(st.session_state["d5_det_whys"], detection_categories, "Detection Why")
+            st.markdown("#### Systemic Why")
+            render_whys_no_repeat(st.session_state["d5_sys_whys"], systemic_categories, "Systemic Why")
+            # Suggest root causes
+            occ_rc = suggest_root_cause(st.session_state["d5_occ_whys"])
+            det_rc = suggest_root_cause(st.session_state["d5_det_whys"])
+            sys_rc = suggest_root_cause(st.session_state["d5_sys_whys"])
+            st.info(f"Suggested Root Causes:\n- Occurrence: {occ_rc}\n- Detection: {det_rc}\n- Systemic: {sys_rc}")
+            st.session_state[step]["answer"] = st.text_area("Final Analysis Notes", value=st.session_state[step]["answer"], key=f"{step}_answer")
+            continue
+
+        # Normal D1–D3, D6–D8
+        st.session_state[step]["answer"] = st.text_area(
+            "Enter your notes here",
+            value=st.session_state[step]["answer"],
+            key=f"{step}_answer"
+        )
 
 # ---------------------------
-# Save / Download Excel
+# Excel Export
 # ---------------------------
-def export_to_excel():
+def generate_excel():
     wb = Workbook()
     ws = wb.active
     ws.title = "8D Report"
-    ws.append(["Step", "Notes / Details"])
-    for step, _, _ in npqp_steps:
-        answer = st.session_state[step]["answer"]
-        ws.append([t[lang_key][step], answer])
-    # D5 whys
-    ws.append(["D5 Occurrence Why(s)"] + st.session_state.d5_occ_whys)
-    ws.append(["D5 Detection Why(s)"] + st.session_state.d5_det_whys)
-    ws.append(["D5 Systemic Why(s)"] + st.session_state.d5_sys_whys)
-    # Containment actions
-    ws.append(["D4 Material Location", st.session_state.d4_location])
-    ws.append(["D4 Activity Status", st.session_state.d4_status])
-    ws.append(["D4 Containment Actions", st.session_state.D4["answer"]])
-    stream = io.BytesIO()
-    wb.save(stream)
-    return stream.getvalue()
 
-if st.button(t[lang_key]["Download"]):
-    excel_data = export_to_excel()
-    st.download_button(
-        label=f"{t[lang_key]['Download']}",
-        data=excel_data,
-        file_name=f"8D_Report_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx",
+    # Header
+    ws["A1"] = "8D Report"
+    ws["A2"] = f"Prepared By: {st.session_state.get('prepared_by','')}"
+    ws["A3"] = f"Report Date: {st.session_state.get('report_date','')}"
+    ws.append([])
+
+    for step, _, _ in npqp_steps:
+        ws.append([t[lang_key][step]])
+        ws.append([st.session_state[step]["answer"]])
+        ws.append([])
+
+    # Save to BytesIO
+    excel_bytes = io.BytesIO()
+    wb.save(excel_bytes)
+    excel_bytes.seek(0)
+    return excel_bytes
+
+st.sidebar.markdown("---")
+if st.sidebar.button(t[lang_key]["Download"]):
+    excel_file = generate_excel()
+    st.sidebar.download_button(
+        label="📥 Download Excel 8D Report",
+        data=excel_file,
+        file_name=f"8D_Report_{datetime.datetime.today().strftime('%Y%m%d')}.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
 
