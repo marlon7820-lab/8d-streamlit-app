@@ -200,29 +200,55 @@ tabs = st.tabs(tab_labels)
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     with tabs[i]:
         st.markdown(f"### {t[lang_key][step]}")
-        st.markdown(f"<div style='background-color:#b3e0ff;color:black;padding:12px;border-left:5px solid #1E90FF;border-radius:6px;'>{note_dict[lang_key]}<br><br>💡 {example_dict[lang_key]}</div>", unsafe_allow_html=True)
+        st.markdown(
+            f"<div style='background-color:#b3e0ff;color:black;padding:12px;border-left:5px solid #1E90FF;border-radius:6px;'>{note_dict[lang_key]}<br><br>💡 {example_dict[lang_key]}</div>",
+            unsafe_allow_html=True
+        )
         if step == "D4":
-            st.session_state[step]["location"] = st.selectbox("Location of Material", ["","Work in Progress","Stores Stock","Warehouse Stock","Service Parts","Other"], index=0)
-            st.session_state[step]["status"] = st.selectbox("Status of Activities", ["","Pending","In Progress","Completed","Other"], index=0)
-            st.session_state[step]["answer"] = st.text_area("Containment Actions / Notes", value=st.session_state[step]["answer"])
+            st.session_state[step]["location"] = st.selectbox(
+                "Location of Material", ["","Work in Progress","Stores Stock","Warehouse Stock","Service Parts","Other"], 
+                index=0, key=f"d4_location"
+            )
+            st.session_state[step]["status"] = st.selectbox(
+                "Status of Activities", ["","Pending","In Progress","Completed","Other"], 
+                index=0, key=f"d4_status"
+            )
+            st.session_state[step]["answer"] = st.text_area(
+                "Containment Actions / Notes", value=st.session_state[step]["answer"], key=f"ans_{step}"
+            )
         elif step == "D5":
             st.markdown("#### Occurrence Analysis")
             for idx in range(len(st.session_state.d5_occ_whys)):
-                st.session_state.d5_occ_whys[idx] = st.text_input(f"{t[lang_key]['Occurrence_Why']} {idx+1}", value=st.session_state.d5_occ_whys[idx])
+                st.session_state.d5_occ_whys[idx] = st.text_input(
+                    f"{t[lang_key]['Occurrence_Why']} {idx+1}", 
+                    value=st.session_state.d5_occ_whys[idx], 
+                    key=f"d5_occ_{idx}"
+                )
             st.markdown("#### Detection Analysis")
             for idx in range(len(st.session_state.d5_det_whys)):
-                st.session_state.d5_det_whys[idx] = st.text_input(f"{t[lang_key]['Detection_Why']} {idx+1}", value=st.session_state.d5_det_whys[idx])
+                st.session_state.d5_det_whys[idx] = st.text_input(
+                    f"{t[lang_key]['Detection_Why']} {idx+1}", 
+                    value=st.session_state.d5_det_whys[idx],
+                    key=f"d5_det_{idx}"
+                )
             st.markdown("#### Systemic Analysis")
             for idx in range(len(st.session_state.d5_sys_whys)):
-                st.session_state.d5_sys_whys[idx] = st.text_input(f"{t[lang_key]['Systemic_Why']} {idx+1}", value=st.session_state.d5_sys_whys[idx])
+                st.session_state.d5_sys_whys[idx] = st.text_input(
+                    f"{t[lang_key]['Systemic_Why']} {idx+1}", 
+                    value=st.session_state.d5_sys_whys[idx],
+                    key=f"d5_sys_{idx}"
+                )
             occ_rc_text = suggest_root_cause([w for w in st.session_state.d5_occ_whys if w.strip()])
             det_rc_text = suggest_root_cause([w for w in st.session_state.d5_det_whys if w.strip()])
             sys_rc_text = suggest_root_cause([w for w in st.session_state.d5_sys_whys if w.strip()])
-            st.text_area(f"{t[lang_key]['Root_Cause_Occ']}", value=occ_rc_text, height=80, disabled=True)
-            st.text_area(f"{t[lang_key]['Root_Cause_Det']}", value=det_rc_text, height=80, disabled=True)
-            st.text_area(f"{t[lang_key]['Root_Cause_Sys']}", value=sys_rc_text, height=80, disabled=True)
+            st.text_area(f"{t[lang_key]['Root_Cause_Occ']}", value=occ_rc_text, height=80, disabled=True, key="rc_occ")
+            st.text_area(f"{t[lang_key]['Root_Cause_Det']}", value=det_rc_text, height=80, disabled=True, key="rc_det")
+            st.text_area(f"{t[lang_key]['Root_Cause_Sys']}", value=sys_rc_text, height=80, disabled=True, key="rc_sys")
         else:
-            st.session_state[step]["answer"] = st.text_area("Your Answer", value=st.session_state[step]["answer"])
+            st.session_state[step]["answer"] = st.text_area(
+                "Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}"
+            )
+
 
 # ---------------------------
 # Excel generation
