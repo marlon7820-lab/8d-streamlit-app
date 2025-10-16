@@ -66,8 +66,7 @@ t = {
     "en": {
         "D1": "D1: Concern Details", "D2": "D2: Similar Part Considerations",
         "D3": "D3: Initial Analysis", "D4": "D4: Implement Containment",
-        "D5": "D5: Permanent Corrective Actions",
-        "D6": "D6: Permanent Corrective Actions",
+        "D5": "D5: Final Analysis", "D6": "D6: Permanent Corrective Actions",
         "D7": "D7: Countermeasure Confirmation", "D8": "D8: Follow-up Activities (Lessons Learned / Recurrence Prevention)",
         "Report_Date": "Report Date", "Prepared_By": "Prepared By",
         "Root_Cause_Occ": "Root Cause (Occurrence)", "Root_Cause_Det": "Root Cause (Detection)", "Root_Cause_Sys": "Root Cause (Systemic)",
@@ -80,8 +79,7 @@ t = {
     "es": {
         "D1": "D1: Detalles de la preocupación", "D2": "D2: Consideraciones de partes similares",
         "D3": "D3: Análisis inicial", "D4": "D4: Implementar contención",
-        "D5": "D5: Acciones correctivas permanentes",
-        "D6": "D6: Acciones correctivas permanentes",
+        "D5": "D5: Análisis final", "D6": "D6: Acciones correctivas permanentes",
         "D7": "D7: Confirmación de contramedidas", "D8": "D8: Actividades de seguimiento (Lecciones aprendidas / Prevención de recurrencia)",
         "Report_Date": "Fecha del informe", "Prepared_By": "Preparado por",
         "Root_Cause_Occ": "Causa raíz (Ocurrencia)", "Root_Cause_Det": "Causa raíz (Detección)", "Root_Cause_Sys": "Causa raíz (Sistémica)",
@@ -106,10 +104,10 @@ npqp_steps = [
            {"en":"Visual inspection of solder joints, initial functional tests.", "es":"Inspección visual de soldaduras, pruebas funcionales iniciales."}),
     ("D4", {"en":"Define temporary containment actions and material location.", "es":"Defina acciones de contención temporales y ubicación del material."},
            {"en":"","es":""}),
-    ("D5", {"en":"Perform root cause analysis using 5 Whys methodology.", "es":"Realice análisis de causa raíz usando la metodología 5 Porqués."},
-           {"en":"Update soldering process, redesign fixture.", "es":"Actualizar proceso de soldadura, rediseñar herramienta."}),
+    ("D5", {"en":"Use 5-Why analysis to determine the root cause.", "es":"Use el análisis de 5 Porqués para determinar la causa raíz."},
+           {"en":"","es":""}),
     ("D6", {"en":"Define corrective actions that eliminate the root cause permanently.", "es":"Defina acciones correctivas que eliminen la causa raíz permanentemente."},
-           {"en":"Implement process improvements.", "es":"Implementar mejoras de proceso."}),
+           {"en":"Update soldering process, redesign fixture.", "es":"Actualizar proceso de soldadura, rediseñar herramienta."}),
     ("D7", {"en":"Verify that corrective actions effectively resolve the issue.", "es":"Verifique que las acciones correctivas resuelvan efectivamente el problema."},
            {"en":"Functional tests on corrected amplifiers.", "es":"Pruebas funcionales en amplificadores corregidos."}),
     ("D8", {"en":"Document lessons learned, update standards, FMEAs.", "es":"Documente lecciones aprendidas, actualice estándares, FMEAs."},
@@ -132,7 +130,7 @@ st.session_state.setdefault("d4_status", "")
 st.session_state.setdefault("d4_containment", "")
 
 # ---------------------------
-# Categories for D5
+# Expanded categories for D5
 # ---------------------------
 occurrence_categories = {
     "Machine / Equipment": [
@@ -265,7 +263,7 @@ systemic_categories = {
 }
 
 # ---------------------------
-# Helper functions
+# Helper: Suggest root cause based on whys
 # ---------------------------
 def suggest_root_cause(whys):
     text = " ".join(whys).lower()
@@ -287,6 +285,9 @@ def suggest_root_cause(whys):
         return "Environmental or external factor"
     return "Systemic issue identified from analysis"
 
+# ---------------------------
+# Helper: Render 5-Why dropdowns without repeating selections
+# ---------------------------
 def render_whys_no_repeat(why_list, categories, label_prefix):
     for idx in range(len(why_list)):
         selected_so_far = [w for i, w in enumerate(why_list) if w.strip() and i != idx]
@@ -333,7 +334,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
         </div>
         """, unsafe_allow_html=True)
 
-        # D4 special
+        # D4 special: Nissan-style fields
         if step == "D4":
             st.session_state[step]["location"] = st.selectbox(
                 "Location of Material",
@@ -352,29 +353,34 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                 value=st.session_state[step]["answer"],
                 key=f"ans_{step}"
             )
-        # D5 special
+        # D5 special: 5-Why dropdowns + dynamic root causes
         elif step == "D5":
             st.markdown("#### Occurrence Analysis")
             render_whys_no_repeat(st.session_state.d5_occ_whys, occurrence_categories, t[lang_key]['Occurrence_Why'])
+            if st.button("➕ Add another Occurrence Why"):
+                st.session_state.d5_occ_whys.append("")
+
             st.markdown("#### Detection Analysis")
             render_whys_no_repeat(st.session_state.d5_det_whys, detection_categories, t[lang_key]['Detection_Why'])
-            st.markdown("#### Systemic Analysis")
-            render_whys_no_repeat(st.session_state.d5_sys_whys, systemic_categories, t[lang_key]['Systemic_Why'])
+            if st.button("➕ Add another Detection Why"):
+                st.session_state.d5_det_whys.append("")
 
+            st.markdown("#### Systemic Analysis")
+            render_whys_no_repeat(st.session_state.d5_sys_whys, systemic_categories, t
+                        st.markdown("#### Systemic Analysis")
+            render_whys_no_repeat(st.session_state.d5_sys_whys, systemic_categories, t[lang_key]['Systemic_Why'])
+            if st.button("➕ Add another Systemic Why"):
+                st.session_state.d5_sys_whys.append("")
+
+            # Dynamic Root Cause Suggestions (read-only)
             occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
             det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
             sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
 
-            st.text_area(f"{t[lang_key]['Root_Cause_Occ']}", value=suggest_root_cause(occ_whys) if occ_whys else "
-                        st.text_area(f"{t[lang_key]['Root_Cause_Occ']}", 
-                         value=suggest_root_cause(occ_whys) if occ_whys else "No occurrence whys provided yet", 
-                         height=80, disabled=True)
-            st.text_area(f"{t[lang_key]['Root_Cause_Det']}", 
-                         value=suggest_root_cause(det_whys) if det_whys else "No detection whys provided yet", 
-                         height=80, disabled=True)
-            st.text_area(f"{t[lang_key]['Root_Cause_Sys']}", 
-                         value=suggest_root_cause(sys_whys) if sys_whys else "No systemic whys provided yet", 
-                         height=80, disabled=True)
+            st.text_area(f"{t[lang_key]['Root_Cause_Occ']}", value=suggest_root_cause(occ_whys) if occ_whys else "No occurrence whys provided yet", height=80, disabled=True)
+            st.text_area(f"{t[lang_key]['Root_Cause_Det']}", value=suggest_root_cause(det_whys) if det_whys else "No detection whys provided yet", height=80, disabled=True)
+            st.text_area(f"{t[lang_key]['Root_Cause_Sys']}", value=suggest_root_cause(sys_whys) if sys_whys else "No systemic whys provided yet", height=80, disabled=True)
+        # D6–D8: text areas
         else:
             st.session_state[step]["answer"] = st.text_area(
                 "Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}"
@@ -386,6 +392,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
 with st.sidebar:
     st.markdown("## Backup / Restore")
     
+    # JSON Backup
     def generate_json():
         save_data = {k: v for k, v in st.session_state.items() if not k.startswith("_")}
         return json.dumps(save_data, indent=4)
@@ -397,6 +404,7 @@ with st.sidebar:
         mime="application/json"
     )
 
+    # JSON Restore
     uploaded_file = st.file_uploader("Upload JSON file to restore", type="json")
     if uploaded_file:
         try:
@@ -412,6 +420,7 @@ with st.sidebar:
 # ---------------------------
 data_rows = []
 
+# D5 whys
 occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
 det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
 sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
@@ -447,6 +456,7 @@ def generate_excel():
     thin = Side(border_style="thin", color="000000")
     border = Border(left=thin, right=thin, top=thin, bottom=thin)
 
+    # Add logo if exists
     if os.path.exists("logo.png"):
         try:
             img = XLImage("logo.png")
@@ -463,6 +473,7 @@ def generate_excel():
     ws.append([t[lang_key]['Prepared_By'], st.session_state.prepared_by])
     ws.append([])
 
+    # Header row
     header_row = ws.max_row + 1
     headers = ["Step", "Answer", "Extra / Notes"]
     fill = PatternFill(start_color="1E90FF", end_color="1E90FF", fill_type="solid")
@@ -473,6 +484,7 @@ def generate_excel():
         cell.alignment = Alignment(horizontal="center", vertical="center")
         cell.border = border
 
+    # Append step answers
     for step, answer, extra in data_rows:
         ws.append([t[lang_key].get(step, step), answer, extra])
         r = ws.max_row
