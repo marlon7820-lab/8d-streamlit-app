@@ -32,6 +32,16 @@ button[kind="primary"] {background-color: #87AFC7 !important; color: white !impo
 """, unsafe_allow_html=True)
 
 # ---------------------------
+# Session-safe rerun check
+# ---------------------------
+if "_rerun_needed" not in st.session_state:
+    st.session_state["_rerun_needed"] = False
+
+if st.session_state["_rerun_needed"]:
+    st.session_state["_rerun_needed"] = False
+    st.experimental_rerun()
+
+# ---------------------------
 # Main title
 # ---------------------------
 st.markdown("<h1 style='text-align: center; color: #1E90FF;'>📋 8D Report Assistant</h1>", unsafe_allow_html=True)
@@ -49,23 +59,20 @@ Version {version_number} | Last updated: {last_updated}
 """, unsafe_allow_html=True)
 
 # ---------------------------
-# Sidebar: Language selection & reset
+# Sidebar: Language selection
 # ---------------------------
 st.sidebar.title("8D Report Assistant")
 st.sidebar.markdown("---")
 st.sidebar.header("Settings")
-
-# Language selection
 lang = st.sidebar.selectbox("Select Language / Seleccionar Idioma", ["English", "Español"])
 lang_key = "en" if lang == "English" else "es"
 
 # ---------------------------
-# Smart Session Reset Button
+# Sidebar: Smart Session Reset Button
 # ---------------------------
 st.sidebar.markdown("---")
 st.sidebar.header("⚙️ App Controls")
 
-# Keys to preserve on reset
 preserve_keys = ["lang", "lang_key", "current_tab"]
 
 if st.sidebar.button("🔄 Reset 8D Session"):
@@ -76,64 +83,36 @@ if st.sidebar.button("🔄 Reset 8D Session"):
     for k, v in preserved.items():
         st.session_state[k] = v
     st.sidebar.success("Session data cleared. All 8D inputs reset, but language and tab preserved.")
-    st.experimental_rerun()
+    st.session_state["_rerun_needed"] = True
 
 # ---------------------------
 # Language dictionary
 # ---------------------------
 t = {
-    "en": {
-        "D1": "D1: Concern Details",
-        "D2": "D2: Similar Part Considerations",
-        "D3": "D3: Initial Analysis",
-        "D4": "D4: Implement Containment",
-        "D5": "D5: Final Analysis",
-        "D6": "D6: Permanent Corrective Actions",
-        "D7": "D7: Countermeasure Confirmation",
-        "D8": "D8: Follow-up Activities (Lessons Learned / Recurrence Prevention)",
-        "Report_Date": "Report Date",
-        "Prepared_By": "Prepared By",
-        "Root_Cause_Occ": "Root Cause (Occurrence)",
-        "Root_Cause_Det": "Root Cause (Detection)",
-        "Root_Cause_Sys": "Root Cause (Systemic)",
-        "Occurrence_Why": "Occurrence Why",
-        "Detection_Why": "Detection Why",
-        "Systemic_Why": "Systemic Why",
-        "Save": "💾 Save 8D Report",
-        "Download": "📥 Download XLSX",
-        "Training_Guidance": "Training Guidance",
-        "Example": "Example",
-        "FMEA_Failure": "FMEA Failure Occurrence",
-        "Location": "Material Location",
-        "Status": "Activity Status",
-        "Containment_Actions": "Containment Actions"
-    },
-    "es": {
-        "D1": "D1: Detalles de la preocupación",
-        "D2": "D2: Consideraciones de partes similares",
-        "D3": "D3: Análisis inicial",
-        "D4": "D4: Implementar contención",
-        "D5": "D5: Análisis final",
-        "D6": "D6: Acciones correctivas permanentes",
-        "D7": "D7: Confirmación de contramedidas",
-        "D8": "D8: Actividades de seguimiento (Lecciones aprendidas / Prevención de recurrencia)",
-        "Report_Date": "Fecha del informe",
-        "Prepared_By": "Preparado por",
-        "Root_Cause_Occ": "Causa raíz (Ocurrencia)",
-        "Root_Cause_Det": "Causa raíz (Detección)",
-        "Root_Cause_Sys": "Causa raíz (Sistémica)",
-        "Occurrence_Why": "Por qué Ocurrencia",
-        "Detection_Why": "Por qué Detección",
-        "Systemic_Why": "Por qué Sistémico",
-        "Save": "💾 Guardar Informe 8D",
-        "Download": "📥 Descargar XLSX",
-        "Training_Guidance": "Guía de Entrenamiento",
-        "Example": "Ejemplo",
-        "FMEA_Failure": "Ocurrencia de falla FMEA",
-        "Location": "Ubicación del material",
-        "Status": "Estado de la actividad",
-        "Containment_Actions": "Acciones de contención"
-    }
+    "en": { "D1":"D1: Concern Details", "D2":"D2: Similar Part Considerations",
+            "D3":"D3: Initial Analysis", "D4":"D4: Implement Containment",
+            "D5":"D5: Final Analysis", "D6":"D6: Permanent Corrective Actions",
+            "D7":"D7: Countermeasure Confirmation", "D8":"D8: Follow-up Activities (Lessons Learned / Recurrence Prevention)",
+            "Report_Date":"Report Date","Prepared_By":"Prepared By",
+            "Root_Cause_Occ":"Root Cause (Occurrence)","Root_Cause_Det":"Root Cause (Detection)","Root_Cause_Sys":"Root Cause (Systemic)",
+            "Occurrence_Why":"Occurrence Why","Detection_Why":"Detection Why","Systemic_Why":"Systemic Why",
+            "Save":"💾 Save 8D Report","Download":"📥 Download XLSX",
+            "Training_Guidance":"Training Guidance","Example":"Example",
+            "FMEA_Failure":"FMEA Failure Occurrence","Location":"Material Location","Status":"Activity Status",
+            "Containment_Actions":"Containment Actions"
+          },
+    "es": { "D1":"D1: Detalles de la preocupación", "D2":"D2: Consideraciones de partes similares",
+            "D3":"D3: Análisis inicial", "D4":"D4: Implementar contención",
+            "D5":"D5: Análisis final", "D6":"D6: Acciones correctivas permanentes",
+            "D7":"D7: Confirmación de contramedidas", "D8":"D8: Actividades de seguimiento (Lecciones aprendidas / Prevención de recurrencia)",
+            "Report_Date":"Fecha del informe","Prepared_By":"Preparado por",
+            "Root_Cause_Occ":"Causa raíz (Ocurrencia)","Root_Cause_Det":"Causa raíz (Detección)","Root_Cause_Sys":"Causa raíz (Sistémica)",
+            "Occurrence_Why":"Por qué Ocurrencia","Detection_Why":"Por qué Detección","Systemic_Why":"Por qué Sistémico",
+            "Save":"💾 Guardar Informe 8D","Download":"📥 Descargar XLSX",
+            "Training_Guidance":"Guía de Entrenamiento","Example":"Ejemplo",
+            "FMEA_Failure":"Ocurrencia de falla FMEA","Location":"Ubicación del material","Status":"Estado de la actividad",
+            "Containment_Actions":"Acciones de contención"
+          }
 }
 
 # ---------------------------
@@ -166,56 +145,55 @@ for step, _, _ in npqp_steps:
         st.session_state[step] = {"answer": "", "extra": ""}
 st.session_state.setdefault("report_date", datetime.datetime.today().strftime("%B %d, %Y"))
 st.session_state.setdefault("prepared_by", "")
-st.session_state.setdefault("d5_occ_whys", [""]*5)
-st.session_state.setdefault("d5_det_whys", [""]*5)
-st.session_state.setdefault("d5_sys_whys", [""]*5)
+st.session_state.setdefault("d5_occ_whys", [""])
+st.session_state.setdefault("d5_det_whys", [""])
+st.session_state.setdefault("d5_sys_whys", [""])
 st.session_state.setdefault("d4_location", "")
 st.session_state.setdefault("d4_status", "")
 st.session_state.setdefault("d4_containment", "")
 
 # ---------------------------
-# Root cause suggestion
+# Occurrence / Detection / Systemic categories
+# ---------------------------
+occurrence_categories = { ... }  # same as your previous definition
+detection_categories = { ... }   # same as your previous definition
+systemic_categories = { ... }    # same as your previous definition
+
+# ---------------------------
+# Helper functions
 # ---------------------------
 def suggest_root_cause(whys):
     text = " ".join(whys).lower()
-    if any(word in text for word in ["training", "knowledge", "human error"]):
+    if any(word in text for word in ["training","knowledge","human error"]):
         return "Lack of proper training / knowledge gap"
-    if any(word in text for word in ["equipment", "tool", "machine", "fixture"]):
+    if any(word in text for word in ["equipment","tool","machine","fixture"]):
         return "Equipment, tooling, or maintenance issue"
-    if any(word in text for word in ["procedure", "process", "standard"]):
+    if any(word in text for word in ["procedure","process","standard"]):
         return "Procedure or process not followed or inadequate"
-    if any(word in text for word in ["communication", "information", "handover"]):
+    if any(word in text for word in ["communication","information","handover"]):
         return "Poor communication or unclear information flow"
-    if any(word in text for word in ["material", "supplier", "component", "part"]):
+    if any(word in text for word in ["material","supplier","component","part"]):
         return "Material, supplier, or logistics-related issue"
-    if any(word in text for word in ["design", "specification", "drawing"]):
+    if any(word in text for word in ["design","specification","drawing"]):
         return "Design or engineering issue"
-    if any(word in text for word in ["management", "supervision", "resource"]):
+    if any(word in text for word in ["management","supervision","resource"]):
         return "Management or resource-related issue"
-    if any(word in text for word in ["temperature", "humidity", "contamination", "environment"]):
+    if any(word in text for word in ["temperature","humidity","contamination","environment"]):
         return "Environmental or external factor"
     return "Systemic issue identified from analysis"
 
-# ---------------------------
-# Helper to render 5-Why dropdowns without repeats
-# ---------------------------
 def render_whys_no_repeat(why_list, categories, label_prefix):
     for idx in range(len(why_list)):
-        selected_so_far = [w for i, w in enumerate(why_list) if w.strip() and i != idx]
+        selected_so_far = [w for i,w in enumerate(why_list) if w.strip() and i!=idx]
         options = [""] + [f"{cat}: {item}" for cat, items in categories.items() for item in items if f"{cat}: {item}" not in selected_so_far]
         current_val = why_list[idx] if why_list[idx] in options else ""
-        why_list[idx] = st.selectbox(
-            f"{label_prefix} {idx+1}",
-            options,
-            index=options.index(current_val) if current_val in options else 0,
-            key=f"{label_prefix}_{idx}"
-        )
+        why_list[idx] = st.selectbox(f"{label_prefix} {idx+1}", options, index=options.index(current_val) if current_val in options else 0, key=f"{label_prefix}_{idx}")
         free_text = st.text_input(f"Or enter your own {label_prefix} {idx+1}", value=why_list[idx], key=f"{label_prefix}_txt_{idx}")
         if free_text.strip():
             why_list[idx] = free_text
 
 # ---------------------------
-# D1–D8 Tabs
+# Render Tabs D1–D8
 # ---------------------------
 tab_labels = []
 for step, _, _ in npqp_steps:
@@ -225,112 +203,88 @@ for step, _, _ in npqp_steps:
         tab_labels.append(f"🔴 {t[lang_key][step]}")
 tabs = st.tabs(tab_labels)
 
-# --- Categories for D5 5-Why ---
-occurrence_categories = {
-    "Machine / Equipment": ["Mechanical failure or breakdown", "Calibration issues or drift", "Tooling or fixture wear or damage"],
-    "Material / Component": ["Wrong material or component delivered", "Supplier provided off-spec component"],
-    "Process / Method": ["Incorrect process step sequence", "Critical process parameters not controlled"],
-    "Design / Engineering": ["Design not robust to real-use conditions", "Tolerance stack-up issue not evaluated"],
-    "Environmental / External": ["Temperature or humidity out of control range", "Contamination or dust affecting product"]
-}
-detection_categories = {
-    "QA / Inspection": ["QA checklist incomplete or not updated", "Manual inspection prone to human error"],
-    "Validation / Process": ["Process validation not updated after design/process change"],
-    "FMEA / Control Plan": ["Failure mode not captured in PFMEA", "Detection controls missing or ineffective in PFMEA"],
-    "Test / Equipment": ["Test equipment calibration overdue"],
-    "Systemic / Organizational": ["Feedback loop from quality incidents not implemented"]
-}
-systemic_categories = {
-    "Management / Organization": ["Inadequate leadership or supervision structure", "Insufficient resource allocation to critical processes"],
-    "Process / Procedure": ["Standard Operating Procedures (SOPs) outdated or missing"],
-    "Training / People": ["No defined training matrix or certification tracking"],
-    "Supplier / External": ["Supplier not included in 8D or FMEA review process"],
-    "Quality System / Feedback": ["Internal audits ineffective or not completed"]
-}
-
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     with tabs[i]:
         st.markdown(f"### {t[lang_key][step]}")
         st.markdown(f"""
         <div style=" background-color:#b3e0ff; color:black; padding:12px; border-left:5px solid #1E90FF; border-radius:6px; width:100%; font-size:14px; line-height:1.5; ">
-        <b>{t[lang_key]['Training_Guidance']}:</b> {note_dict[lang_key]}<br><br> 💡 <b>{t[lang_key]['Example']}:</b> {example_dict[lang_key]}
+        <b>{t[lang_key]['Training_Guidance']}:</b> {note_dict[lang_key]}<br><br> 💡 <b>{t[lang_key]['Example']}:</b> {example_dict[lang_key]} 
         </div>
         """, unsafe_allow_html=True)
-        
-        if step == "D4":
-            st.session_state[step]["location"] = st.selectbox(
-                "Location of Material",
-                ["", "Work in Progress", "Stores Stock", "Warehouse Stock", "Service Parts", "Other"],
-                index=0, key="d4_location"
-            )
-            st.session_state[step]["status"] = st.selectbox(
-                "Status of Activities",
-                ["", "Pending", "In Progress", "Completed", "Other"],
-                index=0, key="d4_status"
-            )
-            st.session_state[step]["answer"] = st.text_area(
-                "Containment Actions / Notes",
-                value=st.session_state[step]["answer"],
-                key=f"ans_{step}"
-            )
-        elif step == "D5":
+
+        # D4 fields
+        if step=="D4":
+            st.session_state[step]["location"] = st.selectbox("Location of Material", ["","Work in Progress","Stores Stock","Warehouse Stock","Service Parts","Other"], index=0, key="d4_location")
+            st.session_state[step]["status"] = st.selectbox("Status of Activities", ["","Pending","In Progress","Completed","Other"], index=0, key="d4_status")
+            st.session_state[step]["answer"] = st.text_area("Containment Actions / Notes", value=st.session_state[step]["answer"], key=f"ans_{step}")
+
+        # D5 fields
+        elif step=="D5":
             st.markdown("#### Occurrence Analysis")
             render_whys_no_repeat(st.session_state.d5_occ_whys, occurrence_categories, t[lang_key]['Occurrence_Why'])
+            if st.button("➕ Add another Occurrence Why", key="add_occ_why"):
+                st.session_state.d5_occ_whys.append("")
+
             st.markdown("#### Detection Analysis")
             render_whys_no_repeat(st.session_state.d5_det_whys, detection_categories, t[lang_key]['Detection_Why'])
+            if st.button("➕ Add another Detection Why", key="add_det_why"):
+                st.session_state.d5_det_whys.append("")
+
             st.markdown("#### Systemic Analysis")
             render_whys_no_repeat(st.session_state.d5_sys_whys, systemic_categories, t[lang_key]['Systemic_Why'])
-            
+            if st.button("➕ Add another Systemic Why", key="add_sys_why"):
+                st.session_state.d5_sys_whys.append("")
+
+            # Show dynamic root causes
             occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
             det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
             sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
             st.text_area(f"{t[lang_key]['Root_Cause_Occ']}", value=suggest_root_cause(occ_whys) if occ_whys else "No occurrence whys provided yet", height=80, disabled=True)
             st.text_area(f"{t[lang_key]['Root_Cause_Det']}", value=suggest_root_cause(det_whys) if det_whys else "No detection whys provided yet", height=80, disabled=True)
             st.text_area(f"{t[lang_key]['Root_Cause_Sys']}", value=suggest_root_cause(sys_whys) if sys_whys else "No systemic whys provided yet", height=80, disabled=True)
+
         else:
-            st.session_state[step]["answer"] = st.text_area(
-                "Your Answer",
-                value=st.session_state[step]["answer"],
-                key=f"ans_{step}"
-            )
+            st.session_state[step]["answer"] = st.text_area("Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}")
 
 # ---------------------------
-# Backup / Restore / Reset
+# Sidebar JSON Backup/Restore
 # ---------------------------
 with st.sidebar:
     st.markdown("## Backup / Restore / Reset")
-    
+
+    # JSON Backup
     def generate_json():
-        save_data = {k: v for k, v in st.session_state.items() if not k.startswith("_")}
+        save_data = {k:v for k,v in st.session_state.items() if not k.startswith("_")}
         return json.dumps(save_data, indent=4)
-    
     st.download_button(
         label="💾 Save Progress (JSON)",
         data=generate_json(),
-        file_name=f"8D_Report_Backup_{st.session_state.report_date.replace(' ', '_')}.json",
+        file_name=f"8D_Report_Backup_{st.session_state.report_date.replace(' ','_')}.json",
         mime="application/json"
     )
-    
+
+    # JSON Restore
     uploaded_file = st.file_uploader("Upload JSON file to restore", type="json")
     if uploaded_file:
         try:
             restore_data = json.load(uploaded_file)
-            for k, v in restore_data.items():
+            for k,v in restore_data.items():
                 st.session_state[k] = v
             st.success("✅ Session restored from JSON!")
+            st.session_state["_rerun_needed"] = True
         except Exception as e:
             st.error(f"Error restoring JSON: {e}")
-    
+
+    # Full Session Reset
     if st.button("🧹 Reset Session"):
         for key in list(st.session_state.keys()):
             del st.session_state[key]
-        st.experimental_rerun()
+        st.session_state["_rerun_needed"] = True
 
 # ---------------------------
 # Collect answers for Excel
 # ---------------------------
 data_rows = []
-
 occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
 det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
 sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
@@ -339,38 +293,74 @@ det_rc_text = suggest_root_cause(det_whys) if det_whys else "No detection whys p
 sys_rc_text = suggest_root_cause(sys_whys) if sys_whys else "No systemic whys provided yet"
 
 for step, _, _ in npqp_steps:
-    data_rows.append({
-        "Step": t[lang_key][step],
-        "Answer": st.session_state[step]["answer"] if "answer" in st.session_state[step] else "",
-        "Extra": ""
-    })
+    answer = st.session_state[step]["answer"]
+    extra = st.session_state[step].get("extra","")
+    if step=="D4":
+        location = st.session_state[step].get("location","")
+        status = st.session_state[step].get("status","")
+        extra_text = f"Location: {location} | Status: {status}"
+        data_rows.append((step, answer, extra_text))
+    elif step=="D5":
+        data_rows.append(("D5 - Root Cause (Occurrence)", occ_rc_text, " | ".join(occ_whys)))
+        data_rows.append(("D5 - Root Cause (Detection)", det_rc_text, " | ".join(det_whys)))
+        data_rows.append(("D5 - Root Cause (Systemic)", sys_rc_text, " | ".join(sys_whys)))
+    else:
+        data_rows.append((step, answer, extra))
 
 # ---------------------------
-# Export XLSX
+# Generate Excel
 # ---------------------------
-def generate_xlsx(data_rows):
+def generate_excel():
     wb = Workbook()
     ws = wb.active
-    ws.title = "8D Report"
+    ws.title = "NPQP 8D Report"
+    thin = Side(border_style="thin", color="000000")
+    border = Border(left=thin,right=thin,top=thin,bottom=thin)
 
-    headers = ["Step", "Answer", "Extra"]
-    ws.append(headers)
-    for row in data_rows:
-        ws.append([row["Step"], row["Answer"], row["Extra"]])
+    if os.path.exists("logo.png"):
+        try:
+            img = XLImage("logo.png")
+            img.width = 140
+            img.height = 40
+            ws.add_image(img,"A1")
+        except: pass
 
-    for col in ws.columns:
-        max_length = max(len(str(cell.value)) if cell.value else 0 for cell in col)
-        ws.column_dimensions[get_column_letter(col[0].column)].width = max_length + 5
+    ws.merge_cells(start_row=3,start_column=1,end_row=3,end_column=3)
+    ws.cell(row=3,column=1,value="📋 8D Report Assistant").font = Font(bold=True,size=14)
+    ws.append([t[lang_key]['Report_Date'], st.session_state.report_date])
+    ws.append([t[lang_key]['Prepared_By'], st.session_state.prepared_by])
+    ws.append([])
 
-    bio = io.BytesIO()
-    wb.save(bio)
-    bio.seek(0)
-    return bio
+    # Header
+    header_row = ws.max_row + 1
+    headers = ["Step","Answer","Extra / Notes"]
+    fill = PatternFill(start_color="1E90FF", end_color="1E90FF", fill_type="solid")
+    for c_idx,h in enumerate(headers,start=1):
+        cell = ws.cell(row=header_row,column=c_idx,value=h)
+        cell.fill = fill
+        cell.font = Font(bold=True,color="FFFFFF")
+        cell.alignment = Alignment(horizontal="center", vertical="center")
+        cell.border = border
 
-xlsx_bytes = generate_xlsx(data_rows)
+    for step, answer, extra in data_rows:
+        ws.append([t[lang_key].get(step,step), answer, extra])
+        r = ws.max_row
+        for c in range(1,4):
+            cell = ws.cell(row=r,column=c)
+            cell.alignment = Alignment(wrap_text=True, vertical="top")
+            cell.font = Font(bold=True if c==2 else False)
+            cell.border = border
+
+    for col in range(1,4):
+        ws.column_dimensions[get_column_letter(col)].width = 40
+
+    output = io.BytesIO()
+    wb.save(output)
+    return output.getvalue()
+
 st.download_button(
-    label=t[lang_key]["Download"],
-    data=xlsx_bytes,
-    file_name=f"8D_Report_{st.session_state.report_date.replace(' ', '_')}.xlsx",
+    label=f"{t[lang_key]['Download']}",
+    data=generate_excel(),
+    file_name=f"8D_Report_{st.session_state.report_date.replace(' ','_')}.xlsx",
     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 )
