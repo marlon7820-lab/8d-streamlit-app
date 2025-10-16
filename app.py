@@ -39,8 +39,8 @@ st.markdown("<h1 style='text-align: center; color: #1E90FF;'>📋 8D Report Assi
 # ---------------------------
 # Version info
 # ---------------------------
-version_number = "v1.0.9"
-last_updated = "October 10, 2025"
+version_number = "v1.1.0"
+last_updated = "October 16, 2025"
 st.markdown(f"""
 <hr style='border:1px solid #1E90FF; margin-top:10px; margin-bottom:5px;'>
 <p style='font-size:12px; font-style:italic; text-align:center; color:#555555;'>
@@ -56,27 +56,14 @@ st.sidebar.markdown("---")
 st.sidebar.header("Settings")
 
 # Language selection
-lang = st.sidebar.selectbox("Select Language / Seleccionar Idioma", ["English", "Español"])
+if "lang" not in st.session_state:
+    st.session_state["lang"] = "English"
+if "lang_key" not in st.session_state:
+    st.session_state["lang_key"] = "en"
+lang = st.sidebar.selectbox("Select Language / Seleccionar Idioma", ["English", "Español"], index=0 if st.session_state["lang"] == "English" else 1)
+st.session_state["lang"] = lang
 lang_key = "en" if lang == "English" else "es"
-
-# ---------------------------
-# Smart Session Reset Button
-# ---------------------------
-st.sidebar.markdown("---")
-st.sidebar.header("⚙️ App Controls")
-
-# Keys to preserve on reset
-preserve_keys = ["lang", "lang_key", "current_tab"]
-
-if st.sidebar.button("🔄 Reset 8D Session"):
-    preserved = {k: st.session_state[k] for k in preserve_keys if k in st.session_state}
-    for key in list(st.session_state.keys()):
-        if key not in preserve_keys:
-            del st.session_state[key]
-    for k, v in preserved.items():
-        st.session_state[k] = v
-    st.sidebar.success("Session data cleared. All 8D inputs reset, but language and tab preserved.")
-    st.experimental_rerun()
+st.session_state["lang_key"] = lang_key
 
 # ---------------------------
 # Language dictionary
@@ -147,6 +134,7 @@ st.session_state.setdefault("d5_sys_whys", [""]*5)
 st.session_state.setdefault("d4_location", "")
 st.session_state.setdefault("d4_status", "")
 st.session_state.setdefault("d4_containment", "")
+
 # ---------------------------
 # Expanded categories for D5
 # ---------------------------
@@ -302,10 +290,17 @@ def suggest_root_cause(whys):
     if any(word in text for word in ["temperature", "humidity", "contamination", "environment"]):
         return "Environmental or external factor"
     return "Systemic issue identified from analysis"
-    # ---------------------------
-# Helper: Render 5-Why dropdowns without repeating selections
+
 # ---------------------------
-def render_whys_no_repeat(why_list, categories, label_prefix):
+# Helper: Render 5-Why dropdowns without repeating selections (unique keys)
+# ---------------------------
+def render_whys_no_repeat(why_list, categories, label_prefix, key_prefix="why"):
+    """
+    why_list: list reference in session_state to be modified
+    categories: dict of category -> list(items)
+    label_prefix: human label for the selectboxes ("Occurrence Why", etc.)
+    key_prefix: unique short string used to build widget keys (e.g. "d5_occ")
+    """
     for idx in range(len(why_list)):
         # Gather all selected values except current index
         selected_so_far = [w for i, w in enumerate(why_list) if w.strip() and i != idx]
@@ -318,12 +313,48 @@ def render_whys_no_repeat(why_list, categories, label_prefix):
             f"{label_prefix} {idx+1}",
             options,
             index=options.index(current_val) if current_val in options else 0,
-            key=f"{label_prefix}_{idx}"
+            key=f"{key_prefix}_select_{idx}"
         )
 
-        free_text = st.text_input(f"Or enter your own {label_prefix} {idx+1}", value=why_list[idx], key=f"{label_prefix}_txt_{idx}")
+        free_text = st.text_input(f"Or enter your own {label_prefix} {idx+1}", value=why_list[idx], key=f"{key_prefix}_txt_{idx}")
         if free_text.strip():
             why_list[idx] = free_text
+
+# ---------------------------
+# Clear 8D session helper (preserve specific keys)
+# ---------------------------
+def clear_8d_session(preserve_keys=None):
+    if preserve_keys is None:
+        preserve_keys = ["lang", "lang_key", "current_tab"]
+    preserved = {k: st.session_state[k] for k in preserve_keys if k in st.session_state}
+    for key in list(st.session_state.keys()):
+        if key not in preserve_keys:
+            del st.session_state[key]
+    # Reinitialize
+    for step, _, _ in npqp_steps:
+        st.session_state[step] = {"answer": "", "extra": ""}
+    st.session_state["d5_occ_whys"] = [""] * 5
+    st.session_state["d5_det_whys"] = [""] * 5
+    st.session_state["d5_sys_whys"] = [""] * 5
+    st.session_state["d4_location"] = ""
+    st.session_state["d4_status"] = ""
+    st.session_state["d4_containment"] = ""
+    st.session_state["report_date"] = datetime.datetime.today().strftime("%B %d, %Y")
+    st.session_state["prepared_by"] = ""
+    # restore preserved
+    for k, v in preserved.items():
+        st.session_state[k] = v
+
+# ---------------------------
+# Smart Session Reset Button (top)
+# ---------------------------
+st.sidebar.markdown("---")
+st.sidebar.header("⚙️ App Controls")
+
+if st.sidebar.button("🔄 Reset 8D Session"):
+    clear_8d_session(preserve_keys=["lang", "lang_key", "current_tab"])
+    st.sidebar.success("Session data cleared. All 8D inputs reset, but language and tab preserved.")
+    st.experimental_rerun()
 
 # ---------------------------
 # Render Tabs D1–D8
@@ -378,18 +409,18 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
         # D5 special: 5-Why dropdowns + dynamic root causes
         elif step == "D5":
             st.markdown("#### Occurrence Analysis")
-            render_whys_no_repeat(st.session_state.d5_occ_whys, occurrence_categories, t[lang_key]['Occurrence_Why'])
-            if st.button("➕ Add another Occurrence Why"):
+            render_whys_no_repeat(st.session_state.d5_occ_whys, occurrence_categories, t[lang_key]['Occurrence_Why'], key_prefix="d5_occ")
+            if st.button("➕ Add another Occurrence Why", key="add_occ"):
                 st.session_state.d5_occ_whys.append("")
 
             st.markdown("#### Detection Analysis")
-            render_whys_no_repeat(st.session_state.d5_det_whys, detection_categories, t[lang_key]['Detection_Why'])
-            if st.button("➕ Add another Detection Why"):
+            render_whys_no_repeat(st.session_state.d5_det_whys, detection_categories, t[lang_key]['Detection_Why'], key_prefix="d5_det")
+            if st.button("➕ Add another Detection Why", key="add_det"):
                 st.session_state.d5_det_whys.append("")
 
             st.markdown("#### Systemic Analysis")
-            render_whys_no_repeat(st.session_state.d5_sys_whys, systemic_categories, t[lang_key]['Systemic_Why'])
-            if st.button("➕ Add another Systemic Why"):
+            render_whys_no_repeat(st.session_state.d5_sys_whys, systemic_categories, t[lang_key]['Systemic_Why'], key_prefix="d5_sys")
+            if st.button("➕ Add another Systemic Why", key="add_sys"):
                 st.session_state.d5_sys_whys.append("")
 
             # Dynamic Root Cause Suggestions (read-only)
@@ -397,9 +428,9 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
             sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
 
-            st.text_area(f"{t[lang_key]['Root_Cause_Occ']}", value=suggest_root_cause(occ_whys) if occ_whys else "No occurrence whys provided yet", height=80, disabled=True)
-            st.text_area(f"{t[lang_key]['Root_Cause_Det']}", value=suggest_root_cause(det_whys) if det_whys else "No detection whys provided yet", height=80, disabled=True)
-            st.text_area(f"{t[lang_key]['Root_Cause_Sys']}", value=suggest_root_cause(sys_whys) if sys_whys else "No systemic whys provided yet", height=80, disabled=True)
+            st.text_area(f"{t[lang_key]['Root_Cause_Occ']}", value=suggest_root_cause(occ_whys) if occ_whys else "No occurrence whys provided yet", height=80, disabled=True, key="rc_occ")
+            st.text_area(f"{t[lang_key]['Root_Cause_Det']}", value=suggest_root_cause(det_whys) if det_whys else "No detection whys provided yet", height=80, disabled=True, key="rc_det")
+            st.text_area(f"{t[lang_key]['Root_Cause_Sys']}", value=suggest_root_cause(sys_whys) if sys_whys else "No systemic whys provided yet", height=80, disabled=True, key="rc_sys")
         # D6–D8: text areas
         else:
             st.session_state[step]["answer"] = st.text_area(
@@ -407,7 +438,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             )
 
 # ---------------------------
-# Sidebar: JSON Backup / Restore + Session Reset
+# Sidebar: JSON Backup / Restore + Session Reset (bottom)
 # ---------------------------
 with st.sidebar:
     st.markdown("## Backup / Restore / Reset")
@@ -432,15 +463,16 @@ with st.sidebar:
             for k, v in restore_data.items():
                 st.session_state[k] = v
             st.success("✅ Session restored from JSON!")
+            st.experimental_rerun()
         except Exception as e:
             st.error(f"Error restoring JSON: {e}")
 
-    # Session Reset
+    # Session Reset (preserve language)
     if st.button("🧹 Reset Session"):
-        for key in list(st.session_state.keys()):
-            del st.session_state[key]
+        clear_8d_session(preserve_keys=["lang", "lang_key", "current_tab"])
         st.experimental_rerun()
-        # ---------------------------
+
+# ---------------------------
 # Collect answers for Excel
 # ---------------------------
 data_rows = []
@@ -460,8 +492,8 @@ for step, _, _ in npqp_steps:
 
     if step == "D4":
         # Include Location, Status, and Containment
-        location = st.session_state[step].get("location", "")
-        status = st.session_state[step].get("status", "")
+        location = st.session_state.get("d4_location", "")
+        status = st.session_state.get("d4_status", "")
         extra_text = f"Location: {location} | Status: {status}"
         data_rows.append((step, answer, extra_text))
     elif step == "D5":
