@@ -39,7 +39,7 @@ st.markdown("<h1 style='text-align: center; color: #1E90FF;'>📋 8D Report Assi
 # Version info
 # ---------------------------
 version_number = "v1.0.9"
-last_updated = "October 10, 2025"
+last_updated = "October 16, 2025"
 st.markdown(f"""
 <hr style='border:1px solid #1E90FF; margin-top:10px; margin-bottom:5px;'> 
 <p style='font-size:12px; font-style:italic; text-align:center; color:#555555;'>
@@ -174,18 +174,28 @@ if uploaded_file:
         st.success("✅ Session restored from JSON!")
     except Exception as e:
         st.error(f"Error restoring JSON: {e}")
+# ---------------------------
+# Smart Session Reset Button
+# ---------------------------
+st.sidebar.header("⚙️ App Controls")
+
+# Keys to preserve on reset
+preserve_keys = ["lang", "lang_key"]
 
 if st.sidebar.button("🧹 Reset Session"):
-    preserve_keys = ["lang","lang_key"]
+    # Save preserved keys
     preserved = {k: st.session_state[k] for k in preserve_keys if k in st.session_state}
+    
+    # Clear all other keys
     for key in list(st.session_state.keys()):
-        if key not in preserve_keys and not key.startswith("_"):
-            try:
-                del st.session_state[key]
-            except KeyError:
-                pass
-    for k,v in preserved.items():
+        if key not in preserve_keys:
+            del st.session_state[key]
+    
+    # Restore preserved keys
+    for k, v in preserved.items():
         st.session_state[k] = v
+    
+    # Rerun app safely
     st.experimental_rerun()
 
 # ---------------------------
