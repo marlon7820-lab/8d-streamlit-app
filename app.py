@@ -65,7 +65,6 @@ lang_key = "en" if lang == "English" else "es"
 st.sidebar.markdown("---")
 st.sidebar.header("⚙️ App Controls")
 
-# Keys to preserve on reset
 preserve_keys = ["lang", "lang_key", "current_tab"]
 
 if st.sidebar.button("🔄 Reset 8D Session"):
@@ -76,7 +75,10 @@ if st.sidebar.button("🔄 Reset 8D Session"):
     for k, v in preserved.items():
         st.session_state[k] = v
     st.sidebar.success("✅ 8D session reset complete. All data cleared.")
-    st.experimental_rerun()
+    try:
+        st.experimental_rerun()
+    except AttributeError:
+        pass
 
 # ---------------------------
 # Language dictionary
@@ -149,7 +151,8 @@ st.session_state.setdefault("d4_status", "")
 st.session_state.setdefault("d4_containment", "")
 
 # ---------------------------
-# Categories for D5 whys
+# Expanded categories for D5
+# (same as in your previous code)
 # ---------------------------
 occurrence_categories = {
     "Machine / Equipment": [
@@ -282,7 +285,7 @@ systemic_categories = {
 }
 
 # ---------------------------
-# Helper: Suggest root cause based on whys
+# Helper functions (5-Why & root cause)
 # ---------------------------
 def suggest_root_cause(whys):
     text = " ".join(whys).lower()
@@ -304,9 +307,6 @@ def suggest_root_cause(whys):
         return "Environmental or external factor"
     return "Systemic issue identified from analysis"
 
-# ---------------------------
-# Helper: Render 5-Why dropdowns without repeating selections
-# ---------------------------
 def render_whys_no_repeat(why_list, categories, label_prefix):
     for idx in range(len(why_list)):
         selected_so_far = [w for i, w in enumerate(why_list) if w.strip() and i != idx]
@@ -323,7 +323,7 @@ def render_whys_no_repeat(why_list, categories, label_prefix):
             why_list[idx] = free_text
 
 # ---------------------------
-# Render Tabs D1–D8
+# Render Tabs (D1–D8)
 # ---------------------------
 tab_labels = []
 for step, _, _ in npqp_steps:
@@ -353,7 +353,6 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
         </div>
         """, unsafe_allow_html=True)
 
-        # D4 special: Nissan-style fields
         if step == "D4":
             st.session_state[step]["location"] = st.selectbox(
                 "Location of Material",
@@ -370,66 +369,147 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             st.session_state[step]["answer"] = st.text_area(
                 "Containment Actions / Notes",
                 value=st.session_state[step]["answer"],
-                key=f"{step}_answer"
+                key=f"ans_{step}"
             )
-            continue
+        elif step == "D5":
+            st.markdown("#### Occurrence Analysis")
+            render_whys_no_repeat(st.session_state.d5_occ_whys, occurrence_categories, t[lang_key]['Occurrence_Why'])
+            if st.button("➕ Add another Occurrence Why"):
+                st.session_state.d5_occ_whys.append("")
 
-        # D5 special: 5-Why dropdowns
-        if step == "D5":
-            st.markdown("#### Occurrence Why")
-            render_whys_no_repeat(st.session_state["d5_occ_whys"], occurrence_categories, "Occurrence Why")
-            st.markdown("#### Detection Why")
-            render_whys_no_repeat(st.session_state["d5_det_whys"], detection_categories, "Detection Why")
-            st.markdown("#### Systemic Why")
-            render_whys_no_repeat(st.session_state["d5_sys_whys"], systemic_categories, "Systemic Why")
-            # Suggest root causes
-            occ_rc = suggest_root_cause(st.session_state["d5_occ_whys"])
-            det_rc = suggest_root_cause(st.session_state["d5_det_whys"])
-            sys_rc = suggest_root_cause(st.session_state["d5_sys_whys"])
-            st.info(f"Suggested Root Causes:\n- Occurrence: {occ_rc}\n- Detection: {det_rc}\n- Systemic: {sys_rc}")
-            st.session_state[step]["answer"] = st.text_area("Final Analysis Notes", value=st.session_state[step]["answer"], key=f"{step}_answer")
-            continue
+            st.markdown("#### Detection Analysis")
+            render_whys_no_repeat(st.session_state.d5_det_whys, detection_categories, t[lang_key]['Detection_Why'])
+            if st.button("➕ Add another Detection Why"):
+                st.session_state.d5_det_whys.append("")
 
-        # Normal D1–D3, D6–D8
-        st.session_state[step]["answer"] = st.text_area(
-            "Enter your notes here",
-            value=st.session_state[step]["answer"],
-            key=f"{step}_answer"
-        )
+            st.markdown("#### Systemic Analysis")
+            render_whys_no_repeat(st.session_state.d5_sys_whys, systemic_categories, t[lang_key]['Systemic_Why'])
+            if st.button("➕ Add another Systemic Why"):
+                st.session_state.d5_sys_whys.append("")
+
+            occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
+            det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
+            sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
+
+            st.text_area(f"{t[lang_key]['Root_Cause_Occ']}", value=suggest_root_cause(occ_whys) if occ_whys else "No occurrence whys provided yet", height=80, disabled=True)
+            st.text_area(f"{t[lang_key]['Root_Cause_Det']}", value=suggest_root_cause(det_whys) if det_whys else "No detection whys provided yet", height=80, disabled=True)
+            st.text_area(f"{t[lang_key]['Root_Cause_Sys']}", value=suggest_root_cause(sys_whys) if sys_whys else "No systemic whys provided yet", height=80, disabled=True)
+        else:
+            st.session_state[step]["answer"] = st.text_area(
+                "Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}"
+            )
 
 # ---------------------------
-# Excel Export
+# Sidebar Backup / Restore / Reset
 # ---------------------------
+with st.sidebar:
+    st.markdown("## Backup / Restore / Reset")
+    
+    # JSON Backup
+    def generate_json():
+        save_data = {k: v for k, v in st.session_state.items() if not k.startswith("_")}
+        return json.dumps(save_data, indent=4)
+
+    st.download_button(
+        label="💾 Save Progress (JSON)",
+        data=generate_json(),
+        file_name=f"8D_Report_Backup_{st.session_state.report_date.replace(' ', '_')}.json",
+        mime="application/json"
+    )
+
+    # JSON Restore
+    uploaded_file = st.file_uploader("Upload JSON file to restore", type="json")
+    if uploaded_file:
+        try:
+            restore_data = json.load(uploaded_file)
+            for k, v in restore_data.items():
+                st.session_state[k] = v
+            st.success("✅ Session restored from JSON!")
+        except Exception as e:
+            st.error(f"Error restoring JSON: {e}")
+
+# ---------------------------
+# Collect answers and generate Excel
+# ---------------------------
+data_rows = []
+
+occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
+det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
+sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
+
+occ_rc_text = suggest_root_cause(occ_whys) if occ_whys else "No occurrence whys provided yet"
+det_rc_text = suggest_root_cause(det_whys) if det_whys else "No detection whys provided yet"
+sys_rc_text = suggest_root_cause(sys_whys) if sys_whys else "No systemic whys provided yet"
+
+for step, _, _ in npqp_steps:
+    answer = st.session_state[step]["answer"]
+    extra = st.session_state[step].get("extra", "")
+
+    if step == "D4":
+        location = st.session_state[step].get("location", "")
+        status = st.session_state[step].get("status", "")
+        extra_text = f"Location: {location} | Status: {status}"
+        data_rows.append((step, answer, extra_text))
+    elif step == "D5":
+        data_rows.append(("D5 - Root Cause (Occurrence)", occ_rc_text, " | ".join(occ_whys)))
+        data_rows.append(("D5 - Root Cause (Detection)", det_rc_text, " | ".join(det_whys)))
+        data_rows.append(("D5 - Root Cause (Systemic)", sys_rc_text, " | ".join(sys_whys)))
+    else:
+        data_rows.append((step, answer, extra))
+
 def generate_excel():
     wb = Workbook()
     ws = wb.active
-    ws.title = "8D Report"
+    ws.title = "NPQP 8D Report"
 
-    # Header
-    ws["A1"] = "8D Report"
-    ws["A2"] = f"Prepared By: {st.session_state.get('prepared_by','')}"
-    ws["A3"] = f"Report Date: {st.session_state.get('report_date','')}"
+    thin = Side(border_style="thin", color="000000")
+    border = Border(left=thin, right=thin, top=thin, bottom=thin)
+
+    if os.path.exists("logo.png"):
+        try:
+            img = XLImage("logo.png")
+            img.width = 140
+            img.height = 40
+            ws.add_image(img, "A1")
+        except:
+            pass
+
+    ws.merge_cells(start_row=3, start_column=1, end_row=3, end_column=3)
+    ws.cell(row=3, column=1, value="📋 8D Report Assistant").font = Font(bold=True, size=14)
+
+    ws.append([t[lang_key]['Report_Date'], st.session_state.report_date])
+    ws.append([t[lang_key]['Prepared_By'], st.session_state.prepared_by])
     ws.append([])
 
-    for step, _, _ in npqp_steps:
-        ws.append([t[lang_key][step]])
-        ws.append([st.session_state[step]["answer"]])
-        ws.append([])
+    header_row = ws.max_row + 1
+    headers = ["Step", "Answer", "Extra / Notes"]
+    fill = PatternFill(start_color="1E90FF", end_color="1E90FF", fill_type="solid")
+    for c_idx, h in enumerate(headers, start=1):
+        cell = ws.cell(row=header_row, column=c_idx, value=h)
+        cell.fill = fill
+        cell.font = Font(bold=True, color="FFFFFF")
+        cell.alignment = Alignment(horizontal="center", vertical="center")
+        cell.border = border
 
-    # Save to BytesIO
-    excel_bytes = io.BytesIO()
-    wb.save(excel_bytes)
-    excel_bytes.seek(0)
-    return excel_bytes
+    for step, answer, extra in data_rows:
+        ws.append([t[lang_key].get(step, step), answer, extra])
+        r = ws.max_row
+        for c in range(1, 4):
+            cell = ws.cell(row=r, column=c)
+            cell.alignment = Alignment(wrap_text=True, vertical="top")
+            cell.font = Font(bold=True if c == 2 else False)
+            cell.border = border
 
-st.sidebar.markdown("---")
-if st.sidebar.button(t[lang_key]["Download"]):
-    excel_file = generate_excel()
-    st.sidebar.download_button(
-        label="📥 Download Excel 8D Report",
-        data=excel_file,
-        file_name=f"8D_Report_{datetime.datetime.today().strftime('%Y%m%d')}.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    )
+    for col in range(1, 4):
+        ws.column_dimensions[get_column_letter(col)].width = 40
 
-st.markdown("<p style='text-align:center; font-size:12px; color:#555555;'>End of 8D Report Assistant</p>", unsafe_allow_html=True)
+    output = io.BytesIO()
+    wb.save(output)
+    return output.getvalue()
+
+st.download_button(
+    label=f"{t[lang_key]['Download']}",
+    data=generate_excel(),
+    file_name=f"8D_Report_{st.session_state.report_date.replace(' ', '_')}.xlsx",
+    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+)
