@@ -1,12 +1,8 @@
 import streamlit as st
 from openpyxl import Workbook
-from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
-from openpyxl.utils import get_column_letter
-from openpyxl.drawing.image import Image as XLImage
+from openpyxl.styles import Font
 import datetime
 import io
-import json
-import os
 
 # ---------------------------
 # Page config
@@ -32,30 +28,23 @@ button[kind="primary"] {background-color: #87AFC7 !important; color: white !impo
 """, unsafe_allow_html=True)
 
 # ---------------------------
-# Reset Session check (safe, no KeyError)
+# Reset Session check
 # ---------------------------
 if st.session_state.get("_reset_8d_session", False):
     preserve_keys = ["lang", "lang_key", "current_tab"]
     preserved = {k: st.session_state[k] for k in preserve_keys if k in st.session_state}
-
     for key in list(st.session_state.keys()):
         if key not in preserve_keys and key != "_reset_8d_session":
             del st.session_state[key]
-
     for k, v in preserved.items():
         st.session_state[k] = v
-
     st.session_state["_reset_8d_session"] = False
     st.rerun()
 
 # ---------------------------
-# Main title
+# Main title and version
 # ---------------------------
 st.markdown("<h1 style='text-align: center; color: #1E90FF;'>📋 8D Report Assistant</h1>", unsafe_allow_html=True)
-
-# ---------------------------
-# Version info
-# ---------------------------
 version_number = "v1.1.0"
 last_updated = "October 17, 2025"
 st.markdown(f"""
@@ -66,7 +55,7 @@ Version {version_number} | Last updated: {last_updated}
 """, unsafe_allow_html=True)
 
 # ---------------------------
-# Sidebar: Language selection & reset
+# Sidebar: Language & Reset
 # ---------------------------
 st.sidebar.title("8D Report Assistant")
 st.sidebar.markdown("---")
@@ -75,9 +64,6 @@ st.sidebar.header("Settings")
 lang = st.sidebar.selectbox("Select Language / Seleccionar Idioma", ["English", "Español"])
 lang_key = "en" if lang == "English" else "es"
 
-# ---------------------------
-# Sidebar: Smart Session Reset Button
-# ---------------------------
 st.sidebar.markdown("---")
 st.sidebar.header("⚙️ App Controls")
 if st.sidebar.button("🔄 Reset 8D Session"):
@@ -150,7 +136,7 @@ t = {
 }
 
 # ---------------------------
-# NPQP 8D steps with examples
+# NPQP 8D steps
 # ---------------------------
 npqp_steps = [
     ("D1", {"en":"Describe the customer concerns clearly.", "es":"Describa claramente las preocupaciones del cliente."}, {"en":"Customer reported static noise in amplifier during end-of-line test.", "es":"El cliente reportó ruido estático en el amplificador durante la prueba final."}),
@@ -169,6 +155,7 @@ npqp_steps = [
 for step, _, _ in npqp_steps:
     if step not in st.session_state:
         st.session_state[step] = {"answer": "", "extra": ""}
+
 st.session_state.setdefault("report_date", datetime.datetime.today().strftime("%B %d, %Y"))
 st.session_state.setdefault("prepared_by", "")
 st.session_state.setdefault("d5_occ_whys", [""]*5)
@@ -177,140 +164,9 @@ st.session_state.setdefault("d5_sys_whys", [""]*5)
 st.session_state.setdefault("d4_location", "")
 st.session_state.setdefault("d4_status", "")
 st.session_state.setdefault("d4_containment", "")
-
-# ---------------------------
-# D5 categories
-# ---------------------------
-occurrence_categories = {
-    "Machine / Equipment": [
-        "Mechanical failure or breakdown",
-        "Calibration issues or drift",
-        "Tooling or fixture wear or damage",
-        "Machine parameters not optimized",
-        "Improper preventive maintenance schedule",
-        "Sensor malfunction or misalignment",
-        "Process automation fault not detected",
-        "Unstable process due to poor machine setup"
-    ],
-    "Material / Component": [
-        "Wrong material or component used",
-        "Supplier provided off-spec component",
-        "Material defect not visible during inspection",
-        "Damage during storage, handling, or transport",
-        "Incorrect labeling, Missing label or lot traceability error",
-        "Material substitution without approval",
-        "Incorrect specifications or revision mismatch"
-    ],
-    "Process / Method": [
-        "Incorrect process step sequence",
-        "Critical process parameters not controlled",
-        "Work instructions unclear or missing details",
-        "Process drift over time not detected",
-        "Control plan not followed on production floor",
-        "Incorrect torque, solder, or assembly process",
-        "Outdated or missing process FMEA linkage",
-        "Inadequate process capability (Cp/Cpk below target)"
-    ],
-    "Design / Engineering": [
-        "Design not robust to real-use conditions",
-        "Tolerance stack-up issue not evaluated",
-        "Late design change not communicated to production",
-        "Incorrect or unclear drawing specification",
-        "Component placement design error (DFMEA gap)",
-        "Lack of design verification or validation testing"
-    ],
-    "Environmental / External": [
-        "Temperature or humidity out of control range",
-        "Electrostatic discharge (ESD) not controlled",
-        "Contamination or dust affecting product",
-        "Power fluctuation or interruption",
-        "External vibration or noise interference",
-        "Unstable environmental monitoring process"
-    ]
-}
-
-detection_categories = {
-    "QA / Inspection": [
-        "QA checklist incomplete or not updated",
-        "No automated inspection system in place",
-        "Manual inspection prone to human error",
-        "Inspection frequency too low to detect issue",
-        "Inspection criteria unclear or inconsistent",
-        "Measurement system not capable (GR&R issues)",
-        "Incoming inspection missed supplier issue",
-        "Final inspection missed due to sampling plan"
-    ],
-    "Validation / Process": [
-        "Process validation not updated after design/process change",
-        "Insufficient verification of new parameters or components",
-        "Design validation not complete or not representative of real conditions",
-        "Inadequate control plan coverage for potential failure modes",
-        "Lack of ongoing process monitoring (SPC / CpK tracking)",
-        "Incorrect or outdated process limits not aligned with FMEA"
-    ],
-    "FMEA / Control Plan": [
-        "Failure mode not captured in PFMEA",
-        "Detection controls missing or ineffective in PFMEA",
-        "Control plan not updated after corrective actions",
-        "FMEA not reviewed after customer complaint",
-        "Detection ranking not realistic to actual inspection capability",
-        "PFMEA and control plan not properly linked"
-    ],
-    "Test / Equipment": [
-        "Test equipment calibration overdue",
-        "Testing software parameters incorrect",
-        "Test setup does not detect this specific failure mode",
-        "Detection threshold too wide to capture failure",
-        "Test data not logged or reviewed regularly"
-    ],
-    "Systemic / Organizational": [
-        "Feedback loop from quality incidents not implemented",
-        "Lack of detection feedback in regular team meetings",
-        "Training gaps in inspection or test personnel",
-        "Quality alerts not properly communicated to operators"
-    ]
-}
-
-systemic_categories = {
-    "Management / Organization": [
-        "Inadequate leadership or supervision structure",
-        "Insufficient resource allocation to critical processes",
-        "Delayed response to known production issues",
-        "Lack of accountability or ownership of quality issues",
-        "Ineffective escalation process for recurring problems",
-        "Weak cross-functional communication between departments"
-    ],
-    "Process / Procedure": [
-        "Standard Operating Procedures (SOPs) outdated or missing",
-        "Process FMEA not reviewed regularly",
-        "Control plan not aligned with PFMEA or actual process",
-        "Lessons learned not integrated into similar processes",
-        "Inefficient document control system",
-        "Preventive maintenance procedures not standardized"
-    ],
-    "Training": [
-        "No defined training matrix or certification tracking",
-        "New hires not trained on critical control points",
-        "Training effectiveness not evaluated",
-        "Knowledge not shared between shifts or teams",
-        "Competence requirements not clearly defined"
-    ],
-    "Supplier / External": [
-        "Supplier not included in 8D or FMEA review process",
-        "Supplier corrective actions not verified for effectiveness",
-        "Inadequate incoming material audit process",
-        "Supplier process changes not communicated to customer",
-        "Long lead time for supplier quality issue closure",
-        "Supplier violation of cleanpoint"
-    ],
-    "Quality System / Feedback": [
-        "Internal audits ineffective or not completed",
-        "Quality KPI tracking not linked to root cause analysis",
-        "Ineffective use of 5-Why or other problem solving tools",
-        "Customer complaints not feeding back into design reviews",
-        "No systemic review after multiple 8Ds in same area"
-    ]
-}
+st.session_state.setdefault("occ_rc", "")
+st.session_state.setdefault("det_rc", "")
+st.session_state.setdefault("sys_rc", "")
 
 # ---------------------------
 # Helper: Suggest root cause
@@ -336,7 +192,7 @@ def suggest_root_cause(whys):
     return "Systemic issue identified from analysis"
 
 # ---------------------------
-# Helper: Render 5-Why dropdowns
+# Render 5-Why dropdowns
 # ---------------------------
 def render_whys_no_repeat(why_list, categories, label_prefix):
     for idx in range(len(why_list)):
@@ -352,6 +208,33 @@ def render_whys_no_repeat(why_list, categories, label_prefix):
         free_text = st.text_input(f"Or enter your own {label_prefix} {idx+1}", value=why_list[idx], key=f"{label_prefix}_txt_{idx}")
         if free_text.strip():
             why_list[idx] = free_text
+
+# ---------------------------
+# D5 categories
+# ---------------------------
+occurrence_categories = {
+    "Machine / Equipment": ["Mechanical failure or breakdown","Calibration issues or drift"],
+    "Material / Component": ["Wrong material or component used","Supplier provided off-spec component"],
+    "Process / Method": ["Incorrect process step sequence","Critical process parameters not controlled"],
+    "Design / Engineering": ["Design not robust to real-use conditions","Tolerance stack-up issue not evaluated"],
+    "Environmental / External": ["Temperature or humidity out of control range","Contamination or dust affecting product"]
+}
+
+detection_categories = {
+    "QA / Inspection": ["QA checklist incomplete or not updated","No automated inspection system in place"],
+    "Validation / Process": ["Process validation not updated after design/process change"],
+    "FMEA / Control Plan": ["Failure mode not captured in PFMEA"],
+    "Test / Equipment": ["Test equipment calibration overdue"],
+    "Systemic / Organizational": ["Feedback loop from quality incidents not implemented"]
+}
+
+systemic_categories = {
+    "Management / Organization": ["Inadequate leadership or supervision structure","Insufficient resource allocation"],
+    "Process / Procedure": ["Standard Operating Procedures (SOPs) outdated or missing","Process FMEA not reviewed regularly"],
+    "Training": ["No defined training matrix or certification tracking"],
+    "Supplier / External": ["Supplier not included in 8D or FMEA review process"],
+    "Quality System / Feedback": ["Internal audits ineffective or not completed"]
+}
 
 # ---------------------------
 # Render Tabs D1–D8
@@ -372,8 +255,13 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
         st.session_state[step]["answer"] = st.text_area(f"Your answer for {t[lang_key][step]}", st.session_state[step]["answer"], height=120, key=f"{step}_answer")
         st.session_state[step]["extra"] = st.text_area(f"Extra notes / observations", st.session_state[step]["extra"], height=80, key=f"{step}_extra")
 
+        if step == "D4":
+            st.session_state["d4_location"] = st.text_input(f"{t[lang_key]['Location']}", st.session_state["d4_location"])
+            st.session_state["d4_status"] = st.text_input(f"{t[lang_key]['Status']}", st.session_state["d4_status"])
+            st.session_state["d4_containment"] = st.text_area(f"{t[lang_key]['Containment_Actions']}", st.session_state["d4_containment"], height=80)
+
 # ---------------------------
-# Render D5 Why analysis
+# Render D5 5-Why Analysis
 # ---------------------------
 with tabs[4]:
     st.markdown("### D5: 5-Why Analysis")
@@ -384,11 +272,16 @@ with tabs[4]:
     st.subheader("Systemic")
     render_whys_no_repeat(st.session_state.d5_sys_whys, systemic_categories, "Systemic Why")
 
-    # Suggested root causes
-    st.markdown("**Suggested Root Causes (auto-generated)**")
-    st.text_area("Occurrence Root Cause", value=suggest_root_cause(st.session_state.d5_occ_whys), height=40, key="occ_rc")
-    st.text_area("Detection Root Cause", value=suggest_root_cause(st.session_state.d5_det_whys), height=40, key="det_rc")
-    st.text_area("Systemic Root Cause", value=suggest_root_cause(st.session_state.d5_sys_whys), height=40, key="sys_rc")
+    st.markdown("**Suggested Root Causes (editable)**")
+    st.session_state["occ_rc"] = st.text_area("Occurrence Root Cause", value=suggest_root_cause(st.session_state.d5_occ_whys), height=40, key="occ_rc_txt")
+    st.session_state["det_rc"] = st.text_area("Detection Root Cause", value=suggest_root_cause(st.session_state.d5_det_whys), height=40, key="det_rc_txt")
+    st.session_state["sys_rc"] = st.text_area("Systemic Root Cause", value=suggest_root_cause(st.session_state.d5_sys_whys), height=40, key="sys_rc_txt")
+
+# ---------------------------
+# Top inputs: Report Date / Prepared By
+# ---------------------------
+st.session_state["report_date"] = st.text_input(t[lang_key]["Report_Date"], value=st.session_state["report_date"])
+st.session_state["prepared_by"] = st.text_input(t[lang_key]["Prepared_By"], value=st.session_state["prepared_by"])
 
 # ---------------------------
 # Excel Export
@@ -398,10 +291,10 @@ def export_to_excel():
     ws = wb.active
     ws.title = "8D Report"
 
-    # Header
     ws["A1"] = "8D Report Assistant"
     ws["A1"].font = Font(size=16, bold=True)
     ws.merge_cells("A1:D1")
+
     row = 3
     ws[f"A{row}"] = "Report Date"
     ws[f"B{row}"] = st.session_state["report_date"]
@@ -410,27 +303,35 @@ def export_to_excel():
     ws[f"B{row}"] = st.session_state["prepared_by"]
     row +=2
 
-    # Each D step
     for step, _, _ in npqp_steps:
         ws[f"A{row}"] = step
         ws[f"A{row}"].font = Font(bold=True)
         row +=1
         ws[f"A{row}"] = st.session_state[step]["answer"]
+        row +=1
+        ws[f"A{row}"] = st.session_state[step]["extra"]
         row +=2
+        if step == "D4":
+            ws[f"A{row}"] = f"{t[lang_key]['Location']}: {st.session_state['d4_location']}"
+            row +=1
+            ws[f"A{row}"] = f"{t[lang_key]['Status']}: {st.session_state['d4_status']}"
+            row +=1
+            ws[f"A{row}"] = f"{t[lang_key]['Containment_Actions']}: {st.session_state['d4_containment']}"
+            row +=2
+        if step == "D5":
+            ws[f"A{row}"] = "Occurrence Why: " + ", ".join([w for w in st.session_state.d5_occ_whys if w.strip()])
+            row +=1
+            ws[f"A{row}"] = "Detection Why: " + ", ".join([w for w in st.session_state.d5_det_whys if w.strip()])
+            row +=1
+            ws[f"A{row}"] = "Systemic Why: " + ", ".join([w for w in st.session_state.d5_sys_whys if w.strip()])
+            row +=1
+            ws[f"A{row}"] = "Suggested Occurrence Root Cause: " + st.session_state["occ_rc"]
+            row +=1
+            ws[f"A{row}"] = "Suggested Detection Root Cause: " + st.session_state["det_rc"]
+            row +=1
+            ws[f"A{row}"] = "Suggested Systemic Root Cause: " + st.session_state["sys_rc"]
+            row +=2
 
-    # 5-Why
-    row +=1
-    ws[f"A{row}"] = "D5: Occurrence Why"
-    ws[f"A{row+1}"] = ", ".join([w for w in st.session_state.d5_occ_whys if w.strip()])
-    row +=3
-    ws[f"A{row}"] = "D5: Detection Why"
-    ws[f"A{row+1}"] = ", ".join([w for w in st.session_state.d5_det_whys if w.strip()])
-    row +=3
-    ws[f"A{row}"] = "D5: Systemic Why"
-    ws[f"A{row+1}"] = ", ".join([w for w in st.session_state.d5_sys_whys if w.strip()])
-    row +=3
-
-    # Save to BytesIO
     file_stream = io.BytesIO()
     wb.save(file_stream)
     file_stream.seek(0)
@@ -438,8 +339,7 @@ def export_to_excel():
 
 st.sidebar.markdown("---")
 st.sidebar.header("💾 Download Report")
-if st.sidebar.button("📥 Download Excel"):
-    excel_file = export_to_excel()
-    st.sidebar.download_button("Download XLSX", excel_file, file_name=f"8D_Report_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx")
+excel_file = export_to_excel()
+st.sidebar.download_button("📥 Download Excel", excel_file, file_name=f"8D_Report_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx")
 
 st.markdown("<p style='text-align:center; font-size:12px; color:#555555;'>End of 8D Report Assistant</p>", unsafe_allow_html=True)
