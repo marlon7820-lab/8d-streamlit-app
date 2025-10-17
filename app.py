@@ -558,3 +558,55 @@ def generate_excel():
     output = io.BytesIO()
     wb.save(output)
     return output.getvalue()
+
+# ---------------------------
+# Collect answers for Excel
+# ---------------------------
+data_rows = []
+
+# D5 whys
+occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
+det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
+sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
+occ_rc_text = suggest_root_cause(occ_whys) if occ_whys else "No occurrence whys provided yet"
+det_rc_text = suggest_root_cause(det_whys) if det_whys else "No detection whys provided yet"
+sys_rc_text = suggest_root_cause(sys_whys) if sys_whys else "No systemic whys provided yet"
+
+for step, _, _ in npqp_steps:
+    answer = st.session_state[step]["answer"]
+    extra = st.session_state[step].get("extra", "")
+    if step == "D4":
+        location = st.session_state[step].get("location", "")
+        status = st.session_state[step].get("status", "")
+        extra_text = f"Location: {location} | Status: {status}"
+        data_rows.append((step, answer, extra_text))
+    elif step == "D5":
+        data_rows.append(("D5 - Root Cause (Occurrence)", occ_rc_text, " | ".join(occ_whys)))
+        data_rows.append(("D5 - Root Cause (Detection)", det_rc_text, " | ".join(det_whys)))
+        data_rows.append(("D5 - Root Cause (Systemic)", sys_rc_text, " | ".join(sys_whys)))
+    else:
+        data_rows.append((step, answer, extra))
+
+# ---------------------------
+# Generate Excel
+# ---------------------------
+def generate_excel():
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "NPQP 8D Report"
+    # ... all existing formatting and appending code ...
+    output = io.BytesIO()
+    wb.save(output)
+    return output.getvalue()
+
+# ---------------------------
+# Sidebar XLSX download button (AFTER data_rows & generate_excel defined)
+# ---------------------------
+with st.sidebar:
+    st.markdown("---")
+    st.download_button(
+        label=f"{t[lang_key]['Download']}",
+        data=generate_excel(),
+        file_name=f"8D_Report_{st.session_state.report_date.replace(' ', '_')}.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
