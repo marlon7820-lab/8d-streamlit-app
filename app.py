@@ -86,6 +86,7 @@ lang_key = "en" if lang == "English" else "es"
 # ---------------------------
 st.sidebar.markdown("---")
 st.sidebar.header("⚙️ App Controls")
+# Reset 8D Session button
 if st.sidebar.button("🔄 Reset 8D Session"):
     preserve_keys = ["lang", "lang_key", "current_tab"]
     preserved = {k: st.session_state[k] for k in preserve_keys if k in st.session_state}
@@ -122,6 +123,9 @@ t = {
         "Occurrence_Why": "Occurrence Why",
         "Detection_Why": "Detection Why",
         "Systemic_Why": "Systemic Why",
+        "Occurrence_CM": "Occurrence Countermeasure",
+        "Detection_CM": "Detection Countermeasure",
+        "Systemic_CM": "Systemic Countermeasure",
         "Save": "💾 Save 8D Report",
         "Download": "📥 Download XLSX",
         "Training_Guidance": "Training Guidance",
@@ -148,6 +152,9 @@ t = {
         "Occurrence_Why": "Por qué Ocurrencia",
         "Detection_Why": "Por qué Detección",
         "Systemic_Why": "Por qué Sistémico",
+        "Occurrence_CM": "Contramedida Ocurrencia",
+        "Detection_CM": "Contramedida Detección",
+        "Systemic_CM": "Contramedida Sistémica",
         "Save": "💾 Guardar Informe 8D",
         "Download": "📥 Descargar XLSX",
         "Training_Guidance": "Guía de Entrenamiento",
@@ -184,6 +191,12 @@ st.session_state.setdefault("prepared_by", "")
 st.session_state.setdefault("d5_occ_whys", [""]*5)
 st.session_state.setdefault("d5_det_whys", [""]*5)
 st.session_state.setdefault("d5_sys_whys", [""]*5)
+st.session_state.setdefault("d6_occ_cm", "")
+st.session_state.setdefault("d6_det_cm", "")
+st.session_state.setdefault("d6_sys_cm", "")
+st.session_state.setdefault("d7_occ_cm", "")
+st.session_state.setdefault("d7_det_cm", "")
+st.session_state.setdefault("d7_sys_cm", "")
 st.session_state.setdefault("d4_location", "")
 st.session_state.setdefault("d4_status", "")
 st.session_state.setdefault("d4_containment", "")
@@ -310,7 +323,7 @@ systemic_categories = {
         "Supplier corrective actions not verified for effectiveness",
         "Inadequate incoming material audit process",
         "Supplier process changes not communicated to customer",
-        "Long lead time for supplier quality issue closure"
+        "Long lead time for supplier quality issue closure",
         "Supplier violation of cleanpoint"
     ],
     "Quality System / Feedback": [
@@ -364,94 +377,140 @@ def render_whys_no_repeat(why_list, categories, label_prefix):
             why_list[idx] = free_text
 
 # ---------------------------
-# Render Tabs D1–D8
+# Layout D1-D8
 # ---------------------------
-tab_labels = [f"🟢 {t[lang_key][step]}" if st.session_state[step]["answer"].strip() else f"🔴 {t[lang_key][step]}" for step, _, _ in npqp_steps]
-tabs = st.tabs(tab_labels)
+tabs = st.tabs([t[lang_key] for t in ["D1","D2","D3","D4","D5","D6","D7","D8"]])
 
-for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
-    with tabs[i]:
-        st.markdown(f"### {t[lang_key][step]}")
-        st.markdown(f"""
-        <div style=" background-color:#b3e0ff; color:black; padding:12px; border-left:5px solid #1E90FF; border-radius:6px; width:100%; font-size:14px; margin-bottom:10px;">
-        <b>{t[lang_key]['Example']}:</b> {example_dict[lang_key]}<br>
-        <b>{t[lang_key]['Training_Guidance']}:</b> {note_dict[lang_key]}
-        </div>
-        """, unsafe_allow_html=True)
-        
-        # --- D4: Safe session state example ---
-        if step == "D4":
-            # Initialize safely
-            if "d4_location" not in st.session_state: st.session_state["d4_location"] = ""
-            if "d4_status" not in st.session_state: st.session_state["d4_status"] = ""
-            if "d4_containment" not in st.session_state: st.session_state["d4_containment"] = ""
-            
-            d4_location_options = ["", "Warehouse", "Production Line", "Inspection Area", "Customer Site"]
-            selected_location = st.selectbox(
-                t[lang_key]["Location"],
-                options=d4_location_options,
-                index=d4_location_options.index(st.session_state["d4_location"]) if st.session_state["d4_location"] in d4_location_options else 0,
-                key="d4_location_selectbox"
-            )
-            st.session_state["d4_location"] = selected_location
-            st.session_state["d4_status"] = st.text_input(t[lang_key]["Status"], value=st.session_state["d4_status"], key="d4_status_input")
-            st.session_state["d4_containment"] = st.text_area(t[lang_key]["Containment_Actions"], value=st.session_state["d4_containment"], key="d4_containment_area")
-        
-        # --- D5: Render 5-Whys dropdowns ---
-        if step == "D5":
-            st.markdown("#### Occurrence Whys")
-            render_whys_no_repeat(st.session_state["d5_occ_whys"], occurrence_categories, t[lang_key]["Occurrence_Why"])
-            st.markdown("#### Detection Whys")
-            render_whys_no_repeat(st.session_state["d5_det_whys"], detection_categories, t[lang_key]["Detection_Why"])
-            st.markdown("#### Systemic Whys")
-            render_whys_no_repeat(st.session_state["d5_sys_whys"], systemic_categories, t[lang_key]["Systemic_Why"])
-            st.markdown("**Suggested Root Cause:**")
-            st.markdown(suggest_root_cause(st.session_state["d5_occ_whys"] + st.session_state["d5_det_whys"] + st.session_state["d5_sys_whys"]))
-        
-        # --- D6 & D7: permanent corrective actions & confirmation ---
-        if step in ["D6", "D7"]:
-            st.session_state[step]["answer"] = st.text_area(f"{t[lang_key][step]}:", value=st.session_state[step]["answer"], height=120)
-        
-        # Other steps: free text input
-        if step not in ["D4", "D5", "D6", "D7"]:
-            st.session_state[step]["answer"] = st.text_area(f"{t[lang_key][step]}:", value=st.session_state[step]["answer"], height=120)
+# D1-D3 example implementation
+with tabs[0]:
+    st.text_area("Customer Concern / Descripción del Cliente", height=100, key="D1_answer")
+with tabs[1]:
+    st.text_area("Similar Parts Considerations", height=100, key="D2_answer")
+with tabs[2]:
+    st.text_area("Initial Analysis / Análisis Inicial", height=100, key="D3_answer")
+with tabs[3]:
+    st.text_area(t[lang_key]["Containment_Actions"], height=100, key="d4_containment")
+    st.text_input(t[lang_key]["Location"], key="d4_location")
+    st.text_input(t[lang_key]["Status"], key="d4_status")
+
+# D5 5-Whys
+with tabs[4]:
+    st.header("Occurrence Root Cause")
+    render_whys_no_repeat(st.session_state.d5_occ_whys, occurrence_categories, "Occurrence Why")
+    st.header("Detection Root Cause")
+    render_whys_no_repeat(st.session_state.d5_det_whys, detection_categories, "Detection Why")
+    st.header("Systemic Root Cause")
+    render_whys_no_repeat(st.session_state.d5_sys_whys, systemic_categories, "Systemic Why")
+    st.subheader("Suggested Root Causes")
+    st.text_area("Occurrence Root Cause Suggestion", value=suggest_root_cause(st.session_state.d5_occ_whys), height=60)
+    st.text_area("Detection Root Cause Suggestion", value=suggest_root_cause(st.session_state.d5_det_whys), height=60)
+    st.text_area("Systemic Root Cause Suggestion", value=suggest_root_cause(st.session_state.d5_sys_whys), height=60)
 
 # ---------------------------
-# Save & Download 8D Report as XLSX
+# D6: Countermeasures
 # ---------------------------
-if st.button(t[lang_key]["Save"]):
+with tabs[5]:
+    st.text_area(t[lang_key]["Occurrence_CM"], key="d6_occ_cm", height=80)
+    st.text_area(t[lang_key]["Detection_CM"], key="d6_det_cm", height=80)
+    st.text_area(t[lang_key]["Systemic_CM"], key="d6_sys_cm", height=80)
+
+# ---------------------------
+# D7: Countermeasure Confirmation
+# ---------------------------
+with tabs[6]:
+    st.text_area(t[lang_key]["Occurrence_CM"], key="d7_occ_cm", height=80)
+    st.text_area(t[lang_key]["Detection_CM"], key="d7_det_cm", height=80)
+    st.text_area(t[lang_key]["Systemic_CM"], key="d7_sys_cm", height=80)
+
+# ---------------------------
+# D8 placeholder
+# ---------------------------
+with tabs[7]:
+    st.text_area("Follow-up Activities / Lecciones Aprendidas", height=150, key="D8_answer")
+
+# ---------------------------
+# Save / Download XLSX
+# ---------------------------
+def save_xlsx():
     wb = Workbook()
     ws = wb.active
     ws.title = "8D Report"
-    
-    ws["A1"] = f"8D Report - {st.session_state.get('report_date', '')}"
-    ws["A2"] = f"Prepared By: {st.session_state.get('prepared_by','')}"
-    
-    row_idx = 4
-    for step, _, _ in npqp_steps:
-        ws[f"A{row_idx}"] = t[lang_key][step]
-        ws[f"B{row_idx}"] = st.session_state[step]["answer"]
-        row_idx += 2
-    
-    # D4 extra info
-    ws[f"A{row_idx}"] = t[lang_key]["Location"]
-    ws[f"B{row_idx}"] = st.session_state["d4_location"]
-    row_idx += 1
-    ws[f"A{row_idx}"] = t[lang_key]["Status"]
-    ws[f"B{row_idx}"] = st.session_state["d4_status"]
-    row_idx += 1
-    ws[f"A{row_idx}"] = t[lang_key]["Containment_Actions"]
-    ws[f"B{row_idx}"] = st.session_state["d4_containment"]
-    
-    file_stream = io.BytesIO()
-    wb.save(file_stream)
-    file_stream.seek(0)
-    
-    st.download_button(
-        label=t[lang_key]["Download"],
-        data=file_stream,
-        file_name=f"8D_Report_{st.session_state.get('report_date','')}.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    )
 
+    # Styles
+    header_font = Font(bold=True, color="FFFFFF")
+    header_fill = PatternFill("solid", fgColor="1E90FF")
+    border = Border(left=Side(style="thin"), right=Side(style="thin"), top=Side(style="thin"), bottom=Side(style="thin"))
+
+    # Write basic info
+    ws["A1"] = "Report Date"
+    ws["B1"] = st.session_state.report_date
+    ws["A2"] = "Prepared By"
+    ws["B2"] = st.session_state.prepared_by
+
+    # Write D1-D8 answers
+    row = 4
+    for step, _, _ in npqp_steps:
+        ws[f"A{row}"] = step
+        ws[f"B{row}"] = st.session_state.get(step, {}).get("answer", "")
+        row += 2
+
+    # Write D4 containment
+    ws[f"A{row}"] = "D4 Containment Actions"
+    ws[f"B{row}"] = st.session_state.d4_containment
+    row += 1
+    ws[f"A{row}"] = "D4 Location"
+    ws[f"B{row}"] = st.session_state.d4_location
+    row += 1
+    ws[f"A{row}"] = "D4 Status"
+    ws[f"B{row}"] = st.session_state.d4_status
+    row += 2
+
+    # Write D5 Root Causes
+    ws[f"A{row}"] = "D5 Occurrence Root Causes"
+    ws[f"B{row}"] = "; ".join([w for w in st.session_state.d5_occ_whys if w])
+    row += 1
+    ws[f"A{row}"] = "D5 Detection Root Causes"
+    ws[f"B{row}"] = "; ".join([w for w in st.session_state.d5_det_whys if w])
+    row += 1
+    ws[f"A{row}"] = "D5 Systemic Root Causes"
+    ws[f"B{row}"] = "; ".join([w for w in st.session_state.d5_sys_whys if w])
+    row += 2
+
+    # Write D6/D7 Countermeasures
+    ws[f"A{row}"] = "D6 Occurrence Countermeasure"
+    ws[f"B{row}"] = st.session_state.d6_occ_cm
+    row += 1
+    ws[f"A{row}"] = "D6 Detection Countermeasure"
+    ws[f"B{row}"] = st.session_state.d6_det_cm
+    row += 1
+    ws[f"A{row}"] = "D6 Systemic Countermeasure"
+    ws[f"B{row}"] = st.session_state.d6_sys_cm
+    row += 2
+    ws[f"A{row}"] = "D7 Occurrence Countermeasure Confirmation"
+    ws[f"B{row}"] = st.session_state.d7_occ_cm
+    row += 1
+    ws[f"A{row}"] = "D7 Detection Countermeasure Confirmation"
+    ws[f"B{row}"] = st.session_state.d7_det_cm
+    row += 1
+    ws[f"A{row}"] = "D7 Systemic Countermeasure Confirmation"
+    ws[f"B{row}"] = st.session_state.d7_sys_cm
+    row += 2
+
+    # Adjust column width
+    for col in ["A", "B"]:
+        ws.column_dimensions[col].width = 50
+
+    # Save to BytesIO and return
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+    return output
+
+if st.button(t[lang_key]["Download"]):
+    xlsx_data = save_xlsx()
+    st.download_button("Download Excel", data=xlsx_data, file_name="8D_Report.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+
+# ---------------------------
+# End of app
+# ---------------------------
 st.markdown("<p style='text-align:center; font-size:12px; color:#555555;'>End of 8D Report Assistant</p>", unsafe_allow_html=True)
