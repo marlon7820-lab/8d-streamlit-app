@@ -131,7 +131,8 @@ st.session_state.setdefault("d4_containment", "")
 # ---------------------------
 # Reset 8D Report (single button)
 # ---------------------------
-if st.sidebar.button("🧹 Reset 8D Report"):
+reset_clicked = st.sidebar.button("🧹 Reset 8D Report")
+if reset_clicked:
     preserve_keys = ["lang", "lang_key"]
     preserved = {k: st.session_state[k] for k in preserve_keys if k in st.session_state}
     for key in list(st.session_state.keys()):
@@ -139,6 +140,12 @@ if st.sidebar.button("🧹 Reset 8D Report"):
             del st.session_state[key]
     for k, v in preserved.items():
         st.session_state[k] = v
+    # Use st.session_state to trigger rerun safely
+    st.session_state["__reset_trigger__"] = True
+
+# Trigger rerun safely outside button logic
+if st.session_state.get("__reset_trigger__", False):
+    st.session_state["__reset_trigger__"] = False
     st.experimental_rerun()
 
 # ---------------------------
