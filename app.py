@@ -17,8 +17,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# App styles
-# ---------------------------
+# App styles - updated for desktop selectbox outline
 st.markdown("""
 <style>
 .stApp {background: linear-gradient(to right, #f0f8ff, #e6f2ff); color: #000000 !important;}
@@ -28,18 +27,17 @@ textarea {background-color: #ffffff !important; border: 1px solid #1E90FF !impor
 .css-1d391kg {color: #1E90FF !important; font-weight: bold !important;}
 button[kind="primary"] {background-color: #87AFC7 !important; color: white !important; font-weight: bold;}
 
-/* Outline all selectboxes more reliably */
-div[data-baseweb="select"] > div > div > div > select {
+/* Outline all Streamlit widget containers (works on desktop) */
+div.stSelectbox, div.stTextInput, div.stTextArea {
     border: 2px solid #1E90FF !important;
     border-radius: 5px !important;
+    padding: 5px !important;
     background-color: #ffffff !important;
-    padding: 5px;
-    color: #000000 !important;
     transition: border 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
 }
 
 /* Hover effect */
-div[data-baseweb="select"] > div > div > div > select:hover {
+div.stSelectbox:hover, div.stTextInput:hover, div.stTextArea:hover {
     border: 2px solid #104E8B !important; /* slightly darker blue */
     box-shadow: 0 0 5px #1E90FF;
 }
