@@ -399,7 +399,14 @@ font-size:14px;
 line-height:1.5;
 ">
 <b>{t[lang_key]['Training_Guidance']}:</b> {note_text}<br><br>
-💡 <b>{t[lang_key]['Example']}:</b> {example_text} </div> """, unsafe_allow_html=True) st.session_state[step]["answer"] = st.text_area( "Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}"
+💡 <b>{t[lang_key]['Example']}:</b> {example_text}
+</div>
+""", unsafe_allow_html=True)
+
+st.session_state[step]["answer"] = st.text_area(
+    "Your Answer",
+    value=st.session_state[step]["answer"],
+    key=f"ans_{step}"
 )
 
         # D4 Nissan-style
