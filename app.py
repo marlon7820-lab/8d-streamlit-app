@@ -378,14 +378,17 @@ def render_whys_no_repeat(why_list, categories, label_prefix):
 # ---------------------------
 # Render Tabs D1–D8
 # ---------------------------
-tab_labels = [f"🟢 {t[lang_key][step]}" if st.session_state[step]["answer"].strip() else f"🔴 {t[lang_key][step]}" for step, _, _ in npqp_steps]
+tab_labels = [
+    f"🟢 {t[lang_key][step]}" if st.session_state[step]["answer"].strip() else f"🔴 {t[lang_key][step]}"
+    for step, _, _ in npqp_steps
+]
 tabs = st.tabs(tab_labels)
 
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     with tabs[i]:
         st.markdown(f"### {t[lang_key][step]}")
         st.markdown(f"""
-        <div style=" background-color:#b3e0ff; color:black; padding:12px; border-left:5px solid #1E90FF; border-radius:6px; width:100%; font-size:14px; line-height:1.5; ">
+        <div style="background-color:#b3e0ff; color:black; padding:12px; border-left:5px solid #1E90FF; border-radius:6px; width:100%; font-size:14px; line-height:1.5;">
         <b>{t[lang_key]['Training_Guidance']}:</b> {note_dict[lang_key]}<br><br>
         💡 <b>{t[lang_key]['Example']}:</b> {example_dict[lang_key]}
         </div>
@@ -415,15 +418,15 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
         elif step == "D5":
             st.markdown("#### Occurrence Analysis")
             render_whys_no_repeat(st.session_state.d5_occ_whys, occurrence_categories, t[lang_key]['Occurrence_Why'])
-            if st.button("➕ Add another Occurrence Why"):
+            if st.button("➕ Add another Occurrence Why", key="add_occ"):
                 st.session_state.d5_occ_whys.append("")
             st.markdown("#### Detection Analysis")
             render_whys_no_repeat(st.session_state.d5_det_whys, detection_categories, t[lang_key]['Detection_Why'])
-            if st.button("➕ Add another Detection Why"):
+            if st.button("➕ Add another Detection Why", key="add_det"):
                 st.session_state.d5_det_whys.append("")
             st.markdown("#### Systemic Analysis")
             render_whys_no_repeat(st.session_state.d5_sys_whys, systemic_categories, t[lang_key]['Systemic_Why'])
-            if st.button("➕ Add another Systemic Why"):
+            if st.button("➕ Add another Systemic Why", key="add_sys"):
                 st.session_state.d5_sys_whys.append("")
             # Dynamic Root Causes
             occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
@@ -433,80 +436,58 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             st.text_area(f"{t[lang_key]['Root_Cause_Det']}", value=suggest_root_cause(det_whys) if det_whys else "No detection whys provided yet", height=80, disabled=True)
             st.text_area(f"{t[lang_key]['Root_Cause_Sys']}", value=suggest_root_cause(sys_whys) if sys_whys else "No systemic whys provided yet", height=80, disabled=True)
 
-       # --------------------------- 
-# D6: Permanent Corrective Actions (separate answers for Occ/Det/Sys) 
-# ---------------------------
-for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
-    ...
+        # D6: Permanent Corrective Actions
+        elif step == "D6":
+            st.session_state[step].setdefault("occ_answer", "")
+            st.session_state[step].setdefault("det_answer", "")
+            st.session_state[step].setdefault("sys_answer", "")
 
-if step == "D6":
-with tabs[i]:
-st.markdown(f"### {t[lang_key][step]}")
-note_text = note_dict[lang_key]
-example_text = example_dict[lang_key]
-st.markdown(f"""
-<div style="
-background-color:#b3e0ff;
-color:black;
-padding:12px;
-border-left:5px solid #1E90FF;
-border-radius:6px;
-width:100%;
-font-size:14px;
-line-height:1.5;
-">
-<b>{t[lang_key]['Training_Guidance']}:</b> {note_text}<br><br>
-💡 <b>{t[lang_key]['Example']}:</b> {example_text} </div> """, unsafe_allow_html=True)
+            st.session_state[step]["occ_answer"] = st.text_area(
+                "Corrective Actions for Occurrence Root Cause",
+                value=st.session_state[step]["occ_answer"],
+                key="d6_occ"
+            )
+            st.session_state[step]["det_answer"] = st.text_area(
+                "Corrective Actions for Detection Root Cause",
+                value=st.session_state[step]["det_answer"],
+                key="d6_det"
+            )
+            st.session_state[step]["sys_answer"] = st.text_area(
+                "Corrective Actions for Systemic Root Cause",
+                value=st.session_state[step]["sys_answer"],
+                key="d6_sys"
+            )
 
-st.session_state[step].setdefault("occ_answer", "") st.session_state[step].setdefault("det_answer", "") st.session_state[step].setdefault("sys_answer", "")
+        # D7: Countermeasure Confirmation
+        elif step == "D7":
+            st.session_state[step].setdefault("occ_answer", "")
+            st.session_state[step].setdefault("det_answer", "")
+            st.session_state[step].setdefault("sys_answer", "")
 
-st.session_state[step]["occ_answer"] = st.text_area( "Corrective Actions for Occurrence Root Cause", value=st.session_state[step]["occ_answer"],
-key="d6_occ"
-)
-st.session_state[step]["det_answer"] = st.text_area( "Corrective Actions for Detection Root Cause", value=st.session_state[step]["det_answer"],
-key="d6_det"
-)
-st.session_state[step]["sys_answer"] = st.text_area( "Corrective Actions for Systemic Root Cause", value=st.session_state[step]["sys_answer"],
-key="d6_sys"
-)
+            st.session_state[step]["occ_answer"] = st.text_area(
+                "Countermeasure Confirmation for Occurrence Root Cause",
+                value=st.session_state[step]["occ_answer"],
+                key="d7_occ"
+            )
+            st.session_state[step]["det_answer"] = st.text_area(
+                "Countermeasure Confirmation for Detection Root Cause",
+                value=st.session_state[step]["det_answer"],
+                key="d7_det"
+            )
+            st.session_state[step]["sys_answer"] = st.text_area(
+                "Countermeasure Confirmation for Systemic Root Cause",
+                value=st.session_state[step]["sys_answer"],
+                key="d7_sys"
+            )
 
-# ---------------------------
-# D7: Countermeasure Confirmation (separate answers for Occ/Det/Sys) # --------------------------- for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
-if step == "D7":
-with tabs[i]:
-st.markdown(f"### {t[lang_key][step]}")
-note_text = note_dict[lang_key]
-example_text = example_dict[lang_key]
-st.markdown(f"""
-<div style="
-background-color:#b3e0ff;
-color:black;
-padding:12px;
-border-left:5px solid #1E90FF;
-border-radius:6px;
-width:100%;
-font-size:14px;
-line-height:1.5;
-">
-<b>{t[lang_key]['Training_Guidance']}:</b> {note_text}<br><br>
-💡 <b>{t[lang_key]['Example']}:</b> {example_text} </div> """, unsafe_allow_html=True)
+        # D8: Follow-up Activities / Lessons Learned
+        elif step == "D8":
+            st.session_state[step]["answer"] = st.text_area(
+                "Your Answer",
+                value=st.session_state[step]["answer"],
+                key=f"ans_{step}"
+            )
 
-st.session_state[step].setdefault("occ_answer", "") st.session_state[step].setdefault("det_answer", "") st.session_state[step].setdefault("sys_answer", "")
-
-st.session_state[step]["occ_answer"] = st.text_area( "Countermeasure Confirmation for Occurrence Root Cause", value=st.session_state[step]["occ_answer"],
-key="d7_occ"
-)
-st.session_state[step]["det_answer"] = st.text_area( "Countermeasure Confirmation for Detection Root Cause", value=st.session_state[step]["det_answer"],
-key="d7_det"
-)
-st.session_state[step]["sys_answer"] = st.text_area( "Countermeasure Confirmation for Systemic Root Cause", value=st.session_state[step]["sys_answer"],
-key="d7_sys"
-)
-
-# ---------------------------
-# D8: Follow-up Activities / Lessons Learned # --------------------------- for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
-if step == "D8":
-with tabs[i]:
 st.markdown(f"### {t[lang_key][step]}")
 note_text = note_dict[lang_key]
 example_text = example_dict[lang_key]
