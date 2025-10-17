@@ -348,7 +348,7 @@ def render_whys_no_repeat(why_list, categories, label_prefix):
 # ---------------------------
 # Tabs
 # ---------------------------
-tabs = st.tabs([t[lang_key] for t in [t["en"]["D1"], t["en"]["D2"], t["en"]["D3"], t["en"]["D4"], t["en"]["D5"], t["en"]["D6"], t["en"]["D7"], t["en"]["D8"]]])
+tabs = st.tabs([step[lang_key] for step in [t["en"]["D1"], t["en"]["D2"], t["en"]["D3"], t["en"]["D4"], t["en"]["D5"], t["en"]["D6"], t["en"]["D7"], t["en"]["D8"]]])
 D1_tab, D2_tab, D3_tab, D4_tab, D5_tab, D6_tab, D7_tab, D8_tab = tabs
 
 # ---------------------------
