@@ -51,7 +51,7 @@ if st.session_state.get("_reset_8d_session", False):
     if "_reset_8d_session" in st.session_state:
         st.session_state["_reset_8d_session"] = False
 
-    st.experimental_rerun()
+    st.rerun()
 
 
 # ---------------------------
