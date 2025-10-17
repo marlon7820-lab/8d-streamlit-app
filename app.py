@@ -588,19 +588,61 @@ for step, _, _ in npqp_steps:
         data_rows.append((step, answer, extra))
 
 # ---------------------------
-# Generate Excel
+# Generate Excel function
 # ---------------------------
 def generate_excel():
     wb = Workbook()
     ws = wb.active
     ws.title = "NPQP 8D Report"
-    # ... all existing formatting and appending code ...
+    thin = Side(border_style="thin", color="000000")
+    border = Border(left=thin, right=thin, top=thin, bottom=thin)
+
+    # Add logo if exists
+    if os.path.exists("logo.png"):
+        try:
+            img = XLImage("logo.png")
+            img.width = 140
+            img.height = 40
+            ws.add_image(img, "A1")
+        except:
+            pass
+
+    ws.merge_cells(start_row=3, start_column=1, end_row=3, end_column=3)
+    ws.cell(row=3, column=1, value="📋 8D Report Assistant").font = Font(bold=True, size=14)
+    ws.append([t[lang_key]['Report_Date'], st.session_state.report_date])
+    ws.append([t[lang_key]['Prepared_By'], st.session_state.prepared_by])
+    ws.append([])
+
+    # Header row
+    header_row = ws.max_row + 1
+    headers = ["Step", "Answer", "Extra / Notes"]
+    fill = PatternFill(start_color="1E90FF", end_color="1E90FF", fill_type="solid")
+    for c_idx, h in enumerate(headers, start=1):
+        cell = ws.cell(row=header_row, column=c_idx, value=h)
+        cell.fill = fill
+        cell.font = Font(bold=True, color="FFFFFF")
+        cell.alignment = Alignment(horizontal="center", vertical="center")
+        cell.border = border
+
+    # Append step answers
+    for step, answer, extra in data_rows:
+        ws.append([t[lang_key].get(step, step), answer, extra])
+        r = ws.max_row
+        for c in range(1, 4):
+            cell = ws.cell(row=r, column=c)
+            cell.alignment = Alignment(wrap_text=True, vertical="top")
+            cell.font = Font(bold=True if c == 2 else False)
+            cell.border = border
+
+    for col in range(1, 4):
+        ws.column_dimensions[get_column_letter(col)].width = 40
+
     output = io.BytesIO()
     wb.save(output)
     return output.getvalue()
 
 # ---------------------------
-# Sidebar XLSX download button (AFTER data_rows & generate_excel defined)
+# XLSX Download Button (AFTER everything above)
 # ---------------------------
 with st.sidebar:
     st.markdown("---")
