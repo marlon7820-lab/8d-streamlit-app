@@ -86,32 +86,20 @@ lang_key = "en" if lang == "English" else "es"
 # ---------------------------
 st.sidebar.markdown("---")
 st.sidebar.header("⚙️ App Controls")
-# Reset 8D Session button
 if st.sidebar.button("🔄 Reset 8D Session"):
-    # Preserve essential keys
     preserve_keys = ["lang", "lang_key", "current_tab"]
     preserved = {k: st.session_state[k] for k in preserve_keys if k in st.session_state}
-
-    # Clear all other keys
     for key in list(st.session_state.keys()):
         if key not in preserve_keys:
             del st.session_state[key]
-
-    # Restore preserved keys
     for k, v in preserved.items():
         st.session_state[k] = v
-
-    # Set a dedicated reset flag
     st.session_state["_reset_8d_session"] = True
-
-    # Stop further execution; the app will rerun safely
     st.stop()
 
-# At the very top of your app (after imports), handle the reset flag safely:
 if st.session_state.get("_reset_8d_session", False):
     st.session_state["_reset_8d_session"] = False
     st.experimental_rerun()
-
 
 # ---------------------------
 # Language dictionary
@@ -141,8 +129,7 @@ t = {
         "FMEA_Failure": "FMEA Failure Occurrence",
         "Location": "Material Location",
         "Status": "Activity Status",
-        "Containment_Actions": "Containment Actions",
-        "Corrective_Action": "Corrective Action"
+        "Containment_Actions": "Containment Actions"
     },
     "es": {
         "D1": "D1: Detalles de la preocupación",
@@ -168,8 +155,7 @@ t = {
         "FMEA_Failure": "Ocurrencia de falla FMEA",
         "Location": "Ubicación del material",
         "Status": "Estado de la actividad",
-        "Containment_Actions": "Acciones de contención",
-        "Corrective_Action": "Acción Correctiva"
+        "Containment_Actions": "Acciones de contención"
     }
 }
 
@@ -193,22 +179,14 @@ npqp_steps = [
 for step, _, _ in npqp_steps:
     if step not in st.session_state:
         st.session_state[step] = {"answer": "", "extra": ""}
-
 st.session_state.setdefault("report_date", datetime.datetime.today().strftime("%B %d, %Y"))
 st.session_state.setdefault("prepared_by", "")
 st.session_state.setdefault("d5_occ_whys", [""]*5)
 st.session_state.setdefault("d5_det_whys", [""]*5)
 st.session_state.setdefault("d5_sys_whys", [""]*5)
-
-# Initialize D4 safely
 st.session_state.setdefault("d4_location", "")
 st.session_state.setdefault("d4_status", "")
 st.session_state.setdefault("d4_containment", "")
-
-# Initialize D6/D7 corrective actions safely
-for step in ["D6", "D7"]:
-    if "actions" not in st.session_state[step]:
-        st.session_state[step]["actions"] = ["", "", ""]  # 3 action slots for example
 
 # ---------------------------
 # D5 categories
@@ -386,45 +364,94 @@ def render_whys_no_repeat(why_list, categories, label_prefix):
             why_list[idx] = free_text
 
 # ---------------------------
-# Tabs for 8D steps
+# Render Tabs D1–D8
 # ---------------------------
-tabs = st.tabs([t[lang_key][step] for step, _, _ in npqp_steps])
+tab_labels = [f"🟢 {t[lang_key][step]}" if st.session_state[step]["answer"].strip() else f"🔴 {t[lang_key][step]}" for step, _, _ in npqp_steps]
+tabs = st.tabs(tab_labels)
 
-for tab_idx, (step, guidance, example) in enumerate(npqp_steps):
-    with tabs[tab_idx]:
-        st.info(f"{guidance[lang_key]}\n\n**Example:** {example[lang_key]}")
-        st.text_area(f"{t[lang_key]['Corrective_Action']} ({step})", key=f"{step}_answer", height=100)
-
-        # Additional fields for D4
+for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
+    with tabs[i]:
+        st.markdown(f"### {t[lang_key][step]}")
+        st.markdown(f"""
+        <div style=" background-color:#b3e0ff; color:black; padding:12px; border-left:5px solid #1E90FF; border-radius:6px; width:100%; font-size:14px; margin-bottom:10px;">
+        <b>{t[lang_key]['Example']}:</b> {example_dict[lang_key]}<br>
+        <b>{t[lang_key]['Training_Guidance']}:</b> {note_dict[lang_key]}
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # --- D4: Safe session state example ---
         if step == "D4":
-            st.session_state["d4_location"] = st.selectbox(
+            # Initialize safely
+            if "d4_location" not in st.session_state: st.session_state["d4_location"] = ""
+            if "d4_status" not in st.session_state: st.session_state["d4_status"] = ""
+            if "d4_containment" not in st.session_state: st.session_state["d4_containment"] = ""
+            
+            d4_location_options = ["", "Warehouse", "Production Line", "Inspection Area", "Customer Site"]
+            selected_location = st.selectbox(
                 t[lang_key]["Location"],
-                ["", "Warehouse", "Production Line", "Inspection Area", "Customer Site"],
-                index=["", "Warehouse", "Production Line", "Inspection Area", "Customer Site"].index(st.session_state["d4_location"]),
-                key="d4_location"
+                options=d4_location_options,
+                index=d4_location_options.index(st.session_state["d4_location"]) if st.session_state["d4_location"] in d4_location_options else 0,
+                key="d4_location_selectbox"
             )
-            st.session_state["d4_status"] = st.text_input(t[lang_key]["Status"], value=st.session_state["d4_status"], key="d4_status")
-            st.session_state["d4_containment"] = st.text_area(t[lang_key]["Containment_Actions"], value=st.session_state["d4_containment"], key="d4_containment")
-
-        # D6/D7 actions
-        if step in ["D6", "D7"]:
-            for act_idx in range(3):
-                st.session_state[step]["actions"][act_idx] = st.text_input(
-                    f"{t[lang_key]['Corrective_Action']} {act_idx+1}",
-                    value=st.session_state[step]["actions"][act_idx],
-                    key=f"{step}_action_{act_idx}"
-                )
-
-        # D5 whys
+            st.session_state["d4_location"] = selected_location
+            st.session_state["d4_status"] = st.text_input(t[lang_key]["Status"], value=st.session_state["d4_status"], key="d4_status_input")
+            st.session_state["d4_containment"] = st.text_area(t[lang_key]["Containment_Actions"], value=st.session_state["d4_containment"], key="d4_containment_area")
+        
+        # --- D5: Render 5-Whys dropdowns ---
         if step == "D5":
-            st.subheader("Occurrence Root Cause Analysis")
-            render_whys_no_repeat(st.session_state.d5_occ_whys, occurrence_categories, "Occurrence Why")
-            st.subheader("Detection Root Cause Analysis")
-            render_whys_no_repeat(st.session_state.d5_det_whys, detection_categories, "Detection Why")
-            st.subheader("Systemic Root Cause Analysis")
-            render_whys_no_repeat(st.session_state.d5_sys_whys, systemic_categories, "Systemic Why")
-            st.markdown(f"**Suggested Root Cause (Occurrence):** {suggest_root_cause(st.session_state.d5_occ_whys)}")
-            st.markdown(f"**Suggested Root Cause (Detection):** {suggest_root_cause(st.session_state.d5_det_whys)}")
-            st.markdown(f"**Suggested Root Cause (Systemic):** {suggest_root_cause(st.session_state.d5_sys_whys)}")
+            st.markdown("#### Occurrence Whys")
+            render_whys_no_repeat(st.session_state["d5_occ_whys"], occurrence_categories, t[lang_key]["Occurrence_Why"])
+            st.markdown("#### Detection Whys")
+            render_whys_no_repeat(st.session_state["d5_det_whys"], detection_categories, t[lang_key]["Detection_Why"])
+            st.markdown("#### Systemic Whys")
+            render_whys_no_repeat(st.session_state["d5_sys_whys"], systemic_categories, t[lang_key]["Systemic_Why"])
+            st.markdown("**Suggested Root Cause:**")
+            st.markdown(suggest_root_cause(st.session_state["d5_occ_whys"] + st.session_state["d5_det_whys"] + st.session_state["d5_sys_whys"]))
+        
+        # --- D6 & D7: permanent corrective actions & confirmation ---
+        if step in ["D6", "D7"]:
+            st.session_state[step]["answer"] = st.text_area(f"{t[lang_key][step]}:", value=st.session_state[step]["answer"], height=120)
+        
+        # Other steps: free text input
+        if step not in ["D4", "D5", "D6", "D7"]:
+            st.session_state[step]["answer"] = st.text_area(f"{t[lang_key][step]}:", value=st.session_state[step]["answer"], height=120)
+
+# ---------------------------
+# Save & Download 8D Report as XLSX
+# ---------------------------
+if st.button(t[lang_key]["Save"]):
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "8D Report"
+    
+    ws["A1"] = f"8D Report - {st.session_state.get('report_date', '')}"
+    ws["A2"] = f"Prepared By: {st.session_state.get('prepared_by','')}"
+    
+    row_idx = 4
+    for step, _, _ in npqp_steps:
+        ws[f"A{row_idx}"] = t[lang_key][step]
+        ws[f"B{row_idx}"] = st.session_state[step]["answer"]
+        row_idx += 2
+    
+    # D4 extra info
+    ws[f"A{row_idx}"] = t[lang_key]["Location"]
+    ws[f"B{row_idx}"] = st.session_state["d4_location"]
+    row_idx += 1
+    ws[f"A{row_idx}"] = t[lang_key]["Status"]
+    ws[f"B{row_idx}"] = st.session_state["d4_status"]
+    row_idx += 1
+    ws[f"A{row_idx}"] = t[lang_key]["Containment_Actions"]
+    ws[f"B{row_idx}"] = st.session_state["d4_containment"]
+    
+    file_stream = io.BytesIO()
+    wb.save(file_stream)
+    file_stream.seek(0)
+    
+    st.download_button(
+        label=t[lang_key]["Download"],
+        data=file_stream,
+        file_name=f"8D_Report_{st.session_state.get('report_date','')}.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
 
 st.markdown("<p style='text-align:center; font-size:12px; color:#555555;'>End of 8D Report Assistant</p>", unsafe_allow_html=True)
