@@ -433,7 +433,12 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             st.text_area(f"{t[lang_key]['Root_Cause_Det']}", value=suggest_root_cause(det_whys) if det_whys else "No detection whys provided yet", height=80, disabled=True)
             st.text_area(f"{t[lang_key]['Root_Cause_Sys']}", value=suggest_root_cause(sys_whys) if sys_whys else "No systemic whys provided yet", height=80, disabled=True)
 
-        --------------------------- # D6: Permanent Corrective Actions (separate answers for Occ/Det/Sys) # --------------------------- for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
+       # --------------------------- 
+# D6: Permanent Corrective Actions (separate answers for Occ/Det/Sys) 
+# ---------------------------
+for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
+    ...
+
 if step == "D6":
 with tabs[i]:
 st.markdown(f"### {t[lang_key][step]}")
