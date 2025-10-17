@@ -388,11 +388,19 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     with tabs[i]:
         st.markdown(f"### {t[lang_key][step]}")
         st.markdown(f"""
-        <div style="background-color:#b3e0ff; color:black; padding:12px; border-left:5px solid #1E90FF; border-radius:6px; width:100%; font-size:14px; line-height:1.5;">
-        <b>{t[lang_key]['Training_Guidance']}:</b> {note_dict[lang_key]}<br><br>
-        💡 <b>{t[lang_key]['Example']}:</b> {example_dict[lang_key]}
-        </div>
-        """, unsafe_allow_html=True)
+<div style="
+background-color:#b3e0ff;
+color:black;
+padding:12px;
+border-left:5px solid #1E90FF;
+border-radius:6px;
+width:100%;
+font-size:14px;
+line-height:1.5;
+">
+<b>{t[lang_key]['Training_Guidance']}:</b> {note_text}<br><br>
+💡 <b>{t[lang_key]['Example']}:</b> {example_text} </div> """, unsafe_allow_html=True) st.session_state[step]["answer"] = st.text_area( "Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}"
+)
 
         # D4 Nissan-style
         if step == "D4":
