@@ -87,12 +87,13 @@ lang_key = "en" if lang == "English" else "es"
 # ---------------------------
 st.sidebar.markdown("---")
 st.sidebar.header("⚙️ App Controls")
+# Reset 8D Session button
 if st.sidebar.button("🔄 Reset 8D Session"):
-    # Preserve only essential keys
+    # Preserve essential keys
     preserve_keys = ["lang", "lang_key", "current_tab"]
     preserved = {k: st.session_state[k] for k in preserve_keys if k in st.session_state}
 
-    # Clear everything else
+    # Clear all other keys
     for key in list(st.session_state.keys()):
         if key not in preserve_keys:
             del st.session_state[key]
@@ -101,8 +102,17 @@ if st.sidebar.button("🔄 Reset 8D Session"):
     for k, v in preserved.items():
         st.session_state[k] = v
 
-    # Rerun the app immediately
+    # Set a dedicated reset flag
+    st.session_state["_reset_8d_session"] = True
+
+    # Stop further execution; the app will rerun safely
+    st.stop()
+
+# At the very top of your app (after imports), handle the reset flag safely:
+if st.session_state.get("_reset_8d_session", False):
+    st.session_state["_reset_8d_session"] = False
     st.experimental_rerun()
+
 
 # ---------------------------
 # Language dictionary
