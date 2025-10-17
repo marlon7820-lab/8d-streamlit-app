@@ -32,27 +32,33 @@ button[kind="primary"] {background-color: #87AFC7 !important; color: white !impo
 """, unsafe_allow_html=True)
 
 # ---------------------------
-# Reset Session check (safe, no KeyError)
+# Safe unified reset check (no KeyError / no AttributeError)
 # ---------------------------
+# If a reset has been requested (flag set by either reset button), clear session state
+# while preserving language and other keys listed in preserve_keys.
 if st.session_state.get("_reset_8d_session", False):
     preserve_keys = ["lang", "lang_key", "current_tab"]
+    # gather currently existing preserved values
     preserved = {k: st.session_state[k] for k in preserve_keys if k in st.session_state}
 
-    # Clear everything except preserved values
+    # delete all keys except the ones to preserve and the reset flag itself
     for key in list(st.session_state.keys()):
         if key not in preserve_keys and key != "_reset_8d_session":
-            del st.session_state[key]
+            try:
+                del st.session_state[key]
+            except Exception:
+                # if deletion fails for any key, ignore and continue
+                pass
 
-    # Restore preserved values
+    # restore preserved values
     for k, v in preserved.items():
         st.session_state[k] = v
 
-    # Safely unset the flag only if it exists
-    if "_reset_8d_session" in st.session_state:
-        st.session_state["_reset_8d_session"] = False
+    # unset the reset flag safely
+    st.session_state["_reset_8d_session"] = False
 
+    # rerun using modern API
     st.rerun()
-
 
 # ---------------------------
 # Main title
