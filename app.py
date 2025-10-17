@@ -653,9 +653,12 @@ st.download_button(
 # ---------------------------
 with st.sidebar:
     st.markdown("## Backup / Restore / Reset")
+    
     # JSON Backup
     def generate_json():
-        save_data = {k: v for k, v in st.session_state.items() if not k.startswith("_")}
+        # Only keep user-filled data, include D6/D7 subfields
+        relevant_keys = ["report_date", "prepared_by"] + [step for step in st.session_state if step.startswith("D")]
+        save_data = {k: st.session_state[k] for k in relevant_keys}
         return json.dumps(save_data, indent=4)
 
     st.download_button(
