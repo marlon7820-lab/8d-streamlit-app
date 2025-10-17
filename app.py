@@ -33,16 +33,20 @@ button[kind="primary"] {background-color: #87AFC7 !important; color: white !impo
 # ---------------------------
 # Reset Session check (safe)
 # ---------------------------
-if st.session_state.get("_reset_8d_session", False):
+def reset_session():
     preserve_keys = ["lang", "lang_key", "current_tab"]
     preserved = {k: st.session_state[k] for k in preserve_keys if k in st.session_state}
     for key in list(st.session_state.keys()):
-        if key not in preserve_keys and key != "_reset_8d_session":
+        if key not in preserve_keys:
             del st.session_state[key]
     for k, v in preserved.items():
         st.session_state[k] = v
     st.session_state["_reset_8d_session"] = False
-    st.experimental_rerun()
+
+if st.session_state.get("_reset_8d_session", False):
+    reset_session()
+    # Stop the script and let Streamlit reload safely
+    st.stop()
 
 # ---------------------------
 # Main title
