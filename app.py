@@ -32,18 +32,27 @@ button[kind="primary"] {background-color: #87AFC7 !important; color: white !impo
 """, unsafe_allow_html=True)
 
 # ---------------------------
-# Reset Session check (safe)
+# Reset Session check (safe, no KeyError)
 # ---------------------------
-if "_reset_8d_session" in st.session_state:
+if st.session_state.get("_reset_8d_session", False):
     preserve_keys = ["lang", "lang_key", "current_tab"]
     preserved = {k: st.session_state[k] for k in preserve_keys if k in st.session_state}
+
+    # Clear everything except preserved values
     for key in list(st.session_state.keys()):
-        if key not in preserve_keys:
+        if key not in preserve_keys and key != "_reset_8d_session":
             del st.session_state[key]
+
+    # Restore preserved values
     for k, v in preserved.items():
         st.session_state[k] = v
-    del st.session_state["_reset_8d_session"]
+
+    # Safely unset the flag only if it exists
+    if "_reset_8d_session" in st.session_state:
+        st.session_state["_reset_8d_session"] = False
+
     st.experimental_rerun()
+
 
 # ---------------------------
 # Main title
