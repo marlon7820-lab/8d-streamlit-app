@@ -215,18 +215,18 @@ occurrence_categories = {
         "Unstable process due to poor machine setup"
     ],
     "Material / Component": [
-        "Wrong material or component delivered",
+        "Wrong material or component used",
         "Supplier provided off-spec component",
         "Material defect not visible during inspection",
         "Damage during storage, handling, or transport",
-        "Incorrect labeling or lot traceability error",
+        "Incorrect labeling, Missing label or lot traceability error",
         "Material substitution without approval",
         "Incorrect specifications or revision mismatch"
     ],
     "Process / Method": [
         "Incorrect process step sequence",
         "Critical process parameters not controlled",
-        "Work instructions unclear or missing detail",
+        "Work instructions unclear or missing details",
         "Process drift over time not detected",
         "Control plan not followed on production floor",
         "Incorrect torque, solder, or assembly process",
@@ -310,7 +310,7 @@ systemic_categories = {
         "Inefficient document control system",
         "Preventive maintenance procedures not standardized"
     ],
-    "Training / People": [
+    "Training": [
         "No defined training matrix or certification tracking",
         "New hires not trained on critical control points",
         "Training effectiveness not evaluated",
@@ -323,11 +323,12 @@ systemic_categories = {
         "Inadequate incoming material audit process",
         "Supplier process changes not communicated to customer",
         "Long lead time for supplier quality issue closure"
+        "Supplier violation of cleanpoint"
     ],
     "Quality System / Feedback": [
         "Internal audits ineffective or not completed",
         "Quality KPI tracking not linked to root cause analysis",
-        "Ineffective use of 5-Why or fishbone tools",
+        "Ineffective use of 5-Why or other problem solving tools",
         "Customer complaints not feeding back into design reviews",
         "No systemic review after multiple 8Ds in same area"
     ]
@@ -339,22 +340,22 @@ systemic_categories = {
 def suggest_root_cause(whys):
     text = " ".join(whys).lower()
     if any(word in text for word in ["training", "knowledge", "human error"]):
-        return "Lack of proper training / knowledge gap"
+        return "The root cause may be attributed to insufficient training or a knowledge gap"
     if any(word in text for word in ["equipment", "tool", "machine", "fixture"]):
-        return "Equipment, tooling, or maintenance issue"
+        return "The root cause may be attributed to equipment, tooling, or maintenance issue"
     if any(word in text for word in ["procedure", "process", "standard"]):
-        return "Procedure or process not followed or inadequate"
+        return "The root cause may be attributed to procedure or process not followed or inadequate"
     if any(word in text for word in ["communication", "information", "handover"]):
-        return "Poor communication or unclear information flow"
+        return "The root cause may be attributed to poor communication or unclear information flow"
     if any(word in text for word in ["material", "supplier", "component", "part"]):
-        return "Material, supplier, or logistics-related issue"
+        return "The root cause may be attributed to material, supplier, or logistics-related issue"
     if any(word in text for word in ["design", "specification", "drawing"]):
-        return "Design or engineering issue"
+        return "The root cause may be attributed to design or engineering issue"
     if any(word in text for word in ["management", "supervision", "resource"]):
-        return "Management or resource-related issue"
+        return "The root cause may be attributed management or resource-related issue"
     if any(word in text for word in ["temperature", "humidity", "contamination", "environment"]):
-        return "Environmental or external factor"
-    return "Systemic issue identified from analysis"
+        return "The root cause may be attributed to environmental or external factor"
+        return "Systemic issue identified from analysis"
 
 # ---------------------------
 # Helper: Render 5-Why dropdowns without repeating selections
