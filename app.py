@@ -183,31 +183,29 @@ npqp_steps = [
     ("D7", {"en":"Verify that corrective actions effectively resolve the issue.", "es":"Verifique que las acciones correctivas resuelvan efectivamente el problema."}, {"en":"Functional tests on corrected amplifiers.", "es":"Pruebas funcionales en amplificadores corregidos."}),
     ("D8", {"en":"Document lessons learned, update standards, FMEAs.", "es":"Documente lecciones aprendidas, actualice estándares, FMEAs."}, {"en":"Update SOPs, PFMEA, work instructions.", "es":"Actualizar SOPs, PFMEA, instrucciones de trabajo."})
 ]
-
 # ---------------------------
 # Initialize session state
 # ---------------------------
 for step, _, _ in npqp_steps:
     if step not in st.session_state:
         st.session_state[step] = {"answer": "", "extra": ""}
+
 st.session_state.setdefault("report_date", datetime.datetime.today().strftime("%B %d, %Y"))
 st.session_state.setdefault("prepared_by", "")
+
+# D5 5-Why analysis
 st.session_state.setdefault("d5_occ_whys", [""]*5)
 st.session_state.setdefault("d5_det_whys", [""]*5)
 st.session_state.setdefault("d5_sys_whys", [""]*5)
+
+# D4 selections
 st.session_state.setdefault("d4_location", "")
 st.session_state.setdefault("d4_status", "")
 st.session_state.setdefault("d4_containment", "")
+
 # ---------------------------
-# Initialize D6/D7 root cause notes
-# ---------------------------
-st.session_state.setdefault("d6_occ_rc_note", "")
-st.session_state.setdefault("d6_det_rc_note", "")
-st.session_state.setdefault("d6_sys_rc_note", "")
-st.session_state.setdefault("d7_occ_rc_note", "")
-st.session_state.setdefault("d7_det_rc_note", "")
-st.session_state.setdefault("d7_sys_rc_note", "")
 # Initialize D6/D7 root cause note text boxes
+# ---------------------------
 for step in ["D6", "D7"]:
     st.session_state.setdefault(f"{step.lower()}_occ_rc_note", "")
     st.session_state.setdefault(f"{step.lower()}_det_rc_note", "")
