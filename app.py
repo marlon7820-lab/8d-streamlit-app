@@ -113,7 +113,6 @@ if st.session_state.get("_reset_8d_session", False):
     st.session_state["_reset_8d_session"] = False
     st.experimental_rerun()
 
-
 # ---------------------------
 # Language dictionary
 # ---------------------------
@@ -442,10 +441,11 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             )
 
 # ---------------------------
-# Sidebar Backup/Restore/Reset
+# Sidebar: Backup/Restore/Reset + Download XLSX
 # ---------------------------
 with st.sidebar:
     st.markdown("## Backup / Restore / Reset")
+    
     # JSON Backup
     def generate_json():
         save_data = {k: v for k, v in st.session_state.items() if not k.startswith("_")}
@@ -468,6 +468,17 @@ with st.sidebar:
             st.success("✅ Session restored from JSON!")
         except Exception as e:
             st.error(f"Error restoring JSON: {e}")
+
+    st.markdown("---")
+    st.markdown("## Download 8D Report (XLSX)")
+
+    # XLSX download button (all info and format intact)
+    st.download_button(
+        label=f"{t[lang_key]['Download']}",
+        data=generate_excel(),
+        file_name=f"8D_Report_{st.session_state.report_date.replace(' ', '_')}.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
 
 # ---------------------------
 # Collect answers for Excel
