@@ -58,7 +58,7 @@ if st.sidebar.button("🔄 Reset 8D Session"):
     for k, v in preserved.items():
         st.session_state[k] = v
     
-    st.experimental_rerun()  # Safe rerun
+    st.rerun()  # Safe rerun
 
 # ---------------------------
 # Language dictionary
@@ -374,7 +374,7 @@ for i, (step, guidance, example) in enumerate(npqp_steps):
 st.sidebar.markdown("---")
 st.sidebar.header("Report Metadata")
 st.sidebar.text_input(f"{t[lang_key]['Prepared_By']}", value=st.session_state["prepared_by"], key="prepared_by")
-st.sidebar.date_input(f"{t[lang_key]['Report_Date']}", value=datetime.datetime.today(), key="report_date")
+st.sidebar.date_input(f"{t[lang_key]['Report_Date']}", value=datetime.datetime.today().date(), key="report_date")
 
 # ---------------------------
 # Generate Excel
