@@ -356,7 +356,7 @@ def suggest_root_cause(whys):
         return "The root cause may be attributed management or resource-related issue"
     if any(word in text for word in ["temperature", "humidity", "contamination", "environment"]):
         return "The root cause may be attributed to environmental or external factor"
-    return "Systemic issue identified from analysis"
+    return "The root cause may be attributed to systemic issue identified from analysis"
 
 # ---------------------------
 # Helper: Render 5-Why dropdowns without repeating selections
@@ -379,8 +379,8 @@ def render_whys_no_repeat(why_list, categories, label_prefix):
 # ---------------------------
 # Layout D1-D8
 # ---------------------------
-tabs = st.tabs([t[lang_key] for t in ["D1","D2","D3","D4","D5","D6","D7","D8"]])
 
+tabs = st.tabs([t[lang_key][step] for step in ["D1","D2","D3","D4","D5","D6","D7","D8"]])
 # D1-D3 example implementation
 with tabs[0]:
     st.text_area("Customer Concern / Descripción del Cliente", height=100, key="D1_answer")
