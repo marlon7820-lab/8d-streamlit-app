@@ -32,25 +32,18 @@ button[kind="primary"] {background-color: #87AFC7 !important; color: white !impo
 """, unsafe_allow_html=True)
 
 # ---------------------------
-# Reset Session check (safe, no KeyError)
+# Reset Session check
 # ---------------------------
 if st.session_state.get("_reset_8d_session", False):
     preserve_keys = ["lang", "lang_key", "current_tab"]
     preserved = {k: st.session_state[k] for k in preserve_keys if k in st.session_state}
-
-    # Clear everything except preserved values
     for key in list(st.session_state.keys()):
         if key not in preserve_keys and key != "_reset_8d_session":
             del st.session_state[key]
-
-    # Restore preserved values
     for k, v in preserved.items():
         st.session_state[k] = v
-
-    # Safely unset the flag only if it exists
     if "_reset_8d_session" in st.session_state:
         st.session_state["_reset_8d_session"] = False
-
     st.rerun()
 
 # ---------------------------
@@ -76,38 +69,22 @@ Version {version_number} | Last updated: {last_updated}
 st.sidebar.title("8D Report Assistant")
 st.sidebar.markdown("---")
 st.sidebar.header("Settings")
-
-# Language selection
 lang = st.sidebar.selectbox("Select Language / Seleccionar Idioma", ["English", "Español"])
 lang_key = "en" if lang == "English" else "es"
 
-# ---------------------------
-# Sidebar: Smart Session Reset Button
-# ---------------------------
 st.sidebar.markdown("---")
 st.sidebar.header("⚙️ App Controls")
-# Reset 8D Session button
 if st.sidebar.button("🔄 Reset 8D Session"):
-    # Preserve essential keys
     preserve_keys = ["lang", "lang_key", "current_tab"]
     preserved = {k: st.session_state[k] for k in preserve_keys if k in st.session_state}
-
-    # Clear all other keys
     for key in list(st.session_state.keys()):
         if key not in preserve_keys:
             del st.session_state[key]
-
-    # Restore preserved keys
     for k, v in preserved.items():
         st.session_state[k] = v
-
-    # Set a dedicated reset flag
     st.session_state["_reset_8d_session"] = True
-
-    # Stop further execution; the app will rerun safely
     st.stop()
 
-# At the very top of your app (after imports), handle the reset flag safely:
 if st.session_state.get("_reset_8d_session", False):
     st.session_state["_reset_8d_session"] = False
     st.experimental_rerun()
@@ -183,6 +160,7 @@ npqp_steps = [
     ("D7", {"en":"Verify that corrective actions effectively resolve the issue.", "es":"Verifique que las acciones correctivas resuelvan efectivamente el problema."}, {"en":"Functional tests on corrected amplifiers.", "es":"Pruebas funcionales en amplificadores corregidos."}),
     ("D8", {"en":"Document lessons learned, update standards, FMEAs.", "es":"Documente lecciones aprendidas, actualice estándares, FMEAs."}, {"en":"Update SOPs, PFMEA, work instructions.", "es":"Actualizar SOPs, PFMEA, instrucciones de trabajo."})
 ]
+
 # ---------------------------
 # Initialize session state
 # ---------------------------
@@ -193,249 +171,89 @@ for step, _, _ in npqp_steps:
 st.session_state.setdefault("report_date", datetime.datetime.today().strftime("%B %d, %Y"))
 st.session_state.setdefault("prepared_by", "")
 
-# D5 5-Why analysis
 st.session_state.setdefault("d5_occ_whys", [""]*5)
 st.session_state.setdefault("d5_det_whys", [""]*5)
 st.session_state.setdefault("d5_sys_whys", [""]*5)
 
-# D4 selections
 st.session_state.setdefault("d4_location", "")
 st.session_state.setdefault("d4_status", "")
 st.session_state.setdefault("d4_containment", "")
 
-# ---------------------------
-# Initialize D6/D7 root cause note text boxes
-# ---------------------------
+# D6/D7 root cause notes
 for step in ["D6", "D7"]:
     st.session_state.setdefault(f"{step.lower()}_occ_rc_note", "")
     st.session_state.setdefault(f"{step.lower()}_det_rc_note", "")
     st.session_state.setdefault(f"{step.lower()}_sys_rc_note", "")
 
 # ---------------------------
-# Helper: Suggest root cause based on whys
+# D5 helper functions
 # ---------------------------
-def suggest_root_cause(whys):
-    text = " ".join(whys).lower()
-    if any(word in text for word in ["training", "knowledge", "human error"]):
-        return "The root cause may be attributed to insufficient training or a knowledge gap"
-    if any(word in text for word in ["equipment", "tool", "machine", "fixture"]):
-        return "The root cause may be attributed to equipment, tooling, or maintenance issue"
-    if any(word in text for word in ["procedure", "process", "standard"]):
-        return "The root cause may be attributed to procedure or process not followed or inadequate"
-    if any(word in text for word in ["communication", "information", "handover"]):
-        return "The root cause may be attributed to poor communication or unclear information flow"
-    if any(word in text for word in ["material", "supplier", "component", "part"]):
-        return "The root cause may be attributed to material, supplier, or logistics-related issue"
-    if any(word in text for word in ["design", "specification", "drawing"]):
-        return "The root cause may be attributed to design or engineering issue"
-    if any(word in text for word in ["management", "supervision", "resource"]):
-        return "The root cause may be attributed management or resource-related issue"
-    if any(word in text for word in ["temperature", "humidity", "contamination", "environment"]):
-        return "The root cause may be attributed to environmental or external factor"
-    return "Systemic issue identified from analysis"
+occurrence_categories = { ... } # keep your original categories
+detection_categories = { ... }
+systemic_categories = { ... }
+
+def render_whys_no_repeat(whys_list, categories, label):
+    for i in range(5):
+        whys_list[i] = st.text_input(f"{label} Why {i+1}", value=whys_list[i])
 
 # ---------------------------
-# Helper: Render 5-Why dropdowns without repeating selections
+# Tabs rendering
 # ---------------------------
-def render_whys_no_repeat(why_list, categories, label_prefix):
-    for idx in range(len(why_list)):
-        selected_so_far = [w for i, w in enumerate(why_list) if w.strip() and i != idx]
-        options = [""] + [f"{cat}: {item}" for cat, items in categories.items() for item in items if f"{cat}: {item}" not in selected_so_far]
-        current_val = why_list[idx] if why_list[idx] in options else ""
-        why_list[idx] = st.selectbox(
-            f"{label_prefix} {idx+1}",
-            options,
-            index=options.index(current_val) if current_val in options else 0,
-            key=f"{label_prefix}_{idx}"
-        )
-        free_text = st.text_input(f"Or enter your own {label_prefix} {idx+1}", value=why_list[idx], key=f"{label_prefix}_txt_{idx}")
-        if free_text.strip():
-            why_list[idx] = free_text
+tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs(
+    [t[lang_key]["D1"], t[lang_key]["D2"], t[lang_key]["D3"], t[lang_key]["D4"], t[lang_key]["D5"],
+     t[lang_key]["D6"], t[lang_key]["D7"], t[lang_key]["D8"]]
+)
 
-# ---------------------------
-# Render Tabs D1–D8
-# ---------------------------
-tab_labels = [f"🟢 {t[lang_key][step]}" if st.session_state[step]["answer"].strip() else f"🔴 {t[lang_key][step]}" for step, _, _ in npqp_steps]
-tabs = st.tabs(tab_labels)
+with tab5:
+    st.subheader(t[lang_key]["D5"])
+    st.text("Occurrence Root Cause Analysis (5-Why)")
+    render_whys_no_repeat(st.session_state.d5_occ_whys, occurrence_categories, t[lang_key]["Occurrence_Why"])
+    st.text("Detection Root Cause Analysis (5-Why)")
+    render_whys_no_repeat(st.session_state.d5_det_whys, detection_categories, t[lang_key]["Detection_Why"])
+    st.text("Systemic Root Cause Analysis (5-Why)")
+    render_whys_no_repeat(st.session_state.d5_sys_whys, systemic_categories, t[lang_key]["Systemic_Why"])
 
-for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
-    with tabs[i]:
-        st.markdown(f"### {t[lang_key][step]}")
-        st.markdown(f"""
-        <div style=" background-color:#b3e0ff; color:black; padding:12px; border-left:5px solid #1E90FF; border-radius:6px; width:100%; font-size:14px; line-height:1.5; ">
-        <b>{t[lang_key]['Training_Guidance']}:</b> {note_dict[lang_key]}<br><br>
-        💡 <b>{t[lang_key]['Example']}:</b> {example_dict[lang_key]}
-        </div>
-        """, unsafe_allow_html=True)
+with tab6:
+    st.subheader(t[lang_key]["D6"])
+    st.text("Occurrence Root Cause Note")
+    st.session_state.d6_occ_rc_note = st.text_area("Occurrence RC Note", value=st.session_state.d6_occ_rc_note)
+    st.text("Detection Root Cause Note")
+    st.session_state.d6_det_rc_note = st.text_area("Detection RC Note", value=st.session_state.d6_det_rc_note)
+    st.text("Systemic Root Cause Note")
+    st.session_state.d6_sys_rc_note = st.text_area("Systemic RC Note", value=st.session_state.d6_sys_rc_note)
 
-        # D4 Nissan-style
-        if step == "D4":
-            st.session_state[step]["location"] = st.selectbox(
-                "Location of Material",
-                ["", "Work in Progress", "Stores Stock", "Warehouse Stock", "Service Parts", "Other"],
-                index=0,
-                key="d4_location"
-            )
-            st.session_state[step]["status"] = st.selectbox(
-                "Status of Activities",
-                ["", "Pending", "In Progress", "Completed", "Other"],
-                index=0,
-                key="d4_status"
-            )
-            st.session_state[step]["answer"] = st.text_area(
-                "Containment Actions / Notes",
-                value=st.session_state[step]["answer"],
-                key=f"ans_{step}"
-            )
-
-        # D5 5-Why
-        elif step == "D5":
-            st.markdown("#### Occurrence Analysis")
-            render_whys_no_repeat(st.session_state.d5_occ_whys, occurrence_categories, t[lang_key]['Occurrence_Why'])
-            if st.button("➕ Add another Occurrence Why"):
-                st.session_state.d5_occ_whys.append("")
-            st.markdown("#### Detection Analysis")
-            render_whys_no_repeat(st.session_state.d5_det_whys, detection_categories, t[lang_key]['Detection_Why'])
-            if st.button("➕ Add another Detection Why"):
-                st.session_state.d5_det_whys.append("")
-            st.markdown("#### Systemic Analysis")
-            render_whys_no_repeat(st.session_state.d5_sys_whys, systemic_categories, t[lang_key]['Systemic_Why'])
-            if st.button("➕ Add another Systemic Why"):
-                st.session_state.d5_sys_whys.append("")
-            # Dynamic Root Causes (disabled)
-            occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
-            det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
-            sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
-            st.text_area(f"{t[lang_key]['Root_Cause_Occ']}", value=suggest_root_cause(occ_whys) if occ_whys else "No occurrence whys provided yet", height=80, disabled=True)
-            st.text_area(f"{t[lang_key]['Root_Cause_Det']}", value=suggest_root_cause(det_whys) if det_whys else "No detection whys provided yet", height=80, disabled=True)
-            st.text_area(f"{t[lang_key]['Root_Cause_Sys']}", value=suggest_root_cause(sys_whys) if sys_whys else "No systemic whys provided yet", height=80, disabled=True)
-
-        # D6–D7: Normal text areas + editable Root Cause notes
-        elif step in ["D6", "D7"]:
-            st.session_state[step]["answer"] = st.text_area(
-                "Your Answer",
-                value=st.session_state[step]["answer"],
-                key=f"ans_{step}"
-            )
-
-            st.markdown("### Root Cause Notes")
-            st.session_state[f"{step.lower()}_occ_rc_note"] = st.text_area(
-                f"Occurrence Root Cause Note ({step})",
-                value=st.session_state[f"{step.lower()}_occ_rc_note"],
-                height=80
-            )
-            st.session_state[f"{step.lower()}_det_rc_note"] = st.text_area(
-                f"Detection Root Cause Note ({step})",
-                value=st.session_state[f"{step.lower()}_det_rc_note"],
-                height=80
-            )
-            st.session_state[f"{step.lower()}_sys_rc_note"] = st.text_area(
-                f"Systemic Root Cause Note ({step})",
-                value=st.session_state[f"{step.lower()}_sys_rc_note"],
-                height=80
-            )
-
-        # D1-D3, D8 normal text areas
-        else:
-            st.session_state[step]["answer"] = st.text_area(
-                "Your Answer",
-                value=st.session_state[step]["answer"],
-                key=f"ans_{step}"
-            )
+with tab7:
+    st.subheader(t[lang_key]["D7"])
+    st.text("Occurrence Root Cause Note")
+    st.session_state.d7_occ_rc_note = st.text_area("Occurrence RC Note", value=st.session_state.d7_occ_rc_note)
+    st.text("Detection Root Cause Note")
+    st.session_state.d7_det_rc_note = st.text_area("Detection RC Note", value=st.session_state.d7_det_rc_note)
+    st.text("Systemic Root Cause Note")
+    st.session_state.d7_sys_rc_note = st.text_area("Systemic RC Note", value=st.session_state.d7_sys_rc_note)
 
 # ---------------------------
-# Collect answers for Excel
+# Excel export function
 # ---------------------------
-data_rows = []
-
-# D5 whys
-occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
-det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
-sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
-occ_rc_text = suggest_root_cause(occ_whys) if occ_whys else "No occurrence whys provided yet"
-det_rc_text = suggest_root_cause(det_whys) if det_whys else "No detection whys provided yet"
-sys_rc_text = suggest_root_cause(sys_whys) if sys_whys else "No systemic whys provided yet"
-
-for step, _, _ in npqp_steps:
-    answer = st.session_state[step]["answer"]
-    extra = st.session_state[step].get("extra", "")
-    if step == "D4":
-        location = st.session_state[step].get("location", "")
-        status = st.session_state[step].get("status", "")
-        extra_text = f"Location: {location} | Status: {status}"
-        data_rows.append((step, answer, extra_text))
-    elif step == "D5":
-        data_rows.append(("D5 - Root Cause (Occurrence)", occ_rc_text, " | ".join(occ_whys)))
-        data_rows.append(("D5 - Root Cause (Detection)", det_rc_text, " | ".join(det_whys)))
-        data_rows.append(("D5 - Root Cause (Systemic)", sys_rc_text, " | ".join(sys_whys)))
-    elif step in ["D6", "D7"]:
-        occ_note = st.session_state[f"{step.lower()}_occ_rc_note"]
-        det_note = st.session_state[f"{step.lower()}_det_rc_note"]
-        sys_note = st.session_state[f"{step.lower()}_sys_rc_note"]
-        data_rows.append((f"{step} - Root Cause (Occurrence)", occ_note, ""))
-        data_rows.append((f"{step} - Root Cause (Detection)", det_note, ""))
-        data_rows.append((f"{step} - Root Cause (Systemic)", sys_note, ""))
-        data_rows.append((step, answer, extra))
-    else:
-        data_rows.append((step, answer, extra))
-
-# ---------------------------
-# Generate Excel
-# ---------------------------
-def generate_excel():
+def export_excel():
     wb = Workbook()
     ws = wb.active
-    ws.title = "NPQP 8D Report"
-    thin = Side(border_style="thin", color="000000")
-    border = Border(left=thin, right=thin, top=thin, bottom=thin)
+    ws.title = "8D Report"
+    ws["A1"] = "8D Report"
+    ws["A2"] = f"Report Date: {st.session_state.report_date}"
+    ws["A3"] = f"Prepared By: {st.session_state.prepared_by}"
+    # Insert other D1-D8 contents
+    ws["A5"] = "D5 Occurrence Why"
+    for i, why in enumerate(st.session_state.d5_occ_whys):
+        ws[f"A{6+i}"] = why
+    ws["B5"] = "D6 Occ RC Note"
+    ws["B6"] = st.session_state.d6_occ_rc_note
+    ws["C5"] = "D7 Occ RC Note"
+    ws["C6"] = st.session_state.d7_occ_rc_note
+    buffer = io.BytesIO()
+    wb.save(buffer)
+    buffer.seek(0)
+    return buffer
 
-    # Add logo
-    if os.path.exists("logo.png"):
-        try:
-            img = XLImage("logo.png")
-            img.width = 140
-            img.height = 40
-            ws.add_image(img, "A1")
-        except:
-            pass
+st.download_button(label=t[lang_key]["Download"], data=export_excel(), file_name="8D_Report.xlsx")
 
-    ws.merge_cells(start_row=3, start_column=1, end_row=3, end_column=3)
-    ws.cell(row=3, column=1, value="📋 8D Report Assistant").font = Font(bold=True, size=14)
-    ws.append([t[lang_key]['Report_Date'], st.session_state.report_date])
-    ws.append([t[lang_key]['Prepared_By'], st.session_state.prepared_by])
-    ws.append([])
-
-    # Header row
-    header_row = ws.max_row + 1
-    headers = ["Step", "Answer", "Extra / Notes"]
-    fill = PatternFill(start_color="1E90FF", end_color="1E90FF", fill_type="solid")
-    for c_idx, h in enumerate(headers, start=1):
-        cell = ws.cell(row=header_row, column=c_idx, value=h)
-        cell.fill = fill
-        cell.font = Font(bold=True, color="FFFFFF")
-        cell.alignment = Alignment(horizontal="center", vertical="center")
-        cell.border = border
-
-    # Append step answers
-    for step, answer, extra in data_rows:
-        ws.append([t[lang_key].get(step, step), answer, extra])
-        r = ws.max_row
-        for c in range(1, 4):
-            cell = ws.cell(row=r, column=c)
-            cell.alignment = Alignment(wrap_text=True, vertical="top")
-            cell.font = Font(bold=True if c == 2 else False)
-            cell.border = border
-
-    for col in range(1, 4):
-        ws.column_dimensions[get_column_letter(col)].width = 40
-
-    output = io.BytesIO()
-    wb.save(output)
-    return output.getvalue()
-
-st.download_button(
-    label=f"{t[lang_key]['Download']}",
-    data=generate_excel(),
-    file_name=f"8D_Report_{st.session_state.report_date.replace(' ', '_')}.xlsx",
-    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-)
+st.markdown("<p style='text-align:center; font-size:12px; color:#555555;'>End of 8D Report Assistant</p>", unsafe_allow_html=True)
