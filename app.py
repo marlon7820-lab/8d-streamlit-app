@@ -32,27 +32,26 @@ button[kind="primary"] {background-color: #87AFC7 !important; color: white !impo
 """, unsafe_allow_html=True)
 
 # ---------------------------
-# Reset Session check (safe, no KeyError)
+# Reset Session check
 # ---------------------------
 if st.session_state.get("_reset_8d_session", False):
     preserve_keys = ["lang", "lang_key", "current_tab"]
     preserved = {k: st.session_state[k] for k in preserve_keys if k in st.session_state}
+
     for key in list(st.session_state.keys()):
         if key not in preserve_keys and key != "_reset_8d_session":
             del st.session_state[key]
+
     for k, v in preserved.items():
         st.session_state[k] = v
+
     st.session_state["_reset_8d_session"] = False
     st.rerun()
 
 # ---------------------------
-# Main title
+# Main title & version info
 # ---------------------------
 st.markdown("<h1 style='text-align: center; color: #1E90FF;'>📋 8D Report Assistant</h1>", unsafe_allow_html=True)
-
-# ---------------------------
-# Version info
-# ---------------------------
 version_number = "v1.1.0"
 last_updated = "October 17, 2025"
 st.markdown(f"""
@@ -63,7 +62,7 @@ Version {version_number} | Last updated: {last_updated}
 """, unsafe_allow_html=True)
 
 # ---------------------------
-# Sidebar: Language selection & reset
+# Sidebar: Language & Reset
 # ---------------------------
 st.sidebar.title("8D Report Assistant")
 st.sidebar.markdown("---")
@@ -71,9 +70,6 @@ st.sidebar.header("Settings")
 lang = st.sidebar.selectbox("Select Language / Seleccionar Idioma", ["English", "Español"])
 lang_key = "en" if lang == "English" else "es"
 
-# ---------------------------
-# Sidebar: Smart Session Reset Button
-# ---------------------------
 st.sidebar.markdown("---")
 st.sidebar.header("⚙️ App Controls")
 if st.sidebar.button("🔄 Reset 8D Session"):
@@ -86,9 +82,6 @@ if st.sidebar.button("🔄 Reset 8D Session"):
         st.session_state[k] = v
     st.session_state["_reset_8d_session"] = True
     st.stop()
-if st.session_state.get("_reset_8d_session", False):
-    st.session_state["_reset_8d_session"] = False
-    st.experimental_rerun()
 
 # ---------------------------
 # Language dictionary
@@ -149,7 +142,7 @@ t = {
 }
 
 # ---------------------------
-# NPQP 8D steps with examples
+# NPQP steps
 # ---------------------------
 npqp_steps = [
     ("D1", {"en":"Describe the customer concerns clearly.", "es":"Describa claramente las preocupaciones del cliente."}, {"en":"Customer reported static noise in amplifier during end-of-line test.", "es":"El cliente reportó ruido estático en el amplificador durante la prueba final."}),
@@ -163,7 +156,7 @@ npqp_steps = [
 ]
 
 # ---------------------------
-# Initialize session state
+# Session state init
 # ---------------------------
 for step, _, _ in npqp_steps:
     if step not in st.session_state:
@@ -178,19 +171,12 @@ st.session_state.setdefault("d4_status", "")
 st.session_state.setdefault("d4_containment", "")
 
 # ---------------------------
+# [KEEP YOUR occurrence_categories, detection_categories, systemic_categories, suggest_root_cause, render_whys_no_repeat functions here]
 # ---------------------------
-# [KEEP ALL YOUR D5/5-WHY FUNCTIONS, CATEGORIES, render_whys_no_repeat] 
-# ---------------------------
-# Occurrence, Detection, Systemic categories, suggest_root_cause, render_whys_no_repeat
-# ---------------------------
+# [KEEP YOUR full D1-D8 tabs logic here exactly as in your last working app]
 
 # ---------------------------
-# ---------------------------
-# [KEEP ALL YOUR TABS D1–D8 LOGIC]
-# ---------------------------
-
-# ---------------------------
-# 1️⃣ Collect answers for Excel BEFORE defining generate_excel()
+# Collect answers for Excel
 # ---------------------------
 data_rows = []
 for step, _, _ in npqp_steps:
@@ -215,7 +201,7 @@ for step, _, _ in npqp_steps:
         data_rows.append((step, answer, extra))
 
 # ---------------------------
-# 2️⃣ Define generate_excel() after data_rows exists
+# Generate Excel
 # ---------------------------
 def generate_excel():
     wb = Workbook()
@@ -224,7 +210,6 @@ def generate_excel():
     thin = Side(border_style="thin", color="000000")
     border = Border(left=thin, right=thin, top=thin, bottom=thin)
 
-    # Add logo if exists
     if os.path.exists("logo.png"):
         try:
             img = XLImage("logo.png")
@@ -267,7 +252,7 @@ def generate_excel():
     return output.getvalue()
 
 # ---------------------------
-# 3️⃣ Download button now safe
+# Download Excel button
 # ---------------------------
 st.sidebar.download_button(
     label=f"{t[lang_key]['Download']}",
@@ -290,6 +275,7 @@ with st.sidebar:
         file_name=f"8D_Report_Backup_{st.session_state.report_date.replace(' ', '_')}.json",
         mime="application/json"
     )
+
     uploaded_file = st.file_uploader("Upload JSON file to restore", type="json")
     if uploaded_file:
         try:
