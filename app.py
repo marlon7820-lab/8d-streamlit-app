@@ -32,7 +32,7 @@ button[kind="primary"] {background-color: #87AFC7 !important; color: white !impo
 """, unsafe_allow_html=True)
 
 # ---------------------------
-# Reset Session check (safe, no KeyError)
+# Reset Session check
 # ---------------------------
 if st.session_state.get("_reset_8d_session", False):
     preserve_keys = ["lang", "lang_key", "current_tab"]
@@ -82,11 +82,14 @@ st.sidebar.header("⚙️ App Controls")
 if st.sidebar.button("🔄 Reset 8D Session"):
     preserve_keys = ["lang", "lang_key", "current_tab"]
     preserved = {k: st.session_state[k] for k in preserve_keys if k in st.session_state}
+
     for key in list(st.session_state.keys()):
         if key not in preserve_keys:
             del st.session_state[key]
+
     for k, v in preserved.items():
         st.session_state[k] = v
+
     st.session_state["_reset_8d_session"] = True
     st.stop()
 
@@ -373,79 +376,60 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
 
         if step == "D4":
             st.session_state[step]["location"] = st.selectbox(
-                "Location of Material",
-                ["", "Work in Progress", "Stores Stock", "Shipped", "Customer Site"],
-                index=["", "Work in Progress", "Stores Stock", "Shipped", "Customer Site"].index(st.session_state.get("d4_location","")) if st.session_state.get("d4_location") else 0
+                "Material Location",
+                ["Warehouse","Production","Supplier","In transit"],
+                index=0 if not st.session_state[step].get("location") else ["Warehouse","Production","Supplier","In transit"].index(st.session_state[step].get("location")),
+                key="D4_location"
             )
-            st.session_state[step]["status"] = st.text_input("Status of Containment Activity", st.session_state.get("d4_status",""))
-            st.session_state[step]["containment"] = st.text_area("Containment Actions", st.session_state.get("d4_containment",""))
+            st.session_state[step]["status"] = st.text_input("Activity Status", value=st.session_state[step].get("status",""), key="D4_status")
+            st.session_state[step]["containment"] = st.text_area("Containment Actions", value=st.session_state[step].get("containment",""), key="D4_containment")
+
         elif step == "D5":
-            st.markdown("#### Occurrence Why (select or free-text)")
+            st.markdown("#### Occurrence Root Cause Analysis (5-Why)")
             render_whys_no_repeat(st.session_state["d5_occ_whys"], occurrence_categories, "Occurrence Why")
-            st.markdown("#### Detection Why (select or free-text)")
+
+            st.markdown("#### Detection Root Cause Analysis (5-Why)")
             render_whys_no_repeat(st.session_state["d5_det_whys"], detection_categories, "Detection Why")
-            st.markdown("#### Systemic Why (select or free-text)")
+
+            st.markdown("#### Systemic Root Cause Analysis (5-Why)")
             render_whys_no_repeat(st.session_state["d5_sys_whys"], systemic_categories, "Systemic Why")
-            root_cause = suggest_root_cause(st.session_state["d5_occ_whys"] + st.session_state["d5_det_whys"] + st.session_state["d5_sys_whys"])
-            st.success(f"🔍 Suggested Root Cause: {root_cause}")
+
+            st.session_state[step]["answer"] = st.text_area(
+                "Summary of D5 Analysis",
+                value=st.session_state[step].get("answer",""),
+                key=f"D5_summary"
+            )
+
         else:
-            st.session_state[step]["answer"] = st.text_area("Your input here", st.session_state[step].get("answer",""))
+            st.session_state[step]["answer"] = st.text_area(
+                "Your input here",
+                value=st.session_state[step].get("answer",""),
+                key=f"{step}_input"
+            )
 
 # ---------------------------
-# Sidebar: XLSX save
+# Sidebar Save Button
 # ---------------------------
-st.sidebar.markdown("---")
-st.sidebar.header("📥 Export 8D Report")
-report_date = st.sidebar.date_input("Report Date", datetime.datetime.today())
-prepared_by = st.sidebar.text_input("Prepared By", "")
-if st.sidebar.button(t[lang_key]["Download"]):
+if st.sidebar.button(t[lang_key]["Save"]):
     wb = Workbook()
     ws = wb.active
     ws.title = "8D Report"
-    ws.append([t[lang_key]["Report_Date"], report_date.strftime("%Y-%m-%d")])
-    ws.append([t[lang_key]["Prepared_By"], prepared_by])
-    ws.append([])
 
-    for step, note_dict, example_dict in npqp_steps:
-        ws.append([t[lang_key][step]])
-        ws.append([note_dict[lang_key]])
-        ws.append([f"Example: {example_dict[lang_key]}"])
-        answer = st.session_state[step].get("answer","")
-        ws.append([answer])
-        if step == "D4":
-            ws.append([t[lang_key]["Location"], st.session_state[step].get("location","")])
-            ws.append([t[lang_key]["Status"], st.session_state[step].get("status","")])
-            ws.append([t[lang_key]["Containment_Actions"], st.session_state[step].get("containment","")])
-        if step == "D5":
-            ws.append([t[lang_key]["Occurrence_Why"]] + st.session_state["d5_occ_whys"])
-            ws.append([t[lang_key]["Detection_Why"]] + st.session_state["d5_det_whys"])
-            ws.append([t[lang_key]["Systemic_Why"]] + st.session_state["d5_sys_whys"])
-        ws.append([])
+    ws.append(["Step", "Answer"])
+    for step, _, _ in npqp_steps:
+        ws.append([t[lang_key][step], st.session_state[step]["answer"]])
 
-    # Adjust column width
-    for col in ws.columns:
-        max_length = 0
-        column = col[0].column_letter
-        for cell in col:
-            try:
-                if cell.value:
-                    max_length = max(max_length, len(str(cell.value)))
-            except:
-                pass
-        ws.column_dimensions[column].width = max_length + 5
-
-    # Save to BytesIO
-    output = io.BytesIO()
-    wb.save(output)
-    output.seek(0)
-    st.sidebar.download_button(
-        label=t[lang_key]["Download"],
-        data=output,
-        file_name=f"8D_Report_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    )
+    file_name = f"8D_Report_{datetime.datetime.today().strftime('%Y%m%d')}.xlsx"
+    with io.BytesIO() as output:
+        wb.save(output)
+        st.sidebar.download_button(
+            label=t[lang_key]["Download"],
+            data=output.getvalue(),
+            file_name=file_name,
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
 
 # ---------------------------
-# Footer
+# End of App
 # ---------------------------
 st.markdown("<p style='text-align:center; font-size:12px; color:#555555;'>End of 8D Report Assistant</p>", unsafe_allow_html=True)
