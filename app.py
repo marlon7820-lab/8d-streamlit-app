@@ -53,7 +53,6 @@ if st.session_state.get("_reset_8d_session", False):
 
     st.rerun()
 
-
 # ---------------------------
 # Main title
 # ---------------------------
@@ -468,10 +467,6 @@ with st.sidebar:
             st.success("✅ Session restored from JSON!")
         except Exception as e:
             st.error(f"Error restoring JSON: {e}")
-
-    # Reset Session (full)
-    if st.button("🧹 Reset Session"):
-        st.session_state["_reset_8d_session"] = True
 
 # ---------------------------
 # Collect answers for Excel
