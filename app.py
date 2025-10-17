@@ -146,7 +146,7 @@ if reset_clicked:
 # Trigger rerun safely outside button logic
 if st.session_state.get("__reset_trigger__", False):
     st.session_state["__reset_trigger__"] = False
-    st.experimental_rerun()
+    st.rerun()
 
 # ---------------------------
 # Main title
