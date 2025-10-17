@@ -17,7 +17,6 @@ st.set_page_config(
     layout="wide"
 )
 
-# ---------------------------
 # App styles
 # ---------------------------
 st.markdown("""
@@ -28,6 +27,14 @@ textarea {background-color: #ffffff !important; border: 1px solid #1E90FF !impor
 .stInfo {background-color: #e6f7ff !important; border-left: 5px solid #1E90FF !important; color: #000000 !important;}
 .css-1d391kg {color: #1E90FF !important; font-weight: bold !important;}
 button[kind="primary"] {background-color: #87AFC7 !important; color: white !important; font-weight: bold;}
+/* Outline selectboxes */
+.stSelectbox select {
+    border: 2px solid #1E90FF !important;
+    border-radius: 5px !important;
+    background-color: #ffffff !important;
+    padding: 5px;
+    color: #000000 !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
