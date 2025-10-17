@@ -35,10 +35,16 @@ div[data-baseweb="select"] > div > div > div > select {
     background-color: #ffffff !important;
     padding: 5px;
     color: #000000 !important;
+    transition: border 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+/* Hover effect */
+div[data-baseweb="select"] > div > div > div > select:hover {
+    border: 2px solid #104E8B !important; /* slightly darker blue */
+    box-shadow: 0 0 5px #1E90FF;
 }
 </style>
 """, unsafe_allow_html=True)
-
 
 # ---------------------------
 # Reset Session check (safe, no KeyError)
