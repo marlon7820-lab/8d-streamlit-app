@@ -207,6 +207,12 @@ st.session_state.setdefault("d6_sys_rc_note", "")
 st.session_state.setdefault("d7_occ_rc_note", "")
 st.session_state.setdefault("d7_det_rc_note", "")
 st.session_state.setdefault("d7_sys_rc_note", "")
+# Initialize D6/D7 root cause note text boxes
+for step in ["D6", "D7"]:
+    st.session_state.setdefault(f"{step.lower()}_occ_rc_note", "")
+    st.session_state.setdefault(f"{step.lower()}_det_rc_note", "")
+    st.session_state.setdefault(f"{step.lower()}_sys_rc_note", "")
+
 # ---------------------------
 # Helper: Suggest root cause based on whys
 # ---------------------------
