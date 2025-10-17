@@ -112,7 +112,6 @@ if st.session_state.get("_reset_8d_session", False):
     st.session_state["_reset_8d_session"] = False
     st.experimental_rerun()
 
-
 # ---------------------------
 # Language dictionary
 # ---------------------------
@@ -199,141 +198,15 @@ st.session_state.setdefault("d5_sys_whys", [""]*5)
 st.session_state.setdefault("d4_location", "")
 st.session_state.setdefault("d4_status", "")
 st.session_state.setdefault("d4_containment", "")
-
 # ---------------------------
-# D5 categories
+# Initialize D6/D7 root cause notes
 # ---------------------------
-occurrence_categories = {
-    "Machine / Equipment": [
-        "Mechanical failure or breakdown",
-        "Calibration issues or drift",
-        "Tooling or fixture wear or damage",
-        "Machine parameters not optimized",
-        "Improper preventive maintenance schedule",
-        "Sensor malfunction or misalignment",
-        "Process automation fault not detected",
-        "Unstable process due to poor machine setup"
-    ],
-    "Material / Component": [
-        "Wrong material or component used",
-        "Supplier provided off-spec component",
-        "Material defect not visible during inspection",
-        "Damage during storage, handling, or transport",
-        "Incorrect labeling, Missing label or lot traceability error",
-        "Material substitution without approval",
-        "Incorrect specifications or revision mismatch"
-    ],
-    "Process / Method": [
-        "Incorrect process step sequence",
-        "Critical process parameters not controlled",
-        "Work instructions unclear or missing details",
-        "Process drift over time not detected",
-        "Control plan not followed on production floor",
-        "Incorrect torque, solder, or assembly process",
-        "Outdated or missing process FMEA linkage",
-        "Inadequate process capability (Cp/Cpk below target)"
-    ],
-    "Design / Engineering": [
-        "Design not robust to real-use conditions",
-        "Tolerance stack-up issue not evaluated",
-        "Late design change not communicated to production",
-        "Incorrect or unclear drawing specification",
-        "Component placement design error (DFMEA gap)",
-        "Lack of design verification or validation testing"
-    ],
-    "Environmental / External": [
-        "Temperature or humidity out of control range",
-        "Electrostatic discharge (ESD) not controlled",
-        "Contamination or dust affecting product",
-        "Power fluctuation or interruption",
-        "External vibration or noise interference",
-        "Unstable environmental monitoring process"
-    ]
-}
-
-detection_categories = {
-    "QA / Inspection": [
-        "QA checklist incomplete or not updated",
-        "No automated inspection system in place",
-        "Manual inspection prone to human error",
-        "Inspection frequency too low to detect issue",
-        "Inspection criteria unclear or inconsistent",
-        "Measurement system not capable (GR&R issues)",
-        "Incoming inspection missed supplier issue",
-        "Final inspection missed due to sampling plan"
-    ],
-    "Validation / Process": [
-        "Process validation not updated after design/process change",
-        "Insufficient verification of new parameters or components",
-        "Design validation not complete or not representative of real conditions",
-        "Inadequate control plan coverage for potential failure modes",
-        "Lack of ongoing process monitoring (SPC / CpK tracking)",
-        "Incorrect or outdated process limits not aligned with FMEA"
-    ],
-    "FMEA / Control Plan": [
-        "Failure mode not captured in PFMEA",
-        "Detection controls missing or ineffective in PFMEA",
-        "Control plan not updated after corrective actions",
-        "FMEA not reviewed after customer complaint",
-        "Detection ranking not realistic to actual inspection capability",
-        "PFMEA and control plan not properly linked"
-    ],
-    "Test / Equipment": [
-        "Test equipment calibration overdue",
-        "Testing software parameters incorrect",
-        "Test setup does not detect this specific failure mode",
-        "Detection threshold too wide to capture failure",
-        "Test data not logged or reviewed regularly"
-    ],
-    "Systemic / Organizational": [
-        "Feedback loop from quality incidents not implemented",
-        "Lack of detection feedback in regular team meetings",
-        "Training gaps in inspection or test personnel",
-        "Quality alerts not properly communicated to operators"
-    ]
-}
-
-systemic_categories = {
-    "Management / Organization": [
-        "Inadequate leadership or supervision structure",
-        "Insufficient resource allocation to critical processes",
-        "Delayed response to known production issues",
-        "Lack of accountability or ownership of quality issues",
-        "Ineffective escalation process for recurring problems",
-        "Weak cross-functional communication between departments"
-    ],
-    "Process / Procedure": [
-        "Standard Operating Procedures (SOPs) outdated or missing",
-        "Process FMEA not reviewed regularly",
-        "Control plan not aligned with PFMEA or actual process",
-        "Lessons learned not integrated into similar processes",
-        "Inefficient document control system",
-        "Preventive maintenance procedures not standardized"
-    ],
-    "Training": [
-        "No defined training matrix or certification tracking",
-        "New hires not trained on critical control points",
-        "Training effectiveness not evaluated",
-        "Knowledge not shared between shifts or teams",
-        "Competence requirements not clearly defined"
-    ],
-    "Supplier / External": [
-        "Supplier not included in 8D or FMEA review process",
-        "Supplier corrective actions not verified for effectiveness",
-        "Inadequate incoming material audit process",
-        "Supplier process changes not communicated to customer",
-        "Long lead time for supplier quality issue closure"
-        "Supplier violation of cleanpoint"
-    ],
-    "Quality System / Feedback": [
-        "Internal audits ineffective or not completed",
-        "Quality KPI tracking not linked to root cause analysis",
-        "Ineffective use of 5-Why or other problem solving tools",
-        "Customer complaints not feeding back into design reviews",
-        "No systemic review after multiple 8Ds in same area"
-    ]
-}
-
+st.session_state.setdefault("d6_occ_rc_note", "")
+st.session_state.setdefault("d6_det_rc_note", "")
+st.session_state.setdefault("d6_sys_rc_note", "")
+st.session_state.setdefault("d7_occ_rc_note", "")
+st.session_state.setdefault("d7_det_rc_note", "")
+st.session_state.setdefault("d7_sys_rc_note", "")
 # ---------------------------
 # Helper: Suggest root cause based on whys
 # ---------------------------
@@ -355,7 +228,7 @@ def suggest_root_cause(whys):
         return "The root cause may be attributed management or resource-related issue"
     if any(word in text for word in ["temperature", "humidity", "contamination", "environment"]):
         return "The root cause may be attributed to environmental or external factor"
-        return "Systemic issue identified from analysis"
+    return "Systemic issue identified from analysis"
 
 # ---------------------------
 # Helper: Render 5-Why dropdowns without repeating selections
@@ -425,7 +298,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             render_whys_no_repeat(st.session_state.d5_sys_whys, systemic_categories, t[lang_key]['Systemic_Why'])
             if st.button("➕ Add another Systemic Why"):
                 st.session_state.d5_sys_whys.append("")
-            # Dynamic Root Causes
+            # Dynamic Root Causes (disabled)
             occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
             det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
             sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
@@ -433,41 +306,38 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             st.text_area(f"{t[lang_key]['Root_Cause_Det']}", value=suggest_root_cause(det_whys) if det_whys else "No detection whys provided yet", height=80, disabled=True)
             st.text_area(f"{t[lang_key]['Root_Cause_Sys']}", value=suggest_root_cause(sys_whys) if sys_whys else "No systemic whys provided yet", height=80, disabled=True)
 
-        # D6–D8 normal text areas
-        else:
+        # D6–D7: Normal text areas + editable Root Cause notes
+        elif step in ["D6", "D7"]:
             st.session_state[step]["answer"] = st.text_area(
                 "Your Answer",
                 value=st.session_state[step]["answer"],
                 key=f"ans_{step}"
             )
 
-# ---------------------------
-# Sidebar Backup/Restore/Reset
-# ---------------------------
-with st.sidebar:
-    st.markdown("## Backup / Restore / Reset")
-    # JSON Backup
-    def generate_json():
-        save_data = {k: v for k, v in st.session_state.items() if not k.startswith("_")}
-        return json.dumps(save_data, indent=4)
+            st.markdown("### Root Cause Notes")
+            st.session_state[f"{step.lower()}_occ_rc_note"] = st.text_area(
+                f"Occurrence Root Cause Note ({step})",
+                value=st.session_state[f"{step.lower()}_occ_rc_note"],
+                height=80
+            )
+            st.session_state[f"{step.lower()}_det_rc_note"] = st.text_area(
+                f"Detection Root Cause Note ({step})",
+                value=st.session_state[f"{step.lower()}_det_rc_note"],
+                height=80
+            )
+            st.session_state[f"{step.lower()}_sys_rc_note"] = st.text_area(
+                f"Systemic Root Cause Note ({step})",
+                value=st.session_state[f"{step.lower()}_sys_rc_note"],
+                height=80
+            )
 
-    st.download_button(
-        label="💾 Save Progress (JSON)",
-        data=generate_json(),
-        file_name=f"8D_Report_Backup_{st.session_state.report_date.replace(' ', '_')}.json",
-        mime="application/json"
-    )
-
-    # JSON Restore
-    uploaded_file = st.file_uploader("Upload JSON file to restore", type="json")
-    if uploaded_file:
-        try:
-            restore_data = json.load(uploaded_file)
-            for k, v in restore_data.items():
-                st.session_state[k] = v
-            st.success("✅ Session restored from JSON!")
-        except Exception as e:
-            st.error(f"Error restoring JSON: {e}")
+        # D1-D3, D8 normal text areas
+        else:
+            st.session_state[step]["answer"] = st.text_area(
+                "Your Answer",
+                value=st.session_state[step]["answer"],
+                key=f"ans_{step}"
+            )
 
 # ---------------------------
 # Collect answers for Excel
@@ -494,6 +364,14 @@ for step, _, _ in npqp_steps:
         data_rows.append(("D5 - Root Cause (Occurrence)", occ_rc_text, " | ".join(occ_whys)))
         data_rows.append(("D5 - Root Cause (Detection)", det_rc_text, " | ".join(det_whys)))
         data_rows.append(("D5 - Root Cause (Systemic)", sys_rc_text, " | ".join(sys_whys)))
+    elif step in ["D6", "D7"]:
+        occ_note = st.session_state[f"{step.lower()}_occ_rc_note"]
+        det_note = st.session_state[f"{step.lower()}_det_rc_note"]
+        sys_note = st.session_state[f"{step.lower()}_sys_rc_note"]
+        data_rows.append((f"{step} - Root Cause (Occurrence)", occ_note, ""))
+        data_rows.append((f"{step} - Root Cause (Detection)", det_note, ""))
+        data_rows.append((f"{step} - Root Cause (Systemic)", sys_note, ""))
+        data_rows.append((step, answer, extra))
     else:
         data_rows.append((step, answer, extra))
 
