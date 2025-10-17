@@ -433,12 +433,166 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
             st.text_area(f"{t[lang_key]['Root_Cause_Det']}", value=suggest_root_cause(det_whys) if det_whys else "No detection whys provided yet", height=80, disabled=True)
             st.text_area(f"{t[lang_key]['Root_Cause_Sys']}", value=suggest_root_cause(sys_whys) if sys_whys else "No systemic whys provided yet", height=80, disabled=True)
 
-        # D6–D8 normal text areas
-        else:
-            st.session_state[step]["answer"] = st.text_area(
-                "Your Answer",
-                value=st.session_state[step]["answer"],
-                key=f"ans_{step}"
+        --------------------------- # D6: Permanent Corrective Actions (separate answers for Occ/Det/Sys) # --------------------------- for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
+if step == "D6":
+with tabs[i]:
+st.markdown(f"### {t[lang_key][step]}")
+note_text = note_dict[lang_key]
+example_text = example_dict[lang_key]
+st.markdown(f"""
+<div style="
+background-color:#b3e0ff;
+color:black;
+padding:12px;
+border-left:5px solid #1E90FF;
+border-radius:6px;
+width:100%;
+font-size:14px;
+line-height:1.5;
+">
+<b>{t[lang_key]['Training_Guidance']}:</b> {note_text}<br><br>
+💡 <b>{t[lang_key]['Example']}:</b> {example_text} </div> """, unsafe_allow_html=True)
+
+st.session_state[step].setdefault("occ_answer", "") st.session_state[step].setdefault("det_answer", "") st.session_state[step].setdefault("sys_answer", "")
+
+st.session_state[step]["occ_answer"] = st.text_area( "Corrective Actions for Occurrence Root Cause", value=st.session_state[step]["occ_answer"],
+key="d6_occ"
+)
+st.session_state[step]["det_answer"] = st.text_area( "Corrective Actions for Detection Root Cause", value=st.session_state[step]["det_answer"],
+key="d6_det"
+)
+st.session_state[step]["sys_answer"] = st.text_area( "Corrective Actions for Systemic Root Cause", value=st.session_state[step]["sys_answer"],
+key="d6_sys"
+)
+
+# ---------------------------
+# D7: Countermeasure Confirmation (separate answers for Occ/Det/Sys) # --------------------------- for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
+if step == "D7":
+with tabs[i]:
+st.markdown(f"### {t[lang_key][step]}")
+note_text = note_dict[lang_key]
+example_text = example_dict[lang_key]
+st.markdown(f"""
+<div style="
+background-color:#b3e0ff;
+color:black;
+padding:12px;
+border-left:5px solid #1E90FF;
+border-radius:6px;
+width:100%;
+font-size:14px;
+line-height:1.5;
+">
+<b>{t[lang_key]['Training_Guidance']}:</b> {note_text}<br><br>
+💡 <b>{t[lang_key]['Example']}:</b> {example_text} </div> """, unsafe_allow_html=True)
+
+st.session_state[step].setdefault("occ_answer", "") st.session_state[step].setdefault("det_answer", "") st.session_state[step].setdefault("sys_answer", "")
+
+st.session_state[step]["occ_answer"] = st.text_area( "Countermeasure Confirmation for Occurrence Root Cause", value=st.session_state[step]["occ_answer"],
+key="d7_occ"
+)
+st.session_state[step]["det_answer"] = st.text_area( "Countermeasure Confirmation for Detection Root Cause", value=st.session_state[step]["det_answer"],
+key="d7_det"
+)
+st.session_state[step]["sys_answer"] = st.text_area( "Countermeasure Confirmation for Systemic Root Cause", value=st.session_state[step]["sys_answer"],
+key="d7_sys"
+)
+
+# ---------------------------
+# D8: Follow-up Activities / Lessons Learned # --------------------------- for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
+if step == "D8":
+with tabs[i]:
+st.markdown(f"### {t[lang_key][step]}")
+note_text = note_dict[lang_key]
+example_text = example_dict[lang_key]
+st.markdown(f"""
+<div style="
+background-color:#b3e0ff;
+color:black;
+padding:12px;
+border-left:5px solid #1E90FF;
+border-radius:6px;
+width:100%;
+font-size:14px;
+line-height:1.5;
+">
+<b>{t[lang_key]['Training_Guidance']}:</b> {note_text}<br><br>
+💡 <b>{t[lang_key]['Example']}:</b> {example_text} </div> """, unsafe_allow_html=True) st.session_state[step]["answer"] = st.text_area( "Your Answer", value=st.session_state[step]["answer"], key=f"ans_{step}"
+)
+
+# ---------------------------
+# Collect all answers for Excel export
+# ---------------------------
+data_rows = []
+
+occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()] det_whys = [w for w in st.session_state.d5_det_whys if w.strip()] sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
+
+occ_rc_text = suggest_root_cause(occ_whys) if occ_whys else "No occurrence whys provided yet"
+det_rc_text = suggest_root_cause(det_whys) if det_whys else "No detection whys provided yet"
+sys_rc_text = suggest_root_cause(sys_whys) if sys_whys else "No systemic whys provided yet"
+
+for step, _, _ in npqp_steps:
+if step in ["D6","D7"]:
+# D6/D7 separate Occ/Det/Sys answers
+for root_type, key_name in [("Occurrence", "occ_answer"), ("Detection", "det_answer"), ("Systemic", "sys_answer")]:
+answer = st.session_state[step].get(key_name, "") data_rows.append((f"{step} - {root_type}", answer, "")) elif step == "D5":
+# D5 root causes with whys
+data_rows.append(("D5 - Root Cause (Occurrence)", occ_rc_text, " | ".join(occ_whys)))
+data_rows.append(("D5 - Root Cause (Detection)", det_rc_text, " | ".join(det_whys)))
+data_rows.append(("D5 - Root Cause (Systemic)", sys_rc_text, " | ".join(sys_whys))) elif step == "D4":
+# D4 with location, status, and actions
+loc = st.session_state[step].get("location", "") status = st.session_state[step].get("status", "") answer = st.session_state[step]["answer"] extra = f"Location: {loc} | Status: {status}"
+data_rows.append((step, answer, extra))
+else:
+answer = st.session_state[step]["answer"] extra = st.session_state[step].get("extra", "") data_rows.append((step, answer, extra))
+
+# ---------------------------
+# Excel generation
+# ---------------------------
+def generate_excel():
+wb = Workbook()
+ws = wb.active
+ws.title = "NPQP 8D Report"
+
+thin = Side(border_style="thin", color="000000") border = Border(left=thin, right=thin, top=thin, bottom=thin)
+
+# Add logo if exists
+if os.path.exists("logo.png"):
+try:
+img = XLImage("logo.png")
+img.width = 140
+img.height = 40
+ws.add_image(img, "A1")
+except:
+pass
+
+ws.merge_cells(start_row=3, start_column=1, end_row=3, end_column=3) ws.cell(row=3, column=1, value="📋 8D Report Assistant").font = Font(bold=True, size=14)
+
+ws.append([t[lang_key]['Report_Date'], st.session_state.report_date]) ws.append([t[lang_key]['Prepared_By'], st.session_state.prepared_by])
+ws.append([])
+
+# Header row
+header_row = ws.max_row + 1
+headers = ["Step", "Answer", "Extra / Notes"] fill = PatternFill(start_color="1E90FF", end_color="1E90FF", fill_type="solid") for c_idx, h in enumerate(headers, start=1):
+cell = ws.cell(row=header_row, column=c_idx, value=h) cell.fill = fill cell.font = Font(bold=True, color="FFFFFF") cell.alignment = Alignment(horizontal="center", vertical="center") cell.border = border
+
+# Append step answers
+for step, answer, extra in data_rows:
+ws.append([t[lang_key].get(step, step), answer, extra]) r = ws.max_row for c in range(1, 4):
+cell = ws.cell(row=r, column=c)
+cell.alignment = Alignment(wrap_text=True, vertical="top") cell.font = Font(bold=True if c == 2 else False) cell.border = border
+
+for col in range(1, 4):
+ws.column_dimensions[get_column_letter(col)].width = 40
+
+output = io.BytesIO()
+wb.save(output)
+return output.getvalue()
+
+st.download_button(
+label=f"{t[lang_key]['Download']}",
+data=generate_excel(),
+file_name=f"8D_Report_{st.session_state.report_date.replace(' ', '_')}.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             )
 
 # ---------------------------
