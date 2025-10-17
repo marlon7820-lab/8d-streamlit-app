@@ -53,7 +53,6 @@ if st.session_state.get("_reset_8d_session", False):
 
     st.rerun()
 
-
 # ---------------------------
 # Main title
 # ---------------------------
