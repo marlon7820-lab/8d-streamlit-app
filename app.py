@@ -32,7 +32,7 @@ button[kind="primary"] {background-color: #87AFC7 !important; color: white !impo
 """, unsafe_allow_html=True)
 
 # ---------------------------
-# Sidebar: Language selection & reset
+# Sidebar: Language selection & Reset
 # ---------------------------
 st.sidebar.title("8D Report Assistant")
 st.sidebar.markdown("---")
@@ -41,26 +41,24 @@ st.sidebar.header("Settings")
 # Language selection
 lang = st.sidebar.selectbox("Select Language / Seleccionar Idioma", ["English", "Español"])
 lang_key = "en" if lang == "English" else "es"
+st.session_state["lang_key"] = lang_key
+st.session_state["lang"] = lang
 
-# ---------------------------
-# Sidebar Reset Button
-# ---------------------------
-st.sidebar.markdown("---")
-st.sidebar.header("⚙️ App Controls")
-
+# Safe Reset Button
 if st.sidebar.button("🔄 Reset 8D Session"):
-    preserve_keys = ["lang", "lang_key"]
-    preserved = {k: st.session_state[k] for k in preserve_keys if k in st.session_state}
-
+    # Preserve language selection
+    preserved = {k: st.session_state[k] for k in ["lang", "lang_key"] if k in st.session_state}
+    
+    # Clear all other session data
     for key in list(st.session_state.keys()):
-        if key not in preserve_keys:
+        if key not in preserved:
             del st.session_state[key]
-
+    
+    # Restore preserved keys
     for k, v in preserved.items():
         st.session_state[k] = v
-
-    st.success("✅ Session reset successfully!")
-    st.experimental_rerun()
+    
+    st.experimental_rerun()  # Safe rerun
 
 # ---------------------------
 # Language dictionary
@@ -140,7 +138,6 @@ npqp_steps = [
 for step, _, _ in npqp_steps:
     if step not in st.session_state:
         st.session_state[step] = {"answer": "", "extra": ""}
-
 st.session_state.setdefault("report_date", datetime.datetime.today().strftime("%B %d, %Y"))
 st.session_state.setdefault("prepared_by", "")
 st.session_state.setdefault("d5_occ_whys", [""]*5)
@@ -225,21 +222,63 @@ detection_categories = {
         "Detection controls missing or ineffective in PFMEA",
         "Control plan not updated after corrective actions",
         "FMEA not reviewed after customer complaint",
-        "Control plan deviation went unnoticed",
-        "Audit of control plan not performed"
+        "Detection ranking not realistic to actual inspection capability",
+        "PFMEA and control plan not properly linked"
+    ],
+    "Test / Equipment": [
+        "Test equipment calibration overdue",
+        "Testing software parameters incorrect",
+        "Test setup does not detect this specific failure mode",
+        "Detection threshold too wide to capture failure",
+        "Test data not logged or reviewed regularly"
+    ],
+    "Systemic / Organizational": [
+        "Feedback loop from quality incidents not implemented",
+        "Lack of detection feedback in regular team meetings",
+        "Training gaps in inspection or test personnel",
+        "Quality alerts not properly communicated to operators"
     ]
 }
 
-systemic_categories = [
-    "Training / Knowledge",
-    "Equipment / Tooling",
-    "Process / Procedure",
-    "Communication / Handover",
-    "Material / Supplier",
-    "Design / Specification",
-    "Management / Resource",
-    "Environment / External"
-]
+systemic_categories = {
+    "Management / Organization": [
+        "Inadequate leadership or supervision structure",
+        "Insufficient resource allocation to critical processes",
+        "Delayed response to known production issues",
+        "Lack of accountability or ownership of quality issues",
+        "Ineffective escalation process for recurring problems",
+        "Weak cross-functional communication between departments"
+    ],
+    "Process / Procedure": [
+        "Standard Operating Procedures (SOPs) outdated or missing",
+        "Process FMEA not reviewed regularly",
+        "Control plan not aligned with PFMEA or actual process",
+        "Lessons learned not integrated into similar processes",
+        "Inefficient document control system",
+        "Preventive maintenance procedures not standardized"
+    ],
+    "Training / People": [
+        "No defined training matrix or certification tracking",
+        "New hires not trained on critical control points",
+        "Training effectiveness not evaluated",
+        "Knowledge not shared between shifts or teams",
+        "Competence requirements not clearly defined"
+    ],
+    "Supplier / External": [
+        "Supplier not included in 8D or FMEA review process",
+        "Supplier corrective actions not verified for effectiveness",
+        "Inadequate incoming material audit process",
+        "Supplier process changes not communicated to customer",
+        "Long lead time for supplier quality issue closure"
+    ],
+    "Quality System / Feedback": [
+        "Internal audits ineffective or not completed",
+        "Quality KPI tracking not linked to root cause analysis",
+        "Ineffective use of 5-Why or fishbone tools",
+        "Customer complaints not feeding back into design reviews",
+        "No systemic review after multiple 8Ds in same area"
+    ]
+}
 
 # ---------------------------
 # Helper: Suggest root cause
@@ -265,68 +304,137 @@ def suggest_root_cause(whys):
     return "Systemic issue identified from analysis"
 
 # ---------------------------
-# Render Tabs D1–D8 with full inputs
+# Helper: Render 5-Why dropdowns
 # ---------------------------
-tab_labels = [f"🟢 {t[lang_key][step]}" if st.session_state[step]["answer"].strip() else f"🔴 {t[lang_key][step]}" for step, _, _ in npqp_steps]
-tabs = st.tabs(tab_labels)
+def render_whys_no_repeat(why_list, categories, label_prefix):
+    for idx in range(len(why_list)):
+        selected_so_far = [w for i, w in enumerate(why_list) if w.strip() and i != idx]
+        options = [""] + [f"{cat}: {item}" for cat, items in categories.items() for item in items if f"{cat}: {item}" not in selected_so_far]
+        current_val = why_list[idx] if why_list[idx] in options else ""
+        why_list[idx] = st.selectbox(
+            f"{label_prefix} {idx+1}",
+            options,
+            index=options.index(current_val) if current_val in options else 0,
+            key=f"{label_prefix}_{idx}"
+        )
+        free_text = st.text_input(f"Or enter your own {label_prefix} {idx+1}", value=why_list[idx], key=f"{label_prefix}_txt_{idx}")
+        if free_text.strip():
+            why_list[idx] = free_text
 
-for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
+# ---------------------------
+# Main Title
+# ---------------------------
+st.markdown("<h1 style='text-align: center; color: #1E90FF;'>📋 8D Report Assistant</h1>", unsafe_allow_html=True)
+version_number = "v1.1.0"
+last_updated = "October 17, 2025"
+st.markdown(f"""
+<hr style='border:1px solid #1E90FF; margin-top:10px; margin-bottom:5px;'>
+<p style='font-size:12px; font-style:italic; text-align:center; color:#555555;'>
+Version {version_number} | Last updated: {last_updated}
+</p>
+""", unsafe_allow_html=True)
+# ---------------------------
+# Tabs for D1–D8
+# ---------------------------
+tabs = st.tabs([t[lang_key][step] for step, _, _ in npqp_steps])
+
+for i, (step, guidance, example) in enumerate(npqp_steps):
     with tabs[i]:
-        st.markdown(f"### {t[lang_key][step]}")
-        st.markdown(f"""
-        <div style=" background-color:#b3e0ff; color:black; padding:12px; border-left:5px solid #1E90FF; border-radius:6px; width:100%; font-size:14px; line-height:1.5; ">
-        <b>{t[lang_key]['Training_Guidance']}:</b> {note_dict[lang_key]}<br><br>
-        💡 <b>{t[lang_key]['Example']}:</b> {example_dict[lang_key]}
-        </div>
-        """, unsafe_allow_html=True)
-
-        st.session_state[step]["answer"] = st.text_area(f"Answer {step}", st.session_state[step]["answer"], key=f"answer_{step}")
-        st.session_state[step]["extra"] = st.text_area(f"Extra / Notes {step}", st.session_state[step]["extra"], key=f"extra_{step}")
+        st.markdown(f"**{t[lang_key][step]}**")
+        st.info(guidance[lang_key])
+        st.text_area("Answer", value=st.session_state[step]["answer"], key=f"{step}_answer", height=120)
+        st.text_area("Extra Notes / Observations", value=st.session_state[step]["extra"], key=f"{step}_extra", height=80)
+        
+        # Special handling for D4
+        if step == "D4":
+            st.text_input(f"{t[lang_key]['Location']}", value=st.session_state["d4_location"], key="d4_location")
+            st.text_input(f"{t[lang_key]['Status']}", value=st.session_state["d4_status"], key="d4_status")
+            st.text_area(f"{t[lang_key]['Containment_Actions']}", value=st.session_state["d4_containment"], key="d4_containment")
+        
+        # Special handling for D5 5-Why
+        if step == "D5":
+            st.subheader(f"{t[lang_key]['Root_Cause_Occ']}")
+            render_whys_no_repeat(st.session_state["d5_occ_whys"], occurrence_categories, t[lang_key]["Occurrence_Why"])
+            
+            st.subheader(f"{t[lang_key]['Root_Cause_Det']}")
+            render_whys_no_repeat(st.session_state["d5_det_whys"], detection_categories, t[lang_key]["Detection_Why"])
+            
+            st.subheader(f"{t[lang_key]['Root_Cause_Sys']}")
+            render_whys_no_repeat(st.session_state["d5_sys_whys"], systemic_categories, t[lang_key]["Systemic_Why"])
+            
+            st.markdown("**Suggested Root Cause Summary:**")
+            occ_root = suggest_root_cause(st.session_state["d5_occ_whys"])
+            det_root = suggest_root_cause(st.session_state["d5_det_whys"])
+            sys_root = suggest_root_cause(st.session_state["d5_sys_whys"])
+            st.success(f"Occurrence: {occ_root}\nDetection: {det_root}\nSystemic: {sys_root}")
 
 # ---------------------------
-# Excel Export Function
+# Report Metadata
+# ---------------------------
+st.sidebar.markdown("---")
+st.sidebar.header("Report Metadata")
+st.sidebar.text_input(f"{t[lang_key]['Prepared_By']}", value=st.session_state["prepared_by"], key="prepared_by")
+st.sidebar.date_input(f"{t[lang_key]['Report_Date']}", value=datetime.datetime.today(), key="report_date")
+
+# ---------------------------
+# Generate Excel
 # ---------------------------
 def generate_excel():
     wb = Workbook()
     ws = wb.active
-    ws.title = "NPQP 8D Report"
-    thin = Side(border_style="thin", color="000000")
-    border = Border(left=thin, right=thin, top=thin, bottom=thin)
+    ws.title = "8D Report"
     
-    ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=3)
-    ws.cell(row=1, column=1, value="📋 8D Report Assistant").font = Font(bold=True, size=14)
-    ws.append([t[lang_key]['Report_Date'], st.session_state.report_date])
-    ws.append([t[lang_key]['Prepared_By'], st.session_state.prepared_by])
-    ws.append([])
+    # Header
+    ws.merge_cells("A1:C1")
+    ws["A1"] = f"8D Report - {st.session_state['prepared_by']} - {st.session_state['report_date']}"
+    ws["A1"].font = Font(size=14, bold=True)
+    
+    row = 3
+    for step, guidance, example in npqp_steps:
+        ws[f"A{row}"] = t[lang_key][step]
+        ws[f"B{row}"] = st.session_state[step]["answer"]
+        ws[f"C{row}"] = st.session_state[step]["extra"]
+        row += 2
+        
+        # D4 special fields
+        if step == "D4":
+            ws[f"A{row}"] = t[lang_key]["Location"]
+            ws[f"B{row}"] = st.session_state["d4_location"]
+            ws[f"A{row+1}"] = t[lang_key]["Status"]
+            ws[f"B{row+1}"] = st.session_state["d4_status"]
+            ws[f"A{row+2}"] = t[lang_key]["Containment_Actions"]
+            ws[f"B{row+2}"] = st.session_state["d4_containment"]
+            row += 4
+        
+        # D5 5-Why
+        if step == "D5":
+            ws[f"A{row}"] = t[lang_key]["Root_Cause_Occ"]
+            ws[f"B{row}"] = ", ".join(st.session_state["d5_occ_whys"])
+            ws[f"A{row+1}"] = t[lang_key]["Root_Cause_Det"]
+            ws[f"B{row+1}"] = ", ".join(st.session_state["d5_det_whys"])
+            ws[f"A{row+2}"] = t[lang_key]["Root_Cause_Sys"]
+            ws[f"B{row+2}"] = ", ".join(st.session_state["d5_sys_whys"])
+            row += 4
 
-    header_row = ws.max_row + 1
-    headers = ["Step", "Answer", "Extra / Notes"]
-    fill = PatternFill(start_color="1E90FF", end_color="1E90FF", fill_type="solid")
-    for c_idx, h in enumerate(headers, start=1):
-        cell = ws.cell(row=header_row, column=c_idx, value=h)
-        cell.fill = fill
-        cell.font = Font(bold=True, color="FFFFFF")
-        cell.alignment = Alignment(horizontal="center", vertical="center")
-        cell.border = border
-
-    for step, _, _ in npqp_steps:
-        answer = st.session_state[step]["answer"]
-        extra = st.session_state[step].get("extra", "")
-        ws.append([step, answer, extra])
-
-    for col in range(1, 4):
-        ws.column_dimensions[get_column_letter(col)].width = 40
-
-    output = io.BytesIO()
-    wb.save(output)
-    return output.getvalue()
+    # Save to BytesIO
+    stream = io.BytesIO()
+    wb.save(stream)
+    return stream.getvalue()
 
 # ---------------------------
-# Download button
+# Download Excel
 # ---------------------------
-st.download_button(
-    label=f"{t[lang_key]['Download']}",
-    data=generate_excel(),
-    file_name=f"8D_Report_{st.session_state.report_date.replace(' ', '_')}.xlsx",
-    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-)
+st.sidebar.markdown("---")
+if st.sidebar.button(t[lang_key]["Download"]):
+    excel_data = generate_excel()
+    st.sidebar.download_button(
+        label=t[lang_key]["Download"],
+        data=excel_data,
+        file_name=f"8D_Report_{st.session_state['prepared_by']}_{st.session_state['report_date']}.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+
+# ---------------------------
+# Footer
+# ---------------------------
+st.markdown("<p style='text-align:center; font-size:12px; color:#555555;'>End of 8D Report Assistant</p>", unsafe_allow_html=True)
