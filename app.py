@@ -647,30 +647,34 @@ st.download_button(
     file_name=f"8D_Report_{st.session_state.report_date.replace(' ', '_')}.xlsx",
     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 )
+# ---------------------------
+# Sidebar: Backup / Restore / Reset
+# ---------------------------
 with st.sidebar:
     st.markdown("## Backup / Restore / Reset")
 
-    # Generate JSON as bytes
-    def generate_json_bytes():
+    # Save current session as JSON bytes
+    def get_json_bytes():
         save_data = {k: v for k, v in st.session_state.items() if not k.startswith("_")}
         json_str = json.dumps(save_data, indent=4)
-        return io.BytesIO(json_str.encode("utf-8")).getvalue()  # <--- important
+        return json_str.encode("utf-8")
 
     st.download_button(
         label="💾 Save Progress (JSON)",
-        data=generate_json_bytes(),  # provide actual bytes
+        data=get_json_bytes(),
         file_name=f"8D_Report_Backup_{st.session_state.report_date.replace(' ', '_')}.json",
         mime="application/json"
     )
 
-    # Upload JSON to restore session
+    # Restore session from uploaded JSON
     uploaded_file = st.file_uploader("Upload JSON file to restore", type="json")
-    if uploaded_file:
+    if uploaded_file is not None:
         try:
             restore_data = json.load(uploaded_file)
             for k, v in restore_data.items():
                 st.session_state[k] = v
             st.success("✅ Session restored from JSON!")
+            st.experimental_rerun()
         except Exception as e:
             st.error(f"Error restoring JSON: {e}")
 
