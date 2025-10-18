@@ -405,12 +405,11 @@ line-height:1.5;
                     if file not in st.session_state[step]["uploaded_files"]:
                         st.session_state[step]["uploaded_files"].append(file)
             if st.session_state[step]["uploaded_files"]:
-                st.markdown("**Uploaded Files / Photos:**")
-                for f in st.session_state[step]["uploaded_files"]:
-                    st.write(f"{f.name}")
-                    if f.type.startswith("image/"):
-                        st.image(f, use_column_width=True)
-
+    st.markdown("**Uploaded Files / Photos:**")
+    for f in st.session_state[step]["uploaded_files"]:
+        st.write(f"{f.name}")
+        if f.type.startswith("image/"):
+            st.image(f, use_container_width=True)
 
         # D4 Nissan-style
         if step == "D4":
