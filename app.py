@@ -650,34 +650,37 @@ st.download_button(
 # ---------------------------
 # Sidebar Backup/Restore/Reset
 # ---------------------------
+import streamlit as st
+import json
+
+# Example session data
+st.session_state.setdefault("D1", {"answer": "Example answer"})
+st.session_state.setdefault("D6", {"occ_answer": "Corrective action example"})
+
 with st.sidebar:
     st.markdown("## Backup / Restore / Reset")
 
-    # JSON Backup
-    def generate_json_bytes():
-        # Only save relevant session data (exclude keys starting with '_')
+    # Generate JSON bytes
+    def get_json_bytes():
+        # Only save relevant session data
         save_data = {k: v for k, v in st.session_state.items() if not k.startswith("_")}
-        json_str = json.dumps(save_data, indent=4)
-        return json_str.encode('utf-8')  # Encode as bytes
+        return json.dumps(save_data, indent=4).encode('utf-8')
 
     st.download_button(
         label="💾 Save Progress (JSON)",
-        data=generate_json_bytes(),
-        file_name=f"8D_Report_Backup_{st.session_state.report_date.replace(' ', '_')}.json",
-        mime="application/json",  # Important: must be application/json
-        key="download_json"
+        data=get_json_bytes(),            # bytes, not str
+        file_name="8D_Report_Backup.json",
+        mime="application/json"
     )
 
-    # JSON Restore
-    uploaded_file = st.file_uploader("Upload JSON file to restore", type="json", key="upload_json")
+    # Upload JSON to restore
+    uploaded_file = st.file_uploader("Upload JSON file to restore", type="json")
     if uploaded_file:
-        try:
-            restore_data = json.load(uploaded_file)
-            for k, v in restore_data.items():
-                st.session_state[k] = v
-            st.success("✅ Session restored from JSON!")
-        except Exception as e:
-            st.error(f"Error restoring JSON: {e}")
+        restore_data = json.load(uploaded_file)
+        for k, v in restore_data.items():
+            st.session_state[k] = v
+        st.success("✅ Session restored from JSON!")
+
 
 # ---------------------------
 # (End)
