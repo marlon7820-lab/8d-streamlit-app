@@ -5,6 +5,7 @@ from openpyxl.utils import get_column_letter
 from openpyxl.drawing.image import Image as XLImage
 import datetime
 import io
+import json
 import os
 
 # ---------------------------
@@ -16,9 +17,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# ---------------------------
-# App styles
-# ---------------------------
+# App styles - updated for desktop selectbox outline
 st.markdown("""
 <style>
 .stApp {background: linear-gradient(to right, #f0f8ff, #e6f2ff); color: #000000 !important;}
@@ -27,6 +26,8 @@ textarea {background-color: #ffffff !important; border: 1px solid #1E90FF !impor
 .stInfo {background-color: #e6f7ff !important; border-left: 5px solid #1E90FF !important; color: #000000 !important;}
 .css-1d391kg {color: #1E90FF !important; font-weight: bold !important;}
 button[kind="primary"] {background-color: #87AFC7 !important; color: white !important; font-weight: bold;}
+
+/* Outline all Streamlit widget containers (works on desktop) */
 div.stSelectbox, div.stTextInput, div.stTextArea {
     border: 2px solid #1E90FF !important;
     border-radius: 5px !important;
@@ -34,25 +35,32 @@ div.stSelectbox, div.stTextInput, div.stTextArea {
     background-color: #ffffff !important;
     transition: border 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
 }
+
+/* Hover effect */
 div.stSelectbox:hover, div.stTextInput:hover, div.stTextArea:hover {
-    border: 2px solid #104E8B !important;
+    border: 2px solid #104E8B !important; /* slightly darker blue */
     box-shadow: 0 0 5px #1E90FF;
 }
 </style>
 """, unsafe_allow_html=True)
 
 # ---------------------------
-# Reset Session check
+# Reset Session check (safe, no KeyError)
 # ---------------------------
 if st.session_state.get("_reset_8d_session", False):
     preserve_keys = ["lang", "lang_key", "current_tab"]
     preserved = {k: st.session_state[k] for k in preserve_keys if k in st.session_state}
+
     for key in list(st.session_state.keys()):
         if key not in preserve_keys and key != "_reset_8d_session":
             del st.session_state[key]
+
     for k, v in preserved.items():
         st.session_state[k] = v
-    st.session_state["_reset_8d_session"] = False
+
+    if "_reset_8d_session" in st.session_state:
+        st.session_state["_reset_8d_session"] = False
+
     st.rerun()
 
 # ---------------------------
@@ -93,6 +101,10 @@ if st.sidebar.button("🔄 Reset 8D Session"):
         st.session_state[k] = v
     st.session_state["_reset_8d_session"] = True
     st.stop()
+
+if st.session_state.get("_reset_8d_session", False):
+    st.session_state["_reset_8d_session"] = False
+    st.experimental_rerun()
 
 # ---------------------------
 # Language dictionary
@@ -167,27 +179,14 @@ npqp_steps = [
 ]
 
 # ---------------------------
-# (Full app continues exactly like your baseline...)
-# ---------------------------
-# Includes:
-# - Session state initialization
-# - D5 5-Why rendering
-# - D6/D7 three subfields
-# - Excel export
-# - Tabs for D1–D8
-# - Root cause suggestions
-# - Styling, language selection, reset
-
-
-# ---------------------------
 # Initialize session state
 # ---------------------------
 for step, _, _ in npqp_steps:
     if step not in st.session_state:
         st.session_state[step] = {"answer": "", "extra": ""}
 
-# Ensure D6/D7 subfields exist
 st.session_state.setdefault("report_date", datetime.datetime.today().strftime("%B %d, %Y"))
+st.session_state["report_date"] = str(st.session_state["report_date"])  # <-- fix for TypeError
 st.session_state.setdefault("prepared_by", "")
 st.session_state.setdefault("d5_occ_whys", [""]*5)
 st.session_state.setdefault("d5_det_whys", [""]*5)
@@ -196,13 +195,9 @@ st.session_state.setdefault("d4_location", "")
 st.session_state.setdefault("d4_status", "")
 st.session_state.setdefault("d4_containment", "")
 
-# D6 fields
 for sub in ["occ_answer", "det_answer", "sys_answer"]:
     st.session_state.setdefault(("D6"), st.session_state.get("D6", {}))
     st.session_state["D6"].setdefault(sub, "")
-
-# D7 fields
-for sub in ["occ_answer", "det_answer", "sys_answer"]:
     st.session_state.setdefault(("D7"), st.session_state.get("D7", {}))
     st.session_state["D7"].setdefault(sub, "")
 
@@ -629,7 +624,6 @@ st.download_button(
     file_name=f"8D_Report_{st.session_state.report_date.replace(' ', '_')}.xlsx",
     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 )
-
 # ---------------------------
 # (End)
 # ---------------------------
