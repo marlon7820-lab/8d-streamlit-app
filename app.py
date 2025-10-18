@@ -5,6 +5,7 @@ from openpyxl.utils import get_column_letter
 from openpyxl.drawing.image import Image as XLImage
 import datetime
 import io
+import json
 import os
 
 # ---------------------------
@@ -49,13 +50,20 @@ div.stSelectbox:hover, div.stTextInput:hover, div.stTextArea:hover {
 if st.session_state.get("_reset_8d_session", False):
     preserve_keys = ["lang", "lang_key", "current_tab"]
     preserved = {k: st.session_state[k] for k in preserve_keys if k in st.session_state}
+
+    # Clear everything except preserved values
     for key in list(st.session_state.keys()):
         if key not in preserve_keys and key != "_reset_8d_session":
             del st.session_state[key]
+
+    # Restore preserved values
     for k, v in preserved.items():
         st.session_state[k] = v
+
+    # Safely unset the flag only if it exists
     if "_reset_8d_session" in st.session_state:
         st.session_state["_reset_8d_session"] = False
+
     st.rerun()
 
 # ---------------------------
@@ -82,22 +90,37 @@ st.sidebar.title("8D Report Assistant")
 st.sidebar.markdown("---")
 st.sidebar.header("Settings")
 
+# Language selection
 lang = st.sidebar.selectbox("Select Language / Seleccionar Idioma", ["English", "Español"])
 lang_key = "en" if lang == "English" else "es"
 
+# ---------------------------
+# Sidebar: Smart Session Reset Button
+# ---------------------------
 st.sidebar.markdown("---")
 st.sidebar.header("⚙️ App Controls")
+# Reset 8D Session button
 if st.sidebar.button("🔄 Reset 8D Session"):
+    # Preserve essential keys
     preserve_keys = ["lang", "lang_key", "current_tab"]
     preserved = {k: st.session_state[k] for k in preserve_keys if k in st.session_state}
+
+    # Clear all other keys
     for key in list(st.session_state.keys()):
         if key not in preserve_keys:
             del st.session_state[key]
+
+    # Restore preserved keys
     for k, v in preserved.items():
         st.session_state[k] = v
+
+    # Set a dedicated reset flag
     st.session_state["_reset_8d_session"] = True
+
+    # Stop further execution; the app will rerun safely
     st.stop()
 
+# At the very top of your app (after imports), handle the reset flag safely:
 if st.session_state.get("_reset_8d_session", False):
     st.session_state["_reset_8d_session"] = False
     st.experimental_rerun()
@@ -205,146 +228,426 @@ for sub in ["occ_answer", "det_answer", "sys_answer"]:
 # D5 categories
 # ---------------------------
 occurrence_categories = {
-    "en":["Process","Material","Design","Machine","Human Error"], 
-    "es":["Proceso","Material","Diseño","Máquina","Error Humano"]
+    "Machine / Equipment": [
+        "Mechanical failure or breakdown",
+        "Calibration issues or drift",
+        "Tooling or fixture wear or damage",
+        "Machine parameters not optimized",
+        "Improper preventive maintenance schedule",
+        "Sensor malfunction or misalignment",
+        "Process automation fault not detected",
+        "Unstable process due to poor machine setup"
+    ],
+    "Material / Component": [
+        "Wrong material or component used",
+        "Supplier provided off-spec component",
+        "Material defect not visible during inspection",
+        "Damage during storage, handling, or transport",
+        "Incorrect labeling, Missing label or lot traceability error",
+        "Material substitution without approval",
+        "Incorrect specifications or revision mismatch"
+    ],
+    "Process / Method": [
+        "Incorrect process step sequence",
+        "Critical process parameters not controlled",
+        "Work instructions unclear or missing details",
+        "Process drift over time not detected",
+        "Control plan not followed on production floor",
+        "Incorrect torque, solder, or assembly process",
+        "Outdated or missing process FMEA linkage",
+        "Inadequate process capability (Cp/Cpk below target)"
+    ],
+    "Design / Engineering": [
+        "Design not robust to real-use conditions",
+        "Tolerance stack-up issue not evaluated",
+        "Late design change not communicated to production",
+        "Incorrect or unclear drawing specification",
+        "Component placement design error (DFMEA gap)",
+        "Lack of design verification or validation testing"
+    ],
+    "Environmental / External": [
+        "Temperature or humidity out of control range",
+        "Electrostatic discharge (ESD) not controlled",
+        "Contamination or dust affecting product",
+        "Power fluctuation or interruption",
+        "External vibration or noise interference",
+        "Unstable environmental monitoring process"
+    ]
 }
+
 detection_categories = {
-    "en":["Inspection","Testing","Customer"], 
-    "es":["Inspección","Prueba","Cliente"]
+    "QA / Inspection": [
+        "QA checklist incomplete or not updated",
+        "No automated inspection system in place",
+        "Manual inspection prone to human error",
+        "Inspection frequency too low to detect issue",
+        "Inspection criteria unclear or inconsistent",
+        "Measurement system not capable (GR&R issues)",
+        "Incoming inspection missed supplier issue",
+        "Final inspection missed due to sampling plan"
+    ],
+    "Validation / Process": [
+        "Process validation not updated after design/process change",
+        "Insufficient verification of new parameters or components",
+        "Design validation not complete or not representative of real conditions",
+        "Inadequate control plan coverage for potential failure modes",
+        "Lack of ongoing process monitoring (SPC / CpK tracking)",
+        "Incorrect or outdated process limits not aligned with FMEA"
+    ],
+    "FMEA / Control Plan": [
+        "Failure mode not captured in PFMEA",
+        "Detection controls missing or ineffective in PFMEA",
+        "Control plan not updated after corrective actions",
+        "FMEA not reviewed after customer complaint",
+        "Detection ranking not realistic to actual inspection capability",
+        "PFMEA and control plan not properly linked"
+    ],
+    "Test / Equipment": [
+        "Test equipment calibration overdue",
+        "Testing software parameters incorrect",
+        "Test setup does not detect this specific failure mode",
+        "Detection threshold too wide to capture failure",
+        "Test data not logged or reviewed regularly"
+    ],
+    "Systemic / Organizational": [
+        "Feedback loop from quality incidents not implemented",
+        "Lack of detection feedback in regular team meetings",
+        "Training gaps in inspection or test personnel",
+        "Quality alerts not properly communicated to operators"
+    ]
 }
+
 systemic_categories = {
-    "en":["Process System","Supplier System","Quality System"], 
-    "es":["Sistema de Proceso","Sistema de Proveedor","Sistema de Calidad"]
+    "Management / Organization": [
+        "Inadequate leadership or supervision structure",
+        "Insufficient resource allocation to critical processes",
+        "Delayed response to known production issues",
+        "Lack of accountability or ownership of quality issues",
+        "Ineffective escalation process for recurring problems",
+        "Weak cross-functional communication between departments"
+    ],
+    "Process / Procedure": [
+        "Standard Operating Procedures (SOPs) outdated or missing",
+        "Process FMEA not reviewed regularly",
+        "Control plan not aligned with PFMEA or actual process",
+        "Lessons learned not integrated into similar processes",
+        "Inefficient document control system",
+        "Preventive maintenance procedures not standardized"
+    ],
+    "Training": [
+        "No defined training matrix or certification tracking",
+        "New hires not trained on critical control points",
+        "Training effectiveness not evaluated",
+        "Knowledge not shared between shifts or teams",
+        "Competence requirements not clearly defined"
+    ],
+    "Supplier / External": [
+        "Supplier not included in 8D or FMEA review process",
+        "Supplier corrective actions not verified for effectiveness",
+        "Inadequate incoming material audit process",
+        "Supplier process changes not communicated to customer",
+        "Long lead time for supplier quality issue closure",
+        "Supplier violation of cleanpoint"
+    ],
+    "Quality System / Feedback": [
+        "Internal audits ineffective or not completed",
+        "Quality KPI tracking not linked to root cause analysis",
+        "Ineffective use of 5-Why or other problem solving tools",
+        "Customer complaints not feeding back into design reviews",
+        "No systemic review after multiple 8Ds in same area"
+    ]
 }
 
 # ---------------------------
-# Function to render 5-Whys for each category
+# Helper: Suggest root cause based on whys
 # ---------------------------
-def render_whys_no_repeat(whys_list, categories, text_prefix="Why"):
-    cols = st.columns(len(whys_list))
-    for i in range(len(whys_list)):
-        whys_list[i] = cols[i].text_area(f"{text_prefix} #{i+1}", whys_list[i])
+def suggest_root_cause(whys):
+    text = " ".join(whys).lower()
+    if any(word in text for word in ["training", "knowledge", "human error"]):
+        return "The root cause may be attributed to insufficient training or a knowledge gap"
+    if any(word in text for word in ["equipment", "tool", "machine", "fixture"]):
+        return "The root cause may be attributed to equipment, tooling, or maintenance issue"
+    if any(word in text for word in ["procedure", "process", "standard"]):
+        return "The root cause may be attributed to procedure or process not followed or inadequate"
+    if any(word in text for word in ["communication", "information", "handover"]):
+        return "The root cause may be attributed to poor communication or unclear information flow"
+    if any(word in text for word in ["material", "supplier", "component", "part"]):
+        return "The root cause may be attributed to material, supplier, or logistics-related issue"
+    if any(word in text for word in ["design", "specification", "drawing"]):
+        return "The root cause may be attributed to design or engineering issue"
+    if any(word in text for word in ["management", "supervision", "resource"]):
+        return "The root cause may be attributed management or resource-related issue"
+    if any(word in text for word in ["temperature", "humidity", "contamination", "environment"]):
+        return "The root cause may be attributed to environmental or external factor"
+    return "No clear root cause suggestion (provide more 5-Whys)"
 
 # ---------------------------
-# Layout: Tabs D1-D8
+# Helper: Render 5-Why dropdowns without repeating selections
 # ---------------------------
-tabs_labels = [t[lang_key][0] for t in npqp_steps]
-tabs = st.tabs(tabs_labels)
+def render_whys_no_repeat(why_list, categories, label_prefix):
+    for idx in range(len(why_list)):
+        selected_so_far = [w for i, w in enumerate(why_list) if w.strip() and i != idx]
+        options = [""] + [f"{cat}: {item}" for cat, items in categories.items() for item in items if f"{cat}: {item}" not in selected_so_far]
+        current_val = why_list[idx] if why_list[idx] in options else ""
+        why_list[idx] = st.selectbox(
+            f"{label_prefix} {idx+1}",
+            options,
+            index=options.index(current_val) if current_val in options else 0,
+            key=f"{label_prefix}_{idx}_{lang_key}"
+        )
+        free_text = st.text_input(f"Or enter your own {label_prefix} {idx+1}", value=why_list[idx], key=f"{label_prefix}_txt_{idx}_{lang_key}")
+        if free_text.strip():
+            why_list[idx] = free_text
 
-for idx, (step, guidance, example) in enumerate(npqp_steps):
-    with tabs[idx]:
+# ---------------------------
+# Render Tabs D1–D8
+# ---------------------------
+tab_labels = [
+    f"🟢 {t[lang_key][step]}" if st.session_state[step]["answer"].strip() else f"🔴 {t[lang_key][step]}"
+    for step, _, _ in npqp_steps
+]
+tabs = st.tabs(tab_labels)
+
+for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
+    with tabs[i]:
         st.markdown(f"### {t[lang_key][step]}")
-        st.info(guidance[lang_key])
-        st.text_area("Your Answer", key=f"{step}_answer", height=120)
-        st.markdown(f"**Example:** {example[lang_key]}")
+        note_text = note_dict[lang_key]
+        example_text = example_dict[lang_key]
+        st.markdown(f"""
+<div style="
+background-color:#b3e0ff;
+color:black;
+padding:12px;
+border-left:5px solid #1E90FF;
+border-radius:6px;
+width:100%;
+font-size:14px;
+line-height:1.5;
+">
+<b>{t[lang_key]['Training_Guidance']}:</b> {note_text}<br><br>
+💡 <b>{t[lang_key]['Example']}:</b> {example_text}
+</div>
+""", unsafe_allow_html=True)
+
+        # Default single-answer field (for steps that use it)
+        # We'll override for D4, D5, D6, D7, D8 below as needed
+
+        # D4 Nissan-style
         if step == "D4":
-            st.text_input("Material Location", key="d4_location")
-            st.text_input("Activity Status", key="d4_status")
-            st.text_area("Containment Actions", key="d4_containment")
-        if step == "D5":
-            st.subheader("Occurrence Why")
-            render_whys_no_repeat(st.session_state.d5_occ_whys, occurrence_categories[lang_key])
-            st.subheader("Detection Why")
-            render_whys_no_repeat(st.session_state.d5_det_whys, detection_categories[lang_key])
-            st.subheader("Systemic Why")
-            render_whys_no_repeat(st.session_state.d5_sys_whys, systemic_categories[lang_key])
-        if step == "D6":
-            st.text_area("Permanent Corrective Action - Occurrence", key="D6_occ_answer")
-            st.text_area("Permanent Corrective Action - Detection", key="D6_det_answer")
-            st.text_area("Permanent Corrective Action - Systemic", key="D6_sys_answer")
-        if step == "D7":
-            st.text_area("Countermeasure Confirmation - Occurrence", key="D7_occ_answer")
-            st.text_area("Countermeasure Confirmation - Detection", key="D7_det_answer")
-            st.text_area("Countermeasure Confirmation - Systemic", key="D7_sys_answer")
+            st.session_state[step]["location"] = st.selectbox(
+                "Location of Material",
+                ["", "Work in Progress", "Stores Stock", "Warehouse Stock", "Service Parts", "Other"],
+                index=0,
+                key="d4_location"
+            )
+            st.session_state[step]["status"] = st.selectbox(
+                "Status of Activities",
+                ["", "Pending", "In Progress", "Completed", "Other"],
+                index=0,
+                key="d4_status"
+            )
+            st.session_state[step]["answer"] = st.text_area(
+                "Containment Actions / Notes",
+                value=st.session_state[step]["answer"],
+                key=f"ans_{step}"
+            )
+
+        # D5 5-Why
+        elif step == "D5":
+            st.markdown("#### Occurrence Analysis")
+            render_whys_no_repeat(st.session_state.d5_occ_whys, occurrence_categories, t[lang_key]['Occurrence_Why'])
+            if st.button("➕ Add another Occurrence Why", key=f"add_occ_{i}"):
+                st.session_state.d5_occ_whys.append("")
+            st.markdown("#### Detection Analysis")
+            render_whys_no_repeat(st.session_state.d5_det_whys, detection_categories, t[lang_key]['Detection_Why'])
+            if st.button("➕ Add another Detection Why", key=f"add_det_{i}"):
+                st.session_state.d5_det_whys.append("")
+            st.markdown("#### Systemic Analysis")
+            render_whys_no_repeat(st.session_state.d5_sys_whys, systemic_categories, t[lang_key]['Systemic_Why'])
+            if st.button("➕ Add another Systemic Why", key=f"add_sys_{i}"):
+                st.session_state.d5_sys_whys.append("")
+            # Dynamic Root Causes
+            occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
+            det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
+            sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
+            st.text_area(f"{t[lang_key]['Root_Cause_Occ']}", value=suggest_root_cause(occ_whys) if occ_whys else "No occurrence whys provided yet", height=80, disabled=True)
+            st.text_area(f"{t[lang_key]['Root_Cause_Det']}", value=suggest_root_cause(det_whys) if det_whys else "No detection whys provided yet", height=80, disabled=True)
+            st.text_area(f"{t[lang_key]['Root_Cause_Sys']}", value=suggest_root_cause(sys_whys) if sys_whys else "No systemic whys provided yet", height=80, disabled=True)
+
+        # D6: Permanent Corrective Actions (three text areas: Occ/Det/Sys)
+        elif step == "D6":
+            st.session_state[step].setdefault("occ_answer", st.session_state["D6"].get("occ_answer", ""))
+            st.session_state[step].setdefault("det_answer", st.session_state["D6"].get("det_answer", ""))
+            st.session_state[step].setdefault("sys_answer", st.session_state["D6"].get("sys_answer", ""))
+
+            st.session_state[step]["occ_answer"] = st.text_area(
+                "D6 - Corrective Actions for Occurrence Root Cause",
+                value=st.session_state[step]["occ_answer"],
+                key="d6_occ"
+            )
+            st.session_state[step]["det_answer"] = st.text_area(
+                "D6 - Corrective Actions for Detection Root Cause",
+                value=st.session_state[step]["det_answer"],
+                key="d6_det"
+            )
+            st.session_state[step]["sys_answer"] = st.text_area(
+                "D6 - Corrective Actions for Systemic Root Cause",
+                value=st.session_state[step]["sys_answer"],
+                key="d6_sys"
+            )
+
+            # Mirror into top-level D6 storage so export code can find them consistently
+            st.session_state["D6"]["occ_answer"] = st.session_state[step]["occ_answer"]
+            st.session_state["D6"]["det_answer"] = st.session_state[step]["det_answer"]
+            st.session_state["D6"]["sys_answer"] = st.session_state[step]["sys_answer"]
+
+        # D7: Countermeasure Confirmation (three text areas: verification for Occ/Det/Sys)
+        elif step == "D7":
+            st.session_state[step].setdefault("occ_answer", st.session_state["D7"].get("occ_answer", ""))
+            st.session_state[step].setdefault("det_answer", st.session_state["D7"].get("det_answer", ""))
+            st.session_state[step].setdefault("sys_answer", st.session_state["D7"].get("sys_answer", ""))
+
+            st.session_state[step]["occ_answer"] = st.text_area(
+                "D7 - Occurrence Countermeasure Verification",
+                value=st.session_state[step]["occ_answer"],
+                key="d7_occ"
+            )
+            st.session_state[step]["det_answer"] = st.text_area(
+                "D7 - Detection Countermeasure Verification",
+                value=st.session_state[step]["det_answer"],
+                key="d7_det"
+            )
+            st.session_state[step]["sys_answer"] = st.text_area(
+                "D7 - Systemic Countermeasure Verification",
+                value=st.session_state[step]["sys_answer"],
+                key="d7_sys"
+            )
+
+            # Mirror into top-level D7 storage so export code can find them consistently
+            st.session_state["D7"]["occ_answer"] = st.session_state[step]["occ_answer"]
+            st.session_state["D7"]["det_answer"] = st.session_state[step]["det_answer"]
+            st.session_state["D7"]["sys_answer"] = st.session_state[step]["sys_answer"]
+
+        # D8: Follow-up Activities / Lessons Learned (single text area)
+        elif step == "D8":
+            st.session_state[step]["answer"] = st.text_area(
+                "Your Answer",
+                value=st.session_state[step]["answer"],
+                key=f"ans_{step}"
+            )
+
+        else:
+            # Default for D1, D2, D3, or any other single-answer steps
+            if step not in ["D4", "D5", "D6", "D7", "D8"]:
+                st.session_state[step]["answer"] = st.text_area(
+                    "Your Answer",
+                    value=st.session_state[step]["answer"],
+                    key=f"ans_{step}"
+                )
 
 # ---------------------------
-# Excel Export Function
+# Collect all answers for Excel export
 # ---------------------------
-def export_to_excel():
+data_rows = []
+
+occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
+det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
+sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
+
+occ_rc_text = suggest_root_cause(occ_whys) if occ_whys else "No occurrence whys provided yet"
+det_rc_text = suggest_root_cause(det_whys) if det_whys else "No detection whys provided yet"
+sys_rc_text = suggest_root_cause(sys_whys) if sys_whys else "No systemic whys provided yet"
+
+for step, _, _ in npqp_steps:
+    # D6 and D7 should export their 3 sub-answers as separate rows
+    if step == "D6":
+        data_rows.append(("D6 - Occurrence Countermeasure", st.session_state.get("D6", {}).get("occ_answer", ""), ""))
+        data_rows.append(("D6 - Detection Countermeasure", st.session_state.get("D6", {}).get("det_answer", ""), ""))
+        data_rows.append(("D6 - Systemic Countermeasure", st.session_state.get("D6", {}).get("sys_answer", ""), ""))
+    elif step == "D7":
+        data_rows.append(("D7 - Occurrence Countermeasure Verification", st.session_state.get("D7", {}).get("occ_answer", ""), ""))
+        data_rows.append(("D7 - Detection Countermeasure Verification", st.session_state.get("D7", {}).get("det_answer", ""), ""))
+        data_rows.append(("D7 - Systemic Countermeasure Verification", st.session_state.get("D7", {}).get("sys_answer", ""), ""))
+    elif step == "D5":
+        data_rows.append(("D5 - Root Cause (Occurrence)", occ_rc_text, " | ".join(occ_whys)))
+        data_rows.append(("D5 - Root Cause (Detection)", det_rc_text, " | ".join(det_whys)))
+        data_rows.append(("D5 - Root Cause (Systemic)", sys_rc_text, " | ".join(sys_whys)))
+    elif step == "D4":
+        loc = st.session_state[step].get("location", "")
+        status = st.session_state[step].get("status", "")
+        answer = st.session_state[step].get("answer", "")
+        extra = f"Location: {loc} | Status: {status}"
+        data_rows.append((step, answer, extra))
+    else:
+        answer = st.session_state[step].get("answer", "")
+        extra = st.session_state[step].get("extra", "")
+        data_rows.append((step, answer, extra))
+
+# ---------------------------
+# Excel generation (formatted)
+# ---------------------------
+def generate_excel():
     wb = Workbook()
     ws = wb.active
-    ws.title = "8D Report"
+    ws.title = "NPQP 8D Report"
+    thin = Side(border_style="thin", color="000000")
+    border = Border(left=thin, right=thin, top=thin, bottom=thin)
 
-    row = 1
-    ws.merge_cells(start_row=row, start_column=1, end_row=row, end_column=5)
-    ws.cell(row=row, column=1, value="8D Report").font = Font(bold=True, size=14)
-    row += 2
+    # Add logo if exists
+    if os.path.exists("logo.png"):
+        try:
+            img = XLImage("logo.png")
+            img.width = 140
+            img.height = 40
+            ws.add_image(img, "A1")
+        except:
+            pass
 
-    # Header info
-    ws.cell(row=row, column=1, value="Report Date")
-    ws.cell(row=row, column=2, value=st.session_state.get("report_date", ""))
-    row += 1
-    ws.cell(row=row, column=1, value="Prepared By")
-    ws.cell(row=row, column=2, value=st.session_state.get("prepared_by", ""))
-    row += 2
+    ws.merge_cells(start_row=3, start_column=1, end_row=3, end_column=3)
+    ws.cell(row=3, column=1, value="📋 8D Report Assistant").font = Font(bold=True, size=14)
 
-    # Loop through D1-D8
-    for step, guidance, example in npqp_steps:
-        ws.cell(row=row, column=1, value=t[lang_key][step])
-        ws.cell(row=row, column=2, value=st.session_state.get(f"{step}_answer", ""))
-        row += 2
-        if step == "D4":
-            ws.cell(row=row, column=1, value="Material Location")
-            ws.cell(row=row, column=2, value=st.session_state.get("d4_location",""))
-            row += 1
-            ws.cell(row=row, column=1, value="Activity Status")
-            ws.cell(row=row, column=2, value=st.session_state.get("d4_status",""))
-            row += 1
-            ws.cell(row=row, column=1, value="Containment Actions")
-            ws.cell(row=row, column=2, value=st.session_state.get("d4_containment",""))
-            row += 2
-        if step == "D5":
-            for i, why in enumerate(st.session_state.d5_occ_whys):
-                ws.cell(row=row, column=1, value=f"Occurrence Why #{i+1}")
-                ws.cell(row=row, column=2, value=why)
-                row += 1
-            for i, why in enumerate(st.session_state.d5_det_whys):
-                ws.cell(row=row, column=1, value=f"Detection Why #{i+1}")
-                ws.cell(row=row, column=2, value=why)
-                row += 1
-            for i, why in enumerate(st.session_state.d5_sys_whys):
-                ws.cell(row=row, column=1, value=f"Systemic Why #{i+1}")
-                ws.cell(row=row, column=2, value=why)
-                row += 1
-        if step in ["D6","D7"]:
-            for sub in ["occ_answer","det_answer","sys_answer"]:
-                ws.cell(row=row, column=1, value=sub)
-                ws.cell(row=row, column=2, value=st.session_state[step].get(sub,""))
-                row += 1
-        row += 2
+    ws.append([t[lang_key]['Report_Date'], st.session_state.report_date])
+    ws.append([t[lang_key]['Prepared_By'], st.session_state.prepared_by])
+    ws.append([])
 
-    buffer = io.BytesIO()
-    wb.save(buffer)
-    buffer.seek(0)
-    return buffer
+    # Header row
+    header_row = ws.max_row + 1
+    headers = ["Step", "Answer", "Extra / Notes"]
+    fill = PatternFill(start_color="1E90FF", end_color="1E90FF", fill_type="solid")
+    for c_idx, h in enumerate(headers, start=1):
+        cell = ws.cell(row=header_row, column=c_idx, value=h)
+        cell.fill = fill
+        cell.font = Font(bold=True, color="FFFFFF")
+        cell.alignment = Alignment(horizontal="center", vertical="center")
+        cell.border = border
 
-# ---------------------------
-# Download Button
-# ---------------------------
-st.sidebar.markdown("---")
-st.sidebar.header("💾 Export 8D Report")
-if st.sidebar.button("Download XLSX"):
-    excel_data = export_to_excel()
-    st.sidebar.download_button(
-        label="📥 Download 8D Report",
-        data=excel_data,
-        file_name=f"8D_Report_{datetime.datetime.today().strftime('%Y%m%d')}.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    )
+    # Append step answers
+    for step_label, answer_text, extra_text in data_rows:
+        ws.append([step_label, answer_text, extra_text])
+        r = ws.max_row
+        for c in range(1, 4):
+            cell = ws.cell(row=r, column=c)
+            cell.alignment = Alignment(wrap_text=True, vertical="top")
+            # Bold the Answer column content visually
+            if c == 2:
+                cell.font = Font(bold=True)
+            cell.border = border
 
-# ---------------------------
-# File/Photo Upload Capability
-# ---------------------------
-st.sidebar.markdown("---")
-st.sidebar.header("📎 Upload Files / Photos")
-uploaded_files = st.sidebar.file_uploader(
-    "Upload files or images from computer/phone",
-    type=None,
-    accept_multiple_files=True
+    # Set column widths
+    for col in range(1, 4):
+        ws.column_dimensions[get_column_letter(col)].width = 40
+
+    output = io.BytesIO()
+    wb.save(output)
+    return output.getvalue()
+
+st.download_button(
+    label=f"{t[lang_key]['Download']}",
+    data=generate_excel(),
+    file_name=f"8D_Report_{st.session_state.report_date.replace(' ', '_')}.xlsx",
+    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 )
-if uploaded_files:
-    st.sidebar.markdown("**Uploaded Files:**")
-    for f in uploaded_files:
-        st.sidebar.write(f.name)
-        if f.type.startswith("image/"):
-            st.image(f, width=200)
+
+# ---------------------------
+# (End)
+# ---------------------------
