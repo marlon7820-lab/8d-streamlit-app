@@ -647,36 +647,32 @@ st.download_button(
     file_name=f"8D_Report_{st.session_state.report_date.replace(' ', '_')}.xlsx",
     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 )
-# ---------------------------
-# Sidebar Backup/Restore/Reset
-# ---------------------------
-import io
-import json
-import streamlit as st
-
 with st.sidebar:
     st.markdown("## Backup / Restore / Reset")
 
-    # Generate JSON bytes
-    def get_json_bytesio():
+    # Generate JSON as bytes
+    def generate_json_bytes():
         save_data = {k: v for k, v in st.session_state.items() if not k.startswith("_")}
         json_str = json.dumps(save_data, indent=4)
-        return io.BytesIO(json_str.encode("utf-8"))
+        return io.BytesIO(json_str.encode("utf-8")).getvalue()  # <--- important
 
     st.download_button(
         label="💾 Save Progress (JSON)",
-        data=get_json_bytesio(),
+        data=generate_json_bytes(),  # provide actual bytes
         file_name=f"8D_Report_Backup_{st.session_state.report_date.replace(' ', '_')}.json",
         mime="application/json"
     )
 
-    # Upload JSON to restore
+    # Upload JSON to restore session
     uploaded_file = st.file_uploader("Upload JSON file to restore", type="json")
     if uploaded_file:
-        restore_data = json.load(uploaded_file)
-        for k, v in restore_data.items():
-            st.session_state[k] = v
-        st.success("✅ Session restored from JSON!")
+        try:
+            restore_data = json.load(uploaded_file)
+            for k, v in restore_data.items():
+                st.session_state[k] = v
+            st.success("✅ Session restored from JSON!")
+        except Exception as e:
+            st.error(f"Error restoring JSON: {e}")
 
 # ---------------------------
 # (End)
