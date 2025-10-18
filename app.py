@@ -457,7 +457,7 @@ line-height:1.5;
             if st.session_state[f"{step}_files"]:
                 st.markdown("**Uploaded Files:**")
                 for f in st.session_state[f"{step}_files"]:
-                    st.markdown(f"- {f.name}")d
+                    st.markdown(f"- {f.name}")
 
         # D4 Nissan-style
         if step == "D4":
