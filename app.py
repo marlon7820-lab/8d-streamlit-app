@@ -203,8 +203,12 @@ npqp_steps = [
 for step, _, _ in npqp_steps:
     if step not in st.session_state:
         st.session_state[step] = {"answer": "", "extra": ""}
+    st.session_state.setdefault(f"{step}_files", [])  # <-- Initialize file storage
 
 # Ensure D6/D7 subfields exist
+for sub in ["occ_answer", "det_answer", "sys_answer"]:
+    st.session_state.setdefault("D6", {}).setdefault(sub, "")
+    st.session_state.setdefault("D7", {}).setdefault(sub, "")
 st.session_state.setdefault("report_date", datetime.datetime.today().strftime("%B %d, %Y"))
 st.session_state.setdefault("prepared_by", "")
 st.session_state.setdefault("d5_occ_whys", [""]*5)
@@ -429,8 +433,31 @@ line-height:1.5;
 </div>
 """, unsafe_allow_html=True)
 
-        # Default single-answer field (for steps that use it)
-        # We'll override for D4, D5, D6, D7, D8 below as needed
+        # Default single-answer fields
+        if step not in ["D4", "D5", "D6", "D7", "D8"]:
+            st.session_state[step]["answer"] = st.text_area(
+                "Your Answer",
+                value=st.session_state[step]["answer"],
+                key=f"ans_{step}"
+            )
+
+        # ----------------------
+        # File uploader for D1, D3, D4, D7
+        # ----------------------
+        if step in ["D1", "D3", "D4", "D7"]:
+            uploaded_files = st.file_uploader(
+                "Upload files or images",
+                type=["png", "jpg", "jpeg", "pdf", "xlsx", "docx", "txt"],
+                accept_multiple_files=True,
+                key=f"{step}_uploader"
+            )
+            if uploaded_files:
+                st.session_state[f"{step}_files"].extend(uploaded_files)
+
+            if st.session_state[f"{step}_files"]:
+                st.markdown("**Uploaded Files:**")
+                for f in st.session_state[f"{step}_files"]:
+                    st.markdown(f"- {f.name}")d
 
         # D4 Nissan-style
         if step == "D4":
