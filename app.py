@@ -413,8 +413,8 @@ line-height:1.5;
             for f in st.session_state[step]["uploaded_files"]:
                 st.write(f"{f.name}")
                 if f.type.startswith("image/"):
-                st.image(f, width=288)  # roughly 3 inches wide, height auto-scaled   
-
+                    st.image(f, width=288)  # roughly 3 inches wide, height auto-scaled
+ 
         # Step-specific inputs (same level as upload check)
         if step == "D4":
             st.session_state[step]["location"] = st.selectbox(
