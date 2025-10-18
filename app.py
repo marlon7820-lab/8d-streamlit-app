@@ -183,10 +183,10 @@ npqp_steps = [
 # ---------------------------
 for step, _, _ in npqp_steps:
     if step not in st.session_state:
-        st.session_state[step] = {"answer": "", "extra": ""}
+        st.session_state[step] = {"answer": "", "extra": "", "files": []}  # Added "files"
 
 st.session_state.setdefault("report_date", datetime.datetime.today().strftime("%B %d, %Y"))
-st.session_state["report_date"] = str(st.session_state["report_date"])  # <-- fix for TypeError
+st.session_state["report_date"] = str(st.session_state["report_date"])  # fix for TypeError
 st.session_state.setdefault("prepared_by", "")
 st.session_state.setdefault("d5_occ_whys", [""]*5)
 st.session_state.setdefault("d5_det_whys", [""]*5)
@@ -200,7 +200,6 @@ for sub in ["occ_answer", "det_answer", "sys_answer"]:
     st.session_state["D6"].setdefault(sub, "")
     st.session_state.setdefault(("D7"), st.session_state.get("D7", {}))
     st.session_state["D7"].setdefault(sub, "")
-
 # ---------------------------
 # D5 categories
 # ---------------------------
@@ -334,9 +333,8 @@ systemic_categories = {
         "No systemic review after multiple 8Ds in same area"
     ]
 }
-
 # ---------------------------
-# Helper: Suggest root cause based on whys
+# Helper functions (root cause + whys)
 # ---------------------------
 def suggest_root_cause(whys):
     text = " ".join(whys).lower()
@@ -358,9 +356,6 @@ def suggest_root_cause(whys):
         return "The root cause may be attributed to environmental or external factor"
     return "No clear root cause suggestion (provide more 5-Whys)"
 
-# ---------------------------
-# Helper: Render 5-Why dropdowns without repeating selections
-# ---------------------------
 def render_whys_no_repeat(why_list, categories, label_prefix):
     for idx in range(len(why_list)):
         selected_so_far = [w for i, w in enumerate(why_list) if w.strip() and i != idx]
@@ -406,10 +401,9 @@ line-height:1.5;
 </div>
 """, unsafe_allow_html=True)
 
-        # Default single-answer field (for steps that use it)
-        # We'll override for D4, D5, D6, D7, D8 below as needed
-
-        # D4 Nissan-style
+        # ---------------------------
+        # Step-specific fields
+        # ---------------------------
         if step == "D4":
             st.session_state[step]["location"] = st.selectbox(
                 "Location of Material",
@@ -428,6 +422,7 @@ line-height:1.5;
                 value=st.session_state[step]["answer"],
                 key=f"ans_{step}"
             )
+
 
         # D5 5-Why
         elif step == "D5":
@@ -478,7 +473,7 @@ line-height:1.5;
             st.session_state["D6"]["det_answer"] = st.session_state[step]["det_answer"]
             st.session_state["D6"]["sys_answer"] = st.session_state[step]["sys_answer"]
 
-        # D7: Countermeasure Confirmation (three text areas: verification for Occ/Det/Sys)
+
         elif step == "D7":
             st.session_state[step].setdefault("occ_answer", st.session_state["D7"].get("occ_answer", ""))
             st.session_state[step].setdefault("det_answer", st.session_state["D7"].get("det_answer", ""))
@@ -505,22 +500,18 @@ line-height:1.5;
             st.session_state["D7"]["det_answer"] = st.session_state[step]["det_answer"]
             st.session_state["D7"]["sys_answer"] = st.session_state[step]["sys_answer"]
 
-        # D8: Follow-up Activities / Lessons Learned (single text area)
         elif step == "D8":
             st.session_state[step]["answer"] = st.text_area(
                 "Your Answer",
                 value=st.session_state[step]["answer"],
                 key=f"ans_{step}"
             )
-
         else:
-            # Default for D1, D2, D3, or any other single-answer steps
-            if step not in ["D4", "D5", "D6", "D7", "D8"]:
-                st.session_state[step]["answer"] = st.text_area(
-                    "Your Answer",
-                    value=st.session_state[step]["answer"],
-                    key=f"ans_{step}"
-                )
+            st.session_state[step]["answer"] = st.text_area(
+                "Your Answer",
+                value=st.session_state[step]["answer"],
+                key=f"ans_{step}"
+            )
 
 # ---------------------------
 # Collect all answers for Excel export
@@ -618,10 +609,97 @@ def generate_excel():
     wb.save(output)
     return output.getvalue()
 
+# File uploads for D1, D3, D4, D7
+        # ---------------------------
+        if step in ["D1", "D3", "D4", "D7"]:
+            st.markdown("#### Attach Photos / Files")
+            uploaded_files = st.file_uploader(
+                "Select images or documents (png, jpg, jpeg, pdf, docx)",
+                type=["png", "jpg", "jpeg", "pdf", "docx"],
+                accept_multiple_files=True,
+                key=f"upload_{step}"
+            )
+            st.session_state[step]["files"] = uploaded_files if uploaded_files else st.session_state[step].get("files", [])
+
+            # Preview images / files
+            if st.session_state[step]["files"]:
+                for file in st.session_state[step]["files"]:
+                    if file.type.startswith("image/"):
+                        st.image(file, width=250)
+                    else:
+                        st.markdown(f"- 📄 {file.name}")
+
+# ---------------------------
+# Excel export
+# ---------------------------
+def generate_excel():
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "8D Report"
+
+    # Styles
+    header_font = Font(bold=True, color="FFFFFF")
+    header_fill = PatternFill("solid", fgColor="1E90FF")
+    wrap_alignment = Alignment(wrap_text=True, vertical="top")
+
+    ws.append(["Step", "Answer", "Extra / Notes"])
+    for col in range(1, 4):
+        cell = ws.cell(row=1, column=col)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = wrap_alignment
+
+    data_rows = []
+    for step, _, _ in npqp_steps:
+        if step == "D7":
+            answer_text = "\n".join([
+                f"Occurrence: {st.session_state[step]['occ_answer']}",
+                f"Detection: {st.session_state[step]['det_answer']}",
+                f"Systemic: {st.session_state[step]['sys_answer']}"
+            ])
+        elif step == "D4":
+            answer_text = f"Location: {st.session_state[step]['location']}\nStatus: {st.session_state[step]['status']}\nActions: {st.session_state[step]['answer']}"
+        else:
+            answer_text = st.session_state[step]["answer"]
+
+        extra_text = ""
+        data_rows.append((step, answer_text, extra_text))
+
+    for step_label, answer_text, extra_text in data_rows:
+        ws.append([step_label, answer_text, extra_text])
+        row = ws.max_row
+
+        # Insert images
+        files = st.session_state.get(step_label, {}).get("files", [])
+        for file in files:
+            try:
+                if file.type.startswith("image/"):
+                    # Save to temp
+                    tmp_path = f"/tmp/{file.name}"
+                    with open(tmp_path, "wb") as f:
+                        f.write(file.getbuffer())
+                    img = XLImage(tmp_path)
+                    img.width = 200
+                    img.height = 100
+                    ws.add_image(img, f"C{row+1}")
+                else:
+                    ws.cell(row=row, column=3, value=f"Attached file: {file.name}")
+            except:
+                pass
+
+    # Save to BytesIO
+    stream = io.BytesIO()
+    wb.save(stream)
+    return stream
+
+# ---------------------------
+# Download button
+# ---------------------------
+excel_data = generate_excel()
 st.download_button(
     label=f"{t[lang_key]['Download']}",
-    data=generate_excel(),
-    file_name=f"8D_Report_{st.session_state.report_date.replace(' ', '_')}.xlsx",
+    data=excel_data,
+    file_name=f"8D_Report_{datetime.datetime.today().strftime('%Y%m%d')}.xlsx",
     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 )
 # ---------------------------
