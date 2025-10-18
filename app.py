@@ -647,6 +647,35 @@ st.download_button(
     file_name=f"8D_Report_{st.session_state.report_date.replace(' ', '_')}.xlsx",
     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 )
+# ---------------------------
+# Sidebar: Attach files / photos
+# ---------------------------
+with st.sidebar:
+    st.markdown("## 📎 Attach Files / Photos")
+    uploaded_files = st.file_uploader(
+        "Upload files to include in 8D report",
+        type=["png", "jpg", "jpeg", "pdf", "xlsx", "docx"],
+        accept_multiple_files=True
+    )
+
+    # Store uploaded files in session state
+    if uploaded_files:
+        if "attached_files" not in st.session_state:
+            st.session_state["attached_files"] = []
+        st.session_state["attached_files"].extend(uploaded_files)
+
+    # Display list of uploaded files
+    if st.session_state.get("attached_files"):
+        st.markdown("### Attached Files")
+        for f in st.session_state["attached_files"]:
+            st.write(f"- {f.name}")
+
+# At the end of Excel generation
+if st.session_state.get("attached_files"):
+    ws.append([])
+    ws.append(["Attached Files"])
+    for f in st.session_state["attached_files"]:
+        ws.append([f.name])
 
 # ---------------------------
 # (End)
