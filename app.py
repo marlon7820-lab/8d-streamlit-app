@@ -672,10 +672,12 @@ with st.sidebar:
 
 # At the end of Excel generation
 if st.session_state.get("attached_files"):
-    ws.append([])
-    ws.append(["Attached Files"])
+    # Add a blank row safely
+ws.append([""])  # just one empty cell
+ws.append(["Attached Files"])
     for f in st.session_state["attached_files"]:
-        ws.append([f.name])
+    ws.append([f.name])
+
 
 # ---------------------------
 # (End)
