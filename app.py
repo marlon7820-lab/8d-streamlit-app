@@ -647,37 +647,37 @@ st.download_button(
     file_name=f"8D_Report_{st.session_state.report_date.replace(' ', '_')}.xlsx",
     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 )
-
 # ---------------------------
-# Sidebar Backup/Restore/Reset
+# Sidebar Backup / Restore / Reset
 # ---------------------------
 with st.sidebar:
     st.markdown("## Backup / Restore / Reset")
-    
-    # JSON Backup
+
+    # JSON Backup: Save current session state (all answers)
     def generate_json():
-        # Only keep user-filled data, include D6/D7 subfields
-        relevant_keys = ["report_date", "prepared_by"] + [step for step in st.session_state if step.startswith("D")]
-        save_data = {k: st.session_state[k] for k in relevant_keys}
+        # Exclude internal keys starting with '_'
+        save_data = {k: v for k, v in st.session_state.items() if not k.startswith("_")}
         return json.dumps(save_data, indent=4)
 
+    json_data = generate_json().encode("utf-8")  # convert to bytes for download
     st.download_button(
         label="💾 Save Progress (JSON)",
-        data=generate_json(),
+        data=json_data,
         file_name=f"8D_Report_Backup_{st.session_state.report_date.replace(' ', '_')}.json",
         mime="application/json"
     )
 
-    # JSON Restore
-    uploaded_file = st.file_uploader("Upload JSON file to restore", type="json")
+    # JSON Restore: Load previous session state
+    uploaded_file = st.file_uploader("📂 Upload JSON file to restore", type="json")
     if uploaded_file:
         try:
             restore_data = json.load(uploaded_file)
             for k, v in restore_data.items():
                 st.session_state[k] = v
-            st.success("✅ Session restored from JSON!")
+            st.success("✅ Session restored from JSON! All answers should now appear in the app.")
+            st.experimental_rerun()  # refresh the app to reflect restored state
         except Exception as e:
-            st.error(f"Error restoring JSON: {e}")
+            st.error(f"❌ Error restoring JSON: {e}")
 
 # ---------------------------
 # (End)
