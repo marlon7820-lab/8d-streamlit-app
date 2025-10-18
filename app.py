@@ -593,6 +593,35 @@ def generate_excel():
     thin = Side(border_style="thin", color="000000")
     border = Border(left=thin, right=thin, top=thin, bottom=thin)
 
+    # (logo and headers code here...)
+
+    # Append step answers
+    for step_label, answer_text, extra_text in data_rows:
+        ws.append([step_label, answer_text, extra_text])
+        r = ws.max_row
+        for c in range(1, 4):
+            cell = ws.cell(row=r, column=c)
+            cell.alignment = Alignment(wrap_text=True, vertical="top")
+            if c == 2:
+                cell.font = Font(bold=True)
+            cell.border = border
+
+    # Add attached files list at the bottom
+    if st.session_state.get("attached_files"):
+        ws.append([])  # empty row
+        ws.append(["Attached Files"])
+        for f in st.session_state["attached_files"]:
+            ws.append([f.name])
+
+    # Set column widths
+    for col in range(1, 4):
+        ws.column_dimensions[get_column_letter(col)].width = 40
+
+    output = io.BytesIO()
+    wb.save(output)
+    return output.getvalue()
+
+
     # Add logo if exists
     if os.path.exists("logo.png"):
         try:
