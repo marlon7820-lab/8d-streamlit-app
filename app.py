@@ -410,26 +410,44 @@ line-height:1.5;
 💡 <b>{t[lang_key]['Example']}:</b> {example_text}
 </div>
 """, unsafe_allow_html=True)
-
-        # File upload for D1, D3, D4, D7
-if step in ["D1","D3","D4","D7"]:
-    uploaded_files = st.file_uploader(
-        f"Upload files/photos for {step}",
-        type=["png", "jpg", "jpeg", "pdf", "xlsx", "txt"],
-        accept_multiple_files=True,
-        key=f"upload_{step}"
-    )
-    if uploaded_files:
-        for file in uploaded_files:
-            if file not in st.session_state[step]["uploaded_files"]:
-                st.session_state[step]["uploaded_files"].append(file)
-    if st.session_state[step]["uploaded_files"]:
-        st.markdown("**Uploaded Files / Photos:**")
-        for f in st.session_state[step]["uploaded_files"]:
-            st.write(f"{f.name}")
-            if f.type.startswith("image/"):
-                st.image(f, use_container_width=True)  # updated parameter
-
+    
+    # File upload for D1, D3, D4, D7
+    if step in ["D1","D3","D4","D7"]:
+        uploaded_files = st.file_uploader(
+            f"Upload files/photos for {step}",
+            type=["png", "jpg", "jpeg", "pdf", "xlsx", "txt"],
+            accept_multiple_files=True,
+            key=f"upload_{step}"
+        )
+        if uploaded_files:
+            for file in uploaded_files:
+                if file not in st.session_state[step]["uploaded_files"]:
+                    st.session_state[step]["uploaded_files"].append(file)
+        if st.session_state[step]["uploaded_files"]:
+            st.markdown("**Uploaded Files / Photos:**")
+            for f in st.session_state[step]["uploaded_files"]:
+                st.write(f"{f.name}")
+                if f.type.startswith("image/"):
+                    st.image(f, use_container_width=True)
+        # D4 Nissan-style
+        if step == "D4":
+            st.session_state[step]["location"] = st.selectbox(
+                "Location of Material",
+                ["", "Work in Progress", "Stores Stock", "Warehouse Stock", "Service Parts", "Other"],
+                index=0,
+                key="d4_location"
+            )
+            st.session_state[step]["status"] = st.selectbox(
+                "Status of Activities",
+                ["", "Pending", "In Progress", "Completed", "Other"],
+                index=0,
+                key="d4_status"
+            )
+            st.session_state[step]["answer"] = st.text_area(
+                "Containment Actions / Notes",
+                value=st.session_state[step]["answer"],
+                key=f"ans_{step}"
+            )
 
         # D5 5-Why
         elif step == "D5":
