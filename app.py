@@ -583,44 +583,13 @@ for step, _, _ in npqp_steps:
         extra = st.session_state[step].get("extra", "")
         data_rows.append((step, answer, extra))
 
-# ---------------------------
-# Excel generation (formatted)
-# ---------------------------
 def generate_excel():
     wb = Workbook()
     ws = wb.active
     ws.title = "NPQP 8D Report"
+
     thin = Side(border_style="thin", color="000000")
     border = Border(left=thin, right=thin, top=thin, bottom=thin)
-
-    # (logo and headers code here...)
-
-    # Append step answers
-    for step_label, answer_text, extra_text in data_rows:
-        ws.append([step_label, answer_text, extra_text])
-        r = ws.max_row
-        for c in range(1, 4):
-            cell = ws.cell(row=r, column=c)
-            cell.alignment = Alignment(wrap_text=True, vertical="top")
-            if c == 2:
-                cell.font = Font(bold=True)
-            cell.border = border
-
-    # Add attached files list at the bottom
-    if st.session_state.get("attached_files"):
-        ws.append([])  # empty row
-        ws.append(["Attached Files"])
-        for f in st.session_state["attached_files"]:
-            ws.append([f.name])
-
-    # Set column widths
-    for col in range(1, 4):
-        ws.column_dimensions[get_column_letter(col)].width = 40
-
-    output = io.BytesIO()
-    wb.save(output)
-    return output.getvalue()
-
 
     # Add logo if exists
     if os.path.exists("logo.png"):
@@ -632,9 +601,11 @@ def generate_excel():
         except:
             pass
 
+    # Merge and title
     ws.merge_cells(start_row=3, start_column=1, end_row=3, end_column=3)
     ws.cell(row=3, column=1, value="📋 8D Report Assistant").font = Font(bold=True, size=14)
 
+    # Report info
     ws.append([t[lang_key]['Report_Date'], st.session_state.report_date])
     ws.append([t[lang_key]['Prepared_By'], st.session_state.prepared_by])
     ws.append([])
@@ -657,54 +628,27 @@ def generate_excel():
         for c in range(1, 4):
             cell = ws.cell(row=r, column=c)
             cell.alignment = Alignment(wrap_text=True, vertical="top")
-            # Bold the Answer column content visually
             if c == 2:
                 cell.font = Font(bold=True)
             cell.border = border
+
+    # Add attached files/photos
+    if st.session_state.get("attached_files"):
+        ws.append([])  # empty row
+        ws.append(["Attached Files"])
+        r = ws.max_row
+        ws.cell(row=r, column=1).font = Font(bold=True)
+        for f in st.session_state["attached_files"]:
+            ws.append([f.name])
 
     # Set column widths
     for col in range(1, 4):
         ws.column_dimensions[get_column_letter(col)].width = 40
 
+    # Save to BytesIO
     output = io.BytesIO()
     wb.save(output)
     return output.getvalue()
-
-st.download_button(
-    label=f"{t[lang_key]['Download']}",
-    data=generate_excel(),
-    file_name=f"8D_Report_{st.session_state.report_date.replace(' ', '_')}.xlsx",
-    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-)
-# ---------------------------
-# Sidebar: Attach files / photos
-# ---------------------------
-with st.sidebar:
-    st.markdown("## 📎 Attach Files / Photos")
-    uploaded_files = st.file_uploader(
-        "Upload files to include in 8D report",
-        type=["png", "jpg", "jpeg", "pdf", "xlsx", "docx"],
-        accept_multiple_files=True
-    )
-
-    # Store uploaded files in session state
-    if uploaded_files:
-        if "attached_files" not in st.session_state:
-            st.session_state["attached_files"] = []
-        st.session_state["attached_files"].extend(uploaded_files)
-
-    # Display list of uploaded files
-    if st.session_state.get("attached_files"):
-        st.markdown("### Attached Files")
-        for f in st.session_state["attached_files"]:
-            st.write(f"- {f.name}")
-
-# At the end of Excel generation
-if st.session_state.get("attached_files"):
-    ws.append([""])  # just one empty cell
-    ws.append(["Attached Files"])
-    for f in st.session_state["attached_files"]:
-        ws.append([f.name])
 
 # ---------------------------
 # (End)
