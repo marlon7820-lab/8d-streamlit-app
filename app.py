@@ -17,7 +17,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# App styles - updated for desktop selectbox outline
+# App styles
 st.markdown("""
 <style>
 .stApp {background: linear-gradient(to right, #f0f8ff, #e6f2ff); color: #000000 !important;}
@@ -26,8 +26,6 @@ textarea {background-color: #ffffff !important; border: 1px solid #1E90FF !impor
 .stInfo {background-color: #e6f7ff !important; border-left: 5px solid #1E90FF !important; color: #000000 !important;}
 .css-1d391kg {color: #1E90FF !important; font-weight: bold !important;}
 button[kind="primary"] {background-color: #87AFC7 !important; color: white !important; font-weight: bold;}
-
-/* Outline all Streamlit widget containers (works on desktop) */
 div.stSelectbox, div.stTextInput, div.stTextArea {
     border: 2px solid #1E90FF !important;
     border-radius: 5px !important;
@@ -35,17 +33,15 @@ div.stSelectbox, div.stTextInput, div.stTextArea {
     background-color: #ffffff !important;
     transition: border 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
 }
-
-/* Hover effect */
 div.stSelectbox:hover, div.stTextInput:hover, div.stTextArea:hover {
-    border: 2px solid #104E8B !important; /* slightly darker blue */
+    border: 2px solid #104E8B !important;
     box-shadow: 0 0 5px #1E90FF;
 }
 </style>
 """, unsafe_allow_html=True)
 
 # ---------------------------
-# Reset Session check (safe, no KeyError)
+# Reset Session
 # ---------------------------
 if st.session_state.get("_reset_8d_session", False):
     preserve_keys = ["lang", "lang_key", "current_tab"]
@@ -58,9 +54,7 @@ if st.session_state.get("_reset_8d_session", False):
     for k, v in preserved.items():
         st.session_state[k] = v
 
-    if "_reset_8d_session" in st.session_state:
-        st.session_state["_reset_8d_session"] = False
-
+    st.session_state["_reset_8d_session"] = False
     st.rerun()
 
 # ---------------------------
@@ -81,7 +75,7 @@ Version {version_number} | Last updated: {last_updated}
 """, unsafe_allow_html=True)
 
 # ---------------------------
-# Sidebar: Language selection & reset
+# Sidebar
 # ---------------------------
 st.sidebar.title("8D Report Assistant")
 st.sidebar.markdown("---")
@@ -89,9 +83,6 @@ st.sidebar.header("Settings")
 lang = st.sidebar.selectbox("Select Language / Seleccionar Idioma", ["English", "Español"])
 lang_key = "en" if lang == "English" else "es"
 
-# ---------------------------
-# Sidebar: Smart Session Reset Button
-# ---------------------------
 st.sidebar.markdown("---")
 st.sidebar.header("⚙️ App Controls")
 if st.sidebar.button("🔄 Reset 8D Session"):
@@ -171,17 +162,17 @@ t = {
 }
 
 # ---------------------------
-# NPQP 8D steps with examples
+# NPQP steps
 # ---------------------------
 npqp_steps = [
-    ("D1", {"en":"Describe the customer concerns clearly.", "es":"Describa claramente las preocupaciones del cliente."}, {"en":"Customer reported static noise in amplifier during end-of-line test.", "es":"El cliente reportó ruido estático en el amplificador durante la prueba final."}),
-    ("D2", {"en":"Check for similar parts, models, generic parts, other colors, etc.", "es":"Verifique partes similares, modelos, partes genéricas, otros colores, etc."}, {"en":"Similar model radio, Front vs. rear speaker.", "es":"Radio de modelo similar, altavoz delantero vs trasero."}),
-    ("D3", {"en":"Perform an initial investigation to identify obvious issues.", "es":"Realice una investigación inicial para identificar problemas evidentes."}, {"en":"Visual inspection of solder joints, initial functional tests.", "es":"Inspección visual de soldaduras, pruebas funcionales iniciales."}),
-    ("D4", {"en":"Define temporary containment actions and material location.", "es":"Defina acciones de contención temporales y ubicación del material."}, {"en":"Post Quality Alert, Increase Inspection, Inventory Certification","es":"Implementar Ayuda Visual, Incrementar Inspeccion, Certificar Inventario"}),
-    ("D5", {"en":"Use 5-Why analysis to determine the root cause.", "es":"Use el análisis de 5 Porqués para determinar la causa raíz."}, {"en":"","es":""}),
-    ("D6", {"en":"Define corrective actions that eliminate the root cause permanently.", "es":"Defina acciones correctivas que eliminen la causa raíz permanentemente."}, {"en":"Update soldering process, redesign fixture.", "es":"Actualizar proceso de soldadura, rediseñar herramienta."}),
-    ("D7", {"en":"Verify that corrective actions effectively resolve the issue.", "es":"Verifique que las acciones correctivas resuelvan efectivamente el problema."}, {"en":"Functional tests on corrected amplifiers.", "es":"Pruebas funcionales en amplificadores corregidos."}),
-    ("D8", {"en":"Document lessons learned, update standards, FMEAs.", "es":"Documente lecciones aprendidas, actualice estándares, FMEAs."}, {"en":"Update SOPs, PFMEA, work instructions.", "es":"Actualizar SOPs, PFMEA, instrucciones de trabajo."})
+    ("D1", {"en":"Describe the customer concerns clearly.","es":"Describa claramente las preocupaciones del cliente."}, {"en":"Customer reported static noise in amplifier during end-of-line test.","es":"El cliente reportó ruido estático en el amplificador durante la prueba final."}),
+    ("D2", {"en":"Check for similar parts, models, generic parts, other colors, etc.","es":"Verifique partes similares, modelos, partes genéricas, otros colores, etc."}, {"en":"Similar model radio, Front vs. rear speaker.","es":"Radio de modelo similar, altavoz delantero vs trasero."}),
+    ("D3", {"en":"Perform an initial investigation to identify obvious issues.","es":"Realice una investigación inicial para identificar problemas evidentes."}, {"en":"Visual inspection of solder joints, initial functional tests.","es":"Inspección visual de soldaduras, pruebas funcionales iniciales."}),
+    ("D4", {"en":"Define temporary containment actions and material location.","es":"Defina acciones de contención temporales y ubicación del material."}, {"en":"Post Quality Alert, Increase Inspection, Inventory Certification","es":"Implementar Ayuda Visual, Incrementar Inspeccion, Certificar Inventario"}),
+    ("D5", {"en":"Use 5-Why analysis to determine the root cause.","es":"Use el análisis de 5 Porqués para determinar la causa raíz."}, {"en":"","es":""}),
+    ("D6", {"en":"Define corrective actions that eliminate the root cause permanently.","es":"Defina acciones correctivas que eliminen la causa raíz permanentemente."}, {"en":"Update soldering process, redesign fixture.","es":"Actualizar proceso de soldadura, rediseñar herramienta."}),
+    ("D7", {"en":"Verify that corrective actions effectively resolve the issue.","es":"Verifique que las acciones correctivas resuelvan efectivamente el problema."}, {"en":"Functional tests on corrected amplifiers.","es":"Pruebas funcionales en amplificadores corregidos."}),
+    ("D8", {"en":"Document lessons learned, update standards, FMEAs.","es":"Documente lecciones aprendidas, actualice estándares, FMEAs."}, {"en":"Update SOPs, PFMEA, work instructions.","es":"Actualizar SOPs, PFMEA, instrucciones de trabajo."})
 ]
 
 # ---------------------------
@@ -190,7 +181,6 @@ npqp_steps = [
 for step, _, _ in npqp_steps:
     if step not in st.session_state:
         st.session_state[step] = {"answer": "", "extra": ""}
-        # Initialize uploaded files for D1, D3, D4, D7
         if step in ["D1","D3","D4","D7"]:
             st.session_state[step]["uploaded_files"] = []
 
@@ -204,147 +194,40 @@ st.session_state.setdefault("d4_status", "")
 st.session_state.setdefault("d4_containment", "")
 
 for sub in ["occ_answer", "det_answer", "sys_answer"]:
-    st.session_state.setdefault(("D6"), st.session_state.get("D6", {}))
+    st.session_state.setdefault("D6", st.session_state.get("D6", {}))
     st.session_state["D6"].setdefault(sub, "")
-    st.session_state.setdefault(("D7"), st.session_state.get("D7", {}))
+    st.session_state.setdefault("D7", st.session_state.get("D7", {}))
     st.session_state["D7"].setdefault(sub, "")
 
 # ---------------------------
-# D5 categories
+# Categories for D5
 # ---------------------------
 occurrence_categories = {
-    "Machine / Equipment": [
-        "Mechanical failure or breakdown",
-        "Calibration issues or drift",
-        "Tooling or fixture wear or damage",
-        "Machine parameters not optimized",
-        "Improper preventive maintenance schedule",
-        "Sensor malfunction or misalignment",
-        "Process automation fault not detected",
-        "Unstable process due to poor machine setup"
-    ],
-    "Material / Component": [
-        "Wrong material or component used",
-        "Supplier provided off-spec component",
-        "Material defect not visible during inspection",
-        "Damage during storage, handling, or transport",
-        "Incorrect labeling, Missing label or lot traceability error",
-        "Material substitution without approval",
-        "Incorrect specifications or revision mismatch"
-    ],
-    "Process / Method": [
-        "Incorrect process step sequence",
-        "Critical process parameters not controlled",
-        "Work instructions unclear or missing details",
-        "Process drift over time not detected",
-        "Control plan not followed on production floor",
-        "Incorrect torque, solder, or assembly process",
-        "Outdated or missing process FMEA linkage",
-        "Inadequate process capability (Cp/Cpk below target)"
-    ],
-    "Design / Engineering": [
-        "Design not robust to real-use conditions",
-        "Tolerance stack-up issue not evaluated",
-        "Late design change not communicated to production",
-        "Incorrect or unclear drawing specification",
-        "Component placement design error (DFMEA gap)",
-        "Lack of design verification or validation testing"
-    ],
-    "Environmental / External": [
-        "Temperature or humidity out of control range",
-        "Electrostatic discharge (ESD) not controlled",
-        "Contamination or dust affecting product",
-        "Power fluctuation or interruption",
-        "External vibration or noise interference",
-        "Unstable environmental monitoring process"
-    ]
+    "Machine / Equipment": ["Mechanical failure or breakdown","Calibration issues or drift","Tooling or fixture wear or damage","Machine parameters not optimized","Improper preventive maintenance schedule","Sensor malfunction or misalignment","Process automation fault not detected","Unstable process due to poor machine setup"],
+    "Material / Component": ["Wrong material or component used","Supplier provided off-spec component","Material defect not visible during inspection","Damage during storage, handling, or transport","Incorrect labeling, Missing label or lot traceability error","Material substitution without approval","Incorrect specifications or revision mismatch"],
+    "Process / Method": ["Incorrect process step sequence","Critical process parameters not controlled","Work instructions unclear or missing details","Process drift over time not detected","Control plan not followed on production floor","Incorrect torque, solder, or assembly process","Outdated or missing process FMEA linkage","Inadequate process capability (Cp/Cpk below target)"],
+    "Design / Engineering": ["Design not robust to real-use conditions","Tolerance stack-up issue not evaluated","Late design change not communicated to production","Incorrect or unclear drawing specification","Component placement design error (DFMEA gap)","Lack of design verification or validation testing"],
+    "Environmental / External": ["Temperature or humidity out of control range","Electrostatic discharge (ESD) not controlled","Contamination or dust affecting product","Power fluctuation or interruption","External vibration or noise interference","Unstable environmental monitoring process"]
 }
 
 detection_categories = {
-    "QA / Inspection": [
-        "QA checklist incomplete or not updated",
-        "No automated inspection system in place",
-        "Manual inspection prone to human error",
-        "Inspection frequency too low to detect issue",
-        "Inspection criteria unclear or inconsistent",
-        "Measurement system not capable (GR&R issues)",
-        "Incoming inspection missed supplier issue",
-        "Final inspection missed due to sampling plan"
-    ],
-    "Validation / Process": [
-        "Process validation not updated after design/process change",
-        "Insufficient verification of new parameters or components",
-        "Design validation not complete or not representative of real conditions",
-        "Inadequate control plan coverage for potential failure modes",
-        "Lack of ongoing process monitoring (SPC / CpK tracking)",
-        "Incorrect or outdated process limits not aligned with FMEA"
-    ],
-    "FMEA / Control Plan": [
-        "Failure mode not captured in PFMEA",
-        "Detection controls missing or ineffective in PFMEA",
-        "Control plan not updated after corrective actions",
-        "FMEA not reviewed after customer complaint",
-        "Detection ranking not realistic to actual inspection capability",
-        "PFMEA and control plan not properly linked"
-    ],
-    "Test / Equipment": [
-        "Test equipment calibration overdue",
-        "Testing software parameters incorrect",
-        "Test setup does not detect this specific failure mode",
-        "Detection threshold too wide to capture failure",
-        "Test data not logged or reviewed regularly"
-    ],
-    "Systemic / Organizational": [
-        "Feedback loop from quality incidents not implemented",
-        "Lack of detection feedback in regular team meetings",
-        "Training gaps in inspection or test personnel",
-        "Quality alerts not properly communicated to operators"
-    ]
+    "QA / Inspection": ["QA checklist incomplete or not updated","No automated inspection system in place","Manual inspection prone to human error","Inspection frequency too low to detect issue","Inspection criteria unclear or inconsistent","Measurement system not capable (GR&R issues)","Incoming inspection missed supplier issue","Final inspection missed due to sampling plan"],
+    "Validation / Process": ["Process validation not updated after design/process change","Insufficient verification of new parameters or components","Design validation not complete or not representative of real conditions","Inadequate control plan coverage for potential failure modes","Lack of ongoing process monitoring (SPC / CpK tracking)","Incorrect or outdated process limits not aligned with FMEA"],
+    "FMEA / Control Plan": ["Failure mode not captured in PFMEA","Detection controls missing or ineffective in PFMEA","Control plan not updated after corrective actions","FMEA not reviewed after customer complaint","Detection ranking not realistic to actual inspection capability","PFMEA and control plan not properly linked"],
+    "Test / Equipment": ["Test equipment calibration overdue","Testing software parameters incorrect","Test setup does not detect this specific failure mode","Detection threshold too wide to capture failure","Test data not logged or reviewed regularly"],
+    "Systemic / Organizational": ["Feedback loop from quality incidents not implemented","Lack of detection feedback in regular team meetings","Training gaps in inspection or test personnel","Quality alerts not properly communicated to operators"]
 }
 
 systemic_categories = {
-    "Management / Organization": [
-        "Inadequate leadership or supervision structure",
-        "Insufficient resource allocation to critical processes",
-        "Delayed response to known production issues",
-        "Lack of accountability or ownership of quality issues",
-        "Ineffective escalation process for recurring problems",
-        "Weak cross-functional communication between departments"
-    ],
-    "Process / Procedure": [
-        "Standard Operating Procedures (SOPs) outdated or missing",
-        "Process FMEA not reviewed regularly",
-        "Control plan not aligned with PFMEA or actual process",
-        "Lessons learned not integrated into similar processes",
-        "Inefficient document control system",
-        "Preventive maintenance procedures not standardized"
-    ],
-    "Training": [
-        "No defined training matrix or certification tracking",
-        "New hires not trained on critical control points",
-        "Training effectiveness not evaluated",
-        "Knowledge not shared between shifts or teams",
-        "Competence requirements not clearly defined"
-    ],
-    "Supplier / External": [
-        "Supplier not included in 8D or FMEA review process",
-        "Supplier corrective actions not verified for effectiveness",
-        "Inadequate incoming material audit process",
-        "Supplier process changes not communicated to customer",
-        "Long lead time for supplier quality issue closure",
-        "Supplier violation of cleanpoint"
-    ],
-    "Quality System / Feedback": [
-        "Internal audits ineffective or not completed",
-        "Quality KPI tracking not linked to root cause analysis",
-        "Ineffective use of 5-Why or other problem solving tools",
-        "Customer complaints not feeding back into design reviews",
-        "No systemic review after multiple 8Ds in same area"
-    ]
+    "Management / Organization": ["Inadequate leadership or supervision structure","Insufficient resource allocation to critical processes","Delayed response to known production issues","Lack of accountability or ownership of quality issues","Ineffective escalation process for recurring problems","Weak cross-functional communication between departments"],
+    "Process / Procedure": ["Standard Operating Procedures (SOPs) outdated or missing","Process FMEA not reviewed regularly","Control plan not aligned with PFMEA or actual process","Lessons learned not integrated into similar processes","Inefficient document control system","Preventive maintenance procedures not standardized"],
+    "Training": ["No defined training matrix or certification tracking","New hires not trained on critical control points","Training effectiveness not evaluated","Knowledge not shared between shifts or teams","Competence requirements not clearly defined"],
+    "Supplier / External": ["Supplier not included in 8D or FMEA review process","Supplier corrective actions not verified for effectiveness","Inadequate incoming material audit process","Supplier process changes not communicated to customer","Long lead time for supplier quality issue closure","Supplier violation of cleanpoint"],
+    "Quality System / Feedback": ["Internal audits ineffective or not completed","Quality KPI tracking not linked to root cause analysis","Ineffective use of 5-Why or other problem solving tools","Customer complaints not feeding back into design reviews","No systemic review after multiple 8Ds in same area"]
 }
 
 # ---------------------------
-# Helper functions (same as your baseline)
+# Helper functions
 # ---------------------------
 def suggest_root_cause(whys):
     text = " ".join(whys).lower()
@@ -382,7 +265,7 @@ def render_whys_no_repeat(why_list, categories, label_prefix):
             why_list[idx] = free_text
 
 # ---------------------------
-# Render Tabs D1–D8 with file upload
+# Render Tabs with Uploads
 # ---------------------------
 tab_labels = [
     f"🟢 {t[lang_key][step]}" if st.session_state[step]["answer"].strip() else f"🔴 {t[lang_key][step]}"
@@ -410,25 +293,27 @@ line-height:1.5;
 💡 <b>{t[lang_key]['Example']}:</b> {example_text}
 </div>
 """, unsafe_allow_html=True)
-    
-    # File upload for D1, D3, D4, D7
-    if step in ["D1","D3","D4","D7"]:
-        uploaded_files = st.file_uploader(
-            f"Upload files/photos for {step}",
-            type=["png", "jpg", "jpeg", "pdf", "xlsx", "txt"],
-            accept_multiple_files=True,
-            key=f"upload_{step}"
-        )
-        if uploaded_files:
-            for file in uploaded_files:
-                if file not in st.session_state[step]["uploaded_files"]:
-                    st.session_state[step]["uploaded_files"].append(file)
-        if st.session_state[step]["uploaded_files"]:
-            st.markdown("**Uploaded Files / Photos:**")
-            for f in st.session_state[step]["uploaded_files"]:
-                st.write(f"{f.name}")
-                if f.type.startswith("image/"):
-                    st.image(f, use_container_width=True)
+
+        # File upload for D1, D3, D4, D7
+        if step in ["D1","D3","D4","D7"]:
+            uploaded_files = st.file_uploader(
+                f"Upload files/photos for {step}",
+                type=["png", "jpg", "jpeg", "pdf", "xlsx", "txt"],
+                accept_multiple_files=True,
+                key=f"upload_{step}"
+            )
+            if uploaded_files:
+                for file in uploaded_files:
+                    if file not in st.session_state[step]["uploaded_files"]:
+                        st.session_state[step]["uploaded_files"].append(file)
+            if st.session_state[step]["uploaded_files"]:
+                st.markdown("**Uploaded Files / Photos:**")
+                for f in st.session_state[step]["uploaded_files"]:
+                    st.write(f"{f.name}")
+                    if f.type.startswith("image/"):
+                        st.image(f, use_column_width=True)
+
+
         # D4 Nissan-style
         if step == "D4":
             st.session_state[step]["location"] = st.selectbox(
