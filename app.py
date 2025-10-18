@@ -404,36 +404,34 @@ if step in ["D1","D3","D4","D7"]:
         for file in uploaded_files:
             if file not in st.session_state[step]["uploaded_files"]:
                 st.session_state[step]["uploaded_files"].append(file)
-    
-    # Display uploaded files
-    if st.session_state[step]["uploaded_files"]:
-        st.markdown("**Uploaded Files / Photos:**")
-        for f in st.session_state[step]["uploaded_files"]:
-            st.write(f"{f.name}")
-            if f.type.startswith("image/"):
-                st.image(f, use_container_width=True)
 
-        
+# Display uploaded files AND D4 / D5 / D6 / D7 inputs outside the 'if uploaded_files' block
+if step in ["D1","D3","D4","D7"] and st.session_state[step].get("uploaded_files"):
+    st.markdown("**Uploaded Files / Photos:**")
+    for f in st.session_state[step]["uploaded_files"]:
+        st.write(f"{f.name}")
+        if f.type.startswith("image/"):
+            st.image(f, use_container_width=True)
 
-        # D4 Nissan-style
-        if step == "D4":
-            st.session_state[step]["location"] = st.selectbox(
-                "Location of Material",
-                ["", "Work in Progress", "Stores Stock", "Warehouse Stock", "Service Parts", "Other"],
-                index=0,
-                key="d4_location"
-            )
-            st.session_state[step]["status"] = st.selectbox(
-                "Status of Activities",
-                ["", "Pending", "In Progress", "Completed", "Other"],
-                index=0,
-                key="d4_status"
-            )
-            st.session_state[step]["answer"] = st.text_area(
-                "Containment Actions / Notes",
-                value=st.session_state[step]["answer"],
-                key=f"ans_{step}"
-            )
+# D4 Nissan-style fields
+if step == "D4":
+    st.session_state[step]["location"] = st.selectbox(
+        "Location of Material",
+        ["", "Work in Progress", "Stores Stock", "Warehouse Stock", "Service Parts", "Other"],
+        index=0,
+        key="d4_location"
+    )
+    st.session_state[step]["status"] = st.selectbox(
+        "Status of Activities",
+        ["", "Pending", "In Progress", "Completed", "Other"],
+        index=0,
+        key="d4_status"
+    )
+    st.session_state[step]["answer"] = st.text_area(
+        "Containment Actions / Notes",
+        value=st.session_state[step]["answer"],
+        key=f"ans_{step}"
+    )
 
         # D5 5-Why
         elif step == "D5":
