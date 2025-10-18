@@ -51,16 +51,13 @@ if st.session_state.get("_reset_8d_session", False):
     preserve_keys = ["lang", "lang_key", "current_tab"]
     preserved = {k: st.session_state[k] for k in preserve_keys if k in st.session_state}
 
-    # Clear everything except preserved values
     for key in list(st.session_state.keys()):
         if key not in preserve_keys and key != "_reset_8d_session":
             del st.session_state[key]
 
-    # Restore preserved values
     for k, v in preserved.items():
         st.session_state[k] = v
 
-    # Safely unset the flag only if it exists
     if "_reset_8d_session" in st.session_state:
         st.session_state["_reset_8d_session"] = False
 
@@ -89,8 +86,6 @@ Version {version_number} | Last updated: {last_updated}
 st.sidebar.title("8D Report Assistant")
 st.sidebar.markdown("---")
 st.sidebar.header("Settings")
-
-# Language selection
 lang = st.sidebar.selectbox("Select Language / Seleccionar Idioma", ["English", "Español"])
 lang_key = "en" if lang == "English" else "es"
 
@@ -99,28 +94,17 @@ lang_key = "en" if lang == "English" else "es"
 # ---------------------------
 st.sidebar.markdown("---")
 st.sidebar.header("⚙️ App Controls")
-# Reset 8D Session button
 if st.sidebar.button("🔄 Reset 8D Session"):
-    # Preserve essential keys
     preserve_keys = ["lang", "lang_key", "current_tab"]
     preserved = {k: st.session_state[k] for k in preserve_keys if k in st.session_state}
-
-    # Clear all other keys
     for key in list(st.session_state.keys()):
         if key not in preserve_keys:
             del st.session_state[key]
-
-    # Restore preserved keys
     for k, v in preserved.items():
         st.session_state[k] = v
-
-    # Set a dedicated reset flag
     st.session_state["_reset_8d_session"] = True
-
-    # Stop further execution; the app will rerun safely
     st.stop()
 
-# At the very top of your app (after imports), handle the reset flag safely:
 if st.session_state.get("_reset_8d_session", False):
     st.session_state["_reset_8d_session"] = False
     st.experimental_rerun()
@@ -204,7 +188,6 @@ for step, _, _ in npqp_steps:
     if step not in st.session_state:
         st.session_state[step] = {"answer": "", "extra": ""}
 
-# Ensure D6/D7 subfields exist
 st.session_state.setdefault("report_date", datetime.datetime.today().strftime("%B %d, %Y"))
 st.session_state.setdefault("prepared_by", "")
 st.session_state.setdefault("d5_occ_whys", [""]*5)
@@ -214,13 +197,9 @@ st.session_state.setdefault("d4_location", "")
 st.session_state.setdefault("d4_status", "")
 st.session_state.setdefault("d4_containment", "")
 
-# D6 fields
 for sub in ["occ_answer", "det_answer", "sys_answer"]:
     st.session_state.setdefault(("D6"), st.session_state.get("D6", {}))
     st.session_state["D6"].setdefault(sub, "")
-
-# D7 fields
-for sub in ["occ_answer", "det_answer", "sys_answer"]:
     st.session_state.setdefault(("D7"), st.session_state.get("D7", {}))
     st.session_state["D7"].setdefault(sub, "")
 
@@ -379,99 +358,94 @@ def suggest_root_cause(whys):
         return "The root cause may be attributed management or resource-related issue"
     if any(word in text for word in ["temperature", "humidity", "contamination", "environment"]):
         return "The root cause may be attributed to environmental or external factor"
-    return "No clear root cause detected; further investigation may be needed"
+    return "No clear root cause suggestion (provide more 5-Whys)"
 
 # ---------------------------
-# Tabs setup
+# Helper: Render 5-Why dropdowns without repeating selections
 # ---------------------------
-tab_labels = [t[lang_key][step] for step in ["D1","D2","D3","D4","D5","D6","D7","D8"]]
-tabs = st.tabs(tab_labels)
+def render_whys_no_repeat(why_list, categories, label_prefix):
+    for idx in range(len(why_list)):
+        selected_so_far = [w for i, w in enumerate(why_list) if w.strip() and i != idx]
+        options = [""] + [f"{cat}: {item}" for cat, items in categories.items() for item in items if f"{cat}: {item}" not in selected_so_far]
+        current_val = why_list[idx] if why_list[idx] in options else ""
+        why_list[idx] = st.selectbox(f"{label_prefix} Why {idx+1}", options, index=options.index(current_val) if current_val in options else 0)
 
 # ---------------------------
-# Uploaded files storage for D1, D3, D4, D7
+# Main Tabs
 # ---------------------------
-for step in ["D1","D3","D4","D7"]:
-    st.session_state.setdefault(f"{step}_files", [])
+tab_labels = [t[lang_key] for t in ["D1","D2","D3","D4","D5","D6","D7","D8"]]
+tabs = st.tabs([t[lang_key][step] for step, _, _ in npqp_steps])
 
-# ---------------------------
-# Render each tab
-# ---------------------------
-for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
-    with tabs[i]:
-        st.markdown(f"**{note_dict[lang_key]}**")
+for tab, (step, note_dict, example_dict) in zip(tabs, npqp_steps):
+    with tab:
+        st.markdown(f"### {t[lang_key][step]}")
+        # Textarea answer
         st.session_state[step]["answer"] = st.text_area(
-            "Answer / Respuesta",
-            value=st.session_state[step].get("answer", ""),
-            height=150,
-            key=f"{step}_answer"
+            "Your input",
+            value=st.session_state[step]["answer"],
+            height=120
         )
+        # Extra / example
+        st.markdown(f"**{t[lang_key]['Example']}:** {example_dict[lang_key]}")
         st.session_state[step]["extra"] = st.text_area(
-            "Extra / Notes",
-            value=st.session_state[step].get("extra", ""),
-            height=100,
-            key=f"{step}_extra"
+            "Notes / Extra",
+            value=st.session_state[step]["extra"],
+            height=80
         )
 
-        # Add file uploader for relevant steps
-        if step in ["D1","D3","D4","D7"]:
+        # ---------------------------
+        # Drag-and-drop file uploader (only for D1, D3, D4, D7)
+        # ---------------------------
+        if step in ["D1", "D3", "D4", "D7"]:
+            st.session_state.setdefault(f"{step}_files", [])
             uploaded_files = st.file_uploader(
-                f"Upload files for {step} (multiple allowed)", 
+                f"Upload files for {step} (drag & drop allowed, multiple files)",
+                type=None,
                 accept_multiple_files=True,
                 key=f"{step}_uploader"
             )
             if uploaded_files:
                 st.session_state[f"{step}_files"].extend(uploaded_files)
-            # Show uploaded filenames
+
             if st.session_state[f"{step}_files"]:
-                st.write("Uploaded files:")
+                st.markdown("**Uploaded files:**")
                 for f in st.session_state[f"{step}_files"]:
                     st.write(f"- {f.name}")
 
 # ---------------------------
-# Excel export (simplified for clarity, include uploaded filenames)
+# Excel Export
 # ---------------------------
 def export_to_excel():
     wb = Workbook()
     ws = wb.active
     ws.title = "8D Report"
 
-    headers = ["Step", "Answer / Respuesta", "Extra / Notes"]
-    ws.append(headers)
-    for i, (step, _, _) in enumerate(npqp_steps):
-        extra_text = st.session_state[step].get("extra","")
-        if step in ["D1","D3","D4","D7"]:
+    # Header
+    ws.append(["Step","Answer","Extra / Notes"])
+    for step, _, _ in npqp_steps:
+        ans = st.session_state[step]["answer"]
+        extra = st.session_state[step]["extra"]
+
+        # Include uploaded filenames
+        if step in ["D1", "D3", "D4", "D7"]:
             files = st.session_state.get(f"{step}_files", [])
             if files:
                 filenames = ", ".join([f.name for f in files])
-                if extra_text:
-                    extra_text += " | "
-                extra_text += f"Files: {filenames}"
-        ws.append([step, st.session_state[step]["answer"], extra_text])
+                extra = f"{extra} | Files: {filenames}" if extra else f"Files: {filenames}"
 
-    # Auto width columns
-    for col in ws.columns:
-        max_length = 0
-        column = col[0].column_letter
-        for cell in col:
-            try:
-                if cell.value:
-                    max_length = max(max_length, len(str(cell.value)))
-            except:
-                pass
-        adjusted_width = (max_length + 2)
-        ws.column_dimensions[column].width = adjusted_width
+        ws.append([step, ans, extra])
 
-    return wb
+    # Save to BytesIO
+    stream = io.BytesIO()
+    wb.save(stream)
+    stream.seek(0)
+    return stream
 
-# ---------------------------
-# Download button
-# ---------------------------
-wb = export_to_excel()
-with io.BytesIO() as buffer:
-    wb.save(buffer)
+if st.button(t[lang_key]["Download"]):
+    excel_file = export_to_excel()
     st.download_button(
         label=t[lang_key]["Download"],
-        data=buffer.getvalue(),
+        data=excel_file,
         file_name=f"8D_Report_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
