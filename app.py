@@ -650,26 +650,23 @@ st.download_button(
 # ---------------------------
 # Sidebar Backup/Restore/Reset
 # ---------------------------
-import streamlit as st
+import io
 import json
-
-# Example session data
-st.session_state.setdefault("D1", {"answer": "Example answer"})
-st.session_state.setdefault("D6", {"occ_answer": "Corrective action example"})
+import streamlit as st
 
 with st.sidebar:
     st.markdown("## Backup / Restore / Reset")
 
     # Generate JSON bytes
-    def get_json_bytes():
-        # Only save relevant session data
+    def get_json_bytesio():
         save_data = {k: v for k, v in st.session_state.items() if not k.startswith("_")}
-        return json.dumps(save_data, indent=4).encode('utf-8')
+        json_str = json.dumps(save_data, indent=4)
+        return io.BytesIO(json_str.encode("utf-8"))
 
     st.download_button(
         label="💾 Save Progress (JSON)",
-        data=get_json_bytes(),            # bytes, not str
-        file_name="8D_Report_Backup.json",
+        data=get_json_bytesio(),
+        file_name=f"8D_Report_Backup_{st.session_state.report_date.replace(' ', '_')}.json",
         mime="application/json"
     )
 
@@ -680,7 +677,6 @@ with st.sidebar:
         for k, v in restore_data.items():
             st.session_state[k] = v
         st.success("✅ Session restored from JSON!")
-
 
 # ---------------------------
 # (End)
