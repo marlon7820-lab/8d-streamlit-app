@@ -613,48 +613,45 @@ def generate_excel():
             if c == 2:
                 cell.font = Font(bold=True)
             cell.border = border
- # Insert uploaded images below table (fixed for Streamlit UploadedFile + resizing)
-from PIL import Image as PILImage
-from io import BytesIO
 
-last_row = ws.max_row + 2
-for step in ["D1","D3","D4","D7"]:
-    uploaded_files = st.session_state[step].get("uploaded_files", [])
-    if uploaded_files:
-        ws.cell(row=last_row, column=1, value=f"{step} Uploaded Files / Photos").font = Font(bold=True)
-        last_row += 1
-        for f in uploaded_files:
-            if f.type.startswith("image/"):
-                try:
-                    # Open image from uploaded file bytes
-                    img = PILImage.open(BytesIO(f.getvalue()))
-                    max_width = 300
-                    ratio = max_width / img.width
-                    img = img.resize((int(img.width * ratio), int(img.height * ratio)))
-                    # Save temp image for Excel insertion
-                    temp_path = f"/tmp/{f.name}"
-                    img.save(temp_path)
-                    excel_img = XLImage(temp_path)
-                    ws.add_image(excel_img, f"A{last_row}")
-                    # Estimate rows used by image
-                    last_row += int(img.height / 15) + 2
-                except Exception as e:
-                    ws.cell(row=last_row, column=1, value=f"Could not add image {f.name}: {e}")
+    # Insert uploaded images below table
+    from PIL import Image as PILImage
+    from io import BytesIO
+
+    last_row = ws.max_row + 2
+    for step in ["D1","D3","D4","D7"]:
+        uploaded_files = st.session_state[step].get("uploaded_files", [])
+        if uploaded_files:
+            ws.cell(row=last_row, column=1, value=f"{step} Uploaded Files / Photos").font = Font(bold=True)
+            last_row += 1
+            for f in uploaded_files:
+                if f.type.startswith("image/"):
+                    try:
+                        img = PILImage.open(BytesIO(f.getvalue()))
+                        max_width = 300
+                        ratio = max_width / img.width
+                        img = img.resize((int(img.width * ratio), int(img.height * ratio)))
+                        temp_path = f"/tmp/{f.name}"
+                        img.save(temp_path)
+                        excel_img = XLImage(temp_path)
+                        ws.add_image(excel_img, f"A{last_row}")
+                        last_row += int(img.height / 15) + 2
+                    except Exception as e:
+                        ws.cell(row=last_row, column=1, value=f"Could not add image {f.name}: {e}")
+                        last_row += 1
+                else:
+                    ws.cell(row=last_row, column=1, value=f.name)
                     last_row += 1
-            else:
-                # Non-image files
-                ws.cell(row=last_row, column=1, value=f.name)
-                last_row += 1
-
 
     # Set column widths
     for col in range(1, 4):
         ws.column_dimensions[get_column_letter(col)].width = 40
 
-    # ✅ Return must be INSIDE the function
+    # ✅ The return must be inside the function
     output = io.BytesIO()
     wb.save(output)
     return output.getvalue()
+
 
 # Download button remains exactly the same
 st.download_button(
