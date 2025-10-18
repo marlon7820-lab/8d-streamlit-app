@@ -647,6 +647,11 @@ st.download_button(
     file_name=f"8D_Report_{st.session_state.report_date.replace(' ', '_')}.xlsx",
     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 )
+# ---------------------------
+# Sidebar Backup/Restore/Reset
+# ---------------------------
+with st.sidebar:
+    st.markdown("## Backup / Restore / Reset")
 # JSON Backup (fixed)
 def generate_json_bytes():
     save_data = {k: v for k, v in st.session_state.items() if not k.startswith("_")}
