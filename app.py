@@ -371,6 +371,28 @@ def render_whys_no_repeat(why_list, categories, label_prefix):
         if free_text.strip():
             why_list[idx] = free_text
 
+
+        # ---------------------------
+        # Step-specific fields
+        # ---------------------------
+        if step == "D4":
+            st.session_state[step]["location"] = st.selectbox(
+                "Location of Material",
+                ["", "Work in Progress", "Stores Stock", "Warehouse Stock", "Service Parts", "Other"],
+                index=0,
+                key="d4_location"
+            )
+            st.session_state[step]["status"] = st.selectbox(
+                "Status of Activities",
+                ["", "Pending", "In Progress", "Completed", "Other"],
+                index=0,
+                key="d4_status"
+            )
+            st.session_state[step]["answer"] = st.text_area(
+                "Containment Actions / Notes",
+                value=st.session_state[step]["answer"],
+                key=f"ans_{step}"
+            )
 # ---------------------------
 # Render Tabs D1–D8
 # ---------------------------
@@ -400,30 +422,7 @@ line-height:1.5;
 💡 <b>{t[lang_key]['Example']}:</b> {example_text}
 </div>
 """, unsafe_allow_html=True)
-
-        # ---------------------------
-        # Step-specific fields
-        # ---------------------------
-        if step == "D4":
-            st.session_state[step]["location"] = st.selectbox(
-                "Location of Material",
-                ["", "Work in Progress", "Stores Stock", "Warehouse Stock", "Service Parts", "Other"],
-                index=0,
-                key="d4_location"
-            )
-            st.session_state[step]["status"] = st.selectbox(
-                "Status of Activities",
-                ["", "Pending", "In Progress", "Completed", "Other"],
-                index=0,
-                key="d4_status"
-            )
-            st.session_state[step]["answer"] = st.text_area(
-                "Containment Actions / Notes",
-                value=st.session_state[step]["answer"],
-                key=f"ans_{step}"
-            )
-
-
+        
         # D5 5-Why
         elif step == "D5":
             st.markdown("#### Occurrence Analysis")
@@ -609,7 +608,8 @@ def generate_excel():
     wb.save(output)
     return output.getvalue()
 
-# File uploads for D1, D3, D4, D7
+    # ---------------------------
+        # File uploads for D1, D3, D4, D7
         # ---------------------------
         if step in ["D1", "D3", "D4", "D7"]:
             st.markdown("#### Attach Photos / Files")
