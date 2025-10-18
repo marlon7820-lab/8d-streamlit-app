@@ -648,26 +648,26 @@ st.download_button(
     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 )
 # ---------------------------
-# Sidebar Backup / Restore / Reset
+# Sidebar Backup / Restore
 # ---------------------------
 with st.sidebar:
     st.markdown("## Backup / Restore / Reset")
 
-    # JSON Backup: Save current session state (all answers)
-    def generate_json():
-        # Exclude internal keys starting with '_'
+    # JSON Backup
+    def generate_json_bytes():
+        # Only save real session data (skip internal keys starting with "_")
         save_data = {k: v for k, v in st.session_state.items() if not k.startswith("_")}
-        return json.dumps(save_data, indent=4)
+        json_str = json.dumps(save_data, indent=4)
+        return json_str.encode("utf-8")  # Must be bytes for download
 
-    json_data = generate_json().encode("utf-8")  # convert to bytes for download
     st.download_button(
         label="💾 Save Progress (JSON)",
-        data=json_data,
+        data=generate_json_bytes(),
         file_name=f"8D_Report_Backup_{st.session_state.report_date.replace(' ', '_')}.json",
         mime="application/json"
     )
 
-    # JSON Restore: Load previous session state
+    # JSON Restore
     uploaded_file = st.file_uploader("📂 Upload JSON file to restore", type="json")
     if uploaded_file:
         try:
@@ -675,7 +675,7 @@ with st.sidebar:
             for k, v in restore_data.items():
                 st.session_state[k] = v
             st.success("✅ Session restored from JSON! All answers should now appear in the app.")
-            st.experimental_rerun()  # refresh the app to reflect restored state
+            st.experimental_rerun()  # Refresh the app to reflect restored state
         except Exception as e:
             st.error(f"❌ Error restoring JSON: {e}")
 
