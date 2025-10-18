@@ -374,7 +374,7 @@ tabs = st.tabs(tab_labels)
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     with tabs[i]:
         st.markdown(f"### {t[lang_key][step]}")
-        
+
         # Training Guidance & Example
         note_text = note_dict[lang_key]
         example_text = example_dict[lang_key]
@@ -393,8 +393,8 @@ line-height:1.5;
 💡 <b>{t[lang_key]['Example']}:</b> {example_text}
 </div>
 """, unsafe_allow_html=True)
-        
-# File uploads for D1, D3, D4, D7
+
+        # File uploads for D1, D3, D4, D7
         if step in ["D1","D3","D4","D7"]:
             uploaded_files = st.file_uploader(
                 f"Upload files/photos for {step}",
@@ -407,7 +407,7 @@ line-height:1.5;
                     if file not in st.session_state[step]["uploaded_files"]:
                         st.session_state[step]["uploaded_files"].append(file)
 
-        # Display uploaded files (outside the 'if uploaded_files' check)
+        # Display uploaded files (aligned with file upload, not nested too deep)
         if step in ["D1","D3","D4","D7"] and st.session_state[step].get("uploaded_files"):
             st.markdown("**Uploaded Files / Photos:**")
             for f in st.session_state[step]["uploaded_files"]:
@@ -415,7 +415,8 @@ line-height:1.5;
                 if f.type.startswith("image/"):
                     st.image(f, use_container_width=True)
 
- if step == "D4":
+        # Step-specific inputs (same level as upload check)
+        if step == "D4":
             st.session_state[step]["location"] = st.selectbox(
                 "Location of Material",
                 ["", "Work in Progress", "Stores Stock", "Warehouse Stock", "Service Parts", "Other"],
@@ -433,7 +434,6 @@ line-height:1.5;
                 value=st.session_state[step]["answer"],
                 key=f"ans_{step}"
             )
-
         # D5 5-Why
         elif step == "D5":
             st.markdown("#### Occurrence Analysis")
