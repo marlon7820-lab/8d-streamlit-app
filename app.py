@@ -611,28 +611,32 @@ def generate_excel():
             if c == 2:
                 cell.font = Font(bold=True)
             cell.border = border
-
-        # Insert uploaded images/files if step supports it
-        step_key = step_label.split(":")[0]  # e.g., "D1"
-        if step_key in ["D1", "D3", "D4", "D7"]:
-            for file in st.session_state.get(step_key, {}).get("uploaded_files", []):
-                if file.type.startswith("image/"):
-                    try:
-                        img = XLImage(file)
-                        base_width = 150
-                        ratio = base_width / img.width
-                        img.width = base_width
-                        img.height = int(img.height * ratio)
-                        img_cell = f"B{ws.max_row + 1}"
-                        ws.add_image(img, img_cell)
-                        ws.append([])  # leave space for image
-                    except:
-                        ws.append([f"{file.name} (image could not be inserted)"])
-                else:
-                    ws.append([f"{step_key} - Uploaded File", file.name])
-                    r = ws.max_row
-                    for c in range(1, 4):
-                        ws.cell(row=r, column=c).border = border
+# Add uploaded images below the table, resized
+last_row = ws.max_row + 2
+for step in ["D1","D3","D4","D7"]:
+    uploaded_files = st.session_state[step].get("uploaded_files", [])
+    if uploaded_files:
+        ws.cell(row=last_row, column=1, value=f"{step} Uploaded Files / Photos").font = Font(bold=True)
+        last_row += 1
+        for f in uploaded_files:
+            if f.type.startswith("image/"):
+                try:
+                    img = PILImage.open(f)
+                    max_width = 300
+                    ratio = max_width / img.width
+                    img = img.resize((int(img.width * ratio), int(img.height * ratio)))
+                    temp_path = f"/tmp/{f.name}"
+                    img.save(temp_path)
+                    excel_img = XLImage(temp_path)
+                    ws.add_image(excel_img, f"A{last_row}")
+                    last_row += int(img.height / 15) + 2
+                except:
+                    ws.cell(row=last_row, column=1, value=f"Could not add image {f.name}")
+                    last_row += 1
+            else:
+                ws.cell(row=last_row, column=1, value=f"{f.name}")
+                last_row += 1
+        
 
     # Set column widths
     for col in range(1, 4):
