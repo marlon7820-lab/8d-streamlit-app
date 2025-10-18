@@ -655,20 +655,21 @@ with st.sidebar:
 
     # JSON Backup
     def generate_json_bytes():
-        # Save all session state except keys starting with '_'
+        # Only save relevant session data (exclude keys starting with '_')
         save_data = {k: v for k, v in st.session_state.items() if not k.startswith("_")}
         json_str = json.dumps(save_data, indent=4)
-        return json_str.encode('utf-8')  # convert to bytes for download
+        return json_str.encode('utf-8')  # Encode as bytes
 
     st.download_button(
         label="💾 Save Progress (JSON)",
         data=generate_json_bytes(),
         file_name=f"8D_Report_Backup_{st.session_state.report_date.replace(' ', '_')}.json",
-        mime="application/json"
+        mime="application/json",  # Important: must be application/json
+        key="download_json"
     )
 
     # JSON Restore
-    uploaded_file = st.file_uploader("Upload JSON file to restore", type="json")
+    uploaded_file = st.file_uploader("Upload JSON file to restore", type="json", key="upload_json")
     if uploaded_file:
         try:
             restore_data = json.load(uploaded_file)
