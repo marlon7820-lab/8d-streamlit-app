@@ -8,16 +8,12 @@ import io
 import json
 import os
 
-# ---------------------------
-# Page config
-# ---------------------------
 st.set_page_config(
     page_title="8D Report Assistant",
     page_icon="logo.png",
     layout="wide"
 )
 
-# App styles - updated for desktop selectbox outline
 st.markdown("""
 <style>
 .stApp {background: linear-gradient(to right, #f0f8ff, #e6f2ff); color: #000000 !important;}
@@ -26,8 +22,6 @@ textarea {background-color: #ffffff !important; border: 1px solid #1E90FF !impor
 .stInfo {background-color: #e6f7ff !important; border-left: 5px solid #1E90FF !important; color: #000000 !important;}
 .css-1d391kg {color: #1E90FF !important; font-weight: bold !important;}
 button[kind="primary"] {background-color: #87AFC7 !important; color: white !important; font-weight: bold;}
-
-/* Outline all Streamlit widget containers (works on desktop) */
 div.stSelectbox, div.stTextInput, div.stTextArea {
     border: 2px solid #1E90FF !important;
     border-radius: 5px !important;
@@ -35,42 +29,27 @@ div.stSelectbox, div.stTextInput, div.stTextArea {
     background-color: #ffffff !important;
     transition: border 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
 }
-
-/* Hover effect */
 div.stSelectbox:hover, div.stTextInput:hover, div.stTextArea:hover {
-    border: 2px solid #104E8B !important; /* slightly darker blue */
+    border: 2px solid #104E8B !important;
     box-shadow: 0 0 5px #1E90FF;
 }
 </style>
 """, unsafe_allow_html=True)
 
-# ---------------------------
-# Reset Session check (safe, no KeyError)
-# ---------------------------
 if st.session_state.get("_reset_8d_session", False):
     preserve_keys = ["lang", "lang_key", "current_tab"]
     preserved = {k: st.session_state[k] for k in preserve_keys if k in st.session_state}
-
     for key in list(st.session_state.keys()):
         if key not in preserve_keys and key != "_reset_8d_session":
             del st.session_state[key]
-
     for k, v in preserved.items():
         st.session_state[k] = v
-
     if "_reset_8d_session" in st.session_state:
         st.session_state["_reset_8d_session"] = False
-
     st.rerun()
 
-# ---------------------------
-# Main title
-# ---------------------------
 st.markdown("<h1 style='text-align: center; color: #1E90FF;'>📋 8D Report Assistant</h1>", unsafe_allow_html=True)
 
-# ---------------------------
-# Version info
-# ---------------------------
 version_number = "v1.1.0"
 last_updated = "October 17, 2025"
 st.markdown(f"""
@@ -80,18 +59,12 @@ Version {version_number} | Last updated: {last_updated}
 </p>
 """, unsafe_allow_html=True)
 
-# ---------------------------
-# Sidebar: Language selection & reset
-# ---------------------------
 st.sidebar.title("8D Report Assistant")
 st.sidebar.markdown("---")
 st.sidebar.header("Settings")
 lang = st.sidebar.selectbox("Select Language / Seleccionar Idioma", ["English", "Español"])
 lang_key = "en" if lang == "English" else "es"
 
-# ---------------------------
-# Sidebar: Smart Session Reset Button
-# ---------------------------
 st.sidebar.markdown("---")
 st.sidebar.header("⚙️ App Controls")
 if st.sidebar.button("🔄 Reset 8D Session"):
@@ -109,9 +82,6 @@ if st.session_state.get("_reset_8d_session", False):
     st.session_state["_reset_8d_session"] = False
     st.experimental_rerun()
 
-# ---------------------------
-# Language dictionary
-# ---------------------------
 t = {
     "en": {
         "D1": "D1: Concern Details",
@@ -167,9 +137,6 @@ t = {
     }
 }
 
-# ---------------------------
-# NPQP 8D steps with examples
-# ---------------------------
 npqp_steps = [
     ("D1", {"en":"Describe the customer concerns clearly.", "es":"Describa claramente las preocupaciones del cliente."}, {"en":"Customer reported static noise in amplifier during end-of-line test.", "es":"El cliente reportó ruido estático en el amplificador durante la prueba final."}),
     ("D2", {"en":"Check for similar parts, models, generic parts, other colors, etc.", "es":"Verifique partes similares, modelos, partes genéricas, otros colores, etc."}, {"en":"Similar model radio, Front vs. rear speaker.", "es":"Radio de modelo similar, altavoz delantero vs trasero."}),
@@ -181,9 +148,6 @@ npqp_steps = [
     ("D8", {"en":"Document lessons learned, update standards, FMEAs.", "es":"Documente lecciones aprendidas, actualice estándares, FMEAs."}, {"en":"Update SOPs, PFMEA, work instructions.", "es":"Actualizar SOPs, PFMEA, instrucciones de trabajo."})
 ]
 
-# ---------------------------
-# Initialize session state
-# ---------------------------
 for step, _, _ in npqp_steps:
     if step not in st.session_state:
         st.session_state[step] = {"answer": "", "extra": ""}
@@ -198,14 +162,12 @@ st.session_state.setdefault("d4_status", "")
 st.session_state.setdefault("d4_containment", "")
 
 for sub in ["occ_answer", "det_answer", "sys_answer"]:
-    st.session_state.setdefault(("D6"), st.session_state.get("D6", {}))
+    st.session_state.setdefault("D6", st.session_state.get("D6", {}))
     st.session_state["D6"].setdefault(sub, "")
-    st.session_state.setdefault(("D7"), st.session_state.get("D7", {}))
+for sub in ["occ_answer", "det_answer", "sys_answer"]:
+    st.session_state.setdefault("D7", st.session_state.get("D7", {}))
     st.session_state["D7"].setdefault(sub, "")
 
-# ---------------------------
-# D5 categories
-# ---------------------------
 occurrence_categories = {
     "Machine / Equipment": [
         "Mechanical failure or breakdown",
@@ -337,9 +299,6 @@ systemic_categories = {
     ]
 }
 
-# ---------------------------
-# Helper: Suggest root cause based on whys
-# ---------------------------
 def suggest_root_cause(whys):
     text = " ".join(whys).lower()
     if any(word in text for word in ["training", "knowledge", "human error"]):
@@ -360,92 +319,99 @@ def suggest_root_cause(whys):
         return "The root cause may be attributed to environmental or external factor"
     return "No clear root cause suggestion (provide more 5-Whys)"
 
-# ---------------------------
-# Helper: Render 5-Why dropdowns without repeating selections
-# ---------------------------
 def render_whys_no_repeat(why_list, categories, label_prefix):
     for idx in range(len(why_list)):
         selected_so_far = [w for i, w in enumerate(why_list) if w.strip() and i != idx]
         options = [""] + [f"{cat}: {item}" for cat, items in categories.items() for item in items if f"{cat}: {item}" not in selected_so_far]
         current_val = why_list[idx] if why_list[idx] in options else ""
-        why_list[idx] = st.selectbox(f"{label_prefix} Why {idx+1}", options, index=options.index(current_val) if current_val in options else 0)
-
-# ---------------------------
-# Main Tabs
-# ---------------------------
-tab_labels = [t[lang_key] for t in ["D1","D2","D3","D4","D5","D6","D7","D8"]]
-tabs = st.tabs([t[lang_key][step] for step, _, _ in npqp_steps])
-
-for tab, (step, note_dict, example_dict) in zip(tabs, npqp_steps):
-    with tab:
-        st.markdown(f"### {t[lang_key][step]}")
-        # Textarea answer
-        st.session_state[step]["answer"] = st.text_area(
-            "Your input",
-            value=st.session_state[step]["answer"],
-            height=120
+        why_list[idx] = st.selectbox(
+            f"{label_prefix} {idx+1}",
+            options,
+            index=options.index(current_val) if current_val in options else 0,
+            key=f"{label_prefix}_{idx}_{lang_key}"
         )
-        # Extra / example
-        st.markdown(f"**{t[lang_key]['Example']}:** {example_dict[lang_key]}")
-        st.session_state[step]["extra"] = st.text_area(
-            "Notes / Extra",
-            value=st.session_state[step]["extra"],
-            height=80
+        free_text = st.text_input(f"Or enter your own {label_prefix} {idx+1}", value=why_list[idx], key=f"{label_prefix}_txt_{idx}_{lang_key}")
+        if free_text.strip():
+            why_list[idx] = free_text
+
+tab_labels = [
+    f"🟢 {t[lang_key][step]}" if st.session_state[step]["answer"].strip() else f"🔴 {t[lang_key][step]}"
+    for step, _, _ in npqp_steps
+]
+tabs = st.tabs(tab_labels)
+
+for idx, (step, instruction_dict, example_dict) in enumerate(npqp_steps):
+    with tabs[idx]:
+        st.markdown(f"### {t[lang_key][step]}")
+        st.info(instruction_dict[lang_key], icon="ℹ️")
+        st.session_state[step]["answer"] = st.text_area(
+            f"Your response for {t[lang_key][step]}",
+            st.session_state[step]["answer"],
+            key=f"{step}_ta_{lang_key}"
         )
 
         # ---------------------------
-        # Drag-and-drop file uploader (only for D1, D3, D4, D7)
+        # File/photo upload for D1, D3, D4, D7
         # ---------------------------
         if step in ["D1", "D3", "D4", "D7"]:
-            st.session_state.setdefault(f"{step}_files", [])
+            st.session_state.setdefault(f"{step}_uploads", [])
             uploaded_files = st.file_uploader(
-                f"Upload files for {step} (drag & drop allowed, multiple files)",
-                type=None,
-                accept_multiple_files=True,
+                f"Select files for {step}", 
+                accept_multiple_files=True, 
                 key=f"{step}_uploader"
             )
             if uploaded_files:
-                st.session_state[f"{step}_files"].extend(uploaded_files)
+                for file in uploaded_files:
+                    if file.name not in [f.name for f in st.session_state[f"{step}_uploads"]]:
+                        st.session_state[f"{step}_uploads"].append(file)
+            if st.session_state[f"{step}_uploads"]:
+                st.markdown("**Uploaded Files:**")
+                for f in st.session_state[f"{step}_uploads"]:
+                    st.markdown(f"- {f.name}")
 
-            if st.session_state[f"{step}_files"]:
-                st.markdown("**Uploaded files:**")
-                for f in st.session_state[f"{step}_files"]:
-                    st.write(f"- {f.name}")
+        if step == "D5":
+            st.markdown("#### Occurrence Why (5-Why Analysis)")
+            render_whys_no_repeat(st.session_state.d5_occ_whys, occurrence_categories, "Occurrence Why")
+            st.markdown("#### Detection Why (5-Why Analysis)")
+            render_whys_no_repeat(st.session_state.d5_det_whys, detection_categories, "Detection Why")
+            st.markdown("#### Systemic Why (5-Why Analysis)")
+            render_whys_no_repeat(st.session_state.d5_sys_whys, systemic_categories, "Systemic Why")
+            st.session_state["D5_suggested_root"] = suggest_root_cause(st.session_state.d5_occ_whys + st.session_state.d5_det_whys + st.session_state.d5_sys_whys)
+            st.markdown(f"**Root Cause Suggestion:** {st.session_state['D5_suggested_root']}")
 
-# ---------------------------
-# Excel Export
-# ---------------------------
-def export_to_excel():
+        if step == "D4":
+            st.session_state.d4_location = st.text_input("Material Location", st.session_state.d4_location)
+            st.session_state.d4_status = st.text_input("Activity Status", st.session_state.d4_status)
+            st.session_state.d4_containment = st.text_area("Containment Actions", st.session_state.d4_containment)
+
+        if step == "D6":
+            for sub in ["occ_answer", "det_answer", "sys_answer"]:
+                st.session_state["D6"][sub] = st.text_area(f"{sub.replace('_',' ').title()} (D6)", st.session_state["D6"][sub])
+
+        if step == "D7":
+            for sub in ["occ_answer", "det_answer", "sys_answer"]:
+                st.session_state["D7"][sub] = st.text_area(f"{sub.replace('_',' ').title()} (D7)", st.session_state["D7"][sub])
+
+st.sidebar.header("Report Info")
+st.session_state.report_date = st.sidebar.date_input(t[lang_key]["Report_Date"], datetime.datetime.today())
+st.session_state.prepared_by = st.sidebar.text_input(t[lang_key]["Prepared_By"], st.session_state.prepared_by)
+
+if st.button(t[lang_key]["Download"]):
     wb = Workbook()
     ws = wb.active
     ws.title = "8D Report"
-
-    # Header
-    ws.append(["Step","Answer","Extra / Notes"])
+    row = 1
+    ws.cell(row=row, column=1, value="8D Report").font = Font(size=14, bold=True)
+    row += 2
     for step, _, _ in npqp_steps:
-        ans = st.session_state[step]["answer"]
-        extra = st.session_state[step]["extra"]
-
-        # Include uploaded filenames
-        if step in ["D1", "D3", "D4", "D7"]:
-            files = st.session_state.get(f"{step}_files", [])
-            if files:
-                filenames = ", ".join([f.name for f in files])
-                extra = f"{extra} | Files: {filenames}" if extra else f"Files: {filenames}"
-
-        ws.append([step, ans, extra])
-
-    # Save to BytesIO
+        ws.cell(row=row, column=1, value=t[lang_key][step]).font = Font(bold=True)
+        row +=1
+        ws.cell(row=row, column=1, value=st.session_state[step]["answer"])
+        row +=2
     stream = io.BytesIO()
     wb.save(stream)
-    stream.seek(0)
-    return stream
-
-if st.button(t[lang_key]["Download"]):
-    excel_file = export_to_excel()
     st.download_button(
-        label=t[lang_key]["Download"],
-        data=excel_file,
-        file_name=f"8D_Report_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        "📥 Download XLSX",
+        data=stream.getvalue(),
+        file_name=f"8D_Report_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
     )
