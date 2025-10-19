@@ -160,7 +160,40 @@ if dark_mode:
 # ---------------------------
 st.sidebar.markdown("---")
 st.sidebar.header("⚙️ App Controls")
-if st.sidebar.button("🔄 Reset 8D Session"):
+
+# Use st.markdown + HTML for fully styled button
+reset_button_html = """
+<form>
+    <input type="button" id="reset_8d" value="🔄 Reset 8D Session" 
+        style="
+            background-color:#87AFC7;
+            color:#000000;
+            font-weight:bold;
+            border:none;
+            border-radius:5px;
+            padding:8px 16px;
+            cursor:pointer;
+            font-size:16px;
+            width:100%;
+            margin-bottom:10px;
+        ">
+</form>
+<script>
+const btn = window.parent.document.getElementById('reset_8d');
+btn.onclick = () => {
+    window.parent.postMessage({func: 'reset_8d'}, '*')
+}
+</script>
+"""
+
+st.sidebar.markdown(reset_button_html, unsafe_allow_html=True)
+
+# Detect click via a hidden Streamlit element
+if "_reset_8d_session" not in st.session_state:
+    st.session_state["_reset_8d_session"] = False
+
+# Listen for message from HTML button
+def reset_8d():
     preserve_keys = ["lang", "lang_key", "current_tab"]
     preserved = {k: st.session_state[k] for k in preserve_keys if k in st.session_state}
     for key in list(st.session_state.keys()):
@@ -169,7 +202,11 @@ if st.sidebar.button("🔄 Reset 8D Session"):
     for k, v in preserved.items():
         st.session_state[k] = v
     st.session_state["_reset_8d_session"] = True
-    st.stop()
+    st.experimental_rerun()  # refresh app after reset
+
+# Only run if button clicked
+if st.session_state.get("_reset_8d_session_click", False):
+    reset_8d()
 # ---------------------------
 # Language dictionary
 # ---------------------------
