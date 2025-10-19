@@ -541,7 +541,7 @@ line-height:1.5;
             st.session_state.d5_det_whys = render_whys_with_free_text(
                 st.session_state.d5_det_whys, detection_categories, t[lang_key]['Detection_Why']
            )
-           if st.button("➕ Add another Detection Why", key=f"add_det_{i}"):
+            if st.button("➕ Add another Detection Why", key=f"add_det_{i}"):
                st.session_state.d5_det_whys.append("")
 
            st.markdown("#### Systemic Analysis")
