@@ -657,14 +657,14 @@ def generate_excel():
     wb.save(output)
     return output.getvalue()
 
-
-# Download button remains exactly the same
-st.download_button(
-    label=f"{t[lang_key]['Download']}",
-    data=generate_excel(),
-    file_name=f"8D_Report_{st.session_state.report_date.replace(' ', '_')}.xlsx",
-    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-)
+# Move download button to sidebar
+with st.sidebar:
+    st.download_button(
+        label=f"📥 {t[lang_key]['Download']}",
+        data=generate_excel(),
+        file_name=f"8D_Report_{st.session_state.report_date.replace(' ', '_')}.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
 
 
 # ---------------------------
