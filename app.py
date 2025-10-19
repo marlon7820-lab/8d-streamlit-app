@@ -504,7 +504,7 @@ line-height:1.5;
                 key=f"ans_{step}"
             )
 
-        elif step == "D5":
+elif step == "D5":
     # -------------------- D5 --------------------
     st.markdown("#### Occurrence Analysis")
     for idx in range(len(st.session_state.d5_occ_whys)):
