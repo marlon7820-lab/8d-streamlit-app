@@ -505,25 +505,25 @@ line-height:1.5;
             )
 
         elif step == "D5":
-    # -------------------- D5 --------------------
-    st.markdown("#### Occurrence Analysis")
-    for idx in range(5):
-        # Dropdown
-        options = [""] + [f"{cat}: {item}" for cat, items in occurrence_categories.items() for item in items]
-        current_val = st.session_state.d5_occ_whys[idx]
-        st.session_state.d5_occ_whys[idx] = st.selectbox(
-            f"{t[lang_key]['Occurrence_Why']} {idx+1}",
-            options,
-            index=options.index(current_val) if current_val in options else 0,
-            key=f"d5_occ_{idx}_{lang_key}"
-        )
-        # Free-text immediately under dropdown
-        st.session_state.d5_occ_whys_free[idx] = st.text_area(
-            f"{t[lang_key]['Occurrence_Why']} {idx+1} - Free Text",
-            value=st.session_state.d5_occ_whys_free[idx],
-            key=f"d5_occ_free_{idx}_{lang_key}",
-            height=50
-        )
+          # -------------------- D5 --------------------
+          st.markdown("#### Occurrence Analysis")
+          for idx in range(5):
+              # Dropdown
+              options = [""] + [f"{cat}: {item}" for cat, items in occurrence_categories.items() for item in items]
+              current_val = st.session_state.d5_occ_whys[idx]
+              st.session_state.d5_occ_whys[idx] = st.selectbox(
+                  f"{t[lang_key]['Occurrence_Why']} {idx+1}",
+                  options,
+                  index=options.index(current_val) if current_val in options else 0,
+                  key=f"d5_occ_{idx}_{lang_key}"
+          )
+          # Free-text immediately under dropdown
+          st.session_state.d5_occ_whys_free[idx] = st.text_area(
+              f"{t[lang_key]['Occurrence_Why']} {idx+1} - Free Text",
+              value=st.session_state.d5_occ_whys_free[idx],
+              key=f"d5_occ_free_{idx}_{lang_key}",
+              height=50
+         )
     if st.button("➕ Add another Occurrence Why", key=f"add_occ_{i}"):
         st.session_state.d5_occ_whys.append("")
         st.session_state.d5_occ_whys_free.append("")
