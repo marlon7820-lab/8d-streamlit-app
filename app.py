@@ -19,11 +19,11 @@ st.set_page_config(
 )
 
 # ---------------------------
-# App styles (light & dark mode compatible)
+# App styles - updated for dark/light mode & buttons
 # ---------------------------
 st.markdown("""
 <style>
-/* Main app background & text */
+/* App background */
 .stApp {
     background: linear-gradient(to right, #f0f8ff, #e6f2ff);
     color: #000000 !important;
@@ -34,22 +34,42 @@ st.markdown("""
     font-weight: bold; 
     color: #000000 !important;
 }
-.stTabs [data-baseweb="tab"]:hover {
-    color: #1E90FF !important;
+
+/* Buttons */
+button[kind="primary"] {
+    background-color: #87AFC7 !important; 
+    color: white !important; 
+    font-weight: bold;
 }
 
-/* Text inputs, textareas, selectboxes */
-div.stTextInput, div.stTextArea, div.stSelectbox {
+/* Input fields and textareas */
+div.stSelectbox, div.stTextInput, div.stTextArea {
     border: 2px solid #1E90FF !important;
     border-radius: 5px !important;
-    background-color: #ffffff !important;
-    color: #000000 !important;
     padding: 5px !important;
     transition: border 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
 }
-div.stTextInput:hover, div.stTextArea:hover, div.stSelectbox:hover {
+
+/* Hover effect */
+div.stSelectbox:hover, div.stTextInput:hover, div.stTextArea:hover {
     border: 2px solid #104E8B !important;
     box-shadow: 0 0 5px #1E90FF;
+}
+
+/* Light mode */
+[data-theme="light"] .stTextInput, 
+[data-theme="light"] .stTextArea, 
+[data-theme="light"] .stSelectbox {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+}
+
+/* Dark mode */
+[data-theme="dark"] .stTextInput, 
+[data-theme="dark"] .stTextArea, 
+[data-theme="dark"] .stSelectbox {
+    background-color: #1E1E1E !important;
+    color: #F0F0F0 !important;
 }
 
 /* Info boxes */
@@ -59,28 +79,10 @@ div.stTextInput:hover, div.stTextArea:hover, div.stSelectbox:hover {
     color: #000000 !important;
 }
 
-/* Sidebar background & text */
-.stSidebar {
-    background-color: #f0f8ff !important;  
-    color: #000000 !important;             
-}
-
-/* Sidebar labels / selectbox text */
-.stSidebar label, .stSidebar .css-1aumxhk {
-    color: #000000 !important;
-}
-
-/* Buttons (keep same colors for both modes) */
-button[kind="primary"], .stDownloadButton button {
-    background-color: #87AFC7 !important; 
-    color: #000000 !important; 
-    font-weight: bold;
-}
-
-/* Hover effect for buttons */
-button[kind="primary"]:hover, .stDownloadButton button:hover {
-    background-color: #1E90FF !important;
-    color: #ffffff !important;
+/* Bold text */
+.css-1d391kg {
+    color: #1E90FF !important; 
+    font-weight: bold !important;
 }
 </style>
 """, unsafe_allow_html=True)
