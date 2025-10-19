@@ -76,37 +76,27 @@ Version {version_number} | Last updated: {last_updated}
 """, unsafe_allow_html=True)
 
 # ---------------------------
-# Sidebar: Settings (Language & Dark Mode)
+# Sidebar: Language & Dark Mode
 # ---------------------------
 st.sidebar.title("8D Report Assistant")
 st.sidebar.markdown("---")
 st.sidebar.header("Settings")
 
-lang = st.sidebar.selectbox(
-    "Select Language / Seleccionar Idioma",
-    ["English", "Español"],
-    key="select_lang"
-)
+lang = st.sidebar.selectbox("Select Language / Seleccionar Idioma", ["English", "Español"], key="lang_select")
 lang_key = "en" if lang == "English" else "es"
 
 dark_mode = st.sidebar.checkbox("🌙 Dark Mode", key="dark_mode")
 
+# ---------------------------
+# Dark Mode - form only, sidebar normal
+# ---------------------------
 if dark_mode:
     st.markdown("""
     <style>
-    /* Main app background & text */
+    /* Main form background & text */
     .stApp {
         background: #2b2b2b !important;
         color: #e0e0e0 !important;
-    }
-
-    /* Tabs */
-    .stTabs [data-baseweb="tab"] {
-        font-weight: bold; 
-        color: #e0e0e0 !important;
-    }
-    .stTabs [data-baseweb="tab"]:hover {
-        color: #87AFC7 !important;
     }
 
     /* Text inputs, textareas, selectboxes */
@@ -130,25 +120,17 @@ if dark_mode:
         color: #e0e0e0 !important;
     }
 
-    /* Sidebar background & text */
-    .stSidebar {
-        background-color: #2b2b2b !important;
+    /* Tabs */
+    .stTabs [data-baseweb="tab"] {
+        font-weight: bold; 
         color: #e0e0e0 !important;
     }
-
-    /* Sidebar buttons */
-    .stSidebar button[kind="primary"] {
-        background-color: #87AFC7 !important;
-        color: #000000 !important;
-        font-weight: bold;
-    }
-    .stSidebar button {
-        background-color: #5a5a5a !important;
-        color: #e0e0e0 !important;
+    .stTabs [data-baseweb="tab"]:hover {
+        color: #87AFC7 !important;
     }
 
-    /* Download button in sidebar */
-    .stSidebar .stDownloadButton button {
+    /* Buttons remain same dark style in both modes */
+    button[kind="primary"], .stDownloadButton button, .stSidebar button {
         background-color: #87AFC7 !important;
         color: #000000 !important;
         font-weight: bold;
@@ -161,8 +143,7 @@ if dark_mode:
 # ---------------------------
 st.sidebar.markdown("---")
 st.sidebar.header("⚙️ App Controls")
-
-if st.sidebar.button("🔄 Reset 8D Session", key="reset_session"):
+if st.sidebar.button("🔄 Reset 8D Session"):
     preserve_keys = ["lang", "lang_key", "current_tab"]
     preserved = {k: st.session_state[k] for k in preserve_keys if k in st.session_state}
     for key in list(st.session_state.keys()):
