@@ -89,8 +89,30 @@ dark_mode = st.sidebar.checkbox("🌙 Dark Mode")
 if dark_mode:
     st.markdown("""
         <style>
+        /* App background and main text */
         .stApp {background: #1c1c1c; color: #f5f5f5 !important;}
-        textarea, .stTextInput, .stSelectbox, .stTextArea {background-color:#2b2b2b !important; color:#f5f5f5 !important; border-color:#87AFC7 !important;}
+
+        /* Input boxes, text areas, selectboxes */
+        textarea, .stTextInput, .stTextArea, .stSelectbox {
+            background-color:#2b2b2b !important; 
+            color:#f5f5f5 !important; 
+            border-color:#87AFC7 !important;
+        }
+
+        /* Labels inside forms */
+        label, div.css-1d391kg { color:#f5f5f5 !important; }
+
+        /* Tabs */
+        .stTabs [data-baseweb="tab"] {color: #f5f5f5 !important; font-weight: bold;}
+
+        /* Sidebar text */
+        .css-1d391kg, .stSidebar div {color: #f5f5f5 !important;}
+
+        /* Collapsible sections */
+        .stExpanderHeader {color: #f5f5f5 !important; background-color: #2b2b2b !important;}
+
+        /* Buttons */
+        button[kind="primary"] {background-color: #87AFC7 !important; color: #000000 !important; font-weight: bold;}
         </style>
     """, unsafe_allow_html=True)
 
