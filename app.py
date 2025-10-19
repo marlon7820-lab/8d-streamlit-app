@@ -417,8 +417,8 @@ line-height:1.5;
             st.markdown("**Uploaded Files / Photos:**")
             for f in st.session_state[step]["uploaded_files"]:
                 st.write(f"{f.name}")
-        if f.type.startswith("image/"):
-            st.image(f, width=192)  # roughly 2 inches wide, height auto-scaled
+                if f.type.startswith("image/"):
+                    st.image(f, width=192)  # roughly 2 inches wide, height auto-scaled
     
         # Step-specific inputs (same level as upload check)
         if step == "D4":
