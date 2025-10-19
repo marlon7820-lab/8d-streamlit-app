@@ -139,21 +139,21 @@ if dark_mode:
 # ---------------------------
 st.markdown("""
 <style>
-/* Primary sidebar buttons */
-.stSidebar button[kind="primary"], 
+/* All sidebar buttons, including Reset 8D Session & Download XLSX */
+.stSidebar button,
 .stSidebar .stDownloadButton button {
-    background-color: #87AFC7 !important;  /* main blue color */
-    color: #000000 !important;             /* text black */
+    background-color: #87AFC7 !important;  /* main blue */
+    color: #000000 !important;             /* black text */
     font-weight: bold;
     border-radius: 5px;
     transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 /* Hover effect */
-.stSidebar button[kind="primary"]:hover,
+.stSidebar button:hover,
 .stSidebar .stDownloadButton button:hover {
-    background-color: #1E90FF !important;  /* darker blue on hover */
-    color: #ffffff !important;             /* text white on hover */
+    background-color: #1E90FF !important;  /* darker blue */
+    color: #ffffff !important;             /* white text */
 }
 </style>
 """, unsafe_allow_html=True)
