@@ -19,7 +19,7 @@ st.set_page_config(
 )
 
 # ---------------------------
-# App styles - Light mode by default, buttons always same color
+# App styles - updated for desktop selectbox outline + thumbnails
 # ---------------------------
 st.markdown("""
 <style>
@@ -28,11 +28,7 @@ st.markdown("""
 textarea {background-color: #ffffff !important; border: 1px solid #1E90FF !important; border-radius: 5px; color: #000000 !important;}
 .stInfo {background-color: #e6f7ff !important; border-left: 5px solid #1E90FF !important; color: #000000 !important;}
 .css-1d391kg {color: #1E90FF !important; font-weight: bold !important;}
-button[kind="primary"], .stDownloadButton button, .stSidebar button {
-    background-color: #87AFC7 !important;
-    color: #000000 !important;
-    font-weight: bold !important;
-}
+button[kind="primary"] {background-color: #87AFC7 !important; color: white !important; font-weight: bold;}
 div.stSelectbox, div.stTextInput, div.stTextArea {
     border: 2px solid #1E90FF !important;
     border-radius: 5px !important;
@@ -85,22 +81,35 @@ Version {version_number} | Last updated: {last_updated}
 st.sidebar.title("8D Report Assistant")
 st.sidebar.markdown("---")
 st.sidebar.header("Settings")
-lang = st.sidebar.selectbox("Select Language / Seleccionar Idioma", ["English", "Español"], key="lang_select")
-lang_key = "en" if lang == "English" else "es"
-dark_mode = st.sidebar.checkbox("🌙 Dark Mode", key="dark_mode")
 
-# ---------------------------
-# Dark Mode - form only, sidebar normal
-# ---------------------------
+lang = st.sidebar.selectbox("Select Language / Seleccionar Idioma", ["English", "Español"])
+lang_key = "en" if lang == "English" else "es"
+
+dark_mode = st.sidebar.checkbox("🌙 Dark Mode")
 if dark_mode:
     st.markdown("""
     <style>
-    .stApp { background: #2b2b2b !important; color: #e0e0e0 !important; }
+    /* Main app background & text */
+    .stApp {
+        background: linear-gradient(to right, #1e1e1e, #2c2c2c);
+        color: #f5f5f5 !important;
+    }
+
+    /* Tabs */
+    .stTabs [data-baseweb="tab"] {
+        font-weight: bold; 
+        color: #f5f5f5 !important;
+    }
+    .stTabs [data-baseweb="tab"]:hover {
+        color: #87AFC7 !important;
+    }
+
+    /* Text inputs, textareas, selectboxes */
     div.stTextInput, div.stTextArea, div.stSelectbox {
         border: 2px solid #87AFC7 !important;
         border-radius: 5px !important;
-        background-color: #3a3a3a !important;
-        color: #e0e0e0 !important;
+        background-color: #2c2c2c !important;
+        color: #f5f5f5 !important;
         padding: 5px !important;
         transition: border 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
     }
@@ -108,19 +117,47 @@ if dark_mode:
         border: 2px solid #1E90FF !important;
         box-shadow: 0 0 5px #1E90FF;
     }
-    .stInfo { background-color: #444444 !important; border-left: 5px solid #87AFC7 !important; color: #e0e0e0 !important; }
-    .stTabs [data-baseweb="tab"] { font-weight: bold; color: #e0e0e0 !important; }
-    .stTabs [data-baseweb="tab"]:hover { color: #87AFC7 !important; }
-    button[kind="primary"], .stDownloadButton button, .stSidebar button { background-color: #87AFC7 !important; color: #000000 !important; font-weight: bold; }
+
+    /* Info boxes */
+    .stInfo {
+        background-color: #3a3a3a !important; 
+        border-left: 5px solid #87AFC7 !important; 
+        color: #f5f5f5 !important;
+    }
+
+    /* Sidebar background & text */
+    .css-1d391kg {color: #87AFC7 !important; font-weight: bold !important;}
+    .stSidebar {
+        background-color: #1e1e1e !important;
+        color: #f5f5f5 !important;
+    }
+
+    /* Sidebar buttons */
+    .stSidebar button[kind="primary"] {
+        background-color: #87AFC7 !important;
+        color: #000000 !important;
+        font-weight: bold;
+    }
+    .stSidebar button {
+        background-color: #5a5a5a !important;
+        color: #f5f5f5 !important;
+    }
+
+    /* Download button in sidebar */
+    .stSidebar .stDownloadButton button {
+        background-color: #87AFC7 !important;
+        color: #000000 !important;
+        font-weight: bold;
+    }
+
     </style>
     """, unsafe_allow_html=True)
-
 # ---------------------------
 # Sidebar: App Controls
 # ---------------------------
 st.sidebar.markdown("---")
 st.sidebar.header("⚙️ App Controls")
-if st.sidebar.button("🔄 Reset 8D Session", key="reset_button"):
+if st.sidebar.button("🔄 Reset 8D Session"):
     preserve_keys = ["lang", "lang_key", "current_tab"]
     preserved = {k: st.session_state[k] for k in preserve_keys if k in st.session_state}
     for key in list(st.session_state.keys()):
@@ -193,22 +230,14 @@ t = {
 # NPQP 8D steps with examples
 # ---------------------------
 npqp_steps = [
-    ("D1", {"en":"Describe the customer concerns clearly.","es":"Describa claramente las preocupaciones del cliente."},
-     {"en":"Customer reported static noise in amplifier during end-of-line test.","es":"El cliente reportó ruido estático en el amplificador durante la prueba final."}),
-    ("D2", {"en":"Check for similar parts, models, generic parts, other colors, etc.","es":"Verifique partes similares, modelos, partes genéricas, otros colores, etc."},
-     {"en":"Similar model radio, Front vs. rear speaker.","es":"Radio de modelo similar, altavoz delantero vs trasero."}),
-    ("D3", {"en":"Perform an initial investigation to identify obvious issues.","es":"Realice una investigación inicial para identificar problemas evidentes."},
-     {"en":"Visual inspection of solder joints, initial functional tests.","es":"Inspección visual de soldaduras, pruebas funcionales iniciales."}),
-    ("D4", {"en":"Define temporary containment actions and material location.","es":"Defina acciones de contención temporales y ubicación del material."},
-     {"en":"Post Quality Alert, Increase Inspection, Inventory Certification","es":"Implementar Ayuda Visual, Incrementar Inspeccion, Certificar Inventario"}),
-    ("D5", {"en": "Use 5-Why analysis to determine the root cause.","es": "Use el análisis de 5 Porqués para determinar la causa raíz."},
-     {"en": "Final 'Why' from the Analysis will give a good indication of the True Root Cause","es": "El último \"Por qué\" del análisis proporcionará una idea clara de la causa raíz del problema"}),
-    ("D6", {"en":"Define corrective actions that eliminate the root cause permanently.","es":"Defina acciones correctivas que eliminen la causa raíz permanentemente."},
-     {"en":"Update soldering process, redesign fixture.","es":"Actualizar proceso de soldadura, rediseñar herramienta."}),
-    ("D7", {"en":"Verify that corrective actions effectively resolve the issue.","es":"Verifique que las acciones correctivas resuelvan efectivamente el problema."},
-     {"en":"Functional tests on corrected amplifiers.","es":"Pruebas funcionales en amplificadores corregidos."}),
-    ("D8", {"en":"Document lessons learned, update standards, FMEAs.","es":"Documente lecciones aprendidas, actualice estándares, FMEAs."},
-     {"en":"Update SOPs, PFMEA, work instructions.","es":"Actualizar SOPs, PFMEA, instrucciones de trabajo."})
+    ("D1", {"en":"Describe the customer concerns clearly.", "es":"Describa claramente las preocupaciones del cliente."}, {"en":"Customer reported static noise in amplifier during end-of-line test.", "es":"El cliente reportó ruido estático en el amplificador durante la prueba final."}),
+    ("D2", {"en":"Check for similar parts, models, generic parts, other colors, etc.", "es":"Verifique partes similares, modelos, partes genéricas, otros colores, etc."}, {"en":"Similar model radio, Front vs. rear speaker.", "es":"Radio de modelo similar, altavoz delantero vs trasero."}),
+    ("D3", {"en":"Perform an initial investigation to identify obvious issues.", "es":"Realice una investigación inicial para identificar problemas evidentes."}, {"en":"Visual inspection of solder joints, initial functional tests.", "es":"Inspección visual de soldaduras, pruebas funcionales iniciales."}),
+    ("D4", {"en":"Define temporary containment actions and material location.", "es":"Defina acciones de contención temporales y ubicación del material."}, {"en":"Post Quality Alert, Increase Inspection, Inventory Certification","es":"Implementar Ayuda Visual, Incrementar Inspeccion, Certificar Inventario"}),
+    ("D5", {"en": "Use 5-Why analysis to determine the root cause.", "es": "Use el análisis de 5 Porqués para determinar la causa raíz."}, {"en": "Final 'Why' from the Analysis will give a good indication of the True Root Cause", "es": "El último \"Por qué\" del análisis proporcionará una idea clara de la causa raíz del problema"}),
+    ("D6", {"en":"Define corrective actions that eliminate the root cause permanently.", "es":"Defina acciones correctivas que eliminen la causa raíz permanentemente."}, {"en":"Update soldering process, redesign fixture.", "es":"Actualizar proceso de soldadura, rediseñar herramienta."}),
+    ("D7", {"en":"Verify that corrective actions effectively resolve the issue.", "es":"Verifique que las acciones correctivas resuelvan efectivamente el problema."}, {"en":"Functional tests on corrected amplifiers.", "es":"Pruebas funcionales en amplificadores corregidos."}),
+    ("D8", {"en":"Document lessons learned, update standards, FMEAs.", "es":"Documente lecciones aprendidas, actualice estándares, FMEAs."}, {"en":"Update SOPs, PFMEA, work instructions.", "es":"Actualizar SOPs, PFMEA, instrucciones de trabajo."})
 ]
 
 # ---------------------------
@@ -217,17 +246,14 @@ npqp_steps = [
 for step, _, _ in npqp_steps:
     if step not in st.session_state:
         st.session_state[step] = {"answer": "", "extra": ""}
-    if step in ["D1","D3","D4","D7"]:
-        st.session_state[step]["uploaded_files"] = []
+        if step in ["D1","D3","D4","D7"]:
+            st.session_state[step]["uploaded_files"] = []
 
 st.session_state.setdefault("report_date", datetime.datetime.today().strftime("%B %d, %Y"))
 st.session_state.setdefault("prepared_by", "")
 st.session_state.setdefault("d5_occ_whys", [""]*5)
 st.session_state.setdefault("d5_det_whys", [""]*5)
 st.session_state.setdefault("d5_sys_whys", [""]*5)
-st.session_state.setdefault("d5_occ_whys_free", [""]*0)
-st.session_state.setdefault("d5_det_whys_free", [""]*0)
-st.session_state.setdefault("d5_sys_whys_free", [""]*0)
 st.session_state.setdefault("d4_location", "")
 st.session_state.setdefault("d4_status", "")
 st.session_state.setdefault("d4_containment", "")
@@ -394,160 +420,319 @@ def suggest_root_cause(whys):
     if any(word in text for word in ["temperature", "humidity", "contamination", "environment"]):
         return "The root cause may be attributed to environmental or external factor"
     return "No clear root cause suggestion (provide more 5-Whys)"
+
+def render_whys_no_repeat(why_list, categories, label_prefix):
+    for idx in range(len(why_list)):
+        selected_so_far = [w for i, w in enumerate(why_list) if w.strip() and i != idx]
+        options = [""] + [f"{cat}: {item}" for cat, items in categories.items() for item in items if f"{cat}: {item}" not in selected_so_far]
+        current_val = why_list[idx] if why_list[idx] in options else ""
+        why_list[idx] = st.selectbox(
+            f"{label_prefix} {idx+1}",
+            options,
+            index=options.index(current_val) if current_val in options else 0,
+            key=f"{label_prefix}_{idx}_{lang_key}"
+        )
+    return why_list
 # ---------------------------
-# Helper: render 5-Whys section
+# Render Tabs with Uploads
 # ---------------------------
-def render_whys(whys_list, category_name, categories):
-    st.markdown(f"**{category_name}**")
-    for i in range(5):
-        col1, col2 = st.columns([1,3])
-        with col1:
-            st.text_input(f"Why {i+1}", key=f"{category_name}_{i}", value=whys_list[i])
-        with col2:
-            st.selectbox("Select category", [""] + categories, key=f"{category_name}_cat_{i}", index=0)
+tab_labels = [
+    f"🟢 {t[lang_key][step]}" if st.session_state[step]["answer"].strip() else f"🔴 {t[lang_key][step]}"
+    for step, _, _ in npqp_steps
+]
+tabs = st.tabs(tab_labels)
+
+for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
+    with tabs[i]:
+        st.markdown(f"### {t[lang_key][step]}")
+
+        # Training Guidance & Example
+        note_text = note_dict[lang_key]
+        example_text = example_dict[lang_key]
+        st.markdown(f"""
+<div style="
+background-color:#b3e0ff;
+color:black;
+padding:12px;
+border-left:5px solid #1E90FF;
+border-radius:6px;
+width:100%;
+font-size:14px;
+line-height:1.5;
+">
+<b>{t[lang_key]['Training_Guidance']}:</b> {note_text}<br><br>
+💡 <b>{t[lang_key]['Example']}:</b> {example_text}
+</div>
+""", unsafe_allow_html=True)
+
+        # File uploads for D1, D3, D4, D7
+        if step in ["D1","D3","D4","D7"]:
+            uploaded_files = st.file_uploader(
+                f"Upload files/photos for {step}",
+                type=["png", "jpg", "jpeg", "pdf", "xlsx", "txt"],
+                accept_multiple_files=True,
+                key=f"upload_{step}"
+            )
+            if uploaded_files:
+                for file in uploaded_files:
+                    if file not in st.session_state[step]["uploaded_files"]:
+                        st.session_state[step]["uploaded_files"].append(file)
+
+        # Display uploaded files (aligned with file upload, not nested too deep)
+        if step in ["D1","D3","D4","D7"] and st.session_state[step].get("uploaded_files"):
+            st.markdown("**Uploaded Files / Photos:**")
+            for f in st.session_state[step]["uploaded_files"]:
+                st.write(f"{f.name}")
+                if f.type.startswith("image/"):
+                    st.image(f, width=192)  # roughly 2 inches wide, height auto-scaled
+    
+        # Step-specific inputs (same level as upload check)
+        if step == "D4":
+            st.session_state[step]["location"] = st.selectbox(
+                "Location of Material",
+                ["", "Work in Progress", "Stores Stock", "Warehouse Stock", "Service Parts", "Other"],
+                index=0,
+                key="d4_location"
+            )
+            st.session_state[step]["status"] = st.selectbox(
+                "Status of Activities",
+                ["", "Pending", "In Progress", "Completed", "Other"],
+                index=0,
+                key="d4_status"
+            )
+            st.session_state[step]["answer"] = st.text_area(
+                "Containment Actions / Notes",
+                value=st.session_state[step]["answer"],
+                key=f"ans_{step}"
+            )
+        # D5 5-Why
+        elif step == "D5":
+            st.markdown("#### Occurrence Analysis")
+            render_whys_no_repeat(st.session_state.d5_occ_whys, occurrence_categories, t[lang_key]['Occurrence_Why'])
+            if st.button("➕ Add another Occurrence Why", key=f"add_occ_{i}"):
+                st.session_state.d5_occ_whys.append("")
+            st.markdown("#### Detection Analysis")
+            render_whys_no_repeat(st.session_state.d5_det_whys, detection_categories, t[lang_key]['Detection_Why'])
+            if st.button("➕ Add another Detection Why", key=f"add_det_{i}"):
+                st.session_state.d5_det_whys.append("")
+            st.markdown("#### Systemic Analysis")
+            render_whys_no_repeat(st.session_state.d5_sys_whys, systemic_categories, t[lang_key]['Systemic_Why'])
+            if st.button("➕ Add another Systemic Why", key=f"add_sys_{i}"):
+                st.session_state.d5_sys_whys.append("")
+            # Dynamic Root Causes
+            occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
+            det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
+            sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
+            st.text_area(f"{t[lang_key]['Root_Cause_Occ']}", value=suggest_root_cause(occ_whys) if occ_whys else "No occurrence whys provided yet", height=80, disabled=True)
+            st.text_area(f"{t[lang_key]['Root_Cause_Det']}", value=suggest_root_cause(det_whys) if det_whys else "No detection whys provided yet", height=80, disabled=True)
+            st.text_area(f"{t[lang_key]['Root_Cause_Sys']}", value=suggest_root_cause(sys_whys) if sys_whys else "No systemic whys provided yet", height=80, disabled=True)
+
+        # D6: Permanent Corrective Actions (three text areas: Occ/Det/Sys)
+        elif step == "D6":
+            st.session_state[step].setdefault("occ_answer", st.session_state["D6"].get("occ_answer", ""))
+            st.session_state[step].setdefault("det_answer", st.session_state["D6"].get("det_answer", ""))
+            st.session_state[step].setdefault("sys_answer", st.session_state["D6"].get("sys_answer", ""))
+
+            st.session_state[step]["occ_answer"] = st.text_area(
+                "D6 - Corrective Actions for Occurrence Root Cause",
+                value=st.session_state[step]["occ_answer"],
+                key="d6_occ"
+            )
+            st.session_state[step]["det_answer"] = st.text_area(
+                "D6 - Corrective Actions for Detection Root Cause",
+                value=st.session_state[step]["det_answer"],
+                key="d6_det"
+            )
+            st.session_state[step]["sys_answer"] = st.text_area(
+                "D6 - Corrective Actions for Systemic Root Cause",
+                value=st.session_state[step]["sys_answer"],
+                key="d6_sys"
+            )
+
+            # Mirror into top-level D6 storage so export code can find them consistently
+            st.session_state["D6"]["occ_answer"] = st.session_state[step]["occ_answer"]
+            st.session_state["D6"]["det_answer"] = st.session_state[step]["det_answer"]
+            st.session_state["D6"]["sys_answer"] = st.session_state[step]["sys_answer"]
+
+        # D7: Countermeasure Confirmation (three text areas: verification for Occ/Det/Sys)
+        elif step == "D7":
+            st.session_state[step].setdefault("occ_answer", st.session_state["D7"].get("occ_answer", ""))
+            st.session_state[step].setdefault("det_answer", st.session_state["D7"].get("det_answer", ""))
+            st.session_state[step].setdefault("sys_answer", st.session_state["D7"].get("sys_answer", ""))
+
+            st.session_state[step]["occ_answer"] = st.text_area(
+                "D7 - Occurrence Countermeasure Verification",
+                value=st.session_state[step]["occ_answer"],
+                key="d7_occ"
+            )
+            st.session_state[step]["det_answer"] = st.text_area(
+                "D7 - Detection Countermeasure Verification",
+                value=st.session_state[step]["det_answer"],
+                key="d7_det"
+            )
+            st.session_state[step]["sys_answer"] = st.text_area(
+                "D7 - Systemic Countermeasure Verification",
+                value=st.session_state[step]["sys_answer"],
+                key="d7_sys"
+            )
+
+            # Mirror into top-level D7 storage so export code can find them consistently
+            st.session_state["D7"]["occ_answer"] = st.session_state[step]["occ_answer"]
+            st.session_state["D7"]["det_answer"] = st.session_state[step]["det_answer"]
+            st.session_state["D7"]["sys_answer"] = st.session_state[step]["sys_answer"]
+
+        # D8: Follow-up Activities / Lessons Learned (single text area)
+        elif step == "D8":
+            st.session_state[step]["answer"] = st.text_area(
+                "Your Answer",
+                value=st.session_state[step]["answer"],
+                key=f"ans_{step}"
+            )
+
+        else:
+            # Default for D1, D2, D3, or any other single-answer steps
+            if step not in ["D4", "D5", "D6", "D7", "D8"]:
+                st.session_state[step]["answer"] = st.text_area(
+                    "Your Answer",
+                    value=st.session_state[step]["answer"],
+                    key=f"ans_{step}"
+                )
 
 # ---------------------------
-# Tabs for D1-D8
+# Collect all answers for Excel export
 # ---------------------------
-tabs = st.tabs([t[lang_key][step] for step in ["D1","D2","D3","D4","D5","D6","D7","D8"]])
+data_rows = []
+
+occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
+det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
+sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
+
+occ_rc_text = suggest_root_cause(occ_whys) if occ_whys else "No occurrence whys provided yet"
+det_rc_text = suggest_root_cause(det_whys) if det_whys else "No detection whys provided yet"
+sys_rc_text = suggest_root_cause(sys_whys) if sys_whys else "No systemic whys provided yet"
+
+for step, _, _ in npqp_steps:
+    # D6 and D7 should export their 3 sub-answers as separate rows
+    if step == "D6":
+        data_rows.append(("D6 - Occurrence Countermeasure", st.session_state.get("D6", {}).get("occ_answer", ""), ""))
+        data_rows.append(("D6 - Detection Countermeasure", st.session_state.get("D6", {}).get("det_answer", ""), ""))
+        data_rows.append(("D6 - Systemic Countermeasure", st.session_state.get("D6", {}).get("sys_answer", ""), ""))
+    elif step == "D7":
+        data_rows.append(("D7 - Occurrence Countermeasure Verification", st.session_state.get("D7", {}).get("occ_answer", ""), ""))
+        data_rows.append(("D7 - Detection Countermeasure Verification", st.session_state.get("D7", {}).get("det_answer", ""), ""))
+        data_rows.append(("D7 - Systemic Countermeasure Verification", st.session_state.get("D7", {}).get("sys_answer", ""), ""))
+    elif step == "D5":
+        data_rows.append(("D5 - Root Cause (Occurrence)", occ_rc_text, " | ".join(occ_whys)))
+        data_rows.append(("D5 - Root Cause (Detection)", det_rc_text, " | ".join(det_whys)))
+        data_rows.append(("D5 - Root Cause (Systemic)", sys_rc_text, " | ".join(sys_whys)))
+    elif step == "D4":
+        loc = st.session_state[step].get("location", "")
+        status = st.session_state[step].get("status", "")
+        answer = st.session_state[step].get("answer", "")
+        extra = f"Location: {loc} | Status: {status}"
+        data_rows.append((step, answer, extra))
+    else:
+        answer = st.session_state[step].get("answer", "")
+        extra = st.session_state[step].get("extra", "")
+        data_rows.append((step, answer, extra))
 
 # ---------------------------
-# D1
+# Excel generation (formatted + images/files)
 # ---------------------------
-with tabs[0]:
-    st.header("D1: Concern Details")
-    st.text_input("Prepared By", key="prepared_by")
-    st.date_input("Report Date", key="report_date")
-    st.text_area("Customer Concern / Problem Description", key="D1_answer", height=120)
-    uploaded_files = st.file_uploader("Upload evidence images", type=["png","jpg","jpeg"], accept_multiple_files=True, key="D1_upload")
-    st.session_state["D1"]["uploaded_files"] = uploaded_files
-
-# ---------------------------
-# D2
-# ---------------------------
-with tabs[1]:
-    st.header("D2: Similar Part Considerations")
-    st.text_area("Similar Parts / Models / Generic Considerations", key="D2_answer", height=120)
-
-# ---------------------------
-# D3
-# ---------------------------
-with tabs[2]:
-    st.header("D3: Initial Analysis")
-    st.text_area("Initial Analysis / Findings", key="D3_answer", height=120)
-    uploaded_files = st.file_uploader("Upload evidence images", type=["png","jpg","jpeg"], accept_multiple_files=True, key="D3_upload")
-    st.session_state["D3"]["uploaded_files"] = uploaded_files
-
-# ---------------------------
-# D4
-# ---------------------------
-with tabs[3]:
-    st.header("D4: Implement Containment")
-    st.text_area("Temporary Containment Actions", key="D4_containment", height=80)
-    st.text_input("Material Location", key="d4_location")
-    st.selectbox("Activity Status", ["Open","Closed","In Progress"], key="d4_status")
-    uploaded_files = st.file_uploader("Upload evidence images", type=["png","jpg","jpeg"], accept_multiple_files=True, key="D4_upload")
-    st.session_state["D4"]["uploaded_files"] = uploaded_files
-
-# ---------------------------
-# D5
-# ---------------------------
-with tabs[4]:
-    st.header("D5: Final Analysis (5-Whys)")
-    st.markdown("**Occurrence Root Cause**")
-    for i in range(5):
-        st.text_input(f"Occurrence Why {i+1}", key=f"d5_occ_{i}", value=st.session_state["d5_occ_whys"][i])
-    st.markdown("**Detection Root Cause**")
-    for i in range(5):
-        st.text_input(f"Detection Why {i+1}", key=f"d5_det_{i}", value=st.session_state["d5_det_whys"][i])
-    st.markdown("**Systemic Root Cause**")
-    for i in range(5):
-        st.text_input(f"Systemic Why {i+1}", key=f"d5_sys_{i}", value=st.session_state["d5_sys_whys"][i])
-    st.markdown("**Suggested Occurrence Root Cause**")
-    st.info(suggest_root_cause([st.session_state[f"d5_occ_{i}"] for i in range(5)]))
-    st.markdown("**Suggested Detection Root Cause**")
-    st.info(suggest_root_cause([st.session_state[f"d5_det_{i}"] for i in range(5)]))
-    st.markdown("**Suggested Systemic Root Cause**")
-    st.info(suggest_root_cause([st.session_state[f"d5_sys_{i}"] for i in range(5)]))
-
-# ---------------------------
-# D6
-# ---------------------------
-with tabs[5]:
-    st.header("D6: Permanent Corrective Actions")
-    st.text_area("Corrective Actions (Occurrence)", key="D6_occ_answer", height=100)
-    st.text_area("Corrective Actions (Detection)", key="D6_det_answer", height=100)
-    st.text_area("Corrective Actions (Systemic)", key="D6_sys_answer", height=100)
-    uploaded_files = st.file_uploader("Upload evidence images", type=["png","jpg","jpeg"], accept_multiple_files=True, key="D6_upload")
-    st.session_state["D6"]["uploaded_files"] = uploaded_files
-
-# ---------------------------
-# D7
-# ---------------------------
-with tabs[6]:
-    st.header("D7: Countermeasure Confirmation")
-    st.text_area("Effectiveness Verification (Occurrence)", key="D7_occ_answer", height=80)
-    st.text_area("Effectiveness Verification (Detection)", key="D7_det_answer", height=80)
-    st.text_area("Effectiveness Verification (Systemic)", key="D7_sys_answer", height=80)
-    uploaded_files = st.file_uploader("Upload verification evidence", type=["png","jpg","jpeg"], accept_multiple_files=True, key="D7_upload")
-    st.session_state["D7"]["uploaded_files"] = uploaded_files
-
-# ---------------------------
-# D8
-# ---------------------------
-with tabs[7]:
-    st.header("D8: Follow-up / Lessons Learned")
-    st.text_area("Lessons Learned / Recurrence Prevention", key="D8_answer", height=120)
-    st.text_area("Additional Notes / Observations", key="D8_extra", height=80)
-    uploaded_files = st.file_uploader("Upload evidence images", type=["png","jpg","jpeg"], accept_multiple_files=True, key="D8_upload")
-
-# ---------------------------
-# Excel Export
-# ---------------------------
-def create_excel():
+def generate_excel():
     wb = Workbook()
     ws = wb.active
-    ws.title = "8D Report"
+    ws.title = "NPQP 8D Report"
+    thin = Side(border_style="thin", color="000000")
+    border = Border(left=thin, right=thin, top=thin, bottom=thin)
 
-    # Set headers
-    headers = ["Step", "Description", "Answer", "Extra Notes"]
-    for col_num, header in enumerate(headers, 1):
-        ws.cell(row=1, column=col_num, value=header)
-        ws.cell(row=1, column=col_num).font = Font(bold=True)
-        ws.cell(row=1, column=col_num).alignment = Alignment(horizontal="center")
+    # Add logo if exists
+    if os.path.exists("logo.png"):
+        try:
+            img = XLImage("logo.png")
+            img.width = 140
+            img.height = 40
+            ws.add_image(img, "A1")
+        except:
+            pass
 
-    # Fill data
-    row_num = 2
-    for step in ["D1","D2","D3","D4","D5","D6","D7","D8"]:
-        answer = st.session_state.get(step, {}).get("answer","") if isinstance(st.session_state.get(step,{}), dict) else st.session_state.get(f"{step}_answer","")
-        extra = st.session_state.get(step, {}).get("extra","") if isinstance(st.session_state.get(step,{}), dict) else st.session_state.get(f"{step}_extra","")
-        ws.cell(row=row_num, column=1, value=step)
-        ws.cell(row=row_num, column=2, value=t[lang_key].get(step, step))
-        ws.cell(row=row_num, column=3, value=answer)
-        ws.cell(row=row_num, column=4, value=extra)
-        row_num += 1
+    ws.merge_cells(start_row=3, start_column=1, end_row=3, end_column=3)
+    ws.cell(row=3, column=1, value="📋 8D Report Assistant").font = Font(bold=True, size=14)
 
-    # Add images for D1, D3, D4, D6, D7
-    image_steps = ["D1","D3","D4","D6","D7"]
-    for step in image_steps:
-        files = st.session_state.get(step, {}).get("uploaded_files", [])
-        if files:
-            for f in files:
-                image = XLImage(BytesIO(f.read()))
-                ws.add_image(image, f"D{row_num}")
+    ws.append([t[lang_key]['Report_Date'], st.session_state.report_date])
+    ws.append([t[lang_key]['Prepared_By'], st.session_state.prepared_by])
+    ws.append([])
 
-    # Save to BytesIO
-    output = BytesIO()
+    # Header row
+    header_row = ws.max_row + 1
+    headers = ["Step", "Answer", "Extra / Notes"]
+    fill = PatternFill(start_color="1E90FF", end_color="1E90FF", fill_type="solid")
+    for c_idx, h in enumerate(headers, start=1):
+        cell = ws.cell(row=header_row, column=c_idx, value=h)
+        cell.fill = fill
+        cell.font = Font(bold=True, color="FFFFFF")
+        cell.alignment = Alignment(horizontal="center", vertical="center")
+        cell.border = border
+
+    # Append step answers
+    for step_label, answer_text, extra_text in data_rows:
+        ws.append([step_label, answer_text, extra_text])
+        r = ws.max_row
+        for c in range(1, 4):
+            cell = ws.cell(row=r, column=c)
+            cell.alignment = Alignment(wrap_text=True, vertical="top")
+            if c == 2:
+                cell.font = Font(bold=True)
+            cell.border = border
+
+    # Insert uploaded images below table
+    from PIL import Image as PILImage
+    from io import BytesIO
+
+    last_row = ws.max_row + 2
+    for step in ["D1","D3","D4","D7"]:
+        uploaded_files = st.session_state[step].get("uploaded_files", [])
+        if uploaded_files:
+            ws.cell(row=last_row, column=1, value=f"{step} Uploaded Files / Photos").font = Font(bold=True)
+            last_row += 1
+            for f in uploaded_files:
+                if f.type.startswith("image/"):
+                    try:
+                        img = PILImage.open(BytesIO(f.getvalue()))
+                        max_width = 300
+                        ratio = max_width / img.width
+                        img = img.resize((int(img.width * ratio), int(img.height * ratio)))
+                        temp_path = f"/tmp/{f.name}"
+                        img.save(temp_path)
+                        excel_img = XLImage(temp_path)
+                        ws.add_image(excel_img, f"A{last_row}")
+                        last_row += int(img.height / 15) + 2
+                    except Exception as e:
+                        ws.cell(row=last_row, column=1, value=f"Could not add image {f.name}: {e}")
+                        last_row += 1
+                else:
+                    ws.cell(row=last_row, column=1, value=f.name)
+                    last_row += 1
+
+    # Set column widths
+    for col in range(1, 4):
+        ws.column_dimensions[get_column_letter(col)].width = 40
+
+    # ✅ The return must be inside the function
+    output = io.BytesIO()
     wb.save(output)
-    return output
+    return output.getvalue()
+
+# Move download button to sidebar
+with st.sidebar:
+    st.download_button(
+        label=t[lang_key]['Download'],  # no extra icon
+        data=generate_excel(),  # function that returns BytesIO of XLSX
+        file_name=f"8D_Report_{st.session_state['report_date']}.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+
 
 # ---------------------------
-# Download Button
-# ---------------------------
-if st.button("📥 Download XLSX"):
-    excel_file = create_excel()
-    st.download_button("Download 8D Report", data=excel_file.getvalue(), file_name=f"8D_Report_{st.session_state['report_date']}.xlsx")
-
-# ---------------------------
-# End of App
+# (End)
 # ---------------------------
