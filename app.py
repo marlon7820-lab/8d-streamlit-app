@@ -509,52 +509,43 @@ line-height:1.5;
                 if f.type.startswith("image/"):
                     st.image(f, width=192)  # roughly 2 inches wide, height auto-scaled
     
-        # Step-specific inputs (same level as upload check)
-       # ---------------------------
-# Step-specific inputs
+        # ---------------------------
+# Step Rendering
 # ---------------------------
 if step == "D4":
-    st.session_state[step]["location"] = st.selectbox(
-        "Location of Material",
-        ["", "Work in Progress", "Stores Stock", "Warehouse Stock", "Service Parts", "Other"],
-        index=0,
-        key="d4_location"
-    )
-    st.session_state[step]["status"] = st.selectbox(
-        "Status of Activities",
-        ["", "Pending", "In Progress", "Completed", "Other"],
-        index=0,
-        key="d4_status"
-    )
-    st.session_state[step]["answer"] = st.text_area(
-        "Containment Actions / Notes",
-        value=st.session_state[step]["answer"],
-        key=f"ans_{step}"
+    st.markdown("#### Root Cause by Category")
+    st.session_state.d4_selection = render_whys_no_repeat(
+        st.session_state.get("d4_selection", ["", "", ""]),
+        categories=d4_categories,
+        label_prefix=t[lang_key]["D4_Why"]
     )
 
 elif step == "D5":
-    # Occurrence Analysis
     st.markdown("#### Occurrence Analysis")
     st.session_state.d5_occ_whys = render_whys_with_free_text(
-        st.session_state.d5_occ_whys, occurrence_categories, t[lang_key]['Occurrence_Why']
+        st.session_state.get("d5_occ_whys", [""]),
+        occurrence_categories,
+        t[lang_key]['Occurrence_Why']
     )
-    if st.button("➕ Add another Occurrence Why", key=f"add_occ_{i}"):
+    if st.button("➕ Add another Occurrence Why", key="add_occ"):
         st.session_state.d5_occ_whys.append("")
 
-    # Detection Analysis
     st.markdown("#### Detection Analysis")
     st.session_state.d5_det_whys = render_whys_with_free_text(
-        st.session_state.d5_det_whys, detection_categories, t[lang_key]['Detection_Why']
+        st.session_state.get("d5_det_whys", [""]),
+        detection_categories,
+        t[lang_key]['Detection_Why']
     )
-    if st.button("➕ Add another Detection Why", key=f"add_det_{i}"):
+    if st.button("➕ Add another Detection Why", key="add_det"):
         st.session_state.d5_det_whys.append("")
 
-    # Systemic Analysis
     st.markdown("#### Systemic Analysis")
     st.session_state.d5_sys_whys = render_whys_with_free_text(
-        st.session_state.d5_sys_whys, systemic_categories, t[lang_key]['Systemic_Why']
+        st.session_state.get("d5_sys_whys", [""]),
+        systemic_categories,
+        t[lang_key]['Systemic_Why']
     )
-    if st.button("➕ Add another Systemic Why", key=f"add_sys_{i}"):
+    if st.button("➕ Add another Systemic Why", key="add_sys"):
         st.session_state.d5_sys_whys.append("")
 
     # Dynamic Root Causes
@@ -562,24 +553,9 @@ elif step == "D5":
     det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
     sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
 
-    st.text_area(
-        f"{t[lang_key]['Root_Cause_Occ']}",
-        value=suggest_root_cause(occ_whys) if occ_whys else "No occurrence whys provided yet",
-        height=80,
-        disabled=True
-    )
-    st.text_area(
-        f"{t[lang_key]['Root_Cause_Det']}",
-        value=suggest_root_cause(det_whys) if det_whys else "No detection whys provided yet",
-        height=80,
-        disabled=True
-    )
-    st.text_area(
-        f"{t[lang_key]['Root_Cause_Sys']}",
-        value=suggest_root_cause(sys_whys) if sys_whys else "No systemic whys provided yet",
-        height=80,
-        disabled=True
-    )
+    st.text_area(f"{t[lang_key]['Root_Cause_Occ']}", value=suggest_root_cause(occ_whys) if occ_whys else "No occurrence whys provided yet", height=80, disabled=True)
+    st.text_area(f"{t[lang_key]['Root_Cause_Det']}", value=suggest_root_cause(det_whys) if det_whys else "No detection whys provided yet", height=80, disabled=True)
+    st.text_area(f"{t[lang_key]['Root_Cause_Sys']}", value=suggest_root_cause(sys_whys) if sys_whys else "No systemic whys provided yet", height=80, disabled=True)
 
 elif step == "D6":
     st.session_state[step].setdefault("occ_answer", st.session_state["D6"].get("occ_answer", ""))
@@ -648,6 +624,7 @@ else:
             value=st.session_state[step]["answer"],
             key=f"ans_{step}"
         )
+
 
 # ---------------------------
 # Collect all answers for Excel export
