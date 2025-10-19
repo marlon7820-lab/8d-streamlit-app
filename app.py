@@ -409,7 +409,7 @@ def render_whys(whys_list, category_name, categories):
 # ---------------------------
 # Tabs for D1-D8
 # ---------------------------
-tabs = st.tabs([t[lang_key] for t in ["D1","D2","D3","D4","D5","D6","D7","D8"]])
+tabs = st.tabs([t[lang_key][step] for step in ["D1","D2","D3","D4","D5","D6","D7","D8"]])
 
 # ---------------------------
 # D1
