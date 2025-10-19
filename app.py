@@ -75,7 +75,9 @@ Version {version_number} | Last updated: {last_updated}
 </p>
 """, unsafe_allow_html=True)
 
-# Sidebar (untouched by dark mode)
+# ---------------------------
+# Sidebar: Language & Dark Mode
+# ---------------------------
 st.sidebar.title("8D Report Assistant")
 st.sidebar.markdown("---")
 st.sidebar.header("Settings")
@@ -85,45 +87,32 @@ lang_key = "en" if lang == "English" else "es"
 
 dark_mode = st.sidebar.checkbox("🌙 Dark Mode")
 
-# Sidebar buttons styling (Download + Reset)
-st.markdown("""
-<style>
-.stSidebar button, 
-.stSidebar .stDownloadButton button {
-    background-color: #87AFC7 !important;
-    color: #000 !important;
-    font-weight: bold;
-    border-radius: 5px;
-    transition: 0.2s ease;
-}
-.stSidebar button:hover, 
-.stSidebar .stDownloadButton button:hover {
-    background-color: #1E90FF !important;
-    color: #fff !important;
-}
-</style>
-""", unsafe_allow_html=True)
-
-# Dark mode ONLY for form
+# ---------------------------
+# Dark Mode - Main Form Only
+# ---------------------------
 if dark_mode:
     st.markdown("""
     <style>
-    /* Main form background & text */
-    .stApp > .main > div.block-container {
-        background: #1e1e1e;
+    /* Main form area */
+    .css-18e3th9 {   /* Streamlit main content container */
+        background-color: #1e1e1e !important;
         color: #f5f5f5 !important;
     }
-    /* Inputs and selects in form */
+
+    /* Inputs, textareas, selectboxes */
     div.stTextInput, div.stTextArea, div.stSelectbox {
         background-color: #2c2c2c !important;
         color: #f5f5f5 !important;
         border: 2px solid #87AFC7 !important;
         border-radius: 5px;
+        padding: 5px !important;
+        transition: border 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
     }
     div.stTextInput:hover, div.stTextArea:hover, div.stSelectbox:hover {
         border: 2px solid #1E90FF !important;
         box-shadow: 0 0 5px #1E90FF;
     }
+
     /* Tabs inside form */
     .stTabs [data-baseweb="tab"] {
         color: #f5f5f5 !important;
@@ -132,6 +121,7 @@ if dark_mode:
     .stTabs [data-baseweb="tab"]:hover {
         color: #87AFC7 !important;
     }
+
     /* Info boxes */
     .stInfo {
         background-color: #3a3a3a !important;
@@ -141,10 +131,36 @@ if dark_mode:
     </style>
     """, unsafe_allow_html=True)
 
-# Sidebar reset button
+# ---------------------------
+# Sidebar buttons - consistent colors
+# ---------------------------
+st.markdown("""
+<style>
+/* Primary sidebar buttons & download buttons */
+.stSidebar button[kind="primary"], 
+.stSidebar .stDownloadButton button {
+    background-color: #87AFC7 !important;  /* main blue */
+    color: #000000 !important;             /* text black */
+    font-weight: bold;
+    border-radius: 5px;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Hover effect */
+.stSidebar button[kind="primary"]:hover,
+.stSidebar .stDownloadButton button:hover {
+    background-color: #1E90FF !important;  /* darker blue on hover */
+    color: #ffffff !important;             /* text white on hover */
+}
+</style>
+""", unsafe_allow_html=True)
+
+# ---------------------------
+# Sidebar: App Controls
+# ---------------------------
 st.sidebar.markdown("---")
 st.sidebar.header("⚙️ App Controls")
-if st.sidebar.button("🔄 Reset 8D Session", key="reset_8d"):
+if st.sidebar.button("🔄 Reset 8D Session"):
     preserve_keys = ["lang", "lang_key", "current_tab"]
     preserved = {k: st.session_state[k] for k in preserve_keys if k in st.session_state}
     for key in list(st.session_state.keys()):
