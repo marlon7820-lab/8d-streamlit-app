@@ -19,143 +19,56 @@ st.set_page_config(
 )
 
 # ---------------------------
-# Dark/Light mode styles
+# Dark/Light Mode CSS (global)
 # ---------------------------
-dark_mode = st.sidebar.checkbox("🌙 Dark Mode", key="dark_mode_toggle")
-if dark_mode:
-    st.markdown("""
-    <style>
-    /* ----------------- Dark Mode ----------------- */
-    /* Main container */
-    .block-container {
-        background-color: #1E1E1E !important;
-        color: #F0F0F0 !important;
-    }
+st.markdown("""
+<style>
+/* Light mode (default) */
+[data-theme="light"] .stApp {
+    background: linear-gradient(to right, #f0f8ff, #e6f2ff);
+    color: #000000;
+}
+[data-theme="light"] textarea, [data-theme="light"] input, [data-theme="light"] select {
+    background-color: #ffffff;
+    color: #000000;
+    border: 2px solid #1E90FF;
+    border-radius: 5px;
+    padding: 5px;
+}
+[data-theme="light"] .stSidebar {
+    background-color: #f0f8ff;
+    color: #000000;
+}
 
-    /* Sidebar */
-    .stSidebar {
-        background-color: #1E1E1E !important;
-        color: #F0F0F0 !important;
-    }
-    .stSidebar label, .stSidebar .css-1aumxhk {
-        color: #F0F0F0 !important;
-    }
+/* Dark mode */
+[data-theme="dark"] .stApp {
+    background: #1E1E1E;
+    color: #F0F0F0;
+}
+[data-theme="dark"] textarea, [data-theme="dark"] input, [data-theme="dark"] select {
+    background-color: #2B2B2B;
+    color: #F0F0F0;
+    border: 2px solid #1E90FF;
+    border-radius: 5px;
+    padding: 5px;
+}
+[data-theme="dark"] .stSidebar {
+    background-color: #2B2B2B;
+    color: #F0F0F0;
+}
 
-    /* Tabs */
-    .stTabs [data-baseweb="tab"] {
-        color: #F0F0F0 !important;
-        font-weight: bold;
-    }
-    .stTabs [data-baseweb="tab"]:hover {
-        color: #87AFC7 !important;
-    }
-
-    /* Input fields and textareas */
-    div.stTextInput > div, div.stTextArea > div, div.stSelectbox > div {
-        background-color: #2C2C2C !important;
-        color: #F0F0F0 !important;
-        border: 2px solid #1E90FF !important;
-        border-radius: 5px !important;
-        padding: 5px !important;
-    }
-    div.stTextInput:hover > div, div.stTextArea:hover > div, div.stSelectbox:hover > div {
-        border: 2px solid #104E8B !important;
-        box-shadow: 0 0 5px #1E90FF;
-    }
-
-    /* Info boxes */
-    .stInfo {
-        background-color: #2C2C2C !important;
-        border-left: 5px solid #87AFC7 !important;
-        color: #F0F0F0 !important;
-    }
-
-    /* Buttons (keep your blue) */
-    button[kind="primary"], .stDownloadButton button {
-        background-color: #87AFC7 !important;
-        color: #000000 !important;
-        font-weight: bold;
-    }
-    button[kind="primary"]:hover, .stDownloadButton button:hover {
-        background-color: #1E90FF !important;
-        color: #ffffff !important;
-    }
-
-    /* Training/Example boxes */
-    div[style*="border-left:5px solid #1E90FF"] {
-        background-color: #2C2C2C !important;
-        color: #F0F0F0 !important;
-    }
-
-    /* Text area placeholder text */
-    ::placeholder {
-        color: #BBBBBB !important;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-else:
-    st.markdown("""
-    <style>
-    /* ----------------- Light Mode ----------------- */
-    .block-container {
-        background: linear-gradient(to right, #f0f8ff, #e6f2ff) !important;
-        color: #000000 !important;
-    }
-
-    .stSidebar {
-        background: #f0f8ff !important;
-        color: #000000 !important;
-    }
-    .stSidebar label, .stSidebar .css-1aumxhk {
-        color: #000000 !important;
-    }
-
-    .stTabs [data-baseweb="tab"] {
-        color: #000000 !important;
-        font-weight: bold;
-    }
-    .stTabs [data-baseweb="tab"]:hover {
-        color: #1E90FF !important;
-    }
-
-    div.stTextInput > div, div.stTextArea > div, div.stSelectbox > div {
-        background-color: #ffffff !important;
-        color: #000000 !important;
-        border: 2px solid #1E90FF !important;
-        border-radius: 5px !important;
-        padding: 5px !important;
-    }
-    div.stTextInput:hover > div, div.stTextArea:hover > div, div.stSelectbox:hover > div {
-        border: 2px solid #104E8B !important;
-        box-shadow: 0 0 5px #1E90FF;
-    }
-
-    .stInfo {
-        background-color: #e6f7ff !important;
-        border-left: 5px solid #1E90FF !important;
-        color: #000000 !important;
-    }
-
-    button[kind="primary"], .stDownloadButton button {
-        background-color: #87AFC7 !important;
-        color: #000000 !important;
-        font-weight: bold;
-    }
-    button[kind="primary"]:hover, .stDownloadButton button:hover {
-        background-color: #1E90FF !important;
-        color: #ffffff !important;
-    }
-
-    div[style*="border-left:5px solid #1E90FF"] {
-        background-color: #b3e0ff !important;
-        color: #000000 !important;
-    }
-
-    ::placeholder {
-        color: #666666 !important;
-    }
-    </style>
-    """, unsafe_allow_html=True)
+/* Buttons (keep same colors for light and dark) */
+button[kind="primary"], .stDownloadButton button {
+    background-color: #87AFC7 !important;
+    color: #000000 !important;
+    font-weight: bold;
+}
+button[kind="primary"]:hover, .stDownloadButton button:hover {
+    background-color: #1E90FF !important;
+    color: #ffffff !important;
+}
+</style>
+""", unsafe_allow_html=True)
 # ---------------------------
 # Reset Session check
 # ---------------------------
