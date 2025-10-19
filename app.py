@@ -660,7 +660,7 @@ def generate_excel():
 # Move download button to sidebar
 with st.sidebar:
     st.download_button(
-        label=f"📥 {t[lang_key]['Download']}",
+        label=t[lang_key]['Download'],  # no extra icon
         data=generate_excel(),
         file_name=f"8D_Report_{st.session_state.report_date.replace(' ', '_')}.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
