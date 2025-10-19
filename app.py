@@ -23,7 +23,9 @@ st.set_page_config(
 # ---------------------------
 st.markdown("""
 <style>
-/* App background */
+/* ------------------------
+   Main app background & text
+   ------------------------ */
 .stApp {
     background: linear-gradient(to right, #f0f8ff, #e6f2ff);
     color: #000000 !important;
@@ -31,57 +33,84 @@ st.markdown("""
 
 /* Tabs */
 .stTabs [data-baseweb="tab"] {
-    font-weight: bold; 
+    font-weight: bold;
     color: #000000 !important;
 }
-
-/* Buttons */
-button[kind="primary"] {
-    background-color: #87AFC7 !important; 
-    color: white !important; 
-    font-weight: bold;
+.stTabs [data-baseweb="tab"]:hover {
+    color: #1E90FF !important;
 }
 
-/* Input fields and textareas */
+/* Buttons (all buttons) */
+button[kind="primary"], .stDownloadButton button {
+    background-color: #1E90FF !important;
+    color: white !important;
+    font-weight: bold;
+    border-radius: 5px !important;
+}
+button[kind="primary"]:hover, .stDownloadButton button:hover {
+    background-color: #104E8B !important;
+    color: white !important;
+}
+
+/* Input fields, textareas, selectboxes */
 div.stSelectbox, div.stTextInput, div.stTextArea {
     border: 2px solid #1E90FF !important;
     border-radius: 5px !important;
     padding: 5px !important;
+    background-color: #ffffff !important;
+    color: #000000 !important;
     transition: border 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
 }
-
-/* Hover effect */
 div.stSelectbox:hover, div.stTextInput:hover, div.stTextArea:hover {
     border: 2px solid #104E8B !important;
     box-shadow: 0 0 5px #1E90FF;
 }
 
-/* Light mode */
-[data-theme="light"] .stTextInput, 
-[data-theme="light"] .stTextArea, 
-[data-theme="light"] .stSelectbox {
-    background-color: #ffffff !important;
-    color: #000000 !important;
+/* Dark mode */
+[data-theme="dark"] .stApp {
+    background: #121212 !important;
+    color: #F0F0F0 !important;
+}
+[data-theme="dark"] div.stTextInput, 
+[data-theme="dark"] div.stTextArea, 
+[data-theme="dark"] div.stSelectbox {
+    background-color: #1E1E1E !important;
+    color: #F0F0F0 !important;
 }
 
-/* Dark mode */
-[data-theme="dark"] .stTextInput, 
-[data-theme="dark"] .stTextArea, 
-[data-theme="dark"] .stSelectbox {
+/* Sidebar background & text */
+.stSidebar {
+    background-color: #f0f8ff !important;
+    color: #000000 !important;
+}
+[data-theme="dark"] .stSidebar {
     background-color: #1E1E1E !important;
+    color: #F0F0F0 !important;
+}
+
+/* Sidebar labels / selectbox text */
+.stSidebar label, .stSidebar .css-1aumxhk {
+    color: #000000 !important;
+}
+[data-theme="dark"] .stSidebar label, 
+[data-theme="dark"] .stSidebar .css-1aumxhk {
     color: #F0F0F0 !important;
 }
 
 /* Info boxes */
 .stInfo {
-    background-color: #e6f7ff !important; 
-    border-left: 5px solid #1E90FF !important; 
+    background-color: #e6f7ff !important;
+    border-left: 5px solid #1E90FF !important;
     color: #000000 !important;
 }
+[data-theme="dark"] .stInfo {
+    background-color: #2a2a2a !important;
+    color: #F0F0F0 !important;
+}
 
-/* Bold text */
+/* Bold text in headers */
 .css-1d391kg {
-    color: #1E90FF !important; 
+    color: #1E90FF !important;
     font-weight: bold !important;
 }
 </style>
