@@ -485,7 +485,7 @@ line-height:1.5;
                     st.image(f, width=192)  # roughly 2 inches wide, height auto-scaled
 
         # Step-specific inputs (same level as upload check)
-        elif step == "D4":
+       elif step == "D4":
     st.session_state[step]["location"] = st.selectbox(
         "Location of Material",
         ["", "Work in Progress", "Stores Stock", "Warehouse Stock", "Service Parts", "Other"],
@@ -505,26 +505,22 @@ line-height:1.5;
     )
 
 elif step == "D5":
-    # -------------------- D5 --------------------
     st.markdown("#### Occurrence Analysis")
-    for idx in range(len(st.session_state.d5_occ_whys)):
-        # Dropdown
-        selected_so_far = [w for i, w in enumerate(st.session_state.d5_occ_whys) if w.strip() and i != idx]
-        options = [""] + [f"{cat}: {item}" for cat, items in occurrence_categories.items() 
-                          for item in items if f"{cat}: {item}" not in selected_so_far]
-        current_val = st.session_state.d5_occ_whys[idx] if st.session_state.d5_occ_whys[idx] in options else ""
+    for idx in range(5):
+        # Dropdown Why
         st.session_state.d5_occ_whys[idx] = st.selectbox(
             f"Occurrence Why {idx+1}",
-            options,
-            index=options.index(current_val) if current_val in options else 0,
-            key=f"occ_dropdown_{idx}_{lang_key}"
+            [""] + [f"{cat}: {item}" for cat, items in occurrence_categories.items() for item in items],
+            index=0,
+            key=f"d5_occ_{idx}_{lang_key}"
         )
-        # Free-text box right below
+        # Free Text Why under the dropdown
         st.session_state.d5_occ_whys_free[idx] = st.text_area(
             f"Custom Occurrence Why {idx+1}",
             value=st.session_state.d5_occ_whys_free[idx],
-            key=f"occ_free_{idx}_{lang_key}"
+            key=f"d5_occ_free_{idx}_{lang_key}"
         )
+
     if st.button("➕ Add another Occurrence Why", key=f"add_occ_{i}"):
         st.session_state.d5_occ_whys.append("")
         st.session_state.d5_occ_whys_free.append("")
