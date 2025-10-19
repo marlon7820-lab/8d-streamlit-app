@@ -476,15 +476,14 @@ line-height:1.5;
                     if file not in st.session_state[step]["uploaded_files"]:
                         st.session_state[step]["uploaded_files"].append(file)
 
-        # Display uploaded files (aligned with file upload, not nested too deep)
         if step in ["D1","D3","D4","D7"] and st.session_state[step].get("uploaded_files"):
             st.markdown("**Uploaded Files / Photos:**")
             for f in st.session_state[step]["uploaded_files"]:
                 st.write(f"{f.name}")
                 if f.type.startswith("image/"):
-                    st.image(f, width=192)  # roughly 2 inches wide, height auto-scaled
+                    st.image(f, width=192)
 
-        # Step-specific inputs (same level as upload check)
+        # Step-specific inputs
         if step == "D4":
             st.session_state[step]["location"] = st.selectbox(
                 "Location of Material",
@@ -504,90 +503,89 @@ line-height:1.5;
                 key=f"ans_{step}"
             )
 
-      elif step == "D5":
-    # -------------------- D5 --------------------
-    st.markdown("#### Occurrence Analysis")
-    for idx in range(len(st.session_state.d5_occ_whys)):
-        # Dropdown Why
-        st.session_state.d5_occ_whys[idx] = st.selectbox(
-            f"{t[lang_key]['Occurrence_Why']} {idx+1}",
-            [""] + [f"{cat}: {item}" for cat, items in occurrence_categories.items() for item in items],
-            index=0 if st.session_state.d5_occ_whys[idx] not in [f"{cat}: {item}" for cat, items in occurrence_categories.items() for item in items] else 
-                  [f"{cat}: {item}" for cat, items in occurrence_categories.items() for item in items].index(st.session_state.d5_occ_whys[idx]) + 1,
-            key=f"d5_occ_{idx}_{lang_key}"
-        )
-        # Free Text Why under dropdown
-        st.session_state.d5_occ_whys_free[idx] = st.text_area(
-            f"{t[lang_key]['Occurrence_Why']} {idx+1} - Free Text",
-            value=st.session_state.d5_occ_whys_free[idx],
-            key=f"d5_occ_free_{idx}_{lang_key}",
-            height=50
-        )
-    if st.button("➕ Add another Occurrence Why", key=f"add_occ_{i}"):
-        st.session_state.d5_occ_whys.append("")
-        st.session_state.d5_occ_whys_free.append("")
+        elif step == "D5":
+            # -------------------- D5 --------------------
+            st.markdown("#### Occurrence Analysis")
+            for idx in range(len(st.session_state.d5_occ_whys)):
+                st.session_state.d5_occ_whys[idx] = st.selectbox(
+                    f"{t[lang_key]['Occurrence_Why']} {idx+1}",
+                    [""] + [f"{cat}: {item}" for cat, items in occurrence_categories.items() for item in items],
+                    index=0 if st.session_state.d5_occ_whys[idx] not in [f"{cat}: {item}" for cat, items in occurrence_categories.items() for item in items] else 
+                          [f"{cat}: {item}" for cat, items in occurrence_categories.items() for item in items].index(st.session_state.d5_occ_whys[idx]) + 1,
+                    key=f"d5_occ_{idx}_{lang_key}"
+                )
+                # Free Text Why under dropdown
+                st.session_state.d5_occ_whys_free[idx] = st.text_area(
+                    f"{t[lang_key]['Occurrence_Why']} {idx+1} - Free Text",
+                    value=st.session_state.d5_occ_whys_free[idx] if idx < len(st.session_state.d5_occ_whys_free) else "",
+                    key=f"d5_occ_free_{idx}_{lang_key}",
+                    height=50
+                )
+            if st.button("➕ Add another Occurrence Why", key=f"add_occ_{i}"):
+                st.session_state.d5_occ_whys.append("")
+                st.session_state.d5_occ_whys_free.append("")
 
-    st.markdown("#### Detection Analysis")
-    for idx in range(len(st.session_state.d5_det_whys)):
-        st.session_state.d5_det_whys[idx] = st.selectbox(
-            f"{t[lang_key]['Detection_Why']} {idx+1}",
-            [""] + [f"{cat}: {item}" for cat, items in detection_categories.items() for item in items],
-            index=0 if st.session_state.d5_det_whys[idx] not in [f"{cat}: {item}" for cat, items in detection_categories.items() for item in items] else
-                  [f"{cat}: {item}" for cat, items in detection_categories.items() for item in items].index(st.session_state.d5_det_whys[idx]) + 1,
-            key=f"d5_det_{idx}_{lang_key}"
-        )
-        st.session_state.d5_det_whys_free[idx] = st.text_area(
-            f"{t[lang_key]['Detection_Why']} {idx+1} - Free Text",
-            value=st.session_state.d5_det_whys_free[idx],
-            key=f"d5_det_free_{idx}_{lang_key}",
-            height=50
-        )
-    if st.button("➕ Add another Detection Why", key=f"add_det_{i}"):
-        st.session_state.d5_det_whys.append("")
-        st.session_state.d5_det_whys_free.append("")
+            st.markdown("#### Detection Analysis")
+            for idx in range(len(st.session_state.d5_det_whys)):
+                st.session_state.d5_det_whys[idx] = st.selectbox(
+                    f"{t[lang_key]['Detection_Why']} {idx+1}",
+                    [""] + [f"{cat}: {item}" for cat, items in detection_categories.items() for item in items],
+                    index=0 if st.session_state.d5_det_whys[idx] not in [f"{cat}: {item}" for cat, items in detection_categories.items() for item in items] else
+                          [f"{cat}: {item}" for cat, items in detection_categories.items() for item in items].index(st.session_state.d5_det_whys[idx]) + 1,
+                    key=f"d5_det_{idx}_{lang_key}"
+                )
+                st.session_state.d5_det_whys_free[idx] = st.text_area(
+                    f"{t[lang_key]['Detection_Why']} {idx+1} - Free Text",
+                    value=st.session_state.d5_det_whys_free[idx] if idx < len(st.session_state.d5_det_whys_free) else "",
+                    key=f"d5_det_free_{idx}_{lang_key}",
+                    height=50
+                )
+            if st.button("➕ Add another Detection Why", key=f"add_det_{i}"):
+                st.session_state.d5_det_whys.append("")
+                st.session_state.d5_det_whys_free.append("")
 
-    st.markdown("#### Systemic Analysis")
-    for idx in range(len(st.session_state.d5_sys_whys)):
-        st.session_state.d5_sys_whys[idx] = st.selectbox(
-            f"{t[lang_key]['Systemic_Why']} {idx+1}",
-            [""] + [f"{cat}: {item}" for cat, items in systemic_categories.items() for item in items],
-            index=0 if st.session_state.d5_sys_whys[idx] not in [f"{cat}: {item}" for cat, items in systemic_categories.items() for item in items] else
-                  [f"{cat}: {item}" for cat, items in systemic_categories.items() for item in items].index(st.session_state.d5_sys_whys[idx]) + 1,
-            key=f"d5_sys_{idx}_{lang_key}"
-        )
-        st.session_state.d5_sys_whys_free[idx] = st.text_area(
-            f"{t[lang_key]['Systemic_Why']} {idx+1} - Free Text",
-            value=st.session_state.d5_sys_whys_free[idx],
-            key=f"d5_sys_free_{idx}_{lang_key}",
-            height=50
-        )
-    if st.button("➕ Add another Systemic Why", key=f"add_sys_{i}"):
-        st.session_state.d5_sys_whys.append("")
-        st.session_state.d5_sys_whys_free.append("")
+            st.markdown("#### Systemic Analysis")
+            for idx in range(len(st.session_state.d5_sys_whys)):
+                st.session_state.d5_sys_whys[idx] = st.selectbox(
+                    f"{t[lang_key]['Systemic_Why']} {idx+1}",
+                    [""] + [f"{cat}: {item}" for cat, items in systemic_categories.items() for item in items],
+                    index=0 if st.session_state.d5_sys_whys[idx] not in [f"{cat}: {item}" for cat, items in systemic_categories.items() for item in items] else
+                          [f"{cat}: {item}" for cat, items in systemic_categories.items() for item in items].index(st.session_state.d5_sys_whys[idx]) + 1,
+                    key=f"d5_sys_{idx}_{lang_key}"
+                )
+                st.session_state.d5_sys_whys_free[idx] = st.text_area(
+                    f"{t[lang_key]['Systemic_Why']} {idx+1} - Free Text",
+                    value=st.session_state.d5_sys_whys_free[idx] if idx < len(st.session_state.d5_sys_whys_free) else "",
+                    key=f"d5_sys_free_{idx}_{lang_key}",
+                    height=50
+                )
+            if st.button("➕ Add another Systemic Why", key=f"add_sys_{i}"):
+                st.session_state.d5_sys_whys.append("")
+                st.session_state.d5_sys_whys_free.append("")
 
-    # Dynamic Root Causes
-    occ_whys = [w for w in st.session_state.d5_occ_whys + st.session_state.d5_occ_whys_free if w.strip()]
-    det_whys = [w for w in st.session_state.d5_det_whys + st.session_state.d5_det_whys_free if w.strip()]
-    sys_whys = [w for w in st.session_state.d5_sys_whys + st.session_state.d5_sys_whys_free if w.strip()]
-    
-    st.text_area(
-        f"{t[lang_key]['Root_Cause_Occ']}",
-        value=suggest_root_cause(occ_whys) if occ_whys else "No occurrence whys provided yet",
-        height=80,
-        key=f"root_occ_{i}"
-    )
-    st.text_area(
-        f"{t[lang_key]['Root_Cause_Det']}",
-        value=suggest_root_cause(det_whys) if det_whys else "No detection whys provided yet",
-        height=80,
-        key=f"root_det_{i}"
-    )
-    st.text_area(
-        f"{t[lang_key]['Root_Cause_Sys']}",
-        value=suggest_root_cause(sys_whys) if sys_whys else "No systemic whys provided yet",
-        height=80,
-        key=f"root_sys_{i}"
-    )
+            # Dynamic Root Causes
+            occ_whys = [w for w in st.session_state.d5_occ_whys + st.session_state.d5_occ_whys_free if w.strip()]
+            det_whys = [w for w in st.session_state.d5_det_whys + st.session_state.d5_det_whys_free if w.strip()]
+            sys_whys = [w for w in st.session_state.d5_sys_whys + st.session_state.d5_sys_whys_free if w.strip()]
+            
+            st.text_area(
+                f"{t[lang_key]['Root_Cause_Occ']}",
+                value=suggest_root_cause(occ_whys) if occ_whys else "No occurrence whys provided yet",
+                height=80,
+                key=f"root_occ_{i}"
+            )
+            st.text_area(
+                f"{t[lang_key]['Root_Cause_Det']}",
+                value=suggest_root_cause(det_whys) if det_whys else "No detection whys provided yet",
+                height=80,
+                key=f"root_det_{i}"
+            )
+            st.text_area(
+                f"{t[lang_key]['Root_Cause_Sys']}",
+                value=suggest_root_cause(sys_whys) if sys_whys else "No systemic whys provided yet",
+                height=80,
+                key=f"root_sys_{i}"
+            )
 
 
         elif step == "D6":
