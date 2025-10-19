@@ -86,75 +86,74 @@ lang = st.sidebar.selectbox("Select Language / Seleccionar Idioma", ["English", 
 lang_key = "en" if lang == "English" else "es"
 
 dark_mode = st.sidebar.checkbox("🌙 Dark Mode")
-
-# ---------------------------
-# Dark Mode - Main Form Only
-# ---------------------------
 if dark_mode:
     st.markdown("""
     <style>
-    /* Main form area only */
-    .stApp > .main {
-        background-color: #1e1e1e !important;
+    /* Main app background & text */
+    .stApp {
+        background: linear-gradient(to right, #1e1e1e, #2c2c2c);
         color: #f5f5f5 !important;
     }
 
-    /* Inputs, textareas, selectboxes inside main form */
-    .stApp > .main div.stTextInput, 
-    .stApp > .main div.stTextArea, 
-    .stApp > .main div.stSelectbox {
+    /* Tabs */
+    .stTabs [data-baseweb="tab"] {
+        font-weight: bold; 
+        color: #f5f5f5 !important;
+    }
+    .stTabs [data-baseweb="tab"]:hover {
+        color: #87AFC7 !important;
+    }
+
+    /* Text inputs, textareas, selectboxes */
+    div.stTextInput, div.stTextArea, div.stSelectbox {
+        border: 2px solid #87AFC7 !important;
+        border-radius: 5px !important;
         background-color: #2c2c2c !important;
         color: #f5f5f5 !important;
-        border: 2px solid #87AFC7 !important;
-        border-radius: 5px;
         padding: 5px !important;
         transition: border 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
     }
-    .stApp > .main div.stTextInput:hover,
-    .stApp > .main div.stTextArea:hover,
-    .stApp > .main div.stSelectbox:hover {
+    div.stTextInput:hover, div.stTextArea:hover, div.stSelectbox:hover {
         border: 2px solid #1E90FF !important;
         box-shadow: 0 0 5px #1E90FF;
     }
 
-    /* Tabs inside main form */
-    .stApp > .main .stTabs [data-baseweb="tab"] {
+    /* Info boxes */
+    .stInfo {
+        background-color: #3a3a3a !important; 
+        border-left: 5px solid #87AFC7 !important; 
         color: #f5f5f5 !important;
-        font-weight: bold;
-    }
-    .stApp > .main .stTabs [data-baseweb="tab"]:hover {
-        color: #87AFC7 !important;
     }
 
-    /* Info boxes inside main form */
-    .stApp > .main .stInfo {
-        background-color: #3a3a3a !important;
-        border-left: 5px solid #87AFC7 !important;
+    /* Sidebar background & text */
+    .css-1d391kg {color: #87AFC7 !important; font-weight: bold !important;}
+    .stSidebar {
+        background-color: #1e1e1e !important;
         color: #f5f5f5 !important;
     }
     </style>
     """, unsafe_allow_html=True)
 
 # ---------------------------
-# Sidebar buttons - consistent colors
+# Sidebar buttons - consistent colors in light & dark mode
 # ---------------------------
 st.markdown("""
 <style>
-/* Primary sidebar buttons & download buttons */
-.stSidebar button[kind="primary"], 
+/* All sidebar buttons, including Reset 8D Session & Download XLSX */
+.stSidebar button,
 .stSidebar .stDownloadButton button {
     background-color: #87AFC7 !important;  /* main blue */
-    color: #000000 !important;             /* text black */
+    color: #000000 !important;             /* black text */
     font-weight: bold;
     border-radius: 5px;
     transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 /* Hover effect */
-.stSidebar button[kind="primary"]:hover,
+.stSidebar button:hover,
 .stSidebar .stDownloadButton button:hover {
-    background-color: #1E90FF !important;  /* darker blue on hover */
-    color: #ffffff !important;             /* text white on hover */
+    background-color: #1E90FF !important;  /* darker blue */
+    color: #ffffff !important;             /* white text */
 }
 </style>
 """, unsafe_allow_html=True)
@@ -174,6 +173,7 @@ if st.sidebar.button("🔄 Reset 8D Session"):
         st.session_state[k] = v
     st.session_state["_reset_8d_session"] = True
     st.stop()
+
 # ---------------------------
 # Language dictionary
 # ---------------------------
