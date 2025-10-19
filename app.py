@@ -97,13 +97,7 @@ dark_mode = st.sidebar.checkbox("🌙 Dark Mode", key="dark_mode")
 if dark_mode:
     st.markdown("""
     <style>
-    /* Main form background & text */
-    .stApp {
-        background: #2b2b2b !important;
-        color: #e0e0e0 !important;
-    }
-
-    /* Text inputs, textareas, selectboxes */
+    .stApp { background: #2b2b2b !important; color: #e0e0e0 !important; }
     div.stTextInput, div.stTextArea, div.stSelectbox {
         border: 2px solid #87AFC7 !important;
         border-radius: 5px !important;
@@ -116,15 +110,11 @@ if dark_mode:
         border: 2px solid #1E90FF !important;
         box-shadow: 0 0 5px #1E90FF;
     }
-
-    /* Info boxes */
     .stInfo {
         background-color: #444444 !important; 
         border-left: 5px solid #87AFC7 !important; 
         color: #e0e0e0 !important;
     }
-
-    /* Tabs */
     .stTabs [data-baseweb="tab"] {
         font-weight: bold; 
         color: #e0e0e0 !important;
@@ -132,8 +122,6 @@ if dark_mode:
     .stTabs [data-baseweb="tab"]:hover {
         color: #87AFC7 !important;
     }
-
-    /* Buttons remain same dark style in both modes */
     button[kind="primary"], .stDownloadButton button, .stSidebar button {
         background-color: #87AFC7 !important;
         color: #000000 !important;
@@ -245,16 +233,12 @@ st.session_state.setdefault("prepared_by", "")
 st.session_state.setdefault("d5_occ_whys", [""]*5)
 st.session_state.setdefault("d5_det_whys", [""]*5)
 st.session_state.setdefault("d5_sys_whys", [""]*5)
-
-# free-text lists so user can type their own "Why" in addition to selectbox choices
 st.session_state.setdefault("d5_occ_whys_free", [""]*0)
 st.session_state.setdefault("d5_det_whys_free", [""]*0)
 st.session_state.setdefault("d5_sys_whys_free", [""]*0)
-
 st.session_state.setdefault("d4_location", "")
 st.session_state.setdefault("d4_status", "")
 st.session_state.setdefault("d4_containment", "")
-
 for sub in ["occ_answer", "det_answer", "sys_answer"]:
     st.session_state.setdefault(("D6"), st.session_state.get("D6", {}))
     st.session_state["D6"].setdefault(sub, "")
@@ -608,8 +592,6 @@ line-height:1.5;
         height=80,
         key=f"root_sys_{i}"
     )
-
-
 
         elif step == "D6":
             st.session_state[step].setdefault("occ_answer", st.session_state["D6"].get("occ_answer", ""))
