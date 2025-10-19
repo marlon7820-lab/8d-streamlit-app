@@ -118,12 +118,12 @@ if dark_mode:
         box-shadow: 0 0 5px #1E90FF;
     }
 
-    /* Labels / Text inside the main form */
-    .stApp .main .css-10trblm,  /* general text labels */
-    .stApp .main label,           /* fallback for any label elements */
-    .stApp .main p, 
-    .stApp .main span {
+    /* Labels above inputs */
+    div.stTextInput label,
+    div.stTextArea label,
+    div.stSelectbox label {
         color: #f5f5f5 !important;
+        font-weight: bold;
     }
 
     /* Info boxes */
