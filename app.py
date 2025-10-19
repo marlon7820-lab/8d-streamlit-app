@@ -157,6 +157,23 @@ st.markdown("""
 }
 </style>
 """, unsafe_allow_html=True)
+<style>
+/* Regular sidebar buttons (like Reset) */
+.stSidebar button {
+    background-color: #87AFC7 !important;  /* main blue */
+    color: #000000 !important;             /* text black */
+    font-weight: bold;
+    border-radius: 5px;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Hover effect */
+.stSidebar button:hover {
+    background-color: #1E90FF !important;  /* darker blue on hover */
+    color: #ffffff !important;             /* text white on hover */
+}
+</style>
+
 # ---------------------------
 # Sidebar: App Controls
 # ---------------------------
