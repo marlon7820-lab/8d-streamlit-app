@@ -485,24 +485,24 @@ line-height:1.5;
                     st.image(f, width=192)  # roughly 2 inches wide, height auto-scaled
 
         # Step-specific inputs (same level as upload check)
-        if step == "D4":
-            st.session_state[step]["location"] = st.selectbox(
-                "Location of Material",
-                ["", "Work in Progress", "Stores Stock", "Warehouse Stock", "Service Parts", "Other"],
-                index=0,
-                key="d4_location"
-            )
-            st.session_state[step]["status"] = st.selectbox(
-                "Status of Activities",
-                ["", "Pending", "In Progress", "Completed", "Other"],
-                index=0,
-                key="d4_status"
-            )
-            st.session_state[step]["answer"] = st.text_area(
-                "Containment Actions / Notes",
-                value=st.session_state[step]["answer"],
-                key=f"ans_{step}"
-            )
+        elif step == "D4":
+    st.session_state[step]["location"] = st.selectbox(
+        "Location of Material",
+        ["", "Work in Progress", "Stores Stock", "Warehouse Stock", "Service Parts", "Other"],
+        index=0,
+        key="d4_location"
+    )
+    st.session_state[step]["status"] = st.selectbox(
+        "Status of Activities",
+        ["", "Pending", "In Progress", "Completed", "Other"],
+        index=0,
+        key="d4_status"
+    )
+    st.session_state[step]["answer"] = st.text_area(
+        "Containment Actions / Notes",
+        value=st.session_state[step]["answer"],
+        key=f"ans_{step}"
+    )
 
 elif step == "D5":
     # -------------------- D5 --------------------
