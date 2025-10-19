@@ -80,76 +80,93 @@ Version {version_number} | Last updated: {last_updated}
 # ---------------------------
 st.sidebar.title("8D Report Assistant")
 st.sidebar.markdown("---")
-st.sidebar.header("Settings")
+st.sidebar.header("⚙️ Settings")
+lang_key = st.sidebar.selectbox("Select Language / Seleccionar Idioma", ["en", "es"], key="lang_select")
+dark_mode = st.sidebar.checkbox("🌙 Dark Mode", key="dark_mode_toggle")
 
-lang = st.sidebar.selectbox("Select Language / Seleccionar Idioma", ["English", "Español"])
-lang_key = "en" if lang == "English" else "es"
-
-dark_mode = st.sidebar.checkbox("🌙 Dark Mode")
+# Apply custom styles for dark and light mode
 if dark_mode:
     st.markdown("""
     <style>
-    /* Main app background & text */
+    /* Dark mode global styles */
     .stApp {
-        background: linear-gradient(to right, #1e1e1e, #2c2c2c);
-        color: #f5f5f5 !important;
+        background-color: #1E1E1E !important;
+        color: #F0F0F0 !important;
     }
 
-    /* Tabs */
-    .stTabs [data-baseweb="tab"] {
-        font-weight: bold; 
-        color: #f5f5f5 !important;
-    }
-    .stTabs [data-baseweb="tab"]:hover {
-        color: #87AFC7 !important;
-    }
-
-    /* Text inputs, textareas, selectboxes */
-    div.stTextInput, div.stTextArea, div.stSelectbox {
-        border: 2px solid #87AFC7 !important;
+    textarea, input, select {
+        background-color: #2B2B2B !important;
+        color: #F0F0F0 !important;
+        border: 2px solid #1E90FF !important;
         border-radius: 5px !important;
+    }
+
+    .stSidebar {
+        background-color: #2B2B2B !important;
+        color: #F0F0F0 !important;
+    }
+
+    /* Sidebar labels and selectbox fix */
+    .stSidebar label, .stSidebar div[role="radiogroup"] label, .stSidebar .stSelectbox label {
+        color: #f5f5f5 !important;
+        font-weight: bold !important;
+    }
+
+    .stSidebar div[data-baseweb="select"] > div {
         background-color: #2c2c2c !important;
         color: #f5f5f5 !important;
-        padding: 5px !important;
-        transition: border 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        border: 1px solid #87AFC7 !important;
+        border-radius: 5px !important;
     }
-    div.stTextInput:hover, div.stTextArea:hover, div.stSelectbox:hover {
+
+    .stSidebar div[data-baseweb="popover"] {
+        background-color: #2c2c2c !important;
+        color: #f5f5f5 !important;
+    }
+
+    /* Buttons (keep same blue color for both modes) */
+    button[kind="primary"], .stDownloadButton button {
+        background-color: #87AFC7 !important;
+        color: #000000 !important;
+        font-weight: bold !important;
+    }
+    button[kind="primary"]:hover, .stDownloadButton button:hover {
+        background-color: #1E90FF !important;
+        color: #ffffff !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+else:
+    st.markdown("""
+    <style>
+    /* Light mode global styles */
+    .stApp {
+        background: linear-gradient(to right, #f0f8ff, #e6f2ff) !important;
+        color: #000000 !important;
+    }
+
+    textarea, input, select {
+        background-color: #ffffff !important;
+        color: #000000 !important;
         border: 2px solid #1E90FF !important;
-        box-shadow: 0 0 5px #1E90FF;
+        border-radius: 5px !important;
     }
 
-    /* Info boxes */
-    .stInfo {
-        background-color: #3a3a3a !important; 
-        border-left: 5px solid #87AFC7 !important; 
-        color: #f5f5f5 !important;
-    }
-
-    /* Sidebar background & text */
-    .css-1d391kg {color: #87AFC7 !important; font-weight: bold !important;}
     .stSidebar {
-        background-color: #1e1e1e !important;
-        color: #f5f5f5 !important;
+        background-color: #f0f8ff !important;
+        color: #000000 !important;
     }
 
-    /* Sidebar buttons */
-    .stSidebar button[kind="primary"] {
+    /* Buttons (keep same blue color for both modes) */
+    button[kind="primary"], .stDownloadButton button {
         background-color: #87AFC7 !important;
         color: #000000 !important;
-        font-weight: bold;
+        font-weight: bold !important;
     }
-    .stSidebar button {
-        background-color: #5a5a5a !important;
-        color: #f5f5f5 !important;
+    button[kind="primary"]:hover, .stDownloadButton button:hover {
+        background-color: #1E90FF !important;
+        color: #ffffff !important;
     }
-
-    /* Download button in sidebar */
-    .stSidebar .stDownloadButton button {
-        background-color: #87AFC7 !important;
-        color: #000000 !important;
-        font-weight: bold;
-    }
-
     </style>
     """, unsafe_allow_html=True)
 # ---------------------------
