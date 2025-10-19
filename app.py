@@ -19,9 +19,24 @@ st.set_page_config(
 )
 
 # ---------------------------
-# App styles - updated for desktop selectbox outline + thumbnails
+# Sidebar: Language & Dark Mode
 # ---------------------------
-st.markdown("""
+st.sidebar.title("8D Report Assistant")
+st.sidebar.markdown("---")
+st.sidebar.header("Settings")
+
+# Language selection
+lang = st.sidebar.selectbox("Select Language / Seleccionar Idioma", ["English", "Español"])
+lang_key = "en" if lang == "English" else "es"
+
+# Dark mode toggle
+dark_mode = st.sidebar.checkbox("🌙 Dark Mode")
+
+# ---------------------------
+# App CSS Styles
+# ---------------------------
+# Default light theme styles
+light_css = """
 <style>
 .stApp {background: linear-gradient(to right, #f0f8ff, #e6f2ff); color: #000000 !important;}
 .stTabs [data-baseweb="tab"] {font-weight: bold; color: #000000 !important;}
@@ -40,9 +55,50 @@ div.stSelectbox:hover, div.stTextInput:hover, div.stTextArea:hover {
     border: 2px solid #104E8B !important;
     box-shadow: 0 0 5px #1E90FF;
 }
-.image-thumbnail {width: 120px; height: 80px; object-fit: cover; margin:5px; border:1px solid #1E90FF; border-radius:4px;}
 </style>
-""", unsafe_allow_html=True)
+"""
+
+# Dark mode CSS
+dark_css = """
+<style>
+/* Main app background & text */
+.stApp {background-color: #2B2B2B !important; color: #E0E0E0 !important;}
+
+/* Tabs */
+.stTabs [data-baseweb="tab"] {font-weight: bold; color: #E0E0E0 !important;}
+.stTabs [data-baseweb="tab"]:hover {color: #87AFC7 !important;}
+
+/* Inputs, textareas, selectboxes */
+div.stTextInput, div.stTextArea, div.stSelectbox {
+    border: 1px solid #555555 !important;
+    border-radius: 5px !important;
+    background-color: #3A3A3A !important;
+    color: #F5F5F5 !important;
+    padding: 5px !important;
+    transition: border 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+div.stTextInput:hover, div.stTextArea:hover, div.stSelectbox:hover {
+    border: 1px solid #87AFC7 !important;
+    box-shadow: 0 0 5px #87AFC7;
+}
+
+/* Info boxes */
+.stInfo {background-color: #3A3A3A !important; border-left: 5px solid #87AFC7 !important; color: #F5F5F5 !important;}
+
+/* Sidebar background & text */
+.stSidebar {background-color: #2B2B2B !important; color: #E0E0E0 !important;}
+.stSidebar h1, .stSidebar h2, .stSidebar h3, .stSidebar label, .stSidebar span {color: #E0E0E0 !important;}
+
+/* Sidebar buttons */
+.stSidebar button {background-color: #555555 !important; color: #F5F5F5 !important; font-weight: bold;}
+.stSidebar .stDownloadButton button {background-color: #87AFC7 !important; color: #000000 !important; font-weight: bold;}
+</style>
+"""
+
+# Apply CSS
+st.markdown(light_css, unsafe_allow_html=True)
+if dark_mode:
+    st.markdown(dark_css, unsafe_allow_html=True)
 
 # ---------------------------
 # Reset Session check
