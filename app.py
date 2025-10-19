@@ -76,38 +76,55 @@ Version {version_number} | Last updated: {last_updated}
 """, unsafe_allow_html=True)
 
 # ---------------------------
-# Sidebar: Language & Dark Mode
+# Sidebar buttons - always styled (light and dark)
 # ---------------------------
-st.sidebar.title("8D Report Assistant")
-st.sidebar.markdown("---")
-st.sidebar.header("Settings")
+st.markdown("""
+<style>
+/* Primary sidebar buttons */
+.stSidebar button[kind="primary"], 
+.stSidebar .stDownloadButton button {
+    background-color: #87AFC7 !important;  /* main blue color */
+    color: #000000 !important;             /* text black */
+    font-weight: bold;
+    border-radius: 5px;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
 
-lang = st.sidebar.selectbox("Select Language / Seleccionar Idioma", ["English", "Español"])
-lang_key = "en" if lang == "English" else "es"
+/* Hover effect */
+.stSidebar button[kind="primary"]:hover,
+.stSidebar .stDownloadButton button:hover {
+    background-color: #1E90FF !important;  /* darker blue on hover */
+    color: #ffffff !important;             /* text white on hover */
+}
+</style>
+""", unsafe_allow_html=True)
 
-dark_mode = st.sidebar.checkbox("🌙 Dark Mode")
+
+# ---------------------------
+# Dark mode: main form content only
+# ---------------------------
 if dark_mode:
     st.markdown("""
     <style>
-    /* Main app background & text only (exclude sidebar) */
-    .stApp > .main {
+    /* Main form content only (exclude sidebar) */
+    [data-testid="stAppViewContainer"] {
         background: linear-gradient(to right, #1e1e1e, #2c2c2c);
         color: #f5f5f5 !important;
     }
 
     /* Tabs */
-    .stTabs [data-baseweb="tab"] {
+    [data-testid="stAppViewContainer"] .stTabs [data-baseweb="tab"] {
         font-weight: bold; 
         color: #f5f5f5 !important;
     }
-    .stTabs [data-baseweb="tab"]:hover {
+    [data-testid="stAppViewContainer"] .stTabs [data-baseweb="tab"]:hover {
         color: #87AFC7 !important;
     }
 
-    /* Text inputs, textareas, selectboxes inside main form */
-    .stApp .stTextInput, 
-    .stApp .stTextArea, 
-    .stApp .stSelectbox {
+    /* Inputs in main form only */
+    [data-testid="stAppViewContainer"] .stTextInput, 
+    [data-testid="stAppViewContainer"] .stTextArea, 
+    [data-testid="stAppViewContainer"] .stSelectbox {
         border: 2px solid #87AFC7 !important;
         border-radius: 5px !important;
         background-color: #2c2c2c !important;
@@ -115,15 +132,15 @@ if dark_mode:
         padding: 5px !important;
         transition: border 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
     }
-    .stApp .stTextInput:hover, 
-    .stApp .stTextArea:hover, 
-    .stApp .stSelectbox:hover {
+    [data-testid="stAppViewContainer"] .stTextInput:hover, 
+    [data-testid="stAppViewContainer"] .stTextArea:hover, 
+    [data-testid="stAppViewContainer"] .stSelectbox:hover {
         border: 2px solid #1E90FF !important;
         box-shadow: 0 0 5px #1E90FF;
     }
 
-    /* Info boxes */
-    .stApp .stInfo {
+    /* Info boxes in main form */
+    [data-testid="stAppViewContainer"] .stInfo {
         background-color: #3a3a3a !important; 
         border-left: 5px solid #87AFC7 !important; 
         color: #f5f5f5 !important;
