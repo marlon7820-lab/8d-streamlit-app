@@ -89,9 +89,22 @@ dark_mode = st.sidebar.checkbox("🌙 Dark Mode")
 if dark_mode:
     st.markdown("""
     <style>
-    .stApp {background: linear-gradient(to right, #1e1e1e, #2c2c2c); color: #f5f5f5 !important;}
-    .stTabs [data-baseweb="tab"] {font-weight: bold; color: #f5f5f5 !important;}
-    .stTabs [data-baseweb="tab"]:hover {color: #87AFC7 !important;}
+    /* Main app background & text */
+    .stApp {
+        background: linear-gradient(to right, #1e1e1e, #2c2c2c);
+        color: #f5f5f5 !important;
+    }
+
+    /* Tabs */
+    .stTabs [data-baseweb="tab"] {
+        font-weight: bold; 
+        color: #f5f5f5 !important;
+    }
+    .stTabs [data-baseweb="tab"]:hover {
+        color: #87AFC7 !important;
+    }
+
+    /* Text inputs, textareas, selectboxes */
     div.stTextInput, div.stTextArea, div.stSelectbox {
         border: 2px solid #87AFC7 !important;
         border-radius: 5px !important;
@@ -100,16 +113,45 @@ if dark_mode:
         padding: 5px !important;
         transition: border 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
     }
-    div.stTextInput:hover, div.stTextArea:hover, div.stSelectbox:hover {border: 2px solid #1E90FF !important; box-shadow: 0 0 5px #1E90FF;}
-    .stInfo {background-color: #3a3a3a !important; border-left: 5px solid #87AFC7 !important; color: #f5f5f5 !important;}
+    div.stTextInput:hover, div.stTextArea:hover, div.stSelectbox:hover {
+        border: 2px solid #1E90FF !important;
+        box-shadow: 0 0 5px #1E90FF;
+    }
+
+    /* Info boxes */
+    .stInfo {
+        background-color: #3a3a3a !important; 
+        border-left: 5px solid #87AFC7 !important; 
+        color: #f5f5f5 !important;
+    }
+
+    /* Sidebar background & text */
     .css-1d391kg {color: #87AFC7 !important; font-weight: bold !important;}
-    .stSidebar {background-color: #1e1e1e !important; color: #f5f5f5 !important;}
-    .stSidebar button[kind="primary"] {background-color: #87AFC7 !important; color: #000000 !important; font-weight: bold;}
-    .stSidebar button {background-color: #5a5a5a !important; color: #f5f5f5 !important;}
-    .stSidebar .stDownloadButton button {background-color: #87AFC7 !important; color: #000000 !important; font-weight: bold;}
+    .stSidebar {
+        background-color: #1e1e1e !important;
+        color: #f5f5f5 !important;
+    }
+
+    /* Sidebar buttons */
+    .stSidebar button[kind="primary"] {
+        background-color: #87AFC7 !important;
+        color: #000000 !important;
+        font-weight: bold;
+    }
+    .stSidebar button {
+        background-color: #5a5a5a !important;
+        color: #f5f5f5 !important;
+    }
+
+    /* Download button in sidebar */
+    .stSidebar .stDownloadButton button {
+        background-color: #87AFC7 !important;
+        color: #000000 !important;
+        font-weight: bold;
+    }
+
     </style>
     """, unsafe_allow_html=True)
-
 # ---------------------------
 # Sidebar: App Controls
 # ---------------------------
@@ -154,9 +196,7 @@ t = {
         "FMEA_Failure": "FMEA Failure Occurrence",
         "Location": "Material Location",
         "Status": "Activity Status",
-        "Containment_Actions": "Containment Actions",
-        # ✅ Added default for missing key
-        "Answer_for": "Answer for"
+        "Containment_Actions": "Containment Actions"
     },
     "es": {
         "D1": "D1: Detalles de la preocupación",
@@ -182,9 +222,7 @@ t = {
         "FMEA_Failure": "Ocurrencia de falla FMEA",
         "Location": "Ubicación del material",
         "Status": "Estado de la actividad",
-        "Containment_Actions": "Acciones de contención",
-        # ✅ Added default for missing key
-        "Answer_for": "Respuesta para"
+        "Containment_Actions": "Acciones de contención"
     }
 }
 
@@ -216,20 +254,14 @@ st.session_state.setdefault("prepared_by", "")
 st.session_state.setdefault("d5_occ_whys", [""]*5)
 st.session_state.setdefault("d5_det_whys", [""]*5)
 st.session_state.setdefault("d5_sys_whys", [""]*5)
-
-# --- FREE TEXT lists for D5 (they were referenced but not initialized) ---
-st.session_state.setdefault("d5_occ_whys_free", [""]*5)
-st.session_state.setdefault("d5_det_whys_free", [""]*5)
-st.session_state.setdefault("d5_sys_whys_free", [""]*5)
-
 st.session_state.setdefault("d4_location", "")
 st.session_state.setdefault("d4_status", "")
 st.session_state.setdefault("d4_containment", "")
 
 for sub in ["occ_answer", "det_answer", "sys_answer"]:
-    st.session_state.setdefault("D6", st.session_state.get("D6", {}))
+    st.session_state.setdefault(("D6"), st.session_state.get("D6", {}))
     st.session_state["D6"].setdefault(sub, "")
-    st.session_state.setdefault("D7", st.session_state.get("D7", {}))
+    st.session_state.setdefault(("D7"), st.session_state.get("D7", {}))
     st.session_state["D7"].setdefault(sub, "")
 
 # ---------------------------
@@ -401,7 +433,6 @@ def render_whys_no_repeat(why_list, categories, label_prefix):
             key=f"{label_prefix}_{idx}_{lang_key}"
         )
     return why_list
-
 # ---------------------------
 # Render Tabs with Uploads
 # ---------------------------
@@ -415,7 +446,6 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     with tabs[i]:
         st.markdown(f"### {t[lang_key][step]}")
 
-        # ---------------------------
         # Training Guidance & Example
         note_text = note_dict[lang_key]
         example_text = example_dict[lang_key]
@@ -435,9 +465,8 @@ line-height:1.5;
 </div>
 """, unsafe_allow_html=True)
 
-        # ---------------------------
         # File uploads for D1, D3, D4, D7
-        if step in ["D1", "D3", "D4", "D7"]:
+        if step in ["D1","D3","D4","D7"]:
             uploaded_files = st.file_uploader(
                 f"Upload files/photos for {step}",
                 type=["png", "jpg", "jpeg", "pdf", "xlsx", "txt"],
@@ -449,166 +478,134 @@ line-height:1.5;
                     if file not in st.session_state[step]["uploaded_files"]:
                         st.session_state[step]["uploaded_files"].append(file)
 
-            if st.session_state[step].get("uploaded_files"):
-                st.markdown("**Uploaded Files / Photos:**")
-                for f in st.session_state[step]["uploaded_files"]:
-                    st.write(f"{f.name}")
-                    if f.type.startswith("image/"):
-                        st.image(f, width=192)
+        # Display uploaded files (aligned with file upload, not nested too deep)
+        if step in ["D1","D3","D4","D7"] and st.session_state[step].get("uploaded_files"):
+            st.markdown("**Uploaded Files / Photos:**")
+            for f in st.session_state[step]["uploaded_files"]:
+                st.write(f"{f.name}")
+                if f.type.startswith("image/"):
+                    st.image(f, width=192)  # roughly 2 inches wide, height auto-scaled
+    
+        # Step-specific inputs (same level as upload check)
+        if step == "D4":
+            st.session_state[step]["location"] = st.selectbox(
+                "Location of Material",
+                ["", "Work in Progress", "Stores Stock", "Warehouse Stock", "Service Parts", "Other"],
+                index=0,
+                key="d4_location"
+            )
+            st.session_state[step]["status"] = st.selectbox(
+                "Status of Activities",
+                ["", "Pending", "In Progress", "Completed", "Other"],
+                index=0,
+                key="d4_status"
+            )
+            st.session_state[step]["answer"] = st.text_area(
+                "Containment Actions / Notes",
+                value=st.session_state[step]["answer"],
+                key=f"ans_{step}"
+            )
+        # D5 5-Why
+        elif step == "D5":
+            st.markdown("#### Occurrence Analysis")
+            render_whys_no_repeat(st.session_state.d5_occ_whys, occurrence_categories, t[lang_key]['Occurrence_Why'])
+            if st.button("➕ Add another Occurrence Why", key=f"add_occ_{i}"):
+                st.session_state.d5_occ_whys.append("")
+            st.markdown("#### Detection Analysis")
+            render_whys_no_repeat(st.session_state.d5_det_whys, detection_categories, t[lang_key]['Detection_Why'])
+            if st.button("➕ Add another Detection Why", key=f"add_det_{i}"):
+                st.session_state.d5_det_whys.append("")
+            st.markdown("#### Systemic Analysis")
+            render_whys_no_repeat(st.session_state.d5_sys_whys, systemic_categories, t[lang_key]['Systemic_Why'])
+            if st.button("➕ Add another Systemic Why", key=f"add_sys_{i}"):
+                st.session_state.d5_sys_whys.append("")
+            # Dynamic Root Causes
+            occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
+            det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
+            sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
+            st.text_area(f"{t[lang_key]['Root_Cause_Occ']}", value=suggest_root_cause(occ_whys) if occ_whys else "No occurrence whys provided yet", height=80, disabled=True)
+            st.text_area(f"{t[lang_key]['Root_Cause_Det']}", value=suggest_root_cause(det_whys) if det_whys else "No detection whys provided yet", height=80, disabled=True)
+            st.text_area(f"{t[lang_key]['Root_Cause_Sys']}", value=suggest_root_cause(sys_whys) if sys_whys else "No systemic whys provided yet", height=80, disabled=True)
 
-      # Step-specific inputs (same level as upload check)
-if step == "D4":
-    st.session_state[step]["location"] = st.selectbox(
-        t[lang_key].get("Location", "Location of Material"),
-        ["", "Work in Progress", "Stores Stock", "Warehouse Stock", "Service Parts", "Other"],
-        index=0,
-        key="d4_location"
-    )
-    st.session_state[step]["status"] = st.selectbox(
-        t[lang_key].get("Status", "Status of Activities"),
-        ["", "Pending", "In Progress", "Completed", "Other"],
-        index=0,
-        key="d4_status"
-    )
-    st.session_state[step]["answer"] = st.text_area(
-        t[lang_key].get("Answer_for", "Answer for") + f" {step}",
-        value=st.session_state[step]["answer"],
-        key=f"ans_{step}"
-    )
+        # D6: Permanent Corrective Actions (three text areas: Occ/Det/Sys)
+        elif step == "D6":
+            st.session_state[step].setdefault("occ_answer", st.session_state["D6"].get("occ_answer", ""))
+            st.session_state[step].setdefault("det_answer", st.session_state["D6"].get("det_answer", ""))
+            st.session_state[step].setdefault("sys_answer", st.session_state["D6"].get("sys_answer", ""))
 
-elif step == "D5":
-    st.markdown("#### Occurrence Analysis")
-    for idx in range(5):
-        # Dropdown Why
-        st.session_state.d5_occ_whys[idx] = st.selectbox(
-            t[lang_key].get("Occurrence_Why", "Occurrence Why") + f" {idx+1}",
-            [""] + [f"{cat}: {item}" for cat, items in occurrence_categories.items() for item in items],
-            index=0,
-            key=f"d5_occ_{idx}_{lang_key}"
-        )
-        # Free Text Why under the dropdown
-        st.session_state.d5_occ_whys_free[idx] = st.text_area(
-            t[lang_key].get("Occurrence_Why", "Custom Occurrence Why") + f" {idx+1}",
-            value=st.session_state.d5_occ_whys_free[idx],
-            key=f"d5_occ_free_{idx}_{lang_key}"
-        )
+            st.session_state[step]["occ_answer"] = st.text_area(
+                "D6 - Corrective Actions for Occurrence Root Cause",
+                value=st.session_state[step]["occ_answer"],
+                key="d6_occ"
+            )
+            st.session_state[step]["det_answer"] = st.text_area(
+                "D6 - Corrective Actions for Detection Root Cause",
+                value=st.session_state[step]["det_answer"],
+                key="d6_det"
+            )
+            st.session_state[step]["sys_answer"] = st.text_area(
+                "D6 - Corrective Actions for Systemic Root Cause",
+                value=st.session_state[step]["sys_answer"],
+                key="d6_sys"
+            )
 
-    st.markdown("#### Detection Analysis")
-    for idx in range(len(st.session_state.d5_det_whys)):
-        selected_so_far = [w for i, w in enumerate(st.session_state.d5_det_whys) if w.strip() and i != idx]
-        options = [""] + [f"{cat}: {item}" for cat, items in detection_categories.items() 
-                          for item in items if f"{cat}: {item}" not in selected_so_far]
-        current_val = st.session_state.d5_det_whys[idx] if st.session_state.d5_det_whys[idx] in options else ""
-        st.session_state.d5_det_whys[idx] = st.selectbox(
-            t[lang_key].get("Detection_Why", "Detection Why") + f" {idx+1}",
-            options,
-            index=options.index(current_val) if current_val in options else 0,
-            key=f"det_dropdown_{idx}_{lang_key}"
-        )
-        st.session_state.d5_det_whys_free[idx] = st.text_area(
-            t[lang_key].get("Detection_Why", "Custom Detection Why") + f" {idx+1}",
-            value=st.session_state.d5_det_whys_free[idx],
-            key=f"det_free_{idx}_{lang_key}"
-        )
+            # Mirror into top-level D6 storage so export code can find them consistently
+            st.session_state["D6"]["occ_answer"] = st.session_state[step]["occ_answer"]
+            st.session_state["D6"]["det_answer"] = st.session_state[step]["det_answer"]
+            st.session_state["D6"]["sys_answer"] = st.session_state[step]["sys_answer"]
 
-    st.markdown("#### Systemic Analysis")
-    for idx in range(len(st.session_state.d5_sys_whys)):
-        selected_so_far = [w for i, w in enumerate(st.session_state.d5_sys_whys) if w.strip() and i != idx]
-        options = [""] + [f"{cat}: {item}" for cat, items in systemic_categories.items() 
-                          for item in items if f"{cat}: {item}" not in selected_so_far]
-        current_val = st.session_state.d5_sys_whys[idx] if st.session_state.d5_sys_whys[idx] in options else ""
-        st.session_state.d5_sys_whys[idx] = st.selectbox(
-            t[lang_key].get("Systemic_Why", "Systemic Why") + f" {idx+1}",
-            options,
-            index=options.index(current_val) if current_val in options else 0,
-            key=f"sys_dropdown_{idx}_{lang_key}"
-        )
-        st.session_state.d5_sys_whys_free[idx] = st.text_area(
-            t[lang_key].get("Systemic_Why", "Custom Systemic Why") + f" {idx+1}",
-            value=st.session_state.d5_sys_whys_free[idx],
-            key=f"sys_free_{idx}_{lang_key}"
-        )
+        # D7: Countermeasure Confirmation (three text areas: verification for Occ/Det/Sys)
+        elif step == "D7":
+            st.session_state[step].setdefault("occ_answer", st.session_state["D7"].get("occ_answer", ""))
+            st.session_state[step].setdefault("det_answer", st.session_state["D7"].get("det_answer", ""))
+            st.session_state[step].setdefault("sys_answer", st.session_state["D7"].get("sys_answer", ""))
 
-elif step == "D6":
-    st.session_state[step].setdefault("occ_answer", st.session_state["D6"].get("occ_answer", ""))
-    st.session_state[step].setdefault("det_answer", st.session_state["D6"].get("det_answer", ""))
-    st.session_state[step].setdefault("sys_answer", st.session_state["D6"].get("sys_answer", ""))
+            st.session_state[step]["occ_answer"] = st.text_area(
+                "D7 - Occurrence Countermeasure Verification",
+                value=st.session_state[step]["occ_answer"],
+                key="d7_occ"
+            )
+            st.session_state[step]["det_answer"] = st.text_area(
+                "D7 - Detection Countermeasure Verification",
+                value=st.session_state[step]["det_answer"],
+                key="d7_det"
+            )
+            st.session_state[step]["sys_answer"] = st.text_area(
+                "D7 - Systemic Countermeasure Verification",
+                value=st.session_state[step]["sys_answer"],
+                key="d7_sys"
+            )
 
-    st.session_state[step]["occ_answer"] = st.text_area(
-        "D6 - Corrective Actions for Occurrence Root Cause",
-        value=st.session_state[step]["occ_answer"],
-        key="d6_occ"
-    )
-    st.session_state[step]["det_answer"] = st.text_area(
-        "D6 - Corrective Actions for Detection Root Cause",
-        value=st.session_state[step]["det_answer"],
-        key="d6_det"
-    )
-    st.session_state[step]["sys_answer"] = st.text_area(
-        "D6 - Corrective Actions for Systemic Root Cause",
-        value=st.session_state[step]["sys_answer"],
-        key="d6_sys"
-    )
+            # Mirror into top-level D7 storage so export code can find them consistently
+            st.session_state["D7"]["occ_answer"] = st.session_state[step]["occ_answer"]
+            st.session_state["D7"]["det_answer"] = st.session_state[step]["det_answer"]
+            st.session_state["D7"]["sys_answer"] = st.session_state[step]["sys_answer"]
 
-elif step == "D7":
-    st.session_state[step].setdefault("occ_answer", st.session_state["D7"].get("occ_answer", ""))
-    st.session_state[step].setdefault("det_answer", st.session_state["D7"].get("det_answer", ""))
-    st.session_state[step].setdefault("sys_answer", st.session_state["D7"].get("sys_answer", ""))
+        # D8: Follow-up Activities / Lessons Learned (single text area)
+        elif step == "D8":
+            st.session_state[step]["answer"] = st.text_area(
+                "Your Answer",
+                value=st.session_state[step]["answer"],
+                key=f"ans_{step}"
+            )
 
-    st.session_state[step]["occ_answer"] = st.text_area(
-        "D7 - Occurrence Countermeasure Verification",
-        value=st.session_state[step]["occ_answer"],
-        key="d7_occ"
-    )
-    st.session_state[step]["det_answer"] = st.text_area(
-        "D7 - Detection Countermeasure Verification",
-        value=st.session_state[step]["det_answer"],
-        key="d7_det"
-    )
-    st.session_state[step]["sys_answer"] = st.text_area(
-        "D7 - Systemic Countermeasure Verification",
-        value=st.session_state[step]["sys_answer"],
-        key="d7_sys"
-    )
-
-elif step == "D8":
-    st.session_state[step]["answer"] = st.text_area(
-        t[lang_key].get("Answer_for", "Answer for") + f" {step}",
-        value=st.session_state[step]["answer"],
-        key=f"ans_{step}"
-    )
-
-
+        else:
+            # Default for D1, D2, D3, or any other single-answer steps
+            if step not in ["D4", "D5", "D6", "D7", "D8"]:
+                st.session_state[step]["answer"] = st.text_area(
+                    "Your Answer",
+                    value=st.session_state[step]["answer"],
+                    key=f"ans_{step}"
+                )
 
 # ---------------------------
 # Collect all answers for Excel export
 # ---------------------------
 data_rows = []
 
-# Build "effective" whys for export: custom free text overrides dropdown when present
-occ_whys = []
-for j in range(max(len(st.session_state.d5_occ_whys), len(st.session_state.d5_occ_whys_free))):
-    dropdown = st.session_state.d5_occ_whys[j] if j < len(st.session_state.d5_occ_whys) else ""
-    custom = st.session_state.d5_occ_whys_free[j] if j < len(st.session_state.d5_occ_whys_free) else ""
-    val = custom.strip() if custom.strip() else dropdown
-    if val.strip():
-        occ_whys.append(val)
-
-det_whys = []
-for j in range(max(len(st.session_state.d5_det_whys), len(st.session_state.d5_det_whys_free))):
-    dropdown = st.session_state.d5_det_whys[j] if j < len(st.session_state.d5_det_whys) else ""
-    custom = st.session_state.d5_det_whys_free[j] if j < len(st.session_state.d5_det_whys_free) else ""
-    val = custom.strip() if custom.strip() else dropdown
-    if val.strip():
-        det_whys.append(val)
-
-sys_whys = []
-for j in range(max(len(st.session_state.d5_sys_whys), len(st.session_state.d5_sys_whys_free))):
-    dropdown = st.session_state.d5_sys_whys[j] if j < len(st.session_state.d5_sys_whys) else ""
-    custom = st.session_state.d5_sys_whys_free[j] if j < len(st.session_state.d5_sys_whys_free) else ""
-    val = custom.strip() if custom.strip() else dropdown
-    if val.strip():
-        sys_whys.append(val)
+occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
+det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
+sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
 
 occ_rc_text = suggest_root_cause(occ_whys) if occ_whys else "No occurrence whys provided yet"
 det_rc_text = suggest_root_cause(det_whys) if det_whys else "No detection whys provided yet"
@@ -729,12 +726,13 @@ def generate_excel():
 # Move download button to sidebar
 with st.sidebar:
     st.download_button(
-        label=t[lang_key]['Download'],
-        data=generate_excel(),
+        label=t[lang_key]['Download'],  # no extra icon
+        data=generate_excel(),  # function that returns BytesIO of XLSX
         file_name=f"8D_Report_{st.session_state['report_date']}.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        key="download_xlsx"
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
+
 
 # ---------------------------
 # (End)
+# ---------------------------
