@@ -19,56 +19,72 @@ st.set_page_config(
 )
 
 # ---------------------------
-# Dark/Light Mode CSS (global)
+# App styles (light & dark mode compatible)
 # ---------------------------
 st.markdown("""
 <style>
-/* Light mode (default) */
-[data-theme="light"] .stApp {
+/* Main app background & text */
+.stApp {
     background: linear-gradient(to right, #f0f8ff, #e6f2ff);
-    color: #000000;
-}
-[data-theme="light"] textarea, [data-theme="light"] input, [data-theme="light"] select {
-    background-color: #ffffff;
-    color: #000000;
-    border: 2px solid #1E90FF;
-    border-radius: 5px;
-    padding: 5px;
-}
-[data-theme="light"] .stSidebar {
-    background-color: #f0f8ff;
-    color: #000000;
-}
-
-/* Dark mode */
-[data-theme="dark"] .stApp {
-    background: #1E1E1E;
-    color: #F0F0F0;
-}
-[data-theme="dark"] textarea, [data-theme="dark"] input, [data-theme="dark"] select {
-    background-color: #2B2B2B;
-    color: #F0F0F0;
-    border: 2px solid #1E90FF;
-    border-radius: 5px;
-    padding: 5px;
-}
-[data-theme="dark"] .stSidebar {
-    background-color: #2B2B2B;
-    color: #F0F0F0;
-}
-
-/* Buttons (keep same colors for light and dark) */
-button[kind="primary"], .stDownloadButton button {
-    background-color: #87AFC7 !important;
     color: #000000 !important;
+}
+
+/* Tabs */
+.stTabs [data-baseweb="tab"] {
+    font-weight: bold; 
+    color: #000000 !important;
+}
+.stTabs [data-baseweb="tab"]:hover {
+    color: #1E90FF !important;
+}
+
+/* Text inputs, textareas, selectboxes */
+div.stTextInput, div.stTextArea, div.stSelectbox {
+    border: 2px solid #1E90FF !important;
+    border-radius: 5px !important;
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    padding: 5px !important;
+    transition: border 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+div.stTextInput:hover, div.stTextArea:hover, div.stSelectbox:hover {
+    border: 2px solid #104E8B !important;
+    box-shadow: 0 0 5px #1E90FF;
+}
+
+/* Info boxes */
+.stInfo {
+    background-color: #e6f7ff !important; 
+    border-left: 5px solid #1E90FF !important; 
+    color: #000000 !important;
+}
+
+/* Sidebar background & text */
+.stSidebar {
+    background-color: #f0f8ff !important;  
+    color: #000000 !important;             
+}
+
+/* Sidebar labels / selectbox text */
+.stSidebar label, .stSidebar .css-1aumxhk {
+    color: #000000 !important;
+}
+
+/* Buttons (keep same colors for both modes) */
+button[kind="primary"], .stDownloadButton button {
+    background-color: #87AFC7 !important; 
+    color: #000000 !important; 
     font-weight: bold;
 }
+
+/* Hover effect for buttons */
 button[kind="primary"]:hover, .stDownloadButton button:hover {
     background-color: #1E90FF !important;
     color: #ffffff !important;
 }
 </style>
 """, unsafe_allow_html=True)
+
 # ---------------------------
 # Reset Session check
 # ---------------------------
