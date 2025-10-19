@@ -496,7 +496,7 @@ line-height:1.5;
                 value=st.session_state[step]["answer"],
                 key=f"ans_{step}"
             )
-       elif step == "D5":
+         elif step == "D5":
             # -------------------- D5 --------------------
             st.markdown("#### Occurrence Analysis")
             render_whys_no_repeat(st.session_state.d5_occ_whys, occurrence_categories, t[lang_key]['Occurrence_Why'])
@@ -506,7 +506,7 @@ line-height:1.5;
                     value=st.session_state.d5_occ_whys_free[idx],
                     key=f"d5_occ_free_{idx}_{lang_key}"
                 )
-            if st.button("➕ Add another Occurrence Why", key=f"add_occ_{i}"):
+          if st.button("➕ Add another Occurrence Why", key=f"add_occ_{i}"):
                 st.session_state.d5_occ_whys.append("")
                 st.session_state.d5_occ_whys_free.append("")
 
@@ -518,7 +518,7 @@ line-height:1.5;
                     value=st.session_state.d5_det_whys_free[idx],
                     key=f"d5_det_free_{idx}_{lang_key}"
                 )
-            if st.button("➕ Add another Detection Why", key=f"add_det_{i}"):
+         if st.button("➕ Add another Detection Why", key=f"add_det_{i}"):
                 st.session_state.d5_det_whys.append("")
                 st.session_state.d5_det_whys_free.append("")
 
@@ -530,7 +530,7 @@ line-height:1.5;
                     value=st.session_state.d5_sys_whys_free[idx],
                     key=f"d5_sys_free_{idx}_{lang_key}"
                 )
-            if st.button("➕ Add another Systemic Why", key=f"add_sys_{i}"):
+         if st.button("➕ Add another Systemic Why", key=f"add_sys_{i}"):
                 st.session_state.d5_sys_whys.append("")
                 st.session_state.d5_sys_whys_free.append("")
 
@@ -541,7 +541,7 @@ line-height:1.5;
             st.text_area(f"{t[lang_key]['Root_Cause_Occ']}", value=suggest_root_cause(occ_whys) if occ_whys else "No occurrence whys provided yet", height=80,
 
         # D6: Permanent Corrective Actions (three text areas: Occ/Det/Sys)
-        elif step == "D6":
+         elif step == "D6":
             st.session_state[step].setdefault("occ_answer", st.session_state["D6"].get("occ_answer", ""))
             st.session_state[step].setdefault("det_answer", st.session_state["D6"].get("det_answer", ""))
             st.session_state[step].setdefault("sys_answer", st.session_state["D6"].get("sys_answer", ""))
