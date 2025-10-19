@@ -505,7 +505,7 @@ line-height:1.5;
                 value=st.session_state[step]["answer"],
                 key=f"ans_{step}"
             )
-# D5 5-Why
+        # D5 5-Why
 elif step == "D5":
     st.markdown("#### Occurrence Analysis")
     for idx in range(len(st.session_state.d5_occ_whys)):
@@ -596,6 +596,7 @@ elif step == "D5":
     st.text_area(f"{t[lang_key]['Root_Cause_Occ']}", value=suggest_root_cause(occ_whys) if occ_whys else "No occurrence whys provided yet", height=80, disabled=True)
     st.text_area(f"{t[lang_key]['Root_Cause_Det']}", value=suggest_root_cause(det_whys) if det_whys else "No detection whys provided yet", height=80, disabled=True)
     st.text_area(f"{t[lang_key]['Root_Cause_Sys']}", value=suggest_root_cause(sys_whys) if sys_whys else "No systemic whys provided yet", height=80, disabled=True)
+
 
         # D6: Permanent Corrective Actions (three text areas: Occ/Det/Sys)
         elif step == "D6":
