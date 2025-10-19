@@ -19,7 +19,7 @@ st.set_page_config(
 )
 
 # ---------------------------
-# App styles - Light mode by default
+# App styles - Light mode by default, buttons always same color
 # ---------------------------
 st.markdown("""
 <style>
@@ -28,7 +28,11 @@ st.markdown("""
 textarea {background-color: #ffffff !important; border: 1px solid #1E90FF !important; border-radius: 5px; color: #000000 !important;}
 .stInfo {background-color: #e6f7ff !important; border-left: 5px solid #1E90FF !important; color: #000000 !important;}
 .css-1d391kg {color: #1E90FF !important; font-weight: bold !important;}
-button[kind="primary"] {background-color: #87AFC7 !important; color: white !important; font-weight: bold;}
+button[kind="primary"], .stDownloadButton button, .stSidebar button {
+    background-color: #87AFC7 !important;
+    color: #000000 !important;
+    font-weight: bold !important;
+}
 div.stSelectbox, div.stTextInput, div.stTextArea {
     border: 2px solid #1E90FF !important;
     border-radius: 5px !important;
@@ -143,7 +147,7 @@ if dark_mode:
 # ---------------------------
 st.sidebar.markdown("---")
 st.sidebar.header("⚙️ App Controls")
-if st.sidebar.button("🔄 Reset 8D Session"):
+if st.sidebar.button("🔄 Reset 8D Session", key="reset_button"):
     preserve_keys = ["lang", "lang_key", "current_tab"]
     preserved = {k: st.session_state[k] for k in preserve_keys if k in st.session_state}
     for key in list(st.session_state.keys()):
@@ -713,12 +717,12 @@ def generate_excel():
 # Move download button to sidebar
 with st.sidebar:
     st.download_button(
-        label=t[lang_key]['Download'],  # no extra icon
-        data=generate_excel(),  # function that returns BytesIO of XLSX
+        label=t[lang_key]['Download'],  
+        data=generate_excel(),  
         file_name=f"8D_Report_{st.session_state['report_date']}.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        key="download_xlsx"
     )
-
 
 # ---------------------------
 # (End)
