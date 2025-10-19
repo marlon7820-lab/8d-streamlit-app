@@ -517,29 +517,7 @@ line-height:1.5;
             )
         # D5 5-Why + "Other" dropdown replacement
         elif step == "D5":
-           st.markdown("#### Occurrence Analysis")
-           occ_options = [f"{cat}: {item}" for cat, items in occurrence_categories.items() for item in items] + ["Other"]
-           occ_choice = st.selectbox("Select Occurrence Root Cause", occ_options, key="d5_occ_select")
-           if occ_choice == "Other":
-               occ_choice = st.text_input("Please specify Occurrence Root Cause", key="d5_occ_other")
-
-           st.markdown("#### Detection Analysis")
-           det_options = [f"{cat}: {item}" for cat, items in detection_categories.items() for item in items] + ["Other"]
-           det_choice = st.selectbox("Select Detection Root Cause", det_options, key="d5_det_select")
-           if det_choice == "Other":
-               det_choice = st.text_input("Please specify Detection Root Cause", key="d5_det_other")
-
-           st.markdown("#### Systemic Analysis")
-           sys_options = [f"{cat}: {item}" for cat, items in systemic_categories.items() for item in items] + ["Other"]
-           sys_choice = st.selectbox("Select Systemic Root Cause", sys_options, key="d5_sys_select")
-           if sys_choice == "Other":
-               sys_choice = st.text_input("Please specify Systemic Root Cause", key="d5_sys_other")
-
-           # Store in session_state for Excel export
-           st.session_state["D5"]["occ_answer"] = occ_choice
-           st.session_state["D5"]["det_answer"] = det_choice
-           st.session_state["D5"]["sys_answer"] = sys_choice
-
+           
            # Existing 5-Why whys below (unchanged)
            st.markdown("#### Occurrence Analysis")
            st.session_state.d5_occ_whys = render_whys_no_repeat_with_other(st.session_state.d5_occ_whys, occurrence_categories, t[lang_key]['Occurrence_Why'])
