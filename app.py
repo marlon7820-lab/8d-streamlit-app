@@ -624,6 +624,11 @@ occ_rc_text = suggest_root_cause(occ_whys) if occ_whys else "No occurrence whys 
 det_rc_text = suggest_root_cause(det_whys) if det_whys else "No detection whys provided yet"
 sys_rc_text = suggest_root_cause(sys_whys) if sys_whys else "No systemic whys provided yet"
 
+# In your data_rows
+data_rows.append(("D5 - Root Cause (Occurrence)", occ_rc_text, " | ".join(occ_whys)))
+data_rows.append(("D5 - Root Cause (Detection)", det_rc_text, " | ".join(det_whys)))
+data_rows.append(("D5 - Root Cause (Systemic)", sys_rc_text, " | ".join(sys_whys)))
+
 for step, _, _ in npqp_steps:
     # D6 and D7 should export their 3 sub-answers as separate rows
     if step == "D6":
