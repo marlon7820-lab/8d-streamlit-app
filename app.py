@@ -93,14 +93,16 @@ dark_mode = st.sidebar.checkbox("🌙 Dark Mode")
 if dark_mode:
     st.markdown("""
     <style>
-    /* Main form area */
-    .css-18e3th9 {   /* Streamlit main content container */
+    /* Main form area only */
+    .stApp > .main {
         background-color: #1e1e1e !important;
         color: #f5f5f5 !important;
     }
 
-    /* Inputs, textareas, selectboxes */
-    div.stTextInput, div.stTextArea, div.stSelectbox {
+    /* Inputs, textareas, selectboxes inside main form */
+    .stApp > .main div.stTextInput, 
+    .stApp > .main div.stTextArea, 
+    .stApp > .main div.stSelectbox {
         background-color: #2c2c2c !important;
         color: #f5f5f5 !important;
         border: 2px solid #87AFC7 !important;
@@ -108,22 +110,24 @@ if dark_mode:
         padding: 5px !important;
         transition: border 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
     }
-    div.stTextInput:hover, div.stTextArea:hover, div.stSelectbox:hover {
+    .stApp > .main div.stTextInput:hover,
+    .stApp > .main div.stTextArea:hover,
+    .stApp > .main div.stSelectbox:hover {
         border: 2px solid #1E90FF !important;
         box-shadow: 0 0 5px #1E90FF;
     }
 
-    /* Tabs inside form */
-    .stTabs [data-baseweb="tab"] {
+    /* Tabs inside main form */
+    .stApp > .main .stTabs [data-baseweb="tab"] {
         color: #f5f5f5 !important;
         font-weight: bold;
     }
-    .stTabs [data-baseweb="tab"]:hover {
+    .stApp > .main .stTabs [data-baseweb="tab"]:hover {
         color: #87AFC7 !important;
     }
 
-    /* Info boxes */
-    .stInfo {
+    /* Info boxes inside main form */
+    .stApp > .main .stInfo {
         background-color: #3a3a3a !important;
         border-left: 5px solid #87AFC7 !important;
         color: #f5f5f5 !important;
