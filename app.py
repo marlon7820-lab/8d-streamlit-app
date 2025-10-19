@@ -607,49 +607,47 @@ elif step == "D6":
     st.session_state["D6"]["det_answer"] = st.session_state[step]["det_answer"]
     st.session_state["D6"]["sys_answer"] = st.session_state[step]["sys_answer"]
 
-        # D7: Countermeasure Confirmation (three text areas: verification for Occ/Det/Sys)
-        elif step == "D7":
-            st.session_state[step].setdefault("occ_answer", st.session_state["D7"].get("occ_answer", ""))
-            st.session_state[step].setdefault("det_answer", st.session_state["D7"].get("det_answer", ""))
-            st.session_state[step].setdefault("sys_answer", st.session_state["D7"].get("sys_answer", ""))
+elif step == "D7":
+    st.session_state[step].setdefault("occ_answer", st.session_state["D7"].get("occ_answer", ""))
+    st.session_state[step].setdefault("det_answer", st.session_state["D7"].get("det_answer", ""))
+    st.session_state[step].setdefault("sys_answer", st.session_state["D7"].get("sys_answer", ""))
 
-            st.session_state[step]["occ_answer"] = st.text_area(
-                "D7 - Occurrence Countermeasure Verification",
-                value=st.session_state[step]["occ_answer"],
-                key="d7_occ"
-            )
-            st.session_state[step]["det_answer"] = st.text_area(
-                "D7 - Detection Countermeasure Verification",
-                value=st.session_state[step]["det_answer"],
-                key="d7_det"
-            )
-            st.session_state[step]["sys_answer"] = st.text_area(
-                "D7 - Systemic Countermeasure Verification",
-                value=st.session_state[step]["sys_answer"],
-                key="d7_sys"
-            )
+    st.session_state[step]["occ_answer"] = st.text_area(
+        "D7 - Occurrence Countermeasure Verification",
+        value=st.session_state[step]["occ_answer"],
+        key="d7_occ"
+    )
+    st.session_state[step]["det_answer"] = st.text_area(
+        "D7 - Detection Countermeasure Verification",
+        value=st.session_state[step]["det_answer"],
+        key="d7_det"
+    )
+    st.session_state[step]["sys_answer"] = st.text_area(
+        "D7 - Systemic Countermeasure Verification",
+        value=st.session_state[step]["sys_answer"],
+        key="d7_sys"
+    )
 
-            # Mirror into top-level D7 storage so export code can find them consistently
-            st.session_state["D7"]["occ_answer"] = st.session_state[step]["occ_answer"]
-            st.session_state["D7"]["det_answer"] = st.session_state[step]["det_answer"]
-            st.session_state["D7"]["sys_answer"] = st.session_state[step]["sys_answer"]
+    # Mirror into top-level D7 storage for export
+    st.session_state["D7"]["occ_answer"] = st.session_state[step]["occ_answer"]
+    st.session_state["D7"]["det_answer"] = st.session_state[step]["det_answer"]
+    st.session_state["D7"]["sys_answer"] = st.session_state[step]["sys_answer"]
 
-        # D8: Follow-up Activities / Lessons Learned (single text area)
-        elif step == "D8":
-            st.session_state[step]["answer"] = st.text_area(
-                "Your Answer",
-                value=st.session_state[step]["answer"],
-                key=f"ans_{step}"
-            )
+elif step == "D8":
+    st.session_state[step]["answer"] = st.text_area(
+        "Your Answer",
+        value=st.session_state[step]["answer"],
+        key=f"ans_{step}"
+    )
 
-        else:
-            # Default for D1, D2, D3, or any other single-answer steps
-            if step not in ["D4", "D5", "D6", "D7", "D8"]:
-                st.session_state[step]["answer"] = st.text_area(
-                    "Your Answer",
-                    value=st.session_state[step]["answer"],
-                    key=f"ans_{step}"
-                )
+else:
+    # Default for D1, D2, D3, or any other single-answer steps
+    if step not in ["D4", "D5", "D6", "D7", "D8"]:
+        st.session_state[step]["answer"] = st.text_area(
+            "Your Answer",
+            value=st.session_state[step]["answer"],
+            key=f"ans_{step}"
+        )
 
 # ---------------------------
 # Collect all answers for Excel export
