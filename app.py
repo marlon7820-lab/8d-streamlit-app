@@ -131,27 +131,32 @@ if dark_mode:
         background-color: #1e1e1e !important;
         color: #f5f5f5 !important;
     }
-
-    /* Sidebar buttons */
-    .stSidebar button[kind="primary"] {
-        background-color: #87AFC7 !important;
-        color: #000000 !important;
-        font-weight: bold;
-    }
-    .stSidebar button {
-        background-color: #5a5a5a !important;
-        color: #f5f5f5 !important;
-    }
-
-    /* Download button in sidebar */
-    .stSidebar .stDownloadButton button {
-        background-color: #87AFC7 !important;
-        color: #000000 !important;
-        font-weight: bold;
-    }
-
     </style>
     """, unsafe_allow_html=True)
+
+# ---------------------------
+# Sidebar buttons - consistent colors in light & dark mode
+# ---------------------------
+st.markdown("""
+<style>
+/* Primary sidebar buttons */
+.stSidebar button[kind="primary"], 
+.stSidebar .stDownloadButton button {
+    background-color: #87AFC7 !important;  /* main blue color */
+    color: #000000 !important;             /* text black */
+    font-weight: bold;
+    border-radius: 5px;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Hover effect */
+.stSidebar button[kind="primary"]:hover,
+.stSidebar .stDownloadButton button:hover {
+    background-color: #1E90FF !important;  /* darker blue on hover */
+    color: #ffffff !important;             /* text white on hover */
+}
+</style>
+""", unsafe_allow_html=True)
 # ---------------------------
 # Sidebar: App Controls
 # ---------------------------
