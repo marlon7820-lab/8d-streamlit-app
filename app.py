@@ -5,8 +5,9 @@ from openpyxl.utils import get_column_letter
 from openpyxl.drawing.image import Image as XLImage
 import datetime
 import io
-import json
 import os
+from PIL import Image as PILImage
+from io import BytesIO
 
 # ---------------------------
 # Page config
@@ -17,7 +18,9 @@ st.set_page_config(
     layout="wide"
 )
 
-# App styles - updated for desktop selectbox outline
+# ---------------------------
+# App styles - updated for desktop selectbox outline + thumbnails
+# ---------------------------
 st.markdown("""
 <style>
 .stApp {background: linear-gradient(to right, #f0f8ff, #e6f2ff); color: #000000 !important;}
@@ -37,6 +40,7 @@ div.stSelectbox:hover, div.stTextInput:hover, div.stTextArea:hover {
     border: 2px solid #104E8B !important;
     box-shadow: 0 0 5px #1E90FF;
 }
+.image-thumbnail {width: 120px; height: 80px; object-fit: cover; margin:5px; border:1px solid #1E90FF; border-radius:4px;}
 </style>
 """, unsafe_allow_html=True)
 
@@ -62,7 +66,7 @@ st.markdown("<h1 style='text-align: center; color: #1E90FF;'>📋 8D Report Assi
 # ---------------------------
 # Version info
 # ---------------------------
-version_number = "v1.1.1"
+version_number = "v1.2.0"
 last_updated = "October 18, 2025"
 st.markdown(f"""
 <hr style='border:1px solid #1E90FF; margin-top:10px; margin-bottom:5px;'>
@@ -72,16 +76,26 @@ Version {version_number} | Last updated: {last_updated}
 """, unsafe_allow_html=True)
 
 # ---------------------------
-# Sidebar: Language selection & reset
+# Sidebar: Language & Dark Mode
 # ---------------------------
 st.sidebar.title("8D Report Assistant")
 st.sidebar.markdown("---")
 st.sidebar.header("Settings")
+
 lang = st.sidebar.selectbox("Select Language / Seleccionar Idioma", ["English", "Español"])
 lang_key = "en" if lang == "English" else "es"
 
+dark_mode = st.sidebar.checkbox("🌙 Dark Mode")
+if dark_mode:
+    st.markdown("""
+        <style>
+        .stApp {background: #1c1c1c; color: #f5f5f5 !important;}
+        textarea, .stTextInput, .stSelectbox, .stTextArea {background-color:#2b2b2b !important; color:#f5f5f5 !important; border-color:#87AFC7 !important;}
+        </style>
+    """, unsafe_allow_html=True)
+
 # ---------------------------
-# Sidebar: Smart Session Reset Button
+# Sidebar: App Controls
 # ---------------------------
 st.sidebar.markdown("---")
 st.sidebar.header("⚙️ App Controls")
@@ -162,12 +176,7 @@ npqp_steps = [
     ("D2", {"en":"Check for similar parts, models, generic parts, other colors, etc.", "es":"Verifique partes similares, modelos, partes genéricas, otros colores, etc."}, {"en":"Similar model radio, Front vs. rear speaker.", "es":"Radio de modelo similar, altavoz delantero vs trasero."}),
     ("D3", {"en":"Perform an initial investigation to identify obvious issues.", "es":"Realice una investigación inicial para identificar problemas evidentes."}, {"en":"Visual inspection of solder joints, initial functional tests.", "es":"Inspección visual de soldaduras, pruebas funcionales iniciales."}),
     ("D4", {"en":"Define temporary containment actions and material location.", "es":"Defina acciones de contención temporales y ubicación del material."}, {"en":"Post Quality Alert, Increase Inspection, Inventory Certification","es":"Implementar Ayuda Visual, Incrementar Inspeccion, Certificar Inventario"}),
-    ("D5", 
-    {"en": "Use 5-Why analysis to determine the root cause.", 
-     "es": "Use el análisis de 5 Porqués para determinar la causa raíz."},
-    {"en": "Final 'Why' from the Analysis will give a good indication of the True Root Cause", 
-     "es": "El último \"Por qué\" del análisis proporcionará una idea clara de la causa raíz del problema"}
-),
+    ("D5", {"en": "Use 5-Why analysis to determine the root cause.", "es": "Use el análisis de 5 Porqués para determinar la causa raíz."}, {"en": "Final 'Why' from the Analysis will give a good indication of the True Root Cause", "es": "El último \"Por qué\" del análisis proporcionará una idea clara de la causa raíz del problema"}),
     ("D6", {"en":"Define corrective actions that eliminate the root cause permanently.", "es":"Defina acciones correctivas que eliminen la causa raíz permanentemente."}, {"en":"Update soldering process, redesign fixture.", "es":"Actualizar proceso de soldadura, rediseñar herramienta."}),
     ("D7", {"en":"Verify that corrective actions effectively resolve the issue.", "es":"Verifique que las acciones correctivas resuelvan efectivamente el problema."}, {"en":"Functional tests on corrected amplifiers.", "es":"Pruebas funcionales en amplificadores corregidos."}),
     ("D8", {"en":"Document lessons learned, update standards, FMEAs.", "es":"Documente lecciones aprendidas, actualice estándares, FMEAs."}, {"en":"Update SOPs, PFMEA, work instructions.", "es":"Actualizar SOPs, PFMEA, instrucciones de trabajo."})
@@ -332,7 +341,7 @@ systemic_categories = {
 }
 
 # ---------------------------
-# Helper functions
+# Root cause suggestion & helper functions
 # ---------------------------
 def suggest_root_cause(whys):
     text = " ".join(whys).lower()
@@ -661,8 +670,8 @@ def generate_excel():
 with st.sidebar:
     st.download_button(
         label=t[lang_key]['Download'],  # no extra icon
-        data=generate_excel(),
-        file_name=f"8D_Report_{st.session_state.report_date.replace(' ', '_')}.xlsx",
+        data=generate_excel(),  # function that returns BytesIO of XLSX
+        file_name=f"8D_Report_{st.session_state['report_date']}.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
 
