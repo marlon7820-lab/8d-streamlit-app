@@ -89,8 +89,8 @@ dark_mode = st.sidebar.checkbox("🌙 Dark Mode")
 if dark_mode:
     st.markdown("""
     <style>
-    /* Main app background & text */
-    .stApp {
+    /* Main app background & text only (exclude sidebar) */
+    .stApp > .main {
         background: linear-gradient(to right, #1e1e1e, #2c2c2c);
         color: #f5f5f5 !important;
     }
@@ -104,8 +104,10 @@ if dark_mode:
         color: #87AFC7 !important;
     }
 
-    /* Text inputs, textareas, selectboxes */
-    div.stTextInput, div.stTextArea, div.stSelectbox {
+    /* Text inputs, textareas, selectboxes inside main form */
+    .stApp .stTextInput, 
+    .stApp .stTextArea, 
+    .stApp .stSelectbox {
         border: 2px solid #87AFC7 !important;
         border-radius: 5px !important;
         background-color: #2c2c2c !important;
@@ -113,50 +115,21 @@ if dark_mode:
         padding: 5px !important;
         transition: border 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
     }
-    div.stTextInput:hover, div.stTextArea:hover, div.stSelectbox:hover {
+    .stApp .stTextInput:hover, 
+    .stApp .stTextArea:hover, 
+    .stApp .stSelectbox:hover {
         border: 2px solid #1E90FF !important;
         box-shadow: 0 0 5px #1E90FF;
     }
 
     /* Info boxes */
-    .stInfo {
+    .stApp .stInfo {
         background-color: #3a3a3a !important; 
         border-left: 5px solid #87AFC7 !important; 
         color: #f5f5f5 !important;
     }
-
-    /* Sidebar background & text */
-    .css-1d391kg {color: #87AFC7 !important; font-weight: bold !important;}
-    .stSidebar {
-        background-color: #1e1e1e !important;
-        color: #f5f5f5 !important;
-    }
     </style>
     """, unsafe_allow_html=True)
-
-# ---------------------------
-# Sidebar buttons - consistent colors in light & dark mode
-# ---------------------------
-st.markdown("""
-<style>
-/* All sidebar buttons, including Reset 8D Session & Download XLSX */
-.stSidebar button,
-.stSidebar .stDownloadButton button {
-    background-color: #87AFC7 !important;  /* main blue */
-    color: #000000 !important;             /* black text */
-    font-weight: bold;
-    border-radius: 5px;
-    transition: background-color 0.2s ease, color 0.2s ease;
-}
-
-/* Hover effect */
-.stSidebar button:hover,
-.stSidebar .stDownloadButton button:hover {
-    background-color: #1E90FF !important;  /* darker blue */
-    color: #ffffff !important;             /* white text */
-}
-</style>
-""", unsafe_allow_html=True)
 
 # ---------------------------
 # Sidebar: App Controls
