@@ -19,123 +19,143 @@ st.set_page_config(
 )
 
 # ---------------------------
-# App styles - updated for dark/light mode & buttons
+# Dark/Light mode styles
 # ---------------------------
-st.markdown("""
-<style>
-/* ---------- GENERAL APP STYLES ---------- */
+dark_mode = st.sidebar.checkbox("🌙 Dark Mode")
+if dark_mode:
+    st.markdown("""
+    <style>
+    /* ----------------- Dark Mode ----------------- */
+    /* Main container */
+    .block-container {
+        background-color: #1E1E1E !important;
+        color: #F0F0F0 !important;
+    }
 
-/* Main app background & text */
-.stApp {
-    background: linear-gradient(to right, #f0f8ff, #e6f2ff);
-    color: #000000 !important;
-}
+    /* Sidebar */
+    .stSidebar {
+        background-color: #1E1E1E !important;
+        color: #F0F0F0 !important;
+    }
+    .stSidebar label, .stSidebar .css-1aumxhk {
+        color: #F0F0F0 !important;
+    }
 
-/* Tab labels */
-.stTabs [data-baseweb="tab"] {
-    font-weight: bold; 
-    color: #000000 !important;
-}
-.stTabs [data-baseweb="tab"]:hover {
-    color: #1E90FF !important;
-}
+    /* Tabs */
+    .stTabs [data-baseweb="tab"] {
+        color: #F0F0F0 !important;
+        font-weight: bold;
+    }
+    .stTabs [data-baseweb="tab"]:hover {
+        color: #87AFC7 !important;
+    }
 
-/* Buttons */
-button[kind="primary"], .stDownloadButton button {
-    background-color: #87AFC7 !important; 
-    color: #000000 !important; 
-    font-weight: bold;
-}
-button[kind="primary"]:hover, .stDownloadButton button:hover {
-    background-color: #1E90FF !important;
-    color: #ffffff !important;
-}
+    /* Input fields and textareas */
+    div.stTextInput > div, div.stTextArea > div, div.stSelectbox > div {
+        background-color: #2C2C2C !important;
+        color: #F0F0F0 !important;
+        border: 2px solid #1E90FF !important;
+        border-radius: 5px !important;
+        padding: 5px !important;
+    }
+    div.stTextInput:hover > div, div.stTextArea:hover > div, div.stSelectbox:hover > div {
+        border: 2px solid #104E8B !important;
+        box-shadow: 0 0 5px #1E90FF;
+    }
 
-/* Inputs, textareas, selectboxes */
-div.stTextInput > div, div.stTextArea > div, div.stSelectbox > div {
-    border: 2px solid #1E90FF !important;
-    border-radius: 5px !important;
-    padding: 5px !important;
-    background-color: #ffffff !important;
-    color: #000000 !important;
-    transition: border 0.2s, box-shadow 0.2s;
-}
-div.stTextInput:hover > div, div.stTextArea:hover > div, div.stSelectbox:hover > div {
-    border: 2px solid #104E8B !important;
-    box-shadow: 0 0 5px #1E90FF;
-}
+    /* Info boxes */
+    .stInfo {
+        background-color: #2C2C2C !important;
+        border-left: 5px solid #87AFC7 !important;
+        color: #F0F0F0 !important;
+    }
 
-/* Info boxes */
-.stInfo {
-    background-color: #e6f7ff !important; 
-    border-left: 5px solid #1E90FF !important; 
-    color: #000000 !important;
-}
+    /* Buttons (keep your blue) */
+    button[kind="primary"], .stDownloadButton button {
+        background-color: #87AFC7 !important;
+        color: #000000 !important;
+        font-weight: bold;
+    }
+    button[kind="primary"]:hover, .stDownloadButton button:hover {
+        background-color: #1E90FF !important;
+        color: #ffffff !important;
+    }
 
-/* Bold text */
-.css-1d391kg {
-    color: #1E90FF !important; 
-    font-weight: bold !important;
-}
+    /* Training/Example boxes */
+    div[style*="border-left:5px solid #1E90FF"] {
+        background-color: #2C2C2C !important;
+        color: #F0F0F0 !important;
+    }
 
-/* ---------- DARK MODE ---------- */
-[data-theme="dark"] .stApp {
-    background: linear-gradient(to right, #121212, #1E1E1E);
-    color: #F0F0F0 !important;
-}
+    /* Text area placeholder text */
+    ::placeholder {
+        color: #BBBBBB !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+else:
+    st.markdown("""
+    <style>
+    /* ----------------- Light Mode ----------------- */
+    .block-container {
+        background: linear-gradient(to right, #f0f8ff, #e6f2ff) !important;
+        color: #000000 !important;
+    }
 
-/* Dark mode block container (main form) */
-[data-theme="dark"] .block-container {
-    background-color: #1E1E1E !important;
-    color: #F0F0F0 !important;
-}
+    .stSidebar {
+        background: #f0f8ff !important;
+        color: #000000 !important;
+    }
+    .stSidebar label, .stSidebar .css-1aumxhk {
+        color: #000000 !important;
+    }
 
-/* Tabs in dark mode */
-[data-theme="dark"] .stTabs [data-baseweb="tab"] {
-    color: #F0F0F0 !important;
-}
-[data-theme="dark"] .stTabs [data-baseweb="tab"]:hover {
-    color: #87AFC7 !important;
-}
+    .stTabs [data-baseweb="tab"] {
+        color: #000000 !important;
+        font-weight: bold;
+    }
+    .stTabs [data-baseweb="tab"]:hover {
+        color: #1E90FF !important;
+    }
 
-/* Sidebar background & text */
-[data-theme="dark"] .stSidebar {
-    background-color: #1E1E1E !important;
-    color: #F0F0F0 !important;
-}
-[data-theme="dark"] .stSidebar label,
-[data-theme="dark"] .stSidebar .css-1aumxhk {
-    color: #F0F0F0 !important;
-}
+    div.stTextInput > div, div.stTextArea > div, div.stSelectbox > div {
+        background-color: #ffffff !important;
+        color: #000000 !important;
+        border: 2px solid #1E90FF !important;
+        border-radius: 5px !important;
+        padding: 5px !important;
+    }
+    div.stTextInput:hover > div, div.stTextArea:hover > div, div.stSelectbox:hover > div {
+        border: 2px solid #104E8B !important;
+        box-shadow: 0 0 5px #1E90FF;
+    }
 
-/* Dark mode inputs, textareas, selectboxes */
-[data-theme="dark"] div.stTextInput > div,
-[data-theme="dark"] div.stTextArea > div,
-[data-theme="dark"] div.stSelectbox > div {
-    background-color: #2C2C2C !important;
-    color: #F0F0F0 !important;
-}
+    .stInfo {
+        background-color: #e6f7ff !important;
+        border-left: 5px solid #1E90FF !important;
+        color: #000000 !important;
+    }
 
-/* Keep button colors same in dark mode */
-[data-theme="dark"] button[kind="primary"],
-[data-theme="dark"] .stDownloadButton button {
-    background-color: #87AFC7 !important;
-    color: #000000 !important;
-}
-[data-theme="dark"] button[kind="primary"]:hover,
-[data-theme="dark"] .stDownloadButton button:hover {
-    background-color: #1E90FF !important;
-    color: #ffffff !important;
-}
+    button[kind="primary"], .stDownloadButton button {
+        background-color: #87AFC7 !important;
+        color: #000000 !important;
+        font-weight: bold;
+    }
+    button[kind="primary"]:hover, .stDownloadButton button:hover {
+        background-color: #1E90FF !important;
+        color: #ffffff !important;
+    }
 
-/* Info boxes darker in dark mode */
-[data-theme="dark"] .stInfo {
-    background-color: #2C2C2C !important;
-    border-left: 5px solid #87AFC7 !important;
-    color: #F0F0F0 !important;
-}
-</style>
-""", unsafe_allow_html=True)
+    div[style*="border-left:5px solid #1E90FF"] {
+        background-color: #b3e0ff !important;
+        color: #000000 !important;
+    }
+
+    ::placeholder {
+        color: #666666 !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
 # ---------------------------
 # Reset Session check
 # ---------------------------
