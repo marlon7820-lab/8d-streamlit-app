@@ -599,7 +599,7 @@ elif step == "D5":
 
 
         # D6: Permanent Corrective Actions (three text areas: Occ/Det/Sys)
-        elif step == "D6":
+    elif step == "D6":
             st.session_state[step].setdefault("occ_answer", st.session_state["D6"].get("occ_answer", ""))
             st.session_state[step].setdefault("det_answer", st.session_state["D6"].get("det_answer", ""))
             st.session_state[step].setdefault("sys_answer", st.session_state["D6"].get("sys_answer", ""))
