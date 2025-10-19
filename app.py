@@ -23,11 +23,11 @@ st.set_page_config(
 # ---------------------------
 st.markdown("""
 <style>
-/* ------------------ GENERAL APP STYLES ------------------ */
+/* ---------- GENERAL APP STYLES ---------- */
 
 /* Main app background & text */
 .stApp {
-    background: linear-gradient(to right, #f0f8ff, #e6f2ff); /* light mode default */
+    background: linear-gradient(to right, #f0f8ff, #e6f2ff);
     color: #000000 !important;
 }
 
@@ -51,14 +51,16 @@ button[kind="primary"]:hover, .stDownloadButton button:hover {
     color: #ffffff !important;
 }
 
-/* Input fields, textareas, selectboxes */
-div.stTextInput, div.stTextArea, div.stSelectbox {
+/* Inputs, textareas, selectboxes */
+div.stTextInput > div, div.stTextArea > div, div.stSelectbox > div {
     border: 2px solid #1E90FF !important;
     border-radius: 5px !important;
     padding: 5px !important;
-    transition: border 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    transition: border 0.2s, box-shadow 0.2s;
 }
-div.stTextInput:hover, div.stTextArea:hover, div.stSelectbox:hover {
+div.stTextInput:hover > div, div.stTextArea:hover > div, div.stSelectbox:hover > div {
     border: 2px solid #104E8B !important;
     box-shadow: 0 0 5px #1E90FF;
 }
@@ -76,13 +78,19 @@ div.stTextInput:hover, div.stTextArea:hover, div.stSelectbox:hover {
     font-weight: bold !important;
 }
 
-/* ------------------ DARK MODE ------------------ */
+/* ---------- DARK MODE ---------- */
 [data-theme="dark"] .stApp {
     background: linear-gradient(to right, #121212, #1E1E1E);
     color: #F0F0F0 !important;
 }
 
-/* Dark mode tab labels */
+/* Dark mode block container (main form) */
+[data-theme="dark"] .block-container {
+    background-color: #1E1E1E !important;
+    color: #F0F0F0 !important;
+}
+
+/* Tabs in dark mode */
 [data-theme="dark"] .stTabs [data-baseweb="tab"] {
     color: #F0F0F0 !important;
 }
@@ -90,33 +98,25 @@ div.stTextInput:hover, div.stTextArea:hover, div.stSelectbox:hover {
     color: #87AFC7 !important;
 }
 
-/* Dark mode input fields, textareas, selectboxes */
-[data-theme="dark"] div.stTextInput > div,
-[data-theme="dark"] div.stTextArea > div,
-[data-theme="dark"] div.stSelectbox > div {
-    background-color: #1E1E1E !important;
-    color: #F0F0F0 !important;
-}
-
-/* Dark mode main form/container */
-[data-theme="dark"] .block-container {
-    background-color: #1E1E1E !important;
-    color: #F0F0F0 !important;
-}
-
 /* Sidebar background & text */
 [data-theme="dark"] .stSidebar {
     background-color: #1E1E1E !important;
     color: #F0F0F0 !important;
 }
-
-/* Sidebar labels / selectbox text */
 [data-theme="dark"] .stSidebar label,
 [data-theme="dark"] .stSidebar .css-1aumxhk {
     color: #F0F0F0 !important;
 }
 
-/* Keep button colors the same in dark mode */
+/* Dark mode inputs, textareas, selectboxes */
+[data-theme="dark"] div.stTextInput > div,
+[data-theme="dark"] div.stTextArea > div,
+[data-theme="dark"] div.stSelectbox > div {
+    background-color: #2C2C2C !important;
+    color: #F0F0F0 !important;
+}
+
+/* Keep button colors same in dark mode */
 [data-theme="dark"] button[kind="primary"],
 [data-theme="dark"] .stDownloadButton button {
     background-color: #87AFC7 !important;
@@ -126,6 +126,13 @@ div.stTextInput:hover, div.stTextArea:hover, div.stSelectbox:hover {
 [data-theme="dark"] .stDownloadButton button:hover {
     background-color: #1E90FF !important;
     color: #ffffff !important;
+}
+
+/* Info boxes darker in dark mode */
+[data-theme="dark"] .stInfo {
+    background-color: #2C2C2C !important;
+    border-left: 5px solid #87AFC7 !important;
+    color: #F0F0F0 !important;
 }
 </style>
 """, unsafe_allow_html=True)
