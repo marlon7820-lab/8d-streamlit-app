@@ -86,12 +86,11 @@ lang_key = "en" if lang == "English" else "es"
 
 dark_mode = st.sidebar.checkbox("🌙 Dark Mode")
 
-
 # Apply custom styles for dark and light mode
 if dark_mode:
     st.markdown("""
     <style>
-    /* Dark mode global styles */
+    /* 🌙 Dark Mode */
     .stApp {
         background-color: #1E1E1E !important;
         color: #F0F0F0 !important;
@@ -104,30 +103,38 @@ if dark_mode:
         border-radius: 5px !important;
     }
 
-    .stSidebar {
+    /* Sidebar background + text color */
+    section[data-testid="stSidebar"], .stSidebar {
         background-color: #2B2B2B !important;
         color: #F0F0F0 !important;
     }
 
-    /* Sidebar labels and selectbox fix */
-    .stSidebar label, .stSidebar div[role="radiogroup"] label, .stSidebar .stSelectbox label {
-        color: #f5f5f5 !important;
+    /* Make sidebar labels, text, and headers visible */
+    .stSidebar label, .stSidebar h2, .stSidebar h3, .stSidebar p, .stSidebar span {
+        color: #F0F0F0 !important;
         font-weight: bold !important;
     }
 
-    .stSidebar div[data-baseweb="select"] > div {
+    /* Fix the bluish highlight next to select boxes */
+    div[data-baseweb="select"] > div {
         background-color: #2c2c2c !important;
-        color: #f5f5f5 !important;
+        color: #F0F0F0 !important;
         border: 1px solid #87AFC7 !important;
         border-radius: 5px !important;
+        box-shadow: none !important;
+        outline: none !important;
+    }
+    div[data-baseweb="select"]:focus, div[data-baseweb="select"]:hover {
+        border-color: #1E90FF !important;
     }
 
-    .stSidebar div[data-baseweb="popover"] {
-        background-color: #2c2c2c !important;
-        color: #f5f5f5 !important;
+    /* Remove the blue glow ring from focused elements */
+    *:focus {
+        outline: none !important;
+        box-shadow: none !important;
     }
 
-    /* Buttons (keep same blue color for both modes) */
+    /* Buttons (same color for both modes) */
     button[kind="primary"], .stDownloadButton button {
         background-color: #87AFC7 !important;
         color: #000000 !important;
@@ -139,10 +146,11 @@ if dark_mode:
     }
     </style>
     """, unsafe_allow_html=True)
+
 else:
     st.markdown("""
     <style>
-    /* Light mode global styles */
+    /* ☀️ Light Mode */
     .stApp {
         background: linear-gradient(to right, #f0f8ff, #e6f2ff) !important;
         color: #000000 !important;
@@ -155,12 +163,16 @@ else:
         border-radius: 5px !important;
     }
 
-    .stSidebar {
+    section[data-testid="stSidebar"], .stSidebar {
         background-color: #f0f8ff !important;
         color: #000000 !important;
     }
 
-    /* Buttons (keep same blue color for both modes) */
+    .stSidebar label, .stSidebar h2, .stSidebar h3, .stSidebar p, .stSidebar span {
+        color: #000000 !important;
+        font-weight: bold !important;
+    }
+
     button[kind="primary"], .stDownloadButton button {
         background-color: #87AFC7 !important;
         color: #000000 !important;
