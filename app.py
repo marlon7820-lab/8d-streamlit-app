@@ -19,24 +19,9 @@ st.set_page_config(
 )
 
 # ---------------------------
-# Sidebar: Language & Dark Mode
+# App styles - desktop selectbox outline + thumbnails
 # ---------------------------
-st.sidebar.title("8D Report Assistant")
-st.sidebar.markdown("---")
-st.sidebar.header("Settings")
-
-# Language selection
-lang = st.sidebar.selectbox("Select Language / Seleccionar Idioma", ["English", "Español"])
-lang_key = "en" if lang == "English" else "es"
-
-# Dark mode toggle
-dark_mode = st.sidebar.checkbox("🌙 Dark Mode")
-
-# ---------------------------
-# App CSS Styles
-# ---------------------------
-# Default light theme styles
-light_css = """
+st.markdown("""
 <style>
 .stApp {background: linear-gradient(to right, #f0f8ff, #e6f2ff); color: #000000 !important;}
 .stTabs [data-baseweb="tab"] {font-weight: bold; color: #000000 !important;}
@@ -55,50 +40,9 @@ div.stSelectbox:hover, div.stTextInput:hover, div.stTextArea:hover {
     border: 2px solid #104E8B !important;
     box-shadow: 0 0 5px #1E90FF;
 }
+.image-thumbnail {width: 120px; height: 80px; object-fit: cover; margin:5px; border:1px solid #1E90FF; border-radius:4px;}
 </style>
-"""
-
-# Dark mode CSS
-dark_css = """
-<style>
-/* Main app background & text */
-.stApp {background-color: #2B2B2B !important; color: #E0E0E0 !important;}
-
-/* Tabs */
-.stTabs [data-baseweb="tab"] {font-weight: bold; color: #E0E0E0 !important;}
-.stTabs [data-baseweb="tab"]:hover {color: #87AFC7 !important;}
-
-/* Inputs, textareas, selectboxes */
-div.stTextInput, div.stTextArea, div.stSelectbox {
-    border: 1px solid #555555 !important;
-    border-radius: 5px !important;
-    background-color: #3A3A3A !important;
-    color: #F5F5F5 !important;
-    padding: 5px !important;
-    transition: border 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-}
-div.stTextInput:hover, div.stTextArea:hover, div.stSelectbox:hover {
-    border: 1px solid #87AFC7 !important;
-    box-shadow: 0 0 5px #87AFC7;
-}
-
-/* Info boxes */
-.stInfo {background-color: #3A3A3A !important; border-left: 5px solid #87AFC7 !important; color: #F5F5F5 !important;}
-
-/* Sidebar background & text */
-.stSidebar {background-color: #2B2B2B !important; color: #E0E0E0 !important;}
-.stSidebar h1, .stSidebar h2, .stSidebar h3, .stSidebar label, .stSidebar span {color: #E0E0E0 !important;}
-
-/* Sidebar buttons */
-.stSidebar button {background-color: #555555 !important; color: #F5F5F5 !important; font-weight: bold;}
-.stSidebar .stDownloadButton button {background-color: #87AFC7 !important; color: #000000 !important; font-weight: bold;}
-</style>
-"""
-
-# Apply CSS
-st.markdown(light_css, unsafe_allow_html=True)
-if dark_mode:
-    st.markdown(dark_css, unsafe_allow_html=True)
+""", unsafe_allow_html=True)
 
 # ---------------------------
 # Reset Session check
@@ -132,120 +76,93 @@ Version {version_number} | Last updated: {last_updated}
 """, unsafe_allow_html=True)
 
 # ---------------------------
-# Sidebar: Language & Dark Mode
+# Sidebar: Settings (Language & Dark Mode)
 # ---------------------------
 st.sidebar.title("8D Report Assistant")
 st.sidebar.markdown("---")
-st.sidebar.header("⚙️ Settings")
-lang = st.sidebar.selectbox("Select Language / Seleccionar Idioma", ["English", "Español"])
+st.sidebar.header("Settings")
+
+lang = st.sidebar.selectbox(
+    "Select Language / Seleccionar Idioma",
+    ["English", "Español"],
+    key="select_lang"
+)
 lang_key = "en" if lang == "English" else "es"
 
-dark_mode = st.sidebar.checkbox("🌙 Dark Mode")
+dark_mode = st.sidebar.checkbox("🌙 Dark Mode", key="dark_mode")
 
-# Apply custom styles for dark and light mode
 if dark_mode:
     st.markdown("""
     <style>
-    /* 🌙 Dark Mode */
+    /* Main app background & text */
     .stApp {
-        background-color: #1E1E1E !important;
-        color: #F0F0F0 !important;
+        background: #2b2b2b !important;
+        color: #e0e0e0 !important;
     }
 
-    textarea, input, select {
-        background-color: #2B2B2B !important;
-        color: #F0F0F0 !important;
+    /* Tabs */
+    .stTabs [data-baseweb="tab"] {
+        font-weight: bold; 
+        color: #e0e0e0 !important;
+    }
+    .stTabs [data-baseweb="tab"]:hover {
+        color: #87AFC7 !important;
+    }
+
+    /* Text inputs, textareas, selectboxes */
+    div.stTextInput, div.stTextArea, div.stSelectbox {
+        border: 2px solid #87AFC7 !important;
+        border-radius: 5px !important;
+        background-color: #3a3a3a !important;
+        color: #e0e0e0 !important;
+        padding: 5px !important;
+        transition: border 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+    div.stTextInput:hover, div.stTextArea:hover, div.stSelectbox:hover {
         border: 2px solid #1E90FF !important;
-        border-radius: 5px !important;
+        box-shadow: 0 0 5px #1E90FF;
     }
 
-    /* Sidebar background + text color */
-    section[data-testid="stSidebar"], .stSidebar {
-        background-color: #2B2B2B !important;
-        color: #F0F0F0 !important;
+    /* Info boxes */
+    .stInfo {
+        background-color: #444444 !important; 
+        border-left: 5px solid #87AFC7 !important; 
+        color: #e0e0e0 !important;
     }
 
-    /* Make sidebar labels, text, and headers visible */
-    .stSidebar label, .stSidebar h2, .stSidebar h3, .stSidebar p, .stSidebar span {
-        color: #F0F0F0 !important;
-        font-weight: bold !important;
+    /* Sidebar background & text */
+    .stSidebar {
+        background-color: #2b2b2b !important;
+        color: #e0e0e0 !important;
     }
 
-    /* Fix the bluish highlight next to select boxes */
-    div[data-baseweb="select"] > div {
-        background-color: #2c2c2c !important;
-        color: #F0F0F0 !important;
-        border: 1px solid #87AFC7 !important;
-        border-radius: 5px !important;
-        box-shadow: none !important;
-        outline: none !important;
-    }
-    div[data-baseweb="select"]:focus, div[data-baseweb="select"]:hover {
-        border-color: #1E90FF !important;
-    }
-
-    /* Remove the blue glow ring from focused elements */
-    *:focus {
-        outline: none !important;
-        box-shadow: none !important;
-    }
-
-    /* Buttons (same color for both modes) */
-    button[kind="primary"], .stDownloadButton button {
+    /* Sidebar buttons */
+    .stSidebar button[kind="primary"] {
         background-color: #87AFC7 !important;
         color: #000000 !important;
-        font-weight: bold !important;
+        font-weight: bold;
     }
-    button[kind="primary"]:hover, .stDownloadButton button:hover {
-        background-color: #1E90FF !important;
-        color: #ffffff !important;
+    .stSidebar button {
+        background-color: #5a5a5a !important;
+        color: #e0e0e0 !important;
+    }
+
+    /* Download button in sidebar */
+    .stSidebar .stDownloadButton button {
+        background-color: #87AFC7 !important;
+        color: #000000 !important;
+        font-weight: bold;
     }
     </style>
     """, unsafe_allow_html=True)
 
-else:
-    st.markdown("""
-    <style>
-    /* ☀️ Light Mode */
-    .stApp {
-        background: linear-gradient(to right, #f0f8ff, #e6f2ff) !important;
-        color: #000000 !important;
-    }
-
-    textarea, input, select {
-        background-color: #ffffff !important;
-        color: #000000 !important;
-        border: 2px solid #1E90FF !important;
-        border-radius: 5px !important;
-    }
-
-    section[data-testid="stSidebar"], .stSidebar {
-        background-color: #f0f8ff !important;
-        color: #000000 !important;
-    }
-
-    .stSidebar label, .stSidebar h2, .stSidebar h3, .stSidebar p, .stSidebar span {
-        color: #000000 !important;
-        font-weight: bold !important;
-    }
-
-    button[kind="primary"], .stDownloadButton button {
-        background-color: #87AFC7 !important;
-        color: #000000 !important;
-        font-weight: bold !important;
-    }
-    button[kind="primary"]:hover, .stDownloadButton button:hover {
-        background-color: #1E90FF !important;
-        color: #ffffff !important;
-    }
-    </style>
-    """, unsafe_allow_html=True)
 # ---------------------------
 # Sidebar: App Controls
 # ---------------------------
 st.sidebar.markdown("---")
 st.sidebar.header("⚙️ App Controls")
-if st.sidebar.button("🔄 Reset 8D Session"):
+
+if st.sidebar.button("🔄 Reset 8D Session", key="reset_session"):
     preserve_keys = ["lang", "lang_key", "current_tab"]
     preserved = {k: st.session_state[k] for k in preserve_keys if k in st.session_state}
     for key in list(st.session_state.keys()):
@@ -313,6 +230,7 @@ t = {
         "Containment_Actions": "Acciones de contención"
     }
 }
+
 
 # ---------------------------
 # NPQP 8D steps with examples
