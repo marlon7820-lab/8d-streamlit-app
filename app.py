@@ -256,7 +256,7 @@ st.session_state.setdefault("d5_sys_whys", [""]*5)
 # ---------------------------
 # Helper: Render 5-Why dropdowns without repeating selections
 # ---------------------------
-def render_whys_no_repeat(why_list, categories, label_prefix):
+def render_whys_with_free_text(why_list, categories, label_prefix):
     for idx in range(len(why_list)):
         selected_so_far = [w for i, w in enumerate(why_list) if w.strip() and i != idx]
         options = [""] + [f"{cat}: {item}" for cat, items in categories.items() for item in items
@@ -266,15 +266,16 @@ def render_whys_no_repeat(why_list, categories, label_prefix):
             f"{label_prefix} {idx+1}",
             options,
             index=options.index(current_val) if current_val in options else 0,
-            key=f"{label_prefix}_{idx}"
+            key=f"{label_prefix}_{idx}_{lang_key}"
         )
         free_text = st.text_input(
             f"Or enter your own {label_prefix} {idx+1}",
             value=why_list[idx],
-            key=f"{label_prefix}_txt_{idx}"
+            key=f"{label_prefix}_txt_{idx}_{lang_key}"
         )
         if free_text.strip():
             why_list[idx] = free_text
+    return why_list
 
 st.session_state.setdefault("d4_location", "")
 st.session_state.setdefault("d4_status", "")
@@ -530,24 +531,34 @@ line-height:1.5;
         # D5 5-Why
         elif step == "D5":
             st.markdown("#### Occurrence Analysis")
-            render_whys_no_repeat(st.session_state.d5_occ_whys, occurrence_categories, t[lang_key]['Occurrence_Why'])
+            st.session_state.d5_occ_whys = render_whys_with_free_text(
+                st.session_state.d5_occ_whys, occurrence_categories, t[lang_key]['Occurrence_Why']
+            )
             if st.button("➕ Add another Occurrence Why", key=f"add_occ_{i}"):
                 st.session_state.d5_occ_whys.append("")
+
             st.markdown("#### Detection Analysis")
-            render_whys_no_repeat(st.session_state.d5_det_whys, detection_categories, t[lang_key]['Detection_Why'])
-            if st.button("➕ Add another Detection Why", key=f"add_det_{i}"):
-                st.session_state.d5_det_whys.append("")
-            st.markdown("#### Systemic Analysis")
-            render_whys_no_repeat(st.session_state.d5_sys_whys, systemic_categories, t[lang_key]['Systemic_Why'])
-            if st.button("➕ Add another Systemic Why", key=f"add_sys_{i}"):
-                st.session_state.d5_sys_whys.append("")
-            # Dynamic Root Causes
-            occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
-            det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
-            sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
-            st.text_area(f"{t[lang_key]['Root_Cause_Occ']}", value=suggest_root_cause(occ_whys) if occ_whys else "No occurrence whys provided yet", height=80, disabled=True)
-            st.text_area(f"{t[lang_key]['Root_Cause_Det']}", value=suggest_root_cause(det_whys) if det_whys else "No detection whys provided yet", height=80, disabled=True)
-            st.text_area(f"{t[lang_key]['Root_Cause_Sys']}", value=suggest_root_cause(sys_whys) if sys_whys else "No systemic whys provided yet", height=80, disabled=True)
+            st.session_state.d5_det_whys = render_whys_with_free_text(
+                st.session_state.d5_det_whys, detection_categories, t[lang_key]['Detection_Why']
+           )
+           if st.button("➕ Add another Detection Why", key=f"add_det_{i}"):
+               st.session_state.d5_det_whys.append("")
+
+           st.markdown("#### Systemic Analysis")
+           st.session_state.d5_sys_whys = render_whys_with_free_text(
+               st.session_state.d5_sys_whys, systemic_categories, t[lang_key]['Systemic_Why']
+           )
+           if st.button("➕ Add another Systemic Why", key=f"add_sys_{i}"):
+               st.session_state.d5_sys_whys.append("")
+
+           # Dynamic Root Causes
+           occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
+           det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
+           sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
+
+           st.text_area(f"{t[lang_key]['Root_Cause_Occ']}", value=suggest_root_cause(occ_whys) if occ_whys else "No occurrence whys provided yet", height=80, disabled=True)
+           st.text_area(f"{t[lang_key]['Root_Cause_Det']}", value=suggest_root_cause(det_whys) if det_whys else "No detection whys provided yet", height=80, disabled=True)
+           st.text_area(f"{t[lang_key]['Root_Cause_Sys']}", value=suggest_root_cause(sys_whys) if sys_whys else "No systemic whys provided yet", height=80, disabled=True)
 
         # D6: Permanent Corrective Actions (three text areas: Occ/Det/Sys)
         elif step == "D6":
