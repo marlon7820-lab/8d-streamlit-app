@@ -509,9 +509,10 @@ line-height:1.5;
                 if f.type.startswith("image/"):
                     st.image(f, width=192)  # roughly 2 inches wide, height auto-scaled
     
-        # ---------------------------
+# ---------------------------
 # Step Rendering
 # ---------------------------
+
 if step == "D4":
     st.markdown("#### Root Cause by Category")
     st.session_state.d4_selection = render_whys_no_repeat(
@@ -521,30 +522,45 @@ if step == "D4":
     )
 
 elif step == "D5":
+    # Occurrence Analysis
     st.markdown("#### Occurrence Analysis")
-    st.session_state.d5_occ_whys = render_whys_with_free_text(
-        st.session_state.get("d5_occ_whys", [""]),
-        occurrence_categories,
-        t[lang_key]['Occurrence_Why']
-    )
+    if "d5_occ_whys" not in st.session_state:
+        st.session_state.d5_occ_whys = [""]  # start with one blank
+
+    for i in range(len(st.session_state.d5_occ_whys)):
+        st.session_state.d5_occ_whys[i] = st.text_input(
+            f"Occurrence Why {i+1}",
+            value=st.session_state.d5_occ_whys[i],
+            key=f"occ_{i}"
+        )
     if st.button("➕ Add another Occurrence Why", key="add_occ"):
         st.session_state.d5_occ_whys.append("")
 
+    # Detection Analysis
     st.markdown("#### Detection Analysis")
-    st.session_state.d5_det_whys = render_whys_with_free_text(
-        st.session_state.get("d5_det_whys", [""]),
-        detection_categories,
-        t[lang_key]['Detection_Why']
-    )
+    if "d5_det_whys" not in st.session_state:
+        st.session_state.d5_det_whys = [""]
+
+    for i in range(len(st.session_state.d5_det_whys)):
+        st.session_state.d5_det_whys[i] = st.text_input(
+            f"Detection Why {i+1}",
+            value=st.session_state.d5_det_whys[i],
+            key=f"det_{i}"
+        )
     if st.button("➕ Add another Detection Why", key="add_det"):
         st.session_state.d5_det_whys.append("")
 
+    # Systemic Analysis
     st.markdown("#### Systemic Analysis")
-    st.session_state.d5_sys_whys = render_whys_with_free_text(
-        st.session_state.get("d5_sys_whys", [""]),
-        systemic_categories,
-        t[lang_key]['Systemic_Why']
-    )
+    if "d5_sys_whys" not in st.session_state:
+        st.session_state.d5_sys_whys = [""]
+
+    for i in range(len(st.session_state.d5_sys_whys)):
+        st.session_state.d5_sys_whys[i] = st.text_input(
+            f"Systemic Why {i+1}",
+            value=st.session_state.d5_sys_whys[i],
+            key=f"sys_{i}"
+        )
     if st.button("➕ Add another Systemic Why", key="add_sys"):
         st.session_state.d5_sys_whys.append("")
 
@@ -558,9 +574,9 @@ elif step == "D5":
     st.text_area(f"{t[lang_key]['Root_Cause_Sys']}", value=suggest_root_cause(sys_whys) if sys_whys else "No systemic whys provided yet", height=80, disabled=True)
 
 elif step == "D6":
-    st.session_state[step].setdefault("occ_answer", st.session_state["D6"].get("occ_answer", ""))
-    st.session_state[step].setdefault("det_answer", st.session_state["D6"].get("det_answer", ""))
-    st.session_state[step].setdefault("sys_answer", st.session_state["D6"].get("sys_answer", ""))
+    st.session_state[step].setdefault("occ_answer", st.session_state.get("D6", {}).get("occ_answer", ""))
+    st.session_state[step].setdefault("det_answer", st.session_state.get("D6", {}).get("det_answer", ""))
+    st.session_state[step].setdefault("sys_answer", st.session_state.get("D6", {}).get("sys_answer", ""))
 
     st.session_state[step]["occ_answer"] = st.text_area(
         "D6 - Corrective Actions for Occurrence Root Cause",
@@ -579,14 +595,12 @@ elif step == "D6":
     )
 
     # Mirror into top-level D6 storage for export
-    st.session_state["D6"]["occ_answer"] = st.session_state[step]["occ_answer"]
-    st.session_state["D6"]["det_answer"] = st.session_state[step]["det_answer"]
-    st.session_state["D6"]["sys_answer"] = st.session_state[step]["sys_answer"]
+    st.session_state["D6"] = st.session_state[step]
 
 elif step == "D7":
-    st.session_state[step].setdefault("occ_answer", st.session_state["D7"].get("occ_answer", ""))
-    st.session_state[step].setdefault("det_answer", st.session_state["D7"].get("det_answer", ""))
-    st.session_state[step].setdefault("sys_answer", st.session_state["D7"].get("sys_answer", ""))
+    st.session_state[step].setdefault("occ_answer", st.session_state.get("D7", {}).get("occ_answer", ""))
+    st.session_state[step].setdefault("det_answer", st.session_state.get("D7", {}).get("det_answer", ""))
+    st.session_state[step].setdefault("sys_answer", st.session_state.get("D7", {}).get("sys_answer", ""))
 
     st.session_state[step]["occ_answer"] = st.text_area(
         "D7 - Occurrence Countermeasure Verification",
@@ -604,10 +618,8 @@ elif step == "D7":
         key="d7_sys"
     )
 
-    # Mirror into top-level D7 storage for export
-    st.session_state["D7"]["occ_answer"] = st.session_state[step]["occ_answer"]
-    st.session_state["D7"]["det_answer"] = st.session_state[step]["det_answer"]
-    st.session_state["D7"]["sys_answer"] = st.session_state[step]["sys_answer"]
+    # Mirror into top-level D7 storage
+    st.session_state["D7"] = st.session_state[step]
 
 elif step == "D8":
     st.session_state[step]["answer"] = st.text_area(
