@@ -1,4 +1,4 @@
-import streamlit as st
+import streamlit as st 
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
 from openpyxl.utils import get_column_letter
@@ -19,7 +19,7 @@ st.set_page_config(
 )
 
 # ---------------------------
-# App styles - Light mode by default, buttons always same color
+# App styles
 # ---------------------------
 st.markdown("""
 <style>
@@ -91,9 +91,6 @@ lang_key = "en" if lang == "English" else "es"
 
 dark_mode = st.sidebar.checkbox("🌙 Dark Mode", key="dark_mode")
 
-# ---------------------------
-# Dark Mode - form only, sidebar normal
-# ---------------------------
 if dark_mode:
     st.markdown("""
     <style>
@@ -227,15 +224,15 @@ for step, _, _ in npqp_steps:
         if step in ["D1","D3","D4","D7"]:
             st.session_state[step]["uploaded_files"] = []
 
-# Added missing free-text lists for D5 (so code below can append free-text whys)
+# D5 free-text and D6/D7 initialization
 st.session_state.setdefault("report_date", datetime.datetime.today().strftime("%B %d, %Y"))
 st.session_state.setdefault("prepared_by", "")
 st.session_state.setdefault("d5_occ_whys", [""]*5)
 st.session_state.setdefault("d5_det_whys", [""]*5)
 st.session_state.setdefault("d5_sys_whys", [""]*5)
-st.session_state.setdefault("d5_occ_whys_free", [""]*0)
-st.session_state.setdefault("d5_det_whys_free", [""]*0)
-st.session_state.setdefault("d5_sys_whys_free", [""]*0)
+st.session_state.setdefault("d5_occ_whys_free", [])
+st.session_state.setdefault("d5_det_whys_free", [])
+st.session_state.setdefault("d5_sys_whys_free", [])
 st.session_state.setdefault("d4_location", "")
 st.session_state.setdefault("d4_status", "")
 st.session_state.setdefault("d4_containment", "")
@@ -244,6 +241,7 @@ for sub in ["occ_answer", "det_answer", "sys_answer"]:
     st.session_state["D6"].setdefault(sub, "")
     st.session_state.setdefault(("D7"), st.session_state.get("D7", {}))
     st.session_state["D7"].setdefault(sub, "")
+
 
 # ---------------------------
 # D5 categories
@@ -416,7 +414,7 @@ def render_whys_no_repeat(why_list, categories, label_prefix):
     return why_list
 
 # ---------------------------
-# Render Tabs with Uploads
+# Render Tabs
 # ---------------------------
 tab_labels = [
     f"🟢 {t[lang_key][step]}" if st.session_state[step]["answer"].strip() else f"🔴 {t[lang_key][step]}"
@@ -427,25 +425,9 @@ tabs = st.tabs(tab_labels)
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     with tabs[i]:
         st.markdown(f"### {t[lang_key][step]}")
-
-        # Training Guidance & Example
         note_text = note_dict[lang_key]
         example_text = example_dict[lang_key]
-        st.markdown(f"""
-<div style="
-background-color:#b3e0ff;
-color:black;
-padding:12px;
-border-left:5px solid #1E90FF;
-border-radius:6px;
-width:100%;
-font-size:14px;
-line-height:1.5;
-">
-<b>{t[lang_key]['Training_Guidance']}:</b> {note_text}<br><br>
-💡 <b>{t[lang_key]['Example']}:</b> {example_text}
-</div>
-""", unsafe_allow_html=True)
+        st.markdown(f"""<div style="background-color:#b3e0ff;color:black;padding:12px;border-left:5px solid #1E90FF;border-radius:6px;width:100%;font-size:14px;line-height:1.5;"><b>{t[lang_key]['Training_Guidance']}:</b> {note_text}<br><br>💡 <b>{t[lang_key]['Example']}:</b> {example_text}</div>""", unsafe_allow_html=True)
 
         # File uploads for D1, D3, D4, D7
         if step in ["D1","D3","D4","D7"]:
