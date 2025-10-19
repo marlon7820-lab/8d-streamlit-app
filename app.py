@@ -487,25 +487,26 @@ line-height:1.5;
                     st.image(f, width=192)  # roughly 2 inches wide, height auto-scaled
     
         # Step-specific inputs (same level as upload check)
-        if step == "D4":
-            st.session_state[step]["location"] = st.selectbox(
-                "Location of Material",
-                ["", "Work in Progress", "Stores Stock", "Warehouse Stock", "Service Parts", "Other"],
-                index=0,
-                key="d4_location"
-            )
-            st.session_state[step]["status"] = st.selectbox(
-                "Status of Activities",
-                ["", "Pending", "In Progress", "Completed", "Other"],
-                index=0,
-                key="d4_status"
-            )
-            st.session_state[step]["answer"] = st.text_area(
-                "Containment Actions / Notes",
-                value=st.session_state[step]["answer"],
-                key=f"ans_{step}"
-            )
-        # D5 5-Why
+if step == "D4":
+    st.session_state[step]["location"] = st.selectbox(
+        "Location of Material",
+        ["", "Work in Progress", "Stores Stock", "Warehouse Stock", "Service Parts", "Other"],
+        index=0,
+        key="d4_location"
+    )
+    st.session_state[step]["status"] = st.selectbox(
+        "Status of Activities",
+        ["", "Pending", "In Progress", "Completed", "Other"],
+        index=0,
+        key="d4_status"
+    )
+    st.session_state[step]["answer"] = st.text_area(
+        "Containment Actions / Notes",
+        value=st.session_state[step]["answer"],
+        key=f"ans_{step}"
+    )
+
+# ---------------- D5 ----------------
 elif step == "D5":
     st.markdown("#### Occurrence Analysis")
     for idx in range(len(st.session_state.d5_occ_whys)):
@@ -518,7 +519,6 @@ elif step == "D5":
             index=options.index(current_val) if current_val in options else 0,
             key=f"occ_{idx}_{lang_key}"
         )
-        # Extra textbox if "Other" selected
         if st.session_state.d5_occ_whys[idx] == "Other":
             st.session_state.setdefault("d5_occ_extra", [""]*len(st.session_state.d5_occ_whys))
             st.session_state.d5_occ_extra[idx] = st.text_input(
@@ -532,7 +532,8 @@ elif step == "D5":
 
     if st.button("➕ Add another Occurrence Why", key=f"add_occ_{i}"):
         st.session_state.d5_occ_whys.append("")
-    
+
+    # Detection Analysis
     st.markdown("#### Detection Analysis")
     for idx in range(len(st.session_state.d5_det_whys)):
         selected_so_far = [w for i2, w in enumerate(st.session_state.d5_det_whys) if w.strip() and i2 != idx]
@@ -544,7 +545,6 @@ elif step == "D5":
             index=options.index(current_val) if current_val in options else 0,
             key=f"det_{idx}_{lang_key}"
         )
-        # Extra textbox if "Other" selected
         if st.session_state.d5_det_whys[idx] == "Other":
             st.session_state.setdefault("d5_det_extra", [""]*len(st.session_state.d5_det_whys))
             st.session_state.d5_det_extra[idx] = st.text_input(
@@ -559,6 +559,7 @@ elif step == "D5":
     if st.button("➕ Add another Detection Why", key=f"add_det_{i}"):
         st.session_state.d5_det_whys.append("")
 
+    # Systemic Analysis
     st.markdown("#### Systemic Analysis")
     for idx in range(len(st.session_state.d5_sys_whys)):
         selected_so_far = [w for i2, w in enumerate(st.session_state.d5_sys_whys) if w.strip() and i2 != idx]
@@ -570,7 +571,6 @@ elif step == "D5":
             index=options.index(current_val) if current_val in options else 0,
             key=f"sys_{idx}_{lang_key}"
         )
-        # Extra textbox if "Other" selected
         if st.session_state.d5_sys_whys[idx] == "Other":
             st.session_state.setdefault("d5_sys_extra", [""]*len(st.session_state.d5_sys_whys))
             st.session_state.d5_sys_extra[idx] = st.text_input(
@@ -585,7 +585,7 @@ elif step == "D5":
     if st.button("➕ Add another Systemic Why", key=f"add_sys_{i}"):
         st.session_state.d5_sys_whys.append("")
 
-    # Dynamic Root Causes using extra text if "Other" selected
+    # Dynamic Root Causes
     occ_whys = [w if w != "Other" else st.session_state.d5_occ_extra[idx] 
                 for idx, w in enumerate(st.session_state.d5_occ_whys) if w.strip()]
     det_whys = [w if w != "Other" else st.session_state.d5_det_extra[idx] 
