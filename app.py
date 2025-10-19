@@ -19,7 +19,7 @@ st.set_page_config(
 )
 
 # ---------------------------
-# App styles - desktop selectbox outline + thumbnails
+# App styles - Light mode by default
 # ---------------------------
 st.markdown("""
 <style>
