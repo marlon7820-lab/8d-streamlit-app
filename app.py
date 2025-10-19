@@ -594,7 +594,6 @@ elif step == "D5":
         key=f"root_sys_{i}"
     )
 
-
         # D6: Permanent Corrective Actions (three text areas: Occ/Det/Sys)
         elif step == "D6":
             st.session_state[step].setdefault("occ_answer", st.session_state["D6"].get("occ_answer", ""))
