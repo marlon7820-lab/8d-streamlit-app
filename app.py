@@ -76,43 +76,51 @@ Version {version_number} | Last updated: {last_updated}
 """, unsafe_allow_html=True)
 
 # ---------------------------
-# Sidebar buttons - always styled (light and dark)
+# Sidebar: Language & Dark Mode
+# ---------------------------
+st.sidebar.title("8D Report Assistant")
+st.sidebar.markdown("---")
+st.sidebar.header("Settings")
+
+# Language
+lang = st.sidebar.selectbox("Select Language / Seleccionar Idioma", ["English", "Español"])
+lang_key = "en" if lang == "English" else "es"
+
+# Dark mode toggle
+dark_mode = st.sidebar.checkbox("🌙 Dark Mode")
+
+# ---------------------------
+# Sidebar buttons - always styled
 # ---------------------------
 st.markdown("""
 <style>
 /* Primary sidebar buttons */
 .stSidebar button[kind="primary"], 
 .stSidebar .stDownloadButton button {
-    background-color: #87AFC7 !important;  /* main blue color */
-    color: #000000 !important;             /* text black */
+    background-color: #87AFC7 !important;
+    color: #000000 !important;
     font-weight: bold;
     border-radius: 5px;
     transition: background-color 0.2s ease, color 0.2s ease;
 }
-
-/* Hover effect */
 .stSidebar button[kind="primary"]:hover,
 .stSidebar .stDownloadButton button:hover {
-    background-color: #1E90FF !important;  /* darker blue on hover */
-    color: #ffffff !important;             /* text white on hover */
+    background-color: #1E90FF !important;
+    color: #ffffff !important;
 }
 </style>
 """, unsafe_allow_html=True)
 
-
 # ---------------------------
-# Dark mode: main form content only
+# Dark mode: main form only
 # ---------------------------
 if dark_mode:
     st.markdown("""
     <style>
-    /* Main form content only (exclude sidebar) */
     [data-testid="stAppViewContainer"] {
         background: linear-gradient(to right, #1e1e1e, #2c2c2c);
         color: #f5f5f5 !important;
     }
-
-    /* Tabs */
     [data-testid="stAppViewContainer"] .stTabs [data-baseweb="tab"] {
         font-weight: bold; 
         color: #f5f5f5 !important;
@@ -120,8 +128,6 @@ if dark_mode:
     [data-testid="stAppViewContainer"] .stTabs [data-baseweb="tab"]:hover {
         color: #87AFC7 !important;
     }
-
-    /* Inputs in main form only */
     [data-testid="stAppViewContainer"] .stTextInput, 
     [data-testid="stAppViewContainer"] .stTextArea, 
     [data-testid="stAppViewContainer"] .stSelectbox {
@@ -138,8 +144,6 @@ if dark_mode:
         border: 2px solid #1E90FF !important;
         box-shadow: 0 0 5px #1E90FF;
     }
-
-    /* Info boxes in main form */
     [data-testid="stAppViewContainer"] .stInfo {
         background-color: #3a3a3a !important; 
         border-left: 5px solid #87AFC7 !important; 
