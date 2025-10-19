@@ -88,70 +88,68 @@ lang_key = "en" if lang == "English" else "es"
 dark_mode = st.sidebar.checkbox("🌙 Dark Mode")
 if dark_mode:
     st.markdown("""
-    <style>
-    /* Main app background & text */
-    .stApp {
-        background: linear-gradient(to right, #1e1e1e, #2c2c2c);
-        color: #f5f5f5 !important;
-    }
+<style>
+/* Main app background & text */
+.stApp {
+    background: linear-gradient(to right, #f0f8ff, #e6f2ff); /* light mode gradient */
+    color: #000000 !important;
+}
 
-    /* Tabs */
-    .stTabs [data-baseweb="tab"] {
-        font-weight: bold; 
-        color: #f5f5f5 !important;
-    }
-    .stTabs [data-baseweb="tab"]:hover {
-        color: #87AFC7 !important;
-    }
+/* Tabs */
+.stTabs [data-baseweb="tab"] {
+    font-weight: bold; 
+    color: #000000 !important;
+}
+.stTabs [data-baseweb="tab"]:hover {
+    color: #1E90FF !important;
+}
 
-    /* Text inputs, textareas, selectboxes */
-    div.stTextInput, div.stTextArea, div.stSelectbox {
-        border: 2px solid #87AFC7 !important;
-        border-radius: 5px !important;
-        background-color: #2c2c2c !important;
-        color: #f5f5f5 !important;
-        padding: 5px !important;
-        transition: border 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-    }
-    div.stTextInput:hover, div.stTextArea:hover, div.stSelectbox:hover {
-        border: 2px solid #1E90FF !important;
-        box-shadow: 0 0 5px #1E90FF;
-    }
+/* Text inputs, textareas, selectboxes */
+div.stTextInput, div.stTextArea, div.stSelectbox {
+    border: 2px solid #1E90FF !important;
+    border-radius: 5px !important;
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    padding: 5px !important;
+    transition: border 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+div.stTextInput:hover, div.stTextArea:hover, div.stSelectbox:hover {
+    border: 2px solid #104E8B !important;
+    box-shadow: 0 0 5px #1E90FF;
+}
 
-    /* Info boxes */
-    .stInfo {
-        background-color: #3a3a3a !important; 
-        border-left: 5px solid #87AFC7 !important; 
-        color: #f5f5f5 !important;
-    }
+/* Info boxes */
+.stInfo {
+    background-color: #e6f7ff !important; 
+    border-left: 5px solid #1E90FF !important; 
+    color: #000000 !important;
+}
 
-    /* Sidebar background & text */
-    .css-1d391kg {color: #87AFC7 !important; font-weight: bold !important;}
-    .stSidebar {
-        background-color: #1e1e1e !important;
-        color: #f5f5f5 !important;
-    }
+/* Sidebar background & text */
+.stSidebar {
+    background-color: #f0f8ff !important;  /* light background */
+    color: #000000 !important;             /* sidebar text visible */
+}
 
-    /* Sidebar buttons */
-    .stSidebar button[kind="primary"] {
-        background-color: #87AFC7 !important;
-        color: #000000 !important;
-        font-weight: bold;
-    }
-    .stSidebar button {
-        background-color: #5a5a5a !important;
-        color: #f5f5f5 !important;
-    }
+/* Sidebar labels / selectbox text */
+.stSidebar label, .stSidebar .css-1aumxhk {
+    color: #000000 !important; /* ensures 'Select Language' is visible */
+}
 
-    /* Download button in sidebar */
-    .stSidebar .stDownloadButton button {
-        background-color: #87AFC7 !important;
-        color: #000000 !important;
-        font-weight: bold;
-    }
+/* Buttons (keep same colors for both modes) */
+button[kind="primary"], .stDownloadButton button {
+    background-color: #87AFC7 !important; 
+    color: #000000 !important; 
+    font-weight: bold;
+}
 
-    </style>
-    """, unsafe_allow_html=True)
+/* Hover effect for buttons */
+button[kind="primary"]:hover, .stDownloadButton button:hover {
+    background-color: #1E90FF !important;
+    color: #ffffff !important;
+}
+</style>
+""", unsafe_allow_html=True)
 
 # ---------------------------
 # Sidebar: App Controls
