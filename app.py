@@ -76,7 +76,7 @@ Version {version_number} | Last updated: {last_updated}
 """, unsafe_allow_html=True)
 
 # ---------------------------
-# Sidebar: Language & Settings
+# Sidebar: Language & Dark Mode
 # ---------------------------
 st.sidebar.title("8D Report Assistant")
 st.sidebar.markdown("---")
@@ -88,83 +88,8 @@ lang_key = "en" if lang == "English" else "es"
 dark_mode = st.sidebar.checkbox("🌙 Dark Mode")
 
 # ---------------------------
-# Sidebar buttons - always styled
+# Sidebar buttons - consistent colors in light & dark mode
 # ---------------------------
-st.markdown("""
-<style>
-/* Sidebar buttons (Reset 8D & Download XLSX) */
-.stSidebar button[kind="primary"], 
-.stSidebar .stDownloadButton button {
-    background-color: #87AFC7 !important;  /* main blue color */
-    color: #000000 !important;             /* text black */
-    font-weight: bold;
-    border-radius: 5px;
-    transition: background-color 0.2s ease, color 0.2s ease;
-}
-
-/* Hover effect */
-.stSidebar button[kind="primary"]:hover,
-.stSidebar .stDownloadButton button:hover {
-    background-color: #1E90FF !important;  /* darker blue on hover */
-    color: #ffffff !important;             /* text white on hover */
-}
-</style>
-""", unsafe_allow_html=True)
-
-# ---------------------------
-# Dark mode: apply ONLY to main form (not sidebar)
-# ---------------------------
-if dark_mode:
-    st.markdown("""
-    <style>
-    /* Main app container (form) */
-    [data-testid="stAppViewContainer"] {
-        background: linear-gradient(to right, #1e1e1e, #2c2c2c) !important;
-        color: #f5f5f5 !important;
-    }
-
-    /* Tabs */
-    .stTabs [data-baseweb="tab"] {
-        font-weight: bold; 
-        color: #f5f5f5 !important;
-    }
-    .stTabs [data-baseweb="tab"]:hover {
-        color: #87AFC7 !important;
-    }
-
-    /* Inputs inside the main form */
-    div.stTextInput, div.stTextArea, div.stSelectbox {
-        border: 2px solid #87AFC7 !important;
-        border-radius: 5px !important;
-        background-color: #2c2c2c !important;
-        color: #f5f5f5 !important;
-        padding: 5px !important;
-        transition: border 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-    }
-    div.stTextInput:hover, div.stTextArea:hover, div.stSelectbox:hover {
-        border: 2px solid #1E90FF !important;
-        box-shadow: 0 0 5px #1E90FF;
-    }
-
-    /* Info boxes */
-    .stInfo {
-        background-color: #3a3a3a !important; 
-        border-left: 5px solid #87AFC7 !important; 
-        color: #f5f5f5 !important;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-
-# ---------------------------
-# Sidebar: App Controls
-# ---------------------------
-st.sidebar.markdown("---")
-st.sidebar.header("⚙️ App Controls")
-
-# Styled Streamlit button
-reset_clicked = st.sidebar.button("🔄 Reset 8D Session", key="reset_8d")
-
-# Apply consistent CSS for sidebar buttons (Download + Reset)
 st.markdown("""
 <style>
 /* Sidebar buttons styling for both Download & Reset */
@@ -187,6 +112,58 @@ st.markdown("""
 }
 </style>
 """, unsafe_allow_html=True)
+
+# ---------------------------
+# Dark mode for form only
+# ---------------------------
+if dark_mode:
+    st.markdown("""
+    <style>
+    /* Main app (form) background & text ONLY */
+    .stApp > .main > div.block-container {
+        background: linear-gradient(to right, #1e1e1e, #2c2c2c);
+        color: #f5f5f5 !important;
+    }
+
+    /* Tabs inside form */
+    .stTabs [data-baseweb="tab"] {
+        font-weight: bold; 
+        color: #f5f5f5 !important;
+    }
+    .stTabs [data-baseweb="tab"]:hover {
+        color: #87AFC7 !important;
+    }
+
+    /* Text inputs, textareas, selectboxes in form */
+    div.stTextInput, div.stTextArea, div.stSelectbox {
+        border: 2px solid #87AFC7 !important;
+        border-radius: 5px !important;
+        background-color: #2c2c2c !important;
+        color: #f5f5f5 !important;
+        padding: 5px !important;
+        transition: border 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+    div.stTextInput:hover, div.stTextArea:hover, div.stSelectbox:hover {
+        border: 2px solid #1E90FF !important;
+        box-shadow: 0 0 5px #1E90FF;
+    }
+
+    /* Info boxes in form */
+    .stInfo {
+        background-color: #3a3a3a !important; 
+        border-left: 5px solid #87AFC7 !important; 
+        color: #f5f5f5 !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+# ---------------------------
+# Sidebar: App Controls
+# ---------------------------
+st.sidebar.markdown("---")
+st.sidebar.header("⚙️ App Controls")
+
+reset_clicked = st.sidebar.button("🔄 Reset 8D Session", key="reset_8d")
 
 # Reset logic
 if reset_clicked:
