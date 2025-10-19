@@ -21,7 +21,7 @@ st.set_page_config(
 # ---------------------------
 # Dark/Light mode styles
 # ---------------------------
-dark_mode = st.sidebar.checkbox("🌙 Dark Mode")
+dark_mode = st.sidebar.checkbox("🌙 Dark Mode", key="dark_mode_toggle")
 if dark_mode:
     st.markdown("""
     <style>
