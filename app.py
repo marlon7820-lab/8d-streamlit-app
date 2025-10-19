@@ -81,8 +81,11 @@ Version {version_number} | Last updated: {last_updated}
 st.sidebar.title("8D Report Assistant")
 st.sidebar.markdown("---")
 st.sidebar.header("⚙️ Settings")
-lang_key = st.sidebar.selectbox("Select Language / Seleccionar Idioma", ["en", "es"], key="lang_select")
-dark_mode = st.sidebar.checkbox("🌙 Dark Mode", key="dark_mode_toggle")
+lang = st.sidebar.selectbox("Select Language / Seleccionar Idioma", ["English", "Español"])
+lang_key = "en" if lang == "English" else "es"
+
+dark_mode = st.sidebar.checkbox("🌙 Dark Mode")
+
 
 # Apply custom styles for dark and light mode
 if dark_mode:
