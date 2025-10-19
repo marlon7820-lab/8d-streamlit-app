@@ -506,11 +506,12 @@ line-height:1.5;
 
         elif step == "D5":
             # -------------------- D5 --------------------
+            # Occurrence Analysis: each dropdown immediately followed by its free-text (custom) box
             st.markdown("#### Occurrence Analysis")
             render_whys_no_repeat(st.session_state.d5_occ_whys, occurrence_categories, t[lang_key]['Occurrence_Why'])
             for idx in range(len(st.session_state.d5_occ_whys_free)):
                 st.session_state.d5_occ_whys_free[idx] = st.text_area(
-                    f"Occurrence Why - Free Text {idx+1}",
+                    f"Custom Why {idx+1} (optional)",
                     value=st.session_state.d5_occ_whys_free[idx],
                     key=f"d5_occ_free_{idx}_{lang_key}"
                 )
@@ -518,11 +519,12 @@ line-height:1.5;
                 st.session_state.d5_occ_whys.append("")
                 st.session_state.d5_occ_whys_free.append("")
 
+            # Detection Analysis
             st.markdown("#### Detection Analysis")
             render_whys_no_repeat(st.session_state.d5_det_whys, detection_categories, t[lang_key]['Detection_Why'])
             for idx in range(len(st.session_state.d5_det_whys_free)):
                 st.session_state.d5_det_whys_free[idx] = st.text_area(
-                    f"Detection Why - Free Text {idx+1}",
+                    f"Custom Detection Why {idx+1} (optional)",
                     value=st.session_state.d5_det_whys_free[idx],
                     key=f"d5_det_free_{idx}_{lang_key}"
                 )
@@ -530,11 +532,12 @@ line-height:1.5;
                 st.session_state.d5_det_whys.append("")
                 st.session_state.d5_det_whys_free.append("")
 
+            # Systemic Analysis
             st.markdown("#### Systemic Analysis")
             render_whys_no_repeat(st.session_state.d5_sys_whys, systemic_categories, t[lang_key]['Systemic_Why'])
             for idx in range(len(st.session_state.d5_sys_whys_free)):
                 st.session_state.d5_sys_whys_free[idx] = st.text_area(
-                    f"Systemic Why - Free Text {idx+1}",
+                    f"Custom Systemic Why {idx+1} (optional)",
                     value=st.session_state.d5_sys_whys_free[idx],
                     key=f"d5_sys_free_{idx}_{lang_key}"
                 )
@@ -542,10 +545,29 @@ line-height:1.5;
                 st.session_state.d5_sys_whys.append("")
                 st.session_state.d5_sys_whys_free.append("")
 
-            # Dynamic Root Causes
-            occ_whys = [w for w in st.session_state.d5_occ_whys + st.session_state.d5_occ_whys_free if w.strip()]
-            det_whys = [w for w in st.session_state.d5_det_whys + st.session_state.d5_det_whys_free if w.strip()]
-            sys_whys = [w for w in st.session_state.d5_sys_whys + st.session_state.d5_sys_whys_free if w.strip()]
+            # Dynamic Root Causes (use custom text to override dropdown when present)
+            occ_whys = []
+            for j in range(max(len(st.session_state.d5_occ_whys), len(st.session_state.d5_occ_whys_free))):
+                dropdown = st.session_state.d5_occ_whys[j] if j < len(st.session_state.d5_occ_whys) else ""
+                custom = st.session_state.d5_occ_whys_free[j] if j < len(st.session_state.d5_occ_whys_free) else ""
+                val = custom.strip() if custom.strip() else dropdown
+                if val.strip():
+                    occ_whys.append(val)
+            det_whys = []
+            for j in range(max(len(st.session_state.d5_det_whys), len(st.session_state.d5_det_whys_free))):
+                dropdown = st.session_state.d5_det_whys[j] if j < len(st.session_state.d5_det_whys) else ""
+                custom = st.session_state.d5_det_whys_free[j] if j < len(st.session_state.d5_det_whys_free) else ""
+                val = custom.strip() if custom.strip() else dropdown
+                if val.strip():
+                    det_whys.append(val)
+            sys_whys = []
+            for j in range(max(len(st.session_state.d5_sys_whys), len(st.session_state.d5_sys_whys_free))):
+                dropdown = st.session_state.d5_sys_whys[j] if j < len(st.session_state.d5_sys_whys) else ""
+                custom = st.session_state.d5_sys_whys_free[j] if j < len(st.session_state.d5_sys_whys_free) else ""
+                val = custom.strip() if custom.strip() else dropdown
+                if val.strip():
+                    sys_whys.append(val)
+
             st.text_area(
                 f"{t[lang_key]['Root_Cause_Occ']}",
                 value=suggest_root_cause(occ_whys) if occ_whys else "No occurrence whys provided yet",
@@ -641,9 +663,30 @@ line-height:1.5;
 # ---------------------------
 data_rows = []
 
-occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
-det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
-sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
+# Build "effective" whys for export: custom free text overrides dropdown when present
+occ_whys = []
+for j in range(max(len(st.session_state.d5_occ_whys), len(st.session_state.d5_occ_whys_free))):
+    dropdown = st.session_state.d5_occ_whys[j] if j < len(st.session_state.d5_occ_whys) else ""
+    custom = st.session_state.d5_occ_whys_free[j] if j < len(st.session_state.d5_occ_whys_free) else ""
+    val = custom.strip() if custom.strip() else dropdown
+    if val.strip():
+        occ_whys.append(val)
+
+det_whys = []
+for j in range(max(len(st.session_state.d5_det_whys), len(st.session_state.d5_det_whys_free))):
+    dropdown = st.session_state.d5_det_whys[j] if j < len(st.session_state.d5_det_whys) else ""
+    custom = st.session_state.d5_det_whys_free[j] if j < len(st.session_state.d5_det_whys_free) else ""
+    val = custom.strip() if custom.strip() else dropdown
+    if val.strip():
+        det_whys.append(val)
+
+sys_whys = []
+for j in range(max(len(st.session_state.d5_sys_whys), len(st.session_state.d5_sys_whys_free))):
+    dropdown = st.session_state.d5_sys_whys[j] if j < len(st.session_state.d5_sys_whys) else ""
+    custom = st.session_state.d5_sys_whys_free[j] if j < len(st.session_state.d5_sys_whys_free) else ""
+    val = custom.strip() if custom.strip() else dropdown
+    if val.strip():
+        sys_whys.append(val)
 
 occ_rc_text = suggest_root_cause(occ_whys) if occ_whys else "No occurrence whys provided yet"
 det_rc_text = suggest_root_cause(det_whys) if det_whys else "No detection whys provided yet"
