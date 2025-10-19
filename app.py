@@ -76,17 +76,15 @@ Version {version_number} | Last updated: {last_updated}
 """, unsafe_allow_html=True)
 
 # ---------------------------
-# Sidebar: Language & Dark Mode
+# Sidebar: Language & Settings
 # ---------------------------
 st.sidebar.title("8D Report Assistant")
 st.sidebar.markdown("---")
 st.sidebar.header("Settings")
 
-# Language
 lang = st.sidebar.selectbox("Select Language / Seleccionar Idioma", ["English", "Español"])
 lang_key = "en" if lang == "English" else "es"
 
-# Dark mode toggle
 dark_mode = st.sidebar.checkbox("🌙 Dark Mode")
 
 # ---------------------------
@@ -94,43 +92,48 @@ dark_mode = st.sidebar.checkbox("🌙 Dark Mode")
 # ---------------------------
 st.markdown("""
 <style>
-/* Primary sidebar buttons */
+/* Sidebar buttons (Reset 8D & Download XLSX) */
 .stSidebar button[kind="primary"], 
 .stSidebar .stDownloadButton button {
-    background-color: #87AFC7 !important;
-    color: #000000 !important;
+    background-color: #87AFC7 !important;  /* main blue color */
+    color: #000000 !important;             /* text black */
     font-weight: bold;
     border-radius: 5px;
     transition: background-color 0.2s ease, color 0.2s ease;
 }
+
+/* Hover effect */
 .stSidebar button[kind="primary"]:hover,
 .stSidebar .stDownloadButton button:hover {
-    background-color: #1E90FF !important;
-    color: #ffffff !important;
+    background-color: #1E90FF !important;  /* darker blue on hover */
+    color: #ffffff !important;             /* text white on hover */
 }
 </style>
 """, unsafe_allow_html=True)
 
 # ---------------------------
-# Dark mode: main form only
+# Dark mode: apply ONLY to main form (not sidebar)
 # ---------------------------
 if dark_mode:
     st.markdown("""
     <style>
+    /* Main app container (form) */
     [data-testid="stAppViewContainer"] {
-        background: linear-gradient(to right, #1e1e1e, #2c2c2c);
+        background: linear-gradient(to right, #1e1e1e, #2c2c2c) !important;
         color: #f5f5f5 !important;
     }
-    [data-testid="stAppViewContainer"] .stTabs [data-baseweb="tab"] {
+
+    /* Tabs */
+    .stTabs [data-baseweb="tab"] {
         font-weight: bold; 
         color: #f5f5f5 !important;
     }
-    [data-testid="stAppViewContainer"] .stTabs [data-baseweb="tab"]:hover {
+    .stTabs [data-baseweb="tab"]:hover {
         color: #87AFC7 !important;
     }
-    [data-testid="stAppViewContainer"] .stTextInput, 
-    [data-testid="stAppViewContainer"] .stTextArea, 
-    [data-testid="stAppViewContainer"] .stSelectbox {
+
+    /* Inputs inside the main form */
+    div.stTextInput, div.stTextArea, div.stSelectbox {
         border: 2px solid #87AFC7 !important;
         border-radius: 5px !important;
         background-color: #2c2c2c !important;
@@ -138,13 +141,13 @@ if dark_mode:
         padding: 5px !important;
         transition: border 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
     }
-    [data-testid="stAppViewContainer"] .stTextInput:hover, 
-    [data-testid="stAppViewContainer"] .stTextArea:hover, 
-    [data-testid="stAppViewContainer"] .stSelectbox:hover {
+    div.stTextInput:hover, div.stTextArea:hover, div.stSelectbox:hover {
         border: 2px solid #1E90FF !important;
         box-shadow: 0 0 5px #1E90FF;
     }
-    [data-testid="stAppViewContainer"] .stInfo {
+
+    /* Info boxes */
+    .stInfo {
         background-color: #3a3a3a !important; 
         border-left: 5px solid #87AFC7 !important; 
         color: #f5f5f5 !important;
@@ -167,7 +170,6 @@ if st.sidebar.button("🔄 Reset 8D Session"):
         st.session_state[k] = v
     st.session_state["_reset_8d_session"] = True
     st.stop()
-
 # ---------------------------
 # Language dictionary
 # ---------------------------
