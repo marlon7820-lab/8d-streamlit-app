@@ -19,7 +19,7 @@ st.set_page_config(
 )
 
 # ---------------------------
-# App styles - Light mode by default, buttons always same color
+# App styles - updated for desktop selectbox outline + thumbnails
 # ---------------------------
 st.markdown("""
 <style>
@@ -28,11 +28,7 @@ st.markdown("""
 textarea {background-color: #ffffff !important; border: 1px solid #1E90FF !important; border-radius: 5px; color: #000000 !important;}
 .stInfo {background-color: #e6f7ff !important; border-left: 5px solid #1E90FF !important; color: #000000 !important;}
 .css-1d391kg {color: #1E90FF !important; font-weight: bold !important;}
-button[kind="primary"], .stDownloadButton button, .stSidebar button {
-    background-color: #87AFC7 !important;
-    color: #000000 !important;
-    font-weight: bold !important;
-}
+button[kind="primary"] {background-color: #87AFC7 !important; color: white !important; font-weight: bold;}
 div.stSelectbox, div.stTextInput, div.stTextArea {
     border: 2px solid #1E90FF !important;
     border-radius: 5px !important;
@@ -86,59 +82,31 @@ st.sidebar.title("8D Report Assistant")
 st.sidebar.markdown("---")
 st.sidebar.header("Settings")
 
-lang = st.sidebar.selectbox("Select Language / Seleccionar Idioma", ["English", "Español"], key="lang_select")
+lang = st.sidebar.selectbox("Select Language / Seleccionar Idioma", ["English", "Español"])
 lang_key = "en" if lang == "English" else "es"
 
-dark_mode = st.sidebar.checkbox("🌙 Dark Mode", key="dark_mode")
-
-# ---------------------------
-# Dark Mode - form only, sidebar normal
-# ---------------------------
+dark_mode = st.sidebar.checkbox("🌙 Dark Mode")
 if dark_mode:
     st.markdown("""
     <style>
-    /* Main form background & text */
-    .stApp {
-        background: #2b2b2b !important;
-        color: #e0e0e0 !important;
-    }
-
-    /* Text inputs, textareas, selectboxes */
+    .stApp {background: linear-gradient(to right, #1e1e1e, #2c2c2c); color: #f5f5f5 !important;}
+    .stTabs [data-baseweb="tab"] {font-weight: bold; color: #f5f5f5 !important;}
+    .stTabs [data-baseweb="tab"]:hover {color: #87AFC7 !important;}
     div.stTextInput, div.stTextArea, div.stSelectbox {
         border: 2px solid #87AFC7 !important;
         border-radius: 5px !important;
-        background-color: #3a3a3a !important;
-        color: #e0e0e0 !important;
+        background-color: #2c2c2c !important;
+        color: #f5f5f5 !important;
         padding: 5px !important;
         transition: border 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
     }
-    div.stTextInput:hover, div.stTextArea:hover, div.stSelectbox:hover {
-        border: 2px solid #1E90FF !important;
-        box-shadow: 0 0 5px #1E90FF;
-    }
-
-    /* Info boxes */
-    .stInfo {
-        background-color: #444444 !important; 
-        border-left: 5px solid #87AFC7 !important; 
-        color: #e0e0e0 !important;
-    }
-
-    /* Tabs */
-    .stTabs [data-baseweb="tab"] {
-        font-weight: bold; 
-        color: #e0e0e0 !important;
-    }
-    .stTabs [data-baseweb="tab"]:hover {
-        color: #87AFC7 !important;
-    }
-
-    /* Buttons remain same dark style in both modes */
-    button[kind="primary"], .stDownloadButton button, .stSidebar button {
-        background-color: #87AFC7 !important;
-        color: #000000 !important;
-        font-weight: bold;
-    }
+    div.stTextInput:hover, div.stTextArea:hover, div.stSelectbox:hover {border: 2px solid #1E90FF !important; box-shadow: 0 0 5px #1E90FF;}
+    .stInfo {background-color: #3a3a3a !important; border-left: 5px solid #87AFC7 !important; color: #f5f5f5 !important;}
+    .css-1d391kg {color: #87AFC7 !important; font-weight: bold !important;}
+    .stSidebar {background-color: #1e1e1e !important; color: #f5f5f5 !important;}
+    .stSidebar button[kind="primary"] {background-color: #87AFC7 !important; color: #000000 !important; font-weight: bold;}
+    .stSidebar button {background-color: #5a5a5a !important; color: #f5f5f5 !important;}
+    .stSidebar .stDownloadButton button {background-color: #87AFC7 !important; color: #000000 !important; font-weight: bold;}
     </style>
     """, unsafe_allow_html=True)
 
@@ -147,7 +115,7 @@ if dark_mode:
 # ---------------------------
 st.sidebar.markdown("---")
 st.sidebar.header("⚙️ App Controls")
-if st.sidebar.button("🔄 Reset 8D Session", key="reset_button"):
+if st.sidebar.button("🔄 Reset 8D Session"):
     preserve_keys = ["lang", "lang_key", "current_tab"]
     preserved = {k: st.session_state[k] for k in preserve_keys if k in st.session_state}
     for key in list(st.session_state.keys()):
@@ -186,7 +154,9 @@ t = {
         "FMEA_Failure": "FMEA Failure Occurrence",
         "Location": "Material Location",
         "Status": "Activity Status",
-        "Containment_Actions": "Containment Actions"
+        "Containment_Actions": "Containment Actions",
+        # ✅ Added default for missing key
+        "Answer_for": "Answer for"
     },
     "es": {
         "D1": "D1: Detalles de la preocupación",
@@ -212,10 +182,11 @@ t = {
         "FMEA_Failure": "Ocurrencia de falla FMEA",
         "Location": "Ubicación del material",
         "Status": "Estado de la actividad",
-        "Containment_Actions": "Acciones de contención"
+        "Containment_Actions": "Acciones de contención",
+        # ✅ Added default for missing key
+        "Answer_for": "Respuesta para"
     }
 }
-
 
 # ---------------------------
 # NPQP 8D steps with examples
