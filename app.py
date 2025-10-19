@@ -23,99 +23,112 @@ st.set_page_config(
 # ---------------------------
 st.markdown("""
 <style>
-/* ------------------------
-   Main app background & text
-   ------------------------ */
+/* ------------------ GENERAL APP STYLES ------------------ */
+
+/* Main app background & text */
 .stApp {
-    background: linear-gradient(to right, #f0f8ff, #e6f2ff);
+    background: linear-gradient(to right, #f0f8ff, #e6f2ff); /* light mode default */
     color: #000000 !important;
 }
 
-/* Tabs */
+/* Tab labels */
 .stTabs [data-baseweb="tab"] {
-    font-weight: bold;
+    font-weight: bold; 
     color: #000000 !important;
 }
 .stTabs [data-baseweb="tab"]:hover {
     color: #1E90FF !important;
 }
 
-/* Buttons (all buttons) */
+/* Buttons */
 button[kind="primary"], .stDownloadButton button {
-    background-color: #1E90FF !important;
-    color: white !important;
+    background-color: #87AFC7 !important; 
+    color: #000000 !important; 
     font-weight: bold;
-    border-radius: 5px !important;
 }
 button[kind="primary"]:hover, .stDownloadButton button:hover {
-    background-color: #104E8B !important;
-    color: white !important;
+    background-color: #1E90FF !important;
+    color: #ffffff !important;
 }
 
 /* Input fields, textareas, selectboxes */
-div.stSelectbox, div.stTextInput, div.stTextArea {
+div.stTextInput, div.stTextArea, div.stSelectbox {
     border: 2px solid #1E90FF !important;
     border-radius: 5px !important;
     padding: 5px !important;
-    background-color: #ffffff !important;
-    color: #000000 !important;
     transition: border 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
 }
-div.stSelectbox:hover, div.stTextInput:hover, div.stTextArea:hover {
+div.stTextInput:hover, div.stTextArea:hover, div.stSelectbox:hover {
     border: 2px solid #104E8B !important;
     box-shadow: 0 0 5px #1E90FF;
 }
 
-/* Dark mode */
+/* Info boxes */
+.stInfo {
+    background-color: #e6f7ff !important; 
+    border-left: 5px solid #1E90FF !important; 
+    color: #000000 !important;
+}
+
+/* Bold text */
+.css-1d391kg {
+    color: #1E90FF !important; 
+    font-weight: bold !important;
+}
+
+/* ------------------ DARK MODE ------------------ */
 [data-theme="dark"] .stApp {
-    background: #121212 !important;
+    background: linear-gradient(to right, #121212, #1E1E1E);
     color: #F0F0F0 !important;
 }
-[data-theme="dark"] div.stTextInput, 
-[data-theme="dark"] div.stTextArea, 
-[data-theme="dark"] div.stSelectbox {
+
+/* Dark mode tab labels */
+[data-theme="dark"] .stTabs [data-baseweb="tab"] {
+    color: #F0F0F0 !important;
+}
+[data-theme="dark"] .stTabs [data-baseweb="tab"]:hover {
+    color: #87AFC7 !important;
+}
+
+/* Dark mode input fields, textareas, selectboxes */
+[data-theme="dark"] div.stTextInput > div,
+[data-theme="dark"] div.stTextArea > div,
+[data-theme="dark"] div.stSelectbox > div {
+    background-color: #1E1E1E !important;
+    color: #F0F0F0 !important;
+}
+
+/* Dark mode main form/container */
+[data-theme="dark"] .block-container {
     background-color: #1E1E1E !important;
     color: #F0F0F0 !important;
 }
 
 /* Sidebar background & text */
-.stSidebar {
-    background-color: #f0f8ff !important;
-    color: #000000 !important;
-}
 [data-theme="dark"] .stSidebar {
     background-color: #1E1E1E !important;
     color: #F0F0F0 !important;
 }
 
 /* Sidebar labels / selectbox text */
-.stSidebar label, .stSidebar .css-1aumxhk {
-    color: #000000 !important;
-}
-[data-theme="dark"] .stSidebar label, 
+[data-theme="dark"] .stSidebar label,
 [data-theme="dark"] .stSidebar .css-1aumxhk {
     color: #F0F0F0 !important;
 }
 
-/* Info boxes */
-.stInfo {
-    background-color: #e6f7ff !important;
-    border-left: 5px solid #1E90FF !important;
+/* Keep button colors the same in dark mode */
+[data-theme="dark"] button[kind="primary"],
+[data-theme="dark"] .stDownloadButton button {
+    background-color: #87AFC7 !important;
     color: #000000 !important;
 }
-[data-theme="dark"] .stInfo {
-    background-color: #2a2a2a !important;
-    color: #F0F0F0 !important;
-}
-
-/* Bold text in headers */
-.css-1d391kg {
-    color: #1E90FF !important;
-    font-weight: bold !important;
+[data-theme="dark"] button[kind="primary"]:hover,
+[data-theme="dark"] .stDownloadButton button:hover {
+    background-color: #1E90FF !important;
+    color: #ffffff !important;
 }
 </style>
 """, unsafe_allow_html=True)
-
 # ---------------------------
 # Reset Session check
 # ---------------------------
