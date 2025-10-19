@@ -245,14 +245,20 @@ st.session_state.setdefault("prepared_by", "")
 st.session_state.setdefault("d5_occ_whys", [""]*5)
 st.session_state.setdefault("d5_det_whys", [""]*5)
 st.session_state.setdefault("d5_sys_whys", [""]*5)
+
+# --- FREE TEXT lists for D5 (they were referenced but not initialized) ---
+st.session_state.setdefault("d5_occ_whys_free", [""]*5)
+st.session_state.setdefault("d5_det_whys_free", [""]*5)
+st.session_state.setdefault("d5_sys_whys_free", [""]*5)
+
 st.session_state.setdefault("d4_location", "")
 st.session_state.setdefault("d4_status", "")
 st.session_state.setdefault("d4_containment", "")
 
 for sub in ["occ_answer", "det_answer", "sys_answer"]:
-    st.session_state.setdefault(("D6"), st.session_state.get("D6", {}))
+    st.session_state.setdefault("D6", st.session_state.get("D6", {}))
     st.session_state["D6"].setdefault(sub, "")
-    st.session_state.setdefault(("D7"), st.session_state.get("D7", {}))
+    st.session_state.setdefault("D7", st.session_state.get("D7", {}))
     st.session_state["D7"].setdefault(sub, "")
 
 # ---------------------------
@@ -424,6 +430,7 @@ def render_whys_no_repeat(why_list, categories, label_prefix):
             key=f"{label_prefix}_{idx}_{lang_key}"
         )
     return why_list
+
 # ---------------------------
 # Render Tabs with Uploads
 # ---------------------------
@@ -476,7 +483,7 @@ line-height:1.5;
                 st.write(f"{f.name}")
                 if f.type.startswith("image/"):
                     st.image(f, width=192)  # roughly 2 inches wide, height auto-scaled
-    
+
         # Step-specific inputs (same level as upload check)
         if step == "D4":
             st.session_state[step]["location"] = st.selectbox(
@@ -496,7 +503,8 @@ line-height:1.5;
                 value=st.session_state[step]["answer"],
                 key=f"ans_{step}"
             )
-          elif step == "D5":
+
+        elif step == "D5":
             # -------------------- D5 --------------------
             st.markdown("#### Occurrence Analysis")
             render_whys_no_repeat(st.session_state.d5_occ_whys, occurrence_categories, t[lang_key]['Occurrence_Why'])
@@ -506,7 +514,7 @@ line-height:1.5;
                     value=st.session_state.d5_occ_whys_free[idx],
                     key=f"d5_occ_free_{idx}_{lang_key}"
                 )
-          if st.button("➕ Add another Occurrence Why", key=f"add_occ_{i}"):
+            if st.button("➕ Add another Occurrence Why", key=f"add_occ_{i}"):
                 st.session_state.d5_occ_whys.append("")
                 st.session_state.d5_occ_whys_free.append("")
 
@@ -518,7 +526,7 @@ line-height:1.5;
                     value=st.session_state.d5_det_whys_free[idx],
                     key=f"d5_det_free_{idx}_{lang_key}"
                 )
-         if st.button("➕ Add another Detection Why", key=f"add_det_{i}"):
+            if st.button("➕ Add another Detection Why", key=f"add_det_{i}"):
                 st.session_state.d5_det_whys.append("")
                 st.session_state.d5_det_whys_free.append("")
 
@@ -530,7 +538,7 @@ line-height:1.5;
                     value=st.session_state.d5_sys_whys_free[idx],
                     key=f"d5_sys_free_{idx}_{lang_key}"
                 )
-         if st.button("➕ Add another Systemic Why", key=f"add_sys_{i}"):
+            if st.button("➕ Add another Systemic Why", key=f"add_sys_{i}"):
                 st.session_state.d5_sys_whys.append("")
                 st.session_state.d5_sys_whys_free.append("")
 
@@ -538,10 +546,27 @@ line-height:1.5;
             occ_whys = [w for w in st.session_state.d5_occ_whys + st.session_state.d5_occ_whys_free if w.strip()]
             det_whys = [w for w in st.session_state.d5_det_whys + st.session_state.d5_det_whys_free if w.strip()]
             sys_whys = [w for w in st.session_state.d5_sys_whys + st.session_state.d5_sys_whys_free if w.strip()]
-            st.text_area(f"{t[lang_key]['Root_Cause_Occ']}", value=suggest_root_cause(occ_whys) if occ_whys else "No occurrence whys provided yet", height=80,
+            st.text_area(
+                f"{t[lang_key]['Root_Cause_Occ']}",
+                value=suggest_root_cause(occ_whys) if occ_whys else "No occurrence whys provided yet",
+                height=80,
+                key=f"root_occ_{i}"
+            )
+            st.text_area(
+                f"{t[lang_key]['Root_Cause_Det']}",
+                value=suggest_root_cause(det_whys) if det_whys else "No detection whys provided yet",
+                height=80,
+                key=f"root_det_{i}"
+            )
+            st.text_area(
+                f"{t[lang_key]['Root_Cause_Sys']}",
+                value=suggest_root_cause(sys_whys) if sys_whys else "No systemic whys provided yet",
+                height=80,
+                key=f"root_sys_{i}"
+            )
 
         # D6: Permanent Corrective Actions (three text areas: Occ/Det/Sys)
-         elif step == "D6":
+        elif step == "D6":
             st.session_state[step].setdefault("occ_answer", st.session_state["D6"].get("occ_answer", ""))
             st.session_state[step].setdefault("det_answer", st.session_state["D6"].get("det_answer", ""))
             st.session_state[step].setdefault("sys_answer", st.session_state["D6"].get("sys_answer", ""))
@@ -739,8 +764,8 @@ def generate_excel():
 # Move download button to sidebar
 with st.sidebar:
     st.download_button(
-        label=t[lang_key]['Download'],  
-        data=generate_excel(),  
+        label=t[lang_key]['Download'],
+        data=generate_excel(),
         file_name=f"8D_Report_{st.session_state['report_date']}.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         key="download_xlsx"
@@ -748,4 +773,3 @@ with st.sidebar:
 
 # ---------------------------
 # (End)
-# ---------------------------
