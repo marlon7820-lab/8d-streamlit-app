@@ -118,6 +118,14 @@ if dark_mode:
         box-shadow: 0 0 5px #1E90FF;
     }
 
+    /* Labels / Text inside the main form */
+    .stApp .main .css-10trblm,  /* general text labels */
+    .stApp .main label,           /* fallback for any label elements */
+    .stApp .main p, 
+    .stApp .main span {
+        color: #f5f5f5 !important;
+    }
+
     /* Info boxes */
     .stInfo {
         background-color: #3a3a3a !important; 
@@ -125,7 +133,7 @@ if dark_mode:
         color: #f5f5f5 !important;
     }
 
-    /* Sidebar background & text */
+    /* Sidebar background & text (kept separate) */
     .css-1d391kg {color: #87AFC7 !important; font-weight: bold !important;}
     .stSidebar {
         background-color: #1e1e1e !important;
