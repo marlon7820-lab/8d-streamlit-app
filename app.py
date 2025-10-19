@@ -9,18 +9,12 @@ import os
 from PIL import Image as PILImage
 from io import BytesIO
 
-# ---------------------------
-# Page config
-# ---------------------------
 st.set_page_config(
     page_title="8D Report Assistant",
     page_icon="logo.png",
     layout="wide"
 )
 
-# ---------------------------
-# App styles - updated for desktop selectbox outline + thumbnails
-# ---------------------------
 st.markdown("""
 <style>
 .stApp {background: linear-gradient(to right, #f0f8ff, #e6f2ff); color: #000000 !important;}
@@ -44,9 +38,6 @@ div.stSelectbox:hover, div.stTextInput:hover, div.stTextArea:hover {
 </style>
 """, unsafe_allow_html=True)
 
-# ---------------------------
-# Reset Session check
-# ---------------------------
 if st.session_state.get("_reset_8d_session", False):
     preserve_keys = ["lang", "lang_key", "current_tab"]
     preserved = {k: st.session_state[k] for k in preserve_keys if k in st.session_state}
@@ -58,14 +49,8 @@ if st.session_state.get("_reset_8d_session", False):
     st.session_state["_reset_8d_session"] = False
     st.rerun()
 
-# ---------------------------
-# Main title
-# ---------------------------
 st.markdown("<h1 style='text-align: center; color: #1E90FF;'>📋 8D Report Assistant</h1>", unsafe_allow_html=True)
 
-# ---------------------------
-# Version info
-# ---------------------------
 version_number = "v1.2.0"
 last_updated = "October 18, 2025"
 st.markdown(f"""
@@ -75,36 +60,19 @@ Version {version_number} | Last updated: {last_updated}
 </p>
 """, unsafe_allow_html=True)
 
-# ---------------------------
-# Sidebar: Language & Dark Mode
-# ---------------------------
 st.sidebar.title("8D Report Assistant")
 st.sidebar.markdown("---")
 st.sidebar.header("Settings")
-
 lang = st.sidebar.selectbox("Select Language / Seleccionar Idioma", ["English", "Español"])
 lang_key = "en" if lang == "English" else "es"
-
 dark_mode = st.sidebar.checkbox("🌙 Dark Mode")
+
 if dark_mode:
     st.markdown("""
     <style>
-    /* Main app background & text */
-    .stApp {
-        background: linear-gradient(to right, #1e1e1e, #2c2c2c);
-        color: #f5f5f5 !important;
-    }
-
-    /* Tabs */
-    .stTabs [data-baseweb="tab"] {
-        font-weight: bold; 
-        color: #f5f5f5 !important;
-    }
-    .stTabs [data-baseweb="tab"]:hover {
-        color: #87AFC7 !important;
-    }
-
-    /* Text inputs, textareas, selectboxes */
+    .stApp {background: linear-gradient(to right, #1e1e1e, #2c2c2c); color: #f5f5f5 !important;}
+    .stTabs [data-baseweb="tab"] {font-weight: bold; color: #f5f5f5 !important;}
+    .stTabs [data-baseweb="tab"]:hover {color: #87AFC7 !important;}
     div.stTextInput, div.stTextArea, div.stSelectbox {
         border: 2px solid #87AFC7 !important;
         border-radius: 5px !important;
@@ -113,48 +81,16 @@ if dark_mode:
         padding: 5px !important;
         transition: border 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
     }
-    div.stTextInput:hover, div.stTextArea:hover, div.stSelectbox:hover {
-        border: 2px solid #1E90FF !important;
-        box-shadow: 0 0 5px #1E90FF;
-    }
-
-    /* Info boxes */
-    .stInfo {
-        background-color: #3a3a3a !important; 
-        border-left: 5px solid #87AFC7 !important; 
-        color: #f5f5f5 !important;
-    }
-
-    /* Sidebar background & text */
+    div.stTextInput:hover, div.stTextArea:hover, div.stSelectbox:hover {border: 2px solid #1E90FF !important; box-shadow: 0 0 5px #1E90FF;}
+    .stInfo {background-color: #3a3a3a !important; border-left: 5px solid #87AFC7 !important; color: #f5f5f5 !important;}
     .css-1d391kg {color: #87AFC7 !important; font-weight: bold !important;}
-    .stSidebar {
-        background-color: #1e1e1e !important;
-        color: #f5f5f5 !important;
-    }
-
-    /* Sidebar buttons */
-    .stSidebar button[kind="primary"] {
-        background-color: #87AFC7 !important;
-        color: #000000 !important;
-        font-weight: bold;
-    }
-    .stSidebar button {
-        background-color: #5a5a5a !important;
-        color: #f5f5f5 !important;
-    }
-
-    /* Download button in sidebar */
-    .stSidebar .stDownloadButton button {
-        background-color: #87AFC7 !important;
-        color: #000000 !important;
-        font-weight: bold;
-    }
-
+    .stSidebar {background-color: #1e1e1e !important; color: #f5f5f5 !important;}
+    .stSidebar button[kind="primary"] {background-color: #87AFC7 !important; color: #000000 !important; font-weight: bold;}
+    .stSidebar button {background-color: #5a5a5a !important; color: #f5f5f5 !important;}
+    .stSidebar .stDownloadButton button {background-color: #87AFC7 !important; color: #000000 !important; font-weight: bold;}
     </style>
     """, unsafe_allow_html=True)
-# ---------------------------
-# Sidebar: App Controls
-# ---------------------------
+
 st.sidebar.markdown("---")
 st.sidebar.header("⚙️ App Controls")
 if st.sidebar.button("🔄 Reset 8D Session"):
@@ -168,81 +104,45 @@ if st.sidebar.button("🔄 Reset 8D Session"):
     st.session_state["_reset_8d_session"] = True
     st.stop()
 
-# ---------------------------
-# Language dictionary
-# ---------------------------
 t = {
-    "en": {
-        "D1": "D1: Concern Details",
-        "D2": "D2: Similar Part Considerations",
-        "D3": "D3: Initial Analysis",
-        "D4": "D4: Implement Containment",
-        "D5": "D5: Final Analysis",
-        "D6": "D6: Permanent Corrective Actions",
-        "D7": "D7: Countermeasure Confirmation",
-        "D8": "D8: Follow-up Activities (Lessons Learned / Recurrence Prevention)",
-        "Report_Date": "Report Date",
-        "Prepared_By": "Prepared By",
-        "Root_Cause_Occ": "Root Cause (Occurrence)",
-        "Root_Cause_Det": "Root Cause (Detection)",
-        "Root_Cause_Sys": "Root Cause (Systemic)",
-        "Occurrence_Why": "Occurrence Why",
-        "Detection_Why": "Detection Why",
-        "Systemic_Why": "Systemic Why",
-        "Save": "💾 Save 8D Report",
-        "Download": "📥 Download XLSX",
-        "Training_Guidance": "Training Guidance",
-        "Example": "Example",
-        "FMEA_Failure": "FMEA Failure Occurrence",
-        "Location": "Material Location",
-        "Status": "Activity Status",
-        "Containment_Actions": "Containment Actions"
-    },
-    "es": {
-        "D1": "D1: Detalles de la preocupación",
-        "D2": "D2: Consideraciones de partes similares",
-        "D3": "D3: Análisis inicial",
-        "D4": "D4: Implementar contención",
-        "D5": "D5: Análisis final",
-        "D6": "D6: Acciones correctivas permanentes",
-        "D7": "D7: Confirmación de contramedidas",
-        "D8": "D8: Actividades de seguimiento (Lecciones aprendidas / Prevención de recurrencia)",
-        "Report_Date": "Fecha del informe",
-        "Prepared_By": "Preparado por",
-        "Root_Cause_Occ": "Causa raíz (Ocurrencia)",
-        "Root_Cause_Det": "Causa raíz (Detección)",
-        "Root_Cause_Sys": "Causa raíz (Sistémica)",
-        "Occurrence_Why": "Por qué Ocurrencia",
-        "Detection_Why": "Por qué Detección",
-        "Systemic_Why": "Por qué Sistémico",
-        "Save": "💾 Guardar Informe 8D",
-        "Download": "📥 Descargar XLSX",
-        "Training_Guidance": "Guía de Entrenamiento",
-        "Example": "Ejemplo",
-        "FMEA_Failure": "Ocurrencia de falla FMEA",
-        "Location": "Ubicación del material",
-        "Status": "Estado de la actividad",
-        "Containment_Actions": "Acciones de contención"
-    }
+    "en": {"D1": "D1: Concern Details","D2": "D2: Similar Part Considerations","D3": "D3: Initial Analysis",
+           "D4": "D4: Implement Containment","D5": "D5: Final Analysis","D6": "D6: Permanent Corrective Actions",
+           "D7": "D7: Countermeasure Confirmation","D8": "D8: Follow-up Activities (Lessons Learned / Recurrence Prevention)",
+           "Report_Date": "Report Date","Prepared_By": "Prepared By","Root_Cause_Occ": "Root Cause (Occurrence)",
+           "Root_Cause_Det": "Root Cause (Detection)","Root_Cause_Sys": "Root Cause (Systemic)","Occurrence_Why": "Occurrence Why",
+           "Detection_Why": "Detection Why","Systemic_Why": "Systemic Why","Save": "💾 Save 8D Report","Download": "📥 Download XLSX",
+           "Training_Guidance": "Training Guidance","Example": "Example","FMEA_Failure": "FMEA Failure Occurrence","Location": "Material Location",
+           "Status": "Activity Status","Containment_Actions": "Containment Actions"},
+    "es": {"D1": "D1: Detalles de la preocupación","D2": "D2: Consideraciones de partes similares","D3": "D3: Análisis inicial",
+           "D4": "D4: Implementar contención","D5": "D5: Análisis final","D6": "D6: Acciones correctivas permanentes",
+           "D7": "D7: Confirmación de contramedidas","D8": "D8: Actividades de seguimiento (Lecciones aprendidas / Prevención de recurrencia)",
+           "Report_Date": "Fecha del informe","Prepared_By": "Preparado por","Root_Cause_Occ": "Causa raíz (Ocurrencia)",
+           "Root_Cause_Det": "Causa raíz (Detección)","Root_Cause_Sys": "Causa raíz (Sistémica)","Occurrence_Why": "Por qué Ocurrencia",
+           "Detection_Why": "Por qué Detección","Systemic_Why": "Por qué Sistémico","Save": "💾 Guardar Informe 8D",
+           "Download": "📥 Descargar XLSX","Training_Guidance": "Guía de Entrenamiento","Example": "Ejemplo",
+           "FMEA_Failure": "Ocurrencia de falla FMEA","Location": "Ubicación del material","Status": "Estado de la actividad",
+           "Containment_Actions": "Acciones de contención"}
 }
 
-# ---------------------------
-# NPQP 8D steps with examples
-# ---------------------------
 npqp_steps = [
-    ("D1", {"en":"Describe the customer concerns clearly.", "es":"Describa claramente las preocupaciones del cliente."}, {"en":"Customer reported static noise in amplifier during end-of-line test.", "es":"El cliente reportó ruido estático en el amplificador durante la prueba final."}),
-    ("D2", {"en":"Check for similar parts, models, generic parts, other colors, etc.", "es":"Verifique partes similares, modelos, partes genéricas, otros colores, etc."}, {"en":"Similar model radio, Front vs. rear speaker.", "es":"Radio de modelo similar, altavoz delantero vs trasero."}),
-    ("D3", {"en":"Perform an initial investigation to identify obvious issues.", "es":"Realice una investigación inicial para identificar problemas evidentes."}, {"en":"Visual inspection of solder joints, initial functional tests.", "es":"Inspección visual de soldaduras, pruebas funcionales iniciales."}),
-    ("D4", {"en":"Define temporary containment actions and material location.", "es":"Defina acciones de contención temporales y ubicación del material."}, {"en":"Post Quality Alert, Increase Inspection, Inventory Certification","es":"Implementar Ayuda Visual, Incrementar Inspeccion, Certificar Inventario"}),
-    ("D5", {"en": "Use 5-Why analysis to determine the root cause.", "es": "Use el análisis de 5 Porqués para determinar la causa raíz."}, {"en": "Final 'Why' from the Analysis will give a good indication of the True Root Cause", "es": "El último \"Por qué\" del análisis proporcionará una idea clara de la causa raíz del problema"}),
-    ("D6", {"en":"Define corrective actions that eliminate the root cause permanently.", "es":"Defina acciones correctivas que eliminen la causa raíz permanentemente."}, {"en":"Update soldering process, redesign fixture.", "es":"Actualizar proceso de soldadura, rediseñar herramienta."}),
-    ("D7", {"en":"Verify that corrective actions effectively resolve the issue.", "es":"Verifique que las acciones correctivas resuelvan efectivamente el problema."}, {"en":"Functional tests on corrected amplifiers.", "es":"Pruebas funcionales en amplificadores corregidos."}),
-    ("D8", {"en":"Document lessons learned, update standards, FMEAs.", "es":"Documente lecciones aprendidas, actualice estándares, FMEAs."}, {"en":"Update SOPs, PFMEA, work instructions.", "es":"Actualizar SOPs, PFMEA, instrucciones de trabajo."})
+    ("D1", {"en":"Describe the customer concerns clearly.","es":"Describa claramente las preocupaciones del cliente."},
+     {"en":"Customer reported static noise in amplifier during end-of-line test.","es":"El cliente reportó ruido estático en el amplificador durante la prueba final."}),
+    ("D2", {"en":"Check for similar parts, models, generic parts, other colors, etc.","es":"Verifique partes similares, modelos, partes genéricas, otros colores, etc."},
+     {"en":"Similar model radio, Front vs. rear speaker.","es":"Radio de modelo similar, altavoz delantero vs trasero."}),
+    ("D3", {"en":"Perform an initial investigation to identify obvious issues.","es":"Realice una investigación inicial para identificar problemas evidentes."},
+     {"en":"Visual inspection of solder joints, initial functional tests.","es":"Inspección visual de soldaduras, pruebas funcionales iniciales."}),
+    ("D4", {"en":"Define temporary containment actions and material location.","es":"Defina acciones de contención temporales y ubicación del material."},
+     {"en":"Post Quality Alert, Increase Inspection, Inventory Certification","es":"Implementar Ayuda Visual, Incrementar Inspeccion, Certificar Inventario"}),
+    ("D5", {"en": "Use 5-Why analysis to determine the root cause.","es": "Use el análisis de 5 Porqués para determinar la causa raíz."},
+     {"en": "Final 'Why' from the Analysis will give a good indication of the True Root Cause","es": "El último \"Por qué\" del análisis proporcionará una idea clara de la causa raíz del problema"}),
+    ("D6", {"en":"Define corrective actions that eliminate the root cause permanently.","es":"Defina acciones correctivas que eliminen la causa raíz permanentemente."},
+     {"en":"Update soldering process, redesign fixture.","es":"Actualizar proceso de soldadura, rediseñar herramienta."}),
+    ("D7", {"en":"Verify that corrective actions effectively resolve the issue.","es":"Verifique que las acciones correctivas resuelvan efectivamente el problema."},
+     {"en":"Functional tests on corrected amplifiers.","es":"Pruebas funcionales en amplificadores corregidos."}),
+    ("D8", {"en":"Document lessons learned, update standards, FMEAs.","es":"Documente lecciones aprendidas, actualice estándares, FMEAs."},
+     {"en":"Update SOPs, PFMEA, work instructions.","es":"Actualizar SOPs, PFMEA, instrucciones de trabajo."})
 ]
 
-# ---------------------------
-# Initialize session state
-# ---------------------------
 for step, _, _ in npqp_steps:
     if step not in st.session_state:
         st.session_state[step] = {"answer": "", "extra": ""}
@@ -433,9 +333,7 @@ def render_whys_no_repeat(why_list, categories, label_prefix):
             key=f"{label_prefix}_{idx}_{lang_key}"
         )
     return why_list
-# ---------------------------
-# Render Tabs with Uploads
-# ---------------------------
+
 tab_labels = [
     f"🟢 {t[lang_key][step]}" if st.session_state[step]["answer"].strip() else f"🔴 {t[lang_key][step]}"
     for step, _, _ in npqp_steps
@@ -445,8 +343,6 @@ tabs = st.tabs(tab_labels)
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     with tabs[i]:
         st.markdown(f"### {t[lang_key][step]}")
-
-        # Training Guidance & Example
         note_text = note_dict[lang_key]
         example_text = example_dict[lang_key]
         st.markdown(f"""
@@ -465,7 +361,6 @@ line-height:1.5;
 </div>
 """, unsafe_allow_html=True)
 
-        # File uploads for D1, D3, D4, D7
         if step in ["D1","D3","D4","D7"]:
             uploaded_files = st.file_uploader(
                 f"Upload files/photos for {step}",
@@ -478,13 +373,12 @@ line-height:1.5;
                     if file not in st.session_state[step]["uploaded_files"]:
                         st.session_state[step]["uploaded_files"].append(file)
 
-        # Display uploaded files (aligned with file upload, not nested too deep)
         if step in ["D1","D3","D4","D7"] and st.session_state[step].get("uploaded_files"):
             st.markdown("**Uploaded Files / Photos:**")
             for f in st.session_state[step]["uploaded_files"]:
                 st.write(f"{f.name}")
                 if f.type.startswith("image/"):
-                    st.image(f, width=192)  # roughly 2 inches wide, height auto-scaled
+                    st.image(f, width=192)
     
         # Step-specific inputs (same level as upload check)
 if step == "D4":
