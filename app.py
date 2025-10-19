@@ -19,7 +19,7 @@ st.set_page_config(
 )
 
 # ---------------------------
-# App styles - updated for desktop selectbox outline + thumbnails
+# App styles - Light mode by default, buttons always same color
 # ---------------------------
 st.markdown("""
 <style>
@@ -28,7 +28,11 @@ st.markdown("""
 textarea {background-color: #ffffff !important; border: 1px solid #1E90FF !important; border-radius: 5px; color: #000000 !important;}
 .stInfo {background-color: #e6f7ff !important; border-left: 5px solid #1E90FF !important; color: #000000 !important;}
 .css-1d391kg {color: #1E90FF !important; font-weight: bold !important;}
-button[kind="primary"] {background-color: #87AFC7 !important; color: white !important; font-weight: bold;}
+button[kind="primary"], .stDownloadButton button, .stSidebar button {
+    background-color: #87AFC7 !important;
+    color: #000000 !important;
+    font-weight: bold !important;
+}
 div.stSelectbox, div.stTextInput, div.stTextArea {
     border: 2px solid #1E90FF !important;
     border-radius: 5px !important;
@@ -82,34 +86,29 @@ st.sidebar.title("8D Report Assistant")
 st.sidebar.markdown("---")
 st.sidebar.header("Settings")
 
-lang = st.sidebar.selectbox("Select Language / Seleccionar Idioma", ["English", "Español"])
+lang = st.sidebar.selectbox("Select Language / Seleccionar Idioma", ["English", "Español"], key="lang_select")
 lang_key = "en" if lang == "English" else "es"
 
-dark_mode = st.sidebar.checkbox("🌙 Dark Mode")
+dark_mode = st.sidebar.checkbox("🌙 Dark Mode", key="dark_mode")
+
+# ---------------------------
+# Dark Mode - form only, sidebar normal
+# ---------------------------
 if dark_mode:
     st.markdown("""
     <style>
-    /* Main app background & text */
+    /* Main form background & text */
     .stApp {
-        background: linear-gradient(to right, #1e1e1e, #2c2c2c);
-        color: #f5f5f5 !important;
-    }
-
-    /* Tabs */
-    .stTabs [data-baseweb="tab"] {
-        font-weight: bold; 
-        color: #f5f5f5 !important;
-    }
-    .stTabs [data-baseweb="tab"]:hover {
-        color: #87AFC7 !important;
+        background: #2b2b2b !important;
+        color: #e0e0e0 !important;
     }
 
     /* Text inputs, textareas, selectboxes */
     div.stTextInput, div.stTextArea, div.stSelectbox {
         border: 2px solid #87AFC7 !important;
         border-radius: 5px !important;
-        background-color: #2c2c2c !important;
-        color: #f5f5f5 !important;
+        background-color: #3a3a3a !important;
+        color: #e0e0e0 !important;
         padding: 5px !important;
         transition: border 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
     }
@@ -120,44 +119,35 @@ if dark_mode:
 
     /* Info boxes */
     .stInfo {
-        background-color: #3a3a3a !important; 
+        background-color: #444444 !important; 
         border-left: 5px solid #87AFC7 !important; 
-        color: #f5f5f5 !important;
+        color: #e0e0e0 !important;
     }
 
-    /* Sidebar background & text */
-    .css-1d391kg {color: #87AFC7 !important; font-weight: bold !important;}
-    .stSidebar {
-        background-color: #1e1e1e !important;
-        color: #f5f5f5 !important;
+    /* Tabs */
+    .stTabs [data-baseweb="tab"] {
+        font-weight: bold; 
+        color: #e0e0e0 !important;
+    }
+    .stTabs [data-baseweb="tab"]:hover {
+        color: #87AFC7 !important;
     }
 
-    /* Sidebar buttons */
-    .stSidebar button[kind="primary"] {
+    /* Buttons remain same dark style in both modes */
+    button[kind="primary"], .stDownloadButton button, .stSidebar button {
         background-color: #87AFC7 !important;
         color: #000000 !important;
         font-weight: bold;
     }
-    .stSidebar button {
-        background-color: #5a5a5a !important;
-        color: #f5f5f5 !important;
-    }
-
-    /* Download button in sidebar */
-    .stSidebar .stDownloadButton button {
-        background-color: #87AFC7 !important;
-        color: #000000 !important;
-        font-weight: bold;
-    }
-
     </style>
     """, unsafe_allow_html=True)
+
 # ---------------------------
 # Sidebar: App Controls
 # ---------------------------
 st.sidebar.markdown("---")
 st.sidebar.header("⚙️ App Controls")
-if st.sidebar.button("🔄 Reset 8D Session"):
+if st.sidebar.button("🔄 Reset 8D Session", key="reset_button"):
     preserve_keys = ["lang", "lang_key", "current_tab"]
     preserved = {k: st.session_state[k] for k in preserve_keys if k in st.session_state}
     for key in list(st.session_state.keys()):
@@ -249,11 +239,18 @@ for step, _, _ in npqp_steps:
         if step in ["D1","D3","D4","D7"]:
             st.session_state[step]["uploaded_files"] = []
 
+# Added missing free-text lists for D5 (so code below can append free-text whys)
 st.session_state.setdefault("report_date", datetime.datetime.today().strftime("%B %d, %Y"))
 st.session_state.setdefault("prepared_by", "")
 st.session_state.setdefault("d5_occ_whys", [""]*5)
 st.session_state.setdefault("d5_det_whys", [""]*5)
 st.session_state.setdefault("d5_sys_whys", [""]*5)
+
+# free-text lists so user can type their own "Why" in addition to selectbox choices
+st.session_state.setdefault("d5_occ_whys_free", [""]*0)
+st.session_state.setdefault("d5_det_whys_free", [""]*0)
+st.session_state.setdefault("d5_sys_whys_free", [""]*0)
+
 st.session_state.setdefault("d4_location", "")
 st.session_state.setdefault("d4_status", "")
 st.session_state.setdefault("d4_containment", "")
@@ -433,6 +430,7 @@ def render_whys_no_repeat(why_list, categories, label_prefix):
             key=f"{label_prefix}_{idx}_{lang_key}"
         )
     return why_list
+
 # ---------------------------
 # Render Tabs with Uploads
 # ---------------------------
@@ -485,7 +483,7 @@ line-height:1.5;
                 st.write(f"{f.name}")
                 if f.type.startswith("image/"):
                     st.image(f, width=192)  # roughly 2 inches wide, height auto-scaled
-    
+
         # Step-specific inputs (same level as upload check)
         if step == "D4":
             st.session_state[step]["location"] = st.selectbox(
@@ -505,29 +503,74 @@ line-height:1.5;
                 value=st.session_state[step]["answer"],
                 key=f"ans_{step}"
             )
-        # D5 5-Why
+
         elif step == "D5":
+            # -------------------- D5 --------------------
             st.markdown("#### Occurrence Analysis")
+            # render selectbox-based whys (no repeats)
             render_whys_no_repeat(st.session_state.d5_occ_whys, occurrence_categories, t[lang_key]['Occurrence_Why'])
+            # render free-text whys for occurrence
+            for idx in range(len(st.session_state.d5_occ_whys_free)):
+                st.session_state.d5_occ_whys_free[idx] = st.text_area(
+                    f"Occurrence Why - Free Text {idx+1}",
+                    value=st.session_state.d5_occ_whys_free[idx],
+                    key=f"d5_occ_free_{idx}_{lang_key}"
+                )
+
             if st.button("➕ Add another Occurrence Why", key=f"add_occ_{i}"):
                 st.session_state.d5_occ_whys.append("")
+                st.session_state.d5_occ_whys_free.append("")
+
             st.markdown("#### Detection Analysis")
             render_whys_no_repeat(st.session_state.d5_det_whys, detection_categories, t[lang_key]['Detection_Why'])
+            for idx in range(len(st.session_state.d5_det_whys_free)):
+                st.session_state.d5_det_whys_free[idx] = st.text_area(
+                    f"Detection Why - Free Text {idx+1}",
+                    value=st.session_state.d5_det_whys_free[idx],
+                    key=f"d5_det_free_{idx}_{lang_key}"
+                )
+
             if st.button("➕ Add another Detection Why", key=f"add_det_{i}"):
                 st.session_state.d5_det_whys.append("")
+                st.session_state.d5_det_whys_free.append("")
+
             st.markdown("#### Systemic Analysis")
             render_whys_no_repeat(st.session_state.d5_sys_whys, systemic_categories, t[lang_key]['Systemic_Why'])
+            for idx in range(len(st.session_state.d5_sys_whys_free)):
+                st.session_state.d5_sys_whys_free[idx] = st.text_area(
+                    f"Systemic Why - Free Text {idx+1}",
+                    value=st.session_state.d5_sys_whys_free[idx],
+                    key=f"d5_sys_free_{idx}_{lang_key}"
+                )
+
             if st.button("➕ Add another Systemic Why", key=f"add_sys_{i}"):
                 st.session_state.d5_sys_whys.append("")
-            # Dynamic Root Causes
-            occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
-            det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
-            sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
-            st.text_area(f"{t[lang_key]['Root_Cause_Occ']}", value=suggest_root_cause(occ_whys) if occ_whys else "No occurrence whys provided yet", height=80, disabled=True)
-            st.text_area(f"{t[lang_key]['Root_Cause_Det']}", value=suggest_root_cause(det_whys) if det_whys else "No detection whys provided yet", height=80, disabled=True)
-            st.text_area(f"{t[lang_key]['Root_Cause_Sys']}", value=suggest_root_cause(sys_whys) if sys_whys else "No systemic whys provided yet", height=80, disabled=True)
+                st.session_state.d5_sys_whys_free.append("")
 
-        # D6: Permanent Corrective Actions (three text areas: Occ/Det/Sys)
+            # Dynamic Root Causes (combine selectbox choices and free-text whys)
+            occ_whys = [w for w in (st.session_state.d5_occ_whys + st.session_state.d5_occ_whys_free) if w.strip()]
+            det_whys = [w for w in (st.session_state.d5_det_whys + st.session_state.d5_det_whys_free) if w.strip()]
+            sys_whys = [w for w in (st.session_state.d5_sys_whys + st.session_state.d5_sys_whys_free) if w.strip()]
+
+            st.text_area(
+                f"{t[lang_key]['Root_Cause_Occ']}",
+                value=suggest_root_cause(occ_whys) if occ_whys else "No occurrence whys provided yet",
+                height=80,
+                disabled=True
+            )
+            st.text_area(
+                f"{t[lang_key]['Root_Cause_Det']}",
+                value=suggest_root_cause(det_whys) if det_whys else "No detection whys provided yet",
+                height=80,
+                disabled=True
+            )
+            st.text_area(
+                f"{t[lang_key]['Root_Cause_Sys']}",
+                value=suggest_root_cause(sys_whys) if sys_whys else "No systemic whys provided yet",
+                height=80,
+                disabled=True
+            )
+
         elif step == "D6":
             st.session_state[step].setdefault("occ_answer", st.session_state["D6"].get("occ_answer", ""))
             st.session_state[step].setdefault("det_answer", st.session_state["D6"].get("det_answer", ""))
@@ -554,7 +597,6 @@ line-height:1.5;
             st.session_state["D6"]["det_answer"] = st.session_state[step]["det_answer"]
             st.session_state["D6"]["sys_answer"] = st.session_state[step]["sys_answer"]
 
-        # D7: Countermeasure Confirmation (three text areas: verification for Occ/Det/Sys)
         elif step == "D7":
             st.session_state[step].setdefault("occ_answer", st.session_state["D7"].get("occ_answer", ""))
             st.session_state[step].setdefault("det_answer", st.session_state["D7"].get("det_answer", ""))
@@ -581,7 +623,6 @@ line-height:1.5;
             st.session_state["D7"]["det_answer"] = st.session_state[step]["det_answer"]
             st.session_state["D7"]["sys_answer"] = st.session_state[step]["sys_answer"]
 
-        # D8: Follow-up Activities / Lessons Learned (single text area)
         elif step == "D8":
             st.session_state[step]["answer"] = st.text_area(
                 "Your Answer",
@@ -603,9 +644,9 @@ line-height:1.5;
 # ---------------------------
 data_rows = []
 
-occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
-det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
-sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
+occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()] + [w for w in st.session_state.d5_occ_whys_free if w.strip()]
+det_whys = [w for w in st.session_state.d5_det_whys if w.strip()] + [w for w in st.session_state.d5_det_whys_free if w.strip()]
+sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()] + [w for w in st.session_state.d5_sys_whys_free if w.strip()]
 
 occ_rc_text = suggest_root_cause(occ_whys) if occ_whys else "No occurrence whys provided yet"
 det_rc_text = suggest_root_cause(det_whys) if det_whys else "No detection whys provided yet"
@@ -686,9 +727,6 @@ def generate_excel():
             cell.border = border
 
     # Insert uploaded images below table
-    from PIL import Image as PILImage
-    from io import BytesIO
-
     last_row = ws.max_row + 2
     for step in ["D1","D3","D4","D7"]:
         uploaded_files = st.session_state[step].get("uploaded_files", [])
@@ -726,12 +764,12 @@ def generate_excel():
 # Move download button to sidebar
 with st.sidebar:
     st.download_button(
-        label=t[lang_key]['Download'],  # no extra icon
-        data=generate_excel(),  # function that returns BytesIO of XLSX
+        label=t[lang_key]['Download'],
+        data=generate_excel(),
         file_name=f"8D_Report_{st.session_state['report_date']}.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        key="download_xlsx"
     )
-
 
 # ---------------------------
 # (End)
