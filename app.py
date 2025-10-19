@@ -421,17 +421,27 @@ def suggest_root_cause(whys):
         return "The root cause may be attributed to environmental or external factor"
     return "No clear root cause suggestion (provide more 5-Whys)"
 
-def render_whys_no_repeat(why_list, categories, label_prefix):
+def render_whys_no_repeat_with_other(why_list, categories, label_prefix):
     for idx in range(len(why_list)):
+        # Build options for this selectbox
         selected_so_far = [w for i, w in enumerate(why_list) if w.strip() and i != idx]
-        options = [""] + [f"{cat}: {item}" for cat, items in categories.items() for item in items if f"{cat}: {item}" not in selected_so_far]
+        options = [""] + [f"{cat}: {item}" for cat, items in categories.items() 
+                          for item in items 
+                          if f"{cat}: {item}" not in selected_so_far] + ["Other"]
+
         current_val = why_list[idx] if why_list[idx] in options else ""
-        why_list[idx] = st.selectbox(
+        selection = st.selectbox(
             f"{label_prefix} {idx+1}",
             options,
             index=options.index(current_val) if current_val in options else 0,
             key=f"{label_prefix}_{idx}_{lang_key}"
         )
+
+        # If "Other" is selected, show a free text box
+        if selection == "Other":
+            why_list[idx] = st.text_input(f"Please specify {label_prefix} {idx+1}", key=f"{label_prefix}_{idx}_other_{lang_key}")
+        else:
+            why_list[idx] = selection
     return why_list
 # ---------------------------
 # Render Tabs with Uploads
@@ -531,16 +541,16 @@ line-height:1.5;
            st.session_state["D5"]["sys_answer"] = sys_choice
 
            # Existing 5-Why whys below (unchanged)
-           st.markdown("#### Occurrence Why Analysis")
-           render_whys_no_repeat(st.session_state.d5_occ_whys, occurrence_categories, t[lang_key]['Occurrence_Why'])
+           st.markdown("#### Occurrence Analysis")
+           st.session_state.d5_occ_whys = render_whys_no_repeat_with_other(st.session_state.d5_occ_whys, occurrence_categories, t[lang_key]['Occurrence_Why'])
            if st.button("➕ Add another Occurrence Why", key=f"add_occ_{i}"):
                st.session_state.d5_occ_whys.append("")
-           st.markdown("#### Detection Why Analysis")
-           render_whys_no_repeat(st.session_state.d5_det_whys, detection_categories, t[lang_key]['Detection_Why'])
+           st.markdown("#### Detection Analysis")
+           st.session_state.d5_det_whys = render_whys_no_repeat_with_other(st.session_state.d5_det_whys, detection_categories, t[lang_key]['Detection_Why'])
            if st.button("➕ Add another Detection Why", key=f"add_det_{i}"):
                st.session_state.d5_det_whys.append("")
-           st.markdown("#### Systemic Why Analysis")
-           render_whys_no_repeat(st.session_state.d5_sys_whys, systemic_categories, t[lang_key]['Systemic_Why'])
+           st.markdown("#### Systemic Analysis")
+           st.session_state.d5_sys_whys = render_whys_no_repeat_with_other(st.session_state.d5_sys_whys, systemic_categories, t[lang_key]['Systemic_Why'])
            if st.button("➕ Add another Systemic Why", key=f"add_sys_{i}"):
                st.session_state.d5_sys_whys.append("")
 
