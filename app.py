@@ -244,17 +244,37 @@ npqp_steps = [
 # Initialize session state
 # ---------------------------
 for step, _, _ in npqp_steps:
-if step not in st.session_state:
-st.session_state[step] = {"answer": "", "extra": ""} st.session_state.setdefault("report_date", datetime.datetime.today().strftime("%B %d, %Y")) st.session_state.setdefault("prepared_by", "") st.session_state.setdefault("d5_occ_whys", [""]*5) st.session_state.setdefault("d5_det_whys", [""]*5) st.session_state.setdefault("d5_sys_whys", [""]*5) # --------------------------- # Helper: Render 5-Why dropdowns without repeating selections # --------------------------- def render_whys_no_repeat(why_list, categories, label_prefix):
-for idx in range(len(why_list)):
-selected_so_far = [w for i, w in enumerate(why_list) if w.strip() and i != idx] options = [""] + [f"{cat}: {item}" for cat, items in categories.items() for item in items if f"{cat}: {item}" not in selected_so_far] current_val = why_list[idx] if why_list[idx] in options else ""
-why_list[idx] = st.selectbox(
-f"{label_prefix} {idx+1}",
-options,
-index=options.index(current_val) if current_val in options else 0, key=f"{label_prefix}_{idx}"
-)
-free_text = st.text_input(f"Or enter your own {label_prefix} {idx+1}", value=why_list[idx], key=f"{label_prefix}_txt_{idx}") if free_text.strip():
-why_list[idx] = free_text
+    if step not in st.session_state:
+        st.session_state[step] = {"answer": "", "extra": ""}
+
+st.session_state.setdefault("report_date", datetime.datetime.today().strftime("%B %d, %Y"))
+st.session_state.setdefault("prepared_by", "")
+st.session_state.setdefault("d5_occ_whys", [""]*5)
+st.session_state.setdefault("d5_det_whys", [""]*5)
+st.session_state.setdefault("d5_sys_whys", [""]*5)
+
+# ---------------------------
+# Helper: Render 5-Why dropdowns without repeating selections
+# ---------------------------
+def render_whys_no_repeat(why_list, categories, label_prefix):
+    for idx in range(len(why_list)):
+        selected_so_far = [w for i, w in enumerate(why_list) if w.strip() and i != idx]
+        options = [""] + [f"{cat}: {item}" for cat, items in categories.items() for item in items
+                          if f"{cat}: {item}" not in selected_so_far]
+        current_val = why_list[idx] if why_list[idx] in options else ""
+        why_list[idx] = st.selectbox(
+            f"{label_prefix} {idx+1}",
+            options,
+            index=options.index(current_val) if current_val in options else 0,
+            key=f"{label_prefix}_{idx}"
+        )
+        free_text = st.text_input(
+            f"Or enter your own {label_prefix} {idx+1}",
+            value=why_list[idx],
+            key=f"{label_prefix}_txt_{idx}"
+        )
+        if free_text.strip():
+            why_list[idx] = free_text
 
 st.session_state.setdefault("d4_location", "")
 st.session_state.setdefault("d4_status", "")
