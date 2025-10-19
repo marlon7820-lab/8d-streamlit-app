@@ -506,7 +506,7 @@ if step == "D4":
         key=f"ans_{step}"
     )
 
-# ---------------- D5 ----------------
+  # ---------------- D5 ----------------
 elif step == "D5":
     st.markdown("#### Occurrence Analysis")
     for idx in range(len(st.session_state.d5_occ_whys)):
@@ -598,27 +598,28 @@ elif step == "D5":
     st.text_area(f"{t[lang_key]['Root_Cause_Sys']}", value=suggest_root_cause(sys_whys) if sys_whys else "No systemic whys provided yet", height=80, disabled=True)
 
 
-        # D6: Permanent Corrective Actions (three text areas: Occ/Det/Sys)
-    elif step == "D6":
-            st.session_state[step].setdefault("occ_answer", st.session_state["D6"].get("occ_answer", ""))
-            st.session_state[step].setdefault("det_answer", st.session_state["D6"].get("det_answer", ""))
-            st.session_state[step].setdefault("sys_answer", st.session_state["D6"].get("sys_answer", ""))
+# ---------------- D6 ----------------
+elif step == "D6":
+    st.session_state[step].setdefault("occ_answer", st.session_state["D6"].get("occ_answer", ""))
+    st.session_state[step].setdefault("det_answer", st.session_state["D6"].get("det_answer", ""))
+    st.session_state[step].setdefault("sys_answer", st.session_state["D6"].get("sys_answer", ""))
 
-            st.session_state[step]["occ_answer"] = st.text_area(
-                "D6 - Corrective Actions for Occurrence Root Cause",
-                value=st.session_state[step]["occ_answer"],
-                key="d6_occ"
-            )
-            st.session_state[step]["det_answer"] = st.text_area(
-                "D6 - Corrective Actions for Detection Root Cause",
-                value=st.session_state[step]["det_answer"],
-                key="d6_det"
-            )
-            st.session_state[step]["sys_answer"] = st.text_area(
-                "D6 - Corrective Actions for Systemic Root Cause",
-                value=st.session_state[step]["sys_answer"],
-                key="d6_sys"
-            )
+    st.session_state[step]["occ_answer"] = st.text_area(
+        "D6 - Corrective Actions for Occurrence Root Cause",
+        value=st.session_state[step]["occ_answer"],
+        key="d6_occ"
+    )
+    st.session_state[step]["det_answer"] = st.text_area(
+        "D6 - Corrective Actions for Detection Root Cause",
+        value=st.session_state[step]["det_answer"],
+        key="d6_det"
+    )
+    st.session_state[step]["sys_answer"] = st.text_area(
+        "D6 - Corrective Actions for Systemic Root Cause",
+        value=st.session_state[step]["sys_answer"],
+        key="d6_sys"
+    )
+
 
             # Mirror into top-level D6 storage so export code can find them consistently
             st.session_state["D6"]["occ_answer"] = st.session_state[step]["occ_answer"]
