@@ -425,7 +425,7 @@ systemic_categories = {
 }
 
 # ---------------------------
-# Root cause suggestion & helper functions (SMART)
+# Root cause suggestion & helper functions
 # ---------------------------
 def suggest_root_cause(whys):
     text = " ".join(whys).lower()
@@ -447,16 +447,13 @@ def suggest_root_cause(whys):
         return "The root cause may be attributed to environmental or external factor"
     return "No clear root cause suggestion (provide more 5-Whys)"
 
-def render_whys_smart_root_cause(why_list, categories, label_prefix):
-    """
-    Render 5-Why dropdowns with "Other" option and show smart root cause dynamically.
-    Returns updated why_list.
-    """
+def render_whys_no_repeat_with_other(why_list, categories, label_prefix):
     for idx in range(len(why_list)):
-        # Build dropdown options excluding what has already been selected
+        # Build options for this selectbox
         selected_so_far = [w for i, w in enumerate(why_list) if w.strip() and i != idx]
-        options = [""] + [f"{cat}: {item}" for cat, items in categories.items()
-                          for item in items if f"{cat}: {item}" not in selected_so_far] + ["Other"]
+        options = [""] + [f"{cat}: {item}" for cat, items in categories.items() 
+                          for item in items 
+                          if f"{cat}: {item}" not in selected_so_far] + ["Other"]
 
         current_val = why_list[idx] if why_list[idx] in options else ""
         selection = st.selectbox(
@@ -466,15 +463,11 @@ def render_whys_smart_root_cause(why_list, categories, label_prefix):
             key=f"{label_prefix}_{idx}_{lang_key}"
         )
 
+        # If "Other" is selected, show a free text box
         if selection == "Other":
             why_list[idx] = st.text_input(f"Please specify {label_prefix} {idx+1}", key=f"{label_prefix}_{idx}_other_{lang_key}")
         else:
             why_list[idx] = selection
-
-    # Show dynamic root cause suggestion below the why list
-    whys_cleaned = [w for w in why_list if w.strip()]
-    if whys_cleaned:
-        st.text_area(f"Suggested Root Cause ({label_prefix})", value=suggest_root_cause_smart(whys_cleaned), height=80, disabled=True)
     return why_list
 # ---------------------------
 # Render Tabs with Uploads
@@ -530,95 +523,70 @@ line-height:1.5;
                     st.image(f, width=192)  # roughly 2 inches wide, height auto-scaled
     
         # Step-specific inputs (same level as upload check)
-if step == "D4":
-    st.session_state[step]["location"] = st.selectbox(
-        "Location of Material",
-        ["", "Work in Progress", "Stores Stock", "Warehouse Stock", "Service Parts", "Other"],
-        index=0,
-        key="d4_location"
-    )
-    st.session_state[step]["status"] = st.selectbox(
-        "Status of Activities",
-        ["", "Pending", "In Progress", "Completed", "Other"],
-        index=0,
-        key="d4_status"
-    )
-    st.session_state[step]["answer"] = st.text_area(
-        "Containment Actions / Notes",
-        value=st.session_state[step]["answer"],
-        key=f"ans_{step}"
-    )
+        if step == "D4":
+            st.session_state[step]["location"] = st.selectbox(
+                "Location of Material",
+                ["", "Work in Progress", "Stores Stock", "Warehouse Stock", "Service Parts", "Other"],
+                index=0,
+                key="d4_location"
+            )
+            st.session_state[step]["status"] = st.selectbox(
+                "Status of Activities",
+                ["", "Pending", "In Progress", "Completed", "Other"],
+                index=0,
+                key="d4_status"
+            )
+            st.session_state[step]["answer"] = st.text_area(
+                "Containment Actions / Notes",
+                value=st.session_state[step]["answer"],
+                key=f"ans_{step}"
+            )
+        # D5 5-Why + "Other" dropdown replacement
+        elif step == "D5":
+           
+           # Existing 5-Why whys below (unchanged)
+           st.markdown("#### Occurrence Analysis")
+           st.session_state.d5_occ_whys = render_whys_no_repeat_with_other(st.session_state.d5_occ_whys, occurrence_categories, t[lang_key]['Occurrence_Why'])
+           if st.button("➕ Add another Occurrence Why", key=f"add_occ_{i}"):
+               st.session_state.d5_occ_whys.append("")
+           st.markdown("#### Detection Analysis")
+           st.session_state.d5_det_whys = render_whys_no_repeat_with_other(st.session_state.d5_det_whys, detection_categories, t[lang_key]['Detection_Why'])
+           if st.button("➕ Add another Detection Why", key=f"add_det_{i}"):
+               st.session_state.d5_det_whys.append("")
+           st.markdown("#### Systemic Analysis")
+           st.session_state.d5_sys_whys = render_whys_no_repeat_with_other(st.session_state.d5_sys_whys, systemic_categories, t[lang_key]['Systemic_Why'])
+           if st.button("➕ Add another Systemic Why", key=f"add_sys_{i}"):
+               st.session_state.d5_sys_whys.append("")
 
-elif step == "D5":
-    # Occurrence Analysis
-    st.markdown("#### Occurrence Analysis")
-    st.session_state.d5_occ_whys = render_whys_no_repeat_with_other(
-        st.session_state.d5_occ_whys, occurrence_categories, t[lang_key]['Occurrence_Why']
-    )
-    if st.button("➕ Add another Occurrence Why", key=f"add_occ_{i}"):
-        st.session_state.d5_occ_whys.append("")
+           # Dynamic Root Causes suggestion display (unchanged)
+           occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
+           det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
+           sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
+           st.text_area(f"{t[lang_key]['Root_Cause_Occ']}", value=suggest_root_cause(occ_whys) if occ_whys else "No occurrence whys provided yet", height=80, disabled=True)
+           st.text_area(f"{t[lang_key]['Root_Cause_Det']}", value=suggest_root_cause(det_whys) if det_whys else "No detection whys provided yet", height=80, disabled=True)
+           st.text_area(f"{t[lang_key]['Root_Cause_Sys']}", value=suggest_root_cause(sys_whys) if sys_whys else "No systemic whys provided yet", height=80, disabled=True)
 
-    # Detection Analysis
-    st.markdown("#### Detection Analysis")
-    st.session_state.d5_det_whys = render_whys_no_repeat_with_other(
-        st.session_state.d5_det_whys, detection_categories, t[lang_key]['Detection_Why']
-    )
-    if st.button("➕ Add another Detection Why", key=f"add_det_{i}"):
-        st.session_state.d5_det_whys.append("")
+        # D6: Permanent Corrective Actions (three text areas: Occ/Det/Sys)
+        elif step == "D6":
+            st.session_state[step].setdefault("occ_answer", st.session_state["D6"].get("occ_answer", ""))
+            st.session_state[step].setdefault("det_answer", st.session_state["D6"].get("det_answer", ""))
+            st.session_state[step].setdefault("sys_answer", st.session_state["D6"].get("sys_answer", ""))
 
-    # Systemic Analysis
-    st.markdown("#### Systemic Analysis")
-    st.session_state.d5_sys_whys = render_whys_no_repeat_with_other(
-        st.session_state.d5_sys_whys, systemic_categories, t[lang_key]['Systemic_Why']
-    )
-    if st.button("➕ Add another Systemic Why", key=f"add_sys_{i}"):
-        st.session_state.d5_sys_whys.append("")
-
-    # Dynamic Root Causes suggestion display
-    occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
-    det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
-    sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
-
-    st.text_area(
-        f"{t[lang_key]['Root_Cause_Occ']}",
-        value=suggest_root_cause(occ_whys) if occ_whys else "No occurrence whys provided yet",
-        height=80,
-        disabled=True
-    )
-    st.text_area(
-        f"{t[lang_key]['Root_Cause_Det']}",
-        value=suggest_root_cause(det_whys) if det_whys else "No detection whys provided yet",
-        height=80,
-        disabled=True
-    )
-    st.text_area(
-        f"{t[lang_key]['Root_Cause_Sys']}",
-        value=suggest_root_cause(sys_whys) if sys_whys else "No systemic whys provided yet",
-        height=80,
-        disabled=True
-    )
-
-elif step == "D6":
-    # Permanent Corrective Actions (three text areas: Occ/Det/Sys)
-    st.session_state[step].setdefault("occ_answer", st.session_state["D6"].get("occ_answer", ""))
-    st.session_state[step].setdefault("det_answer", st.session_state["D6"].get("det_answer", ""))
-    st.session_state[step].setdefault("sys_answer", st.session_state["D6"].get("sys_answer", ""))
-
-    st.session_state[step]["occ_answer"] = st.text_area(
-        "D6 - Corrective Actions for Occurrence Root Cause",
-        value=st.session_state[step]["occ_answer"],
-        key="d6_occ"
-    )
-    st.session_state[step]["det_answer"] = st.text_area(
-        "D6 - Corrective Actions for Detection Root Cause",
-        value=st.session_state[step]["det_answer"],
-        key="d6_det"
-    )
-    st.session_state[step]["sys_answer"] = st.text_area(
-        "D6 - Corrective Actions for Systemic Root Cause",
-        value=st.session_state[step]["sys_answer"],
-        key="d6_sys"
-    )
+            st.session_state[step]["occ_answer"] = st.text_area(
+                "D6 - Corrective Actions for Occurrence Root Cause",
+                value=st.session_state[step]["occ_answer"],
+                key="d6_occ"
+            )
+            st.session_state[step]["det_answer"] = st.text_area(
+                "D6 - Corrective Actions for Detection Root Cause",
+                value=st.session_state[step]["det_answer"],
+                key="d6_det"
+            )
+            st.session_state[step]["sys_answer"] = st.text_area(
+                "D6 - Corrective Actions for Systemic Root Cause",
+                value=st.session_state[step]["sys_answer"],
+                key="d6_sys"
+            )
 
             # Mirror into top-level D6 storage so export code can find them consistently
             st.session_state["D6"]["occ_answer"] = st.session_state[step]["occ_answer"]
@@ -803,7 +771,6 @@ with st.sidebar:
         file_name=f"8D_Report_{st.session_state['report_date']}.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
-
 
 # ---------------------------
 # (End)
