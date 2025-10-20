@@ -562,14 +562,14 @@ line-height:1.5;
     st.session_state.d5_det_whys = render_whys_no_repeat_with_other(
         st.session_state.d5_det_whys, detection_categories, t[lang_key]['Detection_Why']
          )
-         if st.button("➕ Add another Detection Why", key=f"add_det_{i}"):
-              st.session_state.d5_det_whys.append("")
+        if st.button("➕ Add another Detection Why", key=f"add_det_{i}"):
+            st.session_state.d5_det_whys.append("")
 
-         st.markdown("#### Systemic Analysis")
-         st.session_state.d5_sys_whys = render_whys_no_repeat_with_other(
+        st.markdown("#### Systemic Analysis")
+        st.session_state.d5_sys_whys = render_whys_no_repeat_with_other(
             st.session_state.d5_sys_whys, systemic_categories, t[lang_key]['Systemic_Why']
          )
-         if st.button("➕ Add another Systemic Why", key=f"add_sys_{i}"):
+        if st.button("➕ Add another Systemic Why", key=f"add_sys_{i}"):
             st.session_state.d5_sys_whys.append("")
 
        # Dynamic Root Causes suggestion display (unchanged)
