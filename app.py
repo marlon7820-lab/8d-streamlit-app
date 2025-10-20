@@ -283,11 +283,11 @@ for sub in ["occ_answer", "det_answer", "sys_answer"]:
 # ---------------------------
 occurrence_categories = {
     "Machine / Equipment": [
-        "Mechanical failure or breakdown",
+        "Equipment malfunction or inadequate maintenance",
         "Calibration issues or drift",
         "Tooling or fixture wear or damage",
         "Machine parameters not optimized",
-        "Improper preventive maintenance schedule",
+        "Lack of preventive maintenance schedule",
         "Sensor malfunction or misalignment",
         "Process automation fault not detected",
         "Unstable process due to poor machine setup"
@@ -299,17 +299,18 @@ occurrence_categories = {
         "Damage during storage, handling, or transport",
         "Incorrect labeling, Missing label or lot traceability error",
         "Material substitution without approval",
-        "Incorrect specifications or revision mismatch"
+        "Material specification not aligned with requirements"
     ],
     "Process / Method": [
         "Incorrect process step sequence",
-        "Critical process parameters not controlled",
-        "Work instructions unclear or missing details",
+        "Inadequate process control or parameter definition",
+        "Inadequate work instructions / unclear procedure",
         "Process drift over time not detected",
         "Control plan not followed on production floor",
         "Incorrect torque, solder, or assembly process",
         "Outdated or missing process FMEA linkage",
-        "Inadequate process capability (Cp/Cpk below target)"
+        "Inadequate process capability (Cp/Cpk below target)",
+        "Lack of standardized process or method"
     ],
     "Design / Engineering": [
         "Design not robust to real-use conditions",
@@ -337,7 +338,10 @@ detection_categories = {
         "Inspection frequency too low to detect issue",
         "Inspection criteria unclear or inconsistent",
         "Measurement system not capable (GR&R issues)",
-        "Incoming inspection missed supplier issue",
+        "Incoming inspection missed recent supplier issue",
+        "Ineffective detection method or gauge desing",
+        "Lack of defined acceptance criteria",
+        "Inadequate automation or sensing",
         "Final inspection missed due to sampling plan"
     ],
     "Validation / Process": [
@@ -346,6 +350,7 @@ detection_categories = {
         "Design validation not complete or not representative of real conditions",
         "Inadequate control plan coverage for potential failure modes",
         "Lack of ongoing process monitoring (SPC / CpK tracking)",
+        "Ineffective containment validation",
         "Incorrect or outdated process limits not aligned with FMEA"
     ],
     "FMEA / Control Plan": [
@@ -363,9 +368,11 @@ detection_categories = {
         "Detection threshold too wide to capture failure",
         "Test data not logged or reviewed regularly"
     ],
-    "Systemic / Organizational": [
+    "Organizational": [
         "Feedback loop from quality incidents not implemented",
+        "Weak feedback loop from Production / Quality",
         "Lack of detection feedback in regular team meetings",
+        "Lack of incoming or in-process audit",
         "Training gaps in inspection or test personnel",
         "Quality alerts not properly communicated to operators"
     ]
@@ -391,7 +398,7 @@ systemic_categories = {
     "Training": [
         "No defined training matrix or certification tracking",
         "New hires not trained on critical control points",
-        "Training effectiveness not evaluated",
+        "Ineffective training system or onboarding process",
         "Knowledge not shared between shifts or teams",
         "Competence requirements not clearly defined"
     ],
@@ -408,6 +415,7 @@ systemic_categories = {
         "Quality KPI tracking not linked to root cause analysis",
         "Ineffective use of 5-Why or other problem solving tools",
         "Customer complaints not feeding back into design reviews",
+        "Lessons learned not shared / reused",
         "No systemic review after multiple 8Ds in same area"
     ]
 }
