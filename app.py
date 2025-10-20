@@ -424,6 +424,142 @@ systemic_categories = {
     ]
 }
 
+occurrence_categories_es = {
+    "Máquina / Equipo": [
+        "Mal funcionamiento del equipo o mantenimiento inadecuado",
+        "Deriva de calibración o desalineación",
+        "Desgaste / daño de herramientas o accesorios",
+        "Parámetros de máquina no optimizados",
+        "Mal funcionamiento o desalineación del sensor",
+        "Fallo en automatización del proceso no detectado",
+        "Proceso inestable debido a mala configuración de la máquina",
+        "Programa de mantenimiento preventivo no seguido"
+    ],
+    "Material / Componente": [
+        "Material o componente incorrecto usado",
+        "Componente fuera de especificación por proveedor",
+        "Defecto de material no visible durante inspección",
+        "Daño durante almacenamiento, manipulación o transporte",
+        "Etiquetado incorrecto o faltante / error de trazabilidad de lote",
+        "Sustitución de material sin aprobación",
+        "Especificación de material no alineada con requisitos"
+    ],
+    "Proceso / Método": [
+        "Secuencia de pasos de proceso incorrecta",
+        "Control de proceso o definición de parámetros inadecuada",
+        "Instrucciones de trabajo o procedimiento poco claras o faltantes",
+        "Desviación del proceso no detectada con el tiempo",
+        "Plan de control no seguido en producción",
+        "Proceso de torque, soldadura o ensamblaje incorrecto",
+        "FMEA del proceso desactualizado o faltante",
+        "Capacidad del proceso (Cp/Cpk) por debajo del objetivo",
+        "Falta de estandarización de proceso o método"
+    ],
+    "Diseño / Ingeniería": [
+        "Diseño no robusto a condiciones reales",
+        "Problema de acumulación de tolerancias no evaluado",
+        "Cambio de diseño tardío no comunicado a producción",
+        "Especificación de dibujo incorrecta o poco clara",
+        "Error de colocación de componente (brecha DFMEA)",
+        "Falta de verificación o validación de diseño"
+    ],
+    "Ambiental / Externo": [
+        "Temperatura o humedad fuera del rango de control",
+        "Descarga electrostática (ESD) no controlada",
+        "Contaminación o polvo afectando producto",
+        "Fluctuación o interrupción de energía",
+        "Vibración externa o interferencia de ruido",
+        "Proceso de monitoreo ambiental inestable"
+    ]
+}
+detection_categories_es = {
+    "QA / Inspección": [
+        "Lista de verificación de QA incompleta o desactualizada",
+        "No hay sistema de inspección automatizado",
+        "Inspección manual propensa a errores humanos",
+        "Frecuencia de inspección demasiado baja para detectar problemas",
+        "Criterios de inspección poco claros o inconsistentes",
+        "Sistema de medición no capaz (problemas GR&R)",
+        "Inspección de entrada no detectó problema reciente del proveedor",
+        "Método de detección o diseño de calibrador ineficaz",
+        "Criterios de aceptación indefinidos",
+        "Automatización o sensores inadecuados",
+        "Inspección final fallida debido a plan de muestreo"
+    ],
+    "Validación / Proceso": [
+        "Validación del proceso no actualizada tras cambio de diseño/proceso",
+        "Verificación insuficiente de nuevos parámetros o componentes",
+        "Validación de diseño incompleta o no representativa",
+        "Cobertura del plan de control insuficiente para modos de falla potenciales",
+        "Monitoreo del proceso en curso faltante (SPC / CpK)",
+        "Validación de contención ineficaz",
+        "Límites de proceso incorrectos o desactualizados"
+    ],
+    "FMEA / Plan de Control": [
+        "Modo de falla no capturado en PFMEA",
+        "Controles de detección faltantes o ineficaces en PFMEA",
+        "Plan de control no actualizado después de acciones correctivas",
+        "FMEA no revisada tras queja del cliente",
+        "Clasificación de detección poco realista para la capacidad de inspección",
+        "PFMEA y plan de control no correctamente vinculados"
+    ],
+    "Prueba / Equipos": [
+        "Calibración de equipo de prueba vencida",
+        "Parámetros de software de prueba incorrectos",
+        "Configuración de prueba no detecta este modo de falla",
+        "Umbral de detección demasiado amplio para capturar falla",
+        "Datos de prueba no registrados o revisados regularmente"
+    ],
+    "Organizacional": [
+        "Bucle de retroalimentación de incidentes de calidad no implementado",
+        "Debilidad en el bucle de retroalimentación de Producción / Calidad",
+        "Falta retroalimentación de detección en reuniones de equipo",
+        "Auditoría de entrada o en proceso faltante",
+        "Gaps de entrenamiento en personal de inspección/prueba",
+        "Alertas de calidad no comunicadas correctamente a operadores"
+    ]
+}
+systemic_categories_es = {
+    "Gestión / Organización": [
+        "Liderazgo o supervisión inadecuada",
+        "Asignación insuficiente de recursos",
+        "Respuesta retrasada a problemas de producción conocidos",
+        "Falta de responsabilidad o propiedad sobre problemas de calidad",
+        "Escalamiento ineficaz para problemas recurrentes",
+        "Comunicación interfuncional débil"
+    ],
+    "Proceso / Procedimiento": [
+        "SOPs desactualizados o faltantes",
+        "FMEA de proceso no revisada regularmente",
+        "Plan de control desalineado con PFMEA o proceso real",
+        "Lecciones aprendidas no integradas en procesos similares",
+        "Sistema de control de documentos ineficiente",
+        "Procedimientos de mantenimiento preventivo no estandarizados"
+    ],
+    "Capacitación / Entrenamiento": [
+        "No hay matriz de capacitación definida o seguimiento de certificaciones",
+        "Nuevos empleados no entrenados en puntos críticos de control",
+        "Proceso de entrenamiento o inducción ineficaz",
+        "Conocimiento no compartido entre turnos/equipos",
+        "Requisitos de competencia no claramente definidos"
+    ],
+    "Proveedor / Externo": [
+        "Proveedor no incluido en revisión de 8D o FMEA",
+        "Acciones correctivas de proveedor no verificadas",
+        "Proceso de auditoría de material entrante inadecuado",
+        "Cambios de proceso del proveedor no comunicados al cliente",
+        "Tiempo de cierre de problemas de calidad del proveedor largo",
+        "Proveedor violó estándares"
+    ],
+    "Sistema de Calidad / Retroalimentación": [
+        "Auditorías internas ineficaces o incompletas",
+        "Seguimiento de KPI de calidad no vinculado al análisis de causa raíz",
+        "Uso ineficaz de 5-Why o herramientas de resolución de problemas",
+        "Quejas de clientes no alimentan revisiones de diseño",
+        "Lecciones aprendidas no compartidas o reutilizadas",
+        "No hay revisión sistémica después de múltiples 8Ds en la misma área"
+    ]
+}
 
 # ---------------------------
 # Root cause suggestion & helper functions
@@ -579,27 +715,54 @@ line-height:1.5;
                 key=f"ans_{step}"
             )
         # D5 5-Why + "Other" dropdown replacement
-        elif step == "D5":
-           
-           # Existing 5-Why whys below (unchanged)
-           st.markdown("#### Occurrence Analysis")
-           st.session_state.d5_occ_whys = render_whys_no_repeat_with_other(
-               st.session_state.d5_occ_whys, occurrence_categories, t[lang_key]['Occurrence_Why']
-           )
+        elif step == "D5": 
+           # Occurrence Analysis
+           if lang_key == "es":
+               st.session_state.d5_occ_whys = render_whys_no_repeat_with_other(
+                   st.session_state.d5_occ_whys,
+                   occurrence_categories_es,
+                   t[lang_key]['Occurrence_Why']
+               )
+           else:
+               st.session_state.d5_occ_whys = render_whys_no_repeat_with_other(
+                   st.session_state.d5_occ_whys,
+                   occurrence_categories,
+                   t[lang_key]['Occurrence_Why']
+               )
+       
            if st.button("➕ Add another Occurrence Why", key=f"add_occ_{i}"):
                st.session_state.d5_occ_whys.append("")
                
-           st.markdown("#### Detection Analysis")
-           st.session_state.d5_det_whys = render_whys_no_repeat_with_other(
-               st.session_state.d5_det_whys, detection_categories, t[lang_key]['Detection_Why']
-           )
+           # Detection Analysis
+           if lang_key == "es":
+               st.session_state.d5_det_whys = render_whys_no_repeat_with_other(
+                   st.session_state.d5_det_whys,
+                   detection_categories_es,
+                   t[lang_key]['Detection_Why']
+               )
+           else:
+               st.session_state.d5_det_whys = render_whys_no_repeat_with_other(
+                   st.session_state.d5_det_whys,
+                   detection_categories,
+                   t[lang_key]['Detection_Why']
+               )
+
            if st.button("➕ Add another Detection Why", key=f"add_det_{i}"):
                st.session_state.d5_det_whys.append("")
                
-           st.markdown("#### Systemic Analysis")
-           st.session_state.d5_sys_whys = render_whys_no_repeat_with_other(
-               st.session_state.d5_sys_whys, systemic_categories, t[lang_key]['Systemic_Why']
-           )
+          # Systemic Analysis
+          if lang_key == "es":
+              st.session_state.d5_sys_whys = render_whys_no_repeat_with_other(
+                  st.session_state.d5_sys_whys,
+                  systemic_categories_es,
+                  t[lang_key]['Systemic_Why']
+              )
+          else:
+              st.session_state.d5_sys_whys = render_whys_no_repeat_with_other(
+                  st.session_state.d5_sys_whys,
+                  systemic_categories,
+                  t[lang_key]['Systemic_Why']
+              )
            if st.button("➕ Add another Systemic Why", key=f"add_sys_{i}"):
                st.session_state.d5_sys_whys.append("")
 
