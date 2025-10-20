@@ -428,24 +428,40 @@ systemic_categories = {
 # Root cause suggestion & helper functions
 # ---------------------------
 def suggest_root_cause(whys):
-    text = " ".join(whys).lower()
-    if any(word in text for word in ["training", "knowledge", "human error"]):
-        return "The root cause may be attributed to insufficient training or a knowledge gap"
-    if any(word in text for word in ["equipment", "tool", "machine", "fixture"]):
-        return "The root cause may be attributed to equipment, tooling, or maintenance issue"
-    if any(word in text for word in ["procedure", "process", "standard"]):
-        return "The root cause may be attributed to procedure or process not followed or inadequate"
-    if any(word in text for word in ["communication", "information", "handover"]):
-        return "The root cause may be attributed to poor communication or unclear information flow"
-    if any(word in text for word in ["material", "supplier", "component", "part"]):
-        return "The root cause may be attributed to material, supplier, or logistics-related issue"
-    if any(word in text for word in ["design", "specification", "drawing"]):
-        return "The root cause may be attributed to design or engineering issue"
-    if any(word in text for word in ["management", "supervision", "resource"]):
-        return "The root cause may be attributed management or resource-related issue"
-    if any(word in text for word in ["temperature", "humidity", "contamination", "environment"]):
-        return "The root cause may be attributed to environmental or external factor"
-    return "No clear root cause suggestion (provide more 5-Whys)"
+    """
+    Analyze all provided whys and produce a smarter consolidated root cause suggestion.
+    Pure offline, no AI.
+    """
+    text = " ".join([w.lower() for w in whys if w.strip()])
+    
+    categories = {
+        "Training / Knowledge": ["training", "knowledge", "human error", "competence", "onboarding", "guidance"],
+        "Equipment / Tooling": ["equipment", "tool", "machine", "fixture", "calibration", "maintenance", "sensor"],
+        "Process / Procedure": ["process", "procedure", "standard", "control plan", "method", "capability", "instructions", "fmea"],
+        "Communication / Info": ["communication", "information", "handover", "feedback", "miscommunication"],
+        "Material / Supplier": ["material", "supplier", "component", "part", "specification", "labeling", "lot"],
+        "Design / Engineering": ["design", "specification", "drawing", "tolerance", "robust", "dfmea", "verification", "validation"],
+        "Management / Resources": ["management", "supervision", "resource", "leadership", "accountability"],
+        "Environment / External": ["temperature", "humidity", "contamination", "environment", "vibration", "power", "esd"]
+    }
+
+    scores = {cat:0 for cat in categories}
+    for cat, keywords in categories.items():
+        for kw in keywords:
+            if kw in text:
+                scores[cat] += text.count(kw)
+
+    scored_cats = {k:v for k,v in scores.items() if v > 0}
+    if not scored_cats:
+        return "No clear root cause suggestion (provide more detailed 5-Whys)"
+    
+    sorted_cats = sorted(scored_cats.items(), key=lambda x: x[1], reverse=True)
+    top_cats = [cat for cat, score in sorted_cats[:2]]
+    
+    if len(top_cats) == 1:
+        return f"The root cause is likely related to {top_cats[0]}."
+    else:
+        return f"The root cause is likely related to {top_cats[0]} and {top_cats[1]}."
 
 def render_whys_no_repeat_with_other(why_list, categories, label_prefix):
     for idx in range(len(why_list)):
