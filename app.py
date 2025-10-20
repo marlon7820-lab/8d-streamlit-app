@@ -67,7 +67,7 @@ st.markdown("<h1 style='text-align: center; color: #1E90FF;'>📋 8D Report Assi
 # Version info
 # ---------------------------
 version_number = "v1.2.0"
-last_updated = "October 18, 2025"
+last_updated = "October 19, 2025"
 st.markdown(f"""
 <hr style='border:1px solid #1E90FF; margin-top:10px; margin-bottom:5px;'>
 <p style='font-size:12px; font-style:italic; text-align:center; color:#555555;'>
