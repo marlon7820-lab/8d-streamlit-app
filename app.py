@@ -424,13 +424,14 @@ systemic_categories = {
     ]
 }
 
+
 # ---------------------------
 # Root cause suggestion & helper functions
 # ---------------------------
-def suggest_root_cause(whys):
+def suggest_root_cause(whys, lang_key="en"):
     """
-    Smarter root cause suggestion: analyzes all Whys, detects multiple contributing categories,
-    and returns a more natural, combined suggestion for focus areas.
+    Analyze whys (occ/det/sys) and return top 1–3 contributing root cause categories.
+    Supports English and Spanish.
     """
     text = " ".join([w.lower() for w in whys if w.strip()])
     
@@ -445,49 +446,43 @@ def suggest_root_cause(whys):
         "Environment / External": ["temperature", "humidity", "contamination", "environment", "vibration", "power", "esd"]
     }
 
-    # Count occurrences
+    # Count hits per category
     scores = {cat:0 for cat in categories}
     for cat, keywords in categories.items():
         for kw in keywords:
             scores[cat] += text.count(kw)
-
-    # Keep only categories with at least one hit
+    
     scored_cats = {k:v for k,v in scores.items() if v > 0}
     if not scored_cats:
-        return "No clear root cause suggestion (provide more detailed 5-Whys)"
+        return {
+            "en": "No clear root cause suggestion (provide more detailed 5-Whys)",
+            "es": "No hay sugerencia clara de causa raíz (proporcione más detalles en los 5 Porqués)"
+        }[lang_key]
 
-    # Sort by hits
+    # Top 3 categories
     sorted_cats = sorted(scored_cats.items(), key=lambda x: x[1], reverse=True)
-    top_cats = [cat for cat, score in sorted_cats[:3]]  # focus on top 3
+    top_cats = [cat for cat, score in sorted_cats[:3]]
 
-    # Build natural language suggestion
+    # Bilingual mapping
+    rc_texts = {
+        "en": {
+            "single": "The root cause is likely related to {0}. Focus your analysis in this area.",
+            "double": "The root cause is likely related to a combination of {0} and {1}. Consider focusing your investigation in these areas.",
+            "triple": "The root cause is likely related to a combination of {0}, and {1}. Focus your analysis on these areas."
+        },
+        "es": {
+            "single": "La causa raíz probablemente está relacionada con {0}. Enfoca tu análisis en esta área.",
+            "double": "La causa raíz probablemente está relacionada con una combinación de {0} y {1}. Considera enfocar tu investigación en estas áreas.",
+            "triple": "La causa raíz probablemente está relacionada con una combinación de {0}, y {1}. Enfoca tu análisis en estas áreas."
+        }
+    }
+
     if len(top_cats) == 1:
-        return f"The root cause is likely related to {top_cats[0].lower()}. Focus your analysis in this area."
+        return rc_texts[lang_key]["single"].format(top_cats[0])
     elif len(top_cats) == 2:
-        return f"The root cause is likely related to a combination of {top_cats[0].lower()} and {top_cats[1].lower()}. Consider focusing your investigation in these areas."
+        return rc_texts[lang_key]["double"].format(top_cats[0], top_cats[1])
     else:
-        # three or more categories
-        last = top_cats[-1].lower()
-        firsts = ", ".join([c.lower() for c in top_cats[:-1]])
-        return f"The root cause is likely related to a combination of {firsts}, and {last}. Focus your analysis on these areas."
-
-    scores = {cat:0 for cat in categories}
-    for cat, keywords in categories.items():
-        for kw in keywords:
-            if kw in text:
-                scores[cat] += text.count(kw)
-
-    scored_cats = {k:v for k,v in scores.items() if v > 0}
-    if not scored_cats:
-        return "No clear root cause suggestion (provide more detailed 5-Whys)"
-    
-    sorted_cats = sorted(scored_cats.items(), key=lambda x: x[1], reverse=True)
-    top_cats = [cat for cat, score in sorted_cats[:2]]
-    
-    if len(top_cats) == 1:
-        return f"The root cause is likely related to {top_cats[0]}."
-    else:
-        return f"The root cause is likely related to {top_cats[0]} and {top_cats[1]}."
+        return rc_texts[lang_key]["triple"].format(top_cats[0], top_cats[1])
 
 def render_whys_no_repeat_with_other(why_list, categories, label_prefix):
     for idx in range(len(why_list)):
@@ -588,15 +583,23 @@ line-height:1.5;
            
            # Existing 5-Why whys below (unchanged)
            st.markdown("#### Occurrence Analysis")
-           st.session_state.d5_occ_whys = render_whys_no_repeat_with_other(st.session_state.d5_occ_whys, occurrence_categories, t[lang_key]['Occurrence_Why'])
+           st.session_state.d5_occ_whys = render_whys_no_repeat_with_other(
+               st.session_state.d5_occ_whys, occurrence_categories, t[lang_key]['Occurrence_Why']
+           )
            if st.button("➕ Add another Occurrence Why", key=f"add_occ_{i}"):
                st.session_state.d5_occ_whys.append("")
+               
            st.markdown("#### Detection Analysis")
-           st.session_state.d5_det_whys = render_whys_no_repeat_with_other(st.session_state.d5_det_whys, detection_categories, t[lang_key]['Detection_Why'])
+           st.session_state.d5_det_whys = render_whys_no_repeat_with_other(
+               st.session_state.d5_det_whys, detection_categories, t[lang_key]['Detection_Why']
+           )
            if st.button("➕ Add another Detection Why", key=f"add_det_{i}"):
                st.session_state.d5_det_whys.append("")
+               
            st.markdown("#### Systemic Analysis")
-           st.session_state.d5_sys_whys = render_whys_no_repeat_with_other(st.session_state.d5_sys_whys, systemic_categories, t[lang_key]['Systemic_Why'])
+           st.session_state.d5_sys_whys = render_whys_no_repeat_with_other(
+               st.session_state.d5_sys_whys, systemic_categories, t[lang_key]['Systemic_Why']
+           )
            if st.button("➕ Add another Systemic Why", key=f"add_sys_{i}"):
                st.session_state.d5_sys_whys.append("")
 
@@ -604,9 +607,24 @@ line-height:1.5;
            occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
            det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
            sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
-           st.text_area(f"{t[lang_key]['Root_Cause_Occ']}", value=suggest_root_cause(occ_whys) if occ_whys else "No occurrence whys provided yet", height=80, disabled=True)
-           st.text_area(f"{t[lang_key]['Root_Cause_Det']}", value=suggest_root_cause(det_whys) if det_whys else "No detection whys provided yet", height=80, disabled=True)
-           st.text_area(f"{t[lang_key]['Root_Cause_Sys']}", value=suggest_root_cause(sys_whys) if sys_whys else "No systemic whys provided yet", height=80, disabled=True)
+           st.text_area(
+               f"{t[lang_key]['Root_Cause_Occ']}",
+               value=suggest_root_cause(occ_whys, lang_key),
+               height=100,
+               disabled=True
+           )
+           st.text_area(
+              f"{t[lang_key]['Root_Cause_Det']}",
+              value=suggest_root_cause(det_whys, lang_key),
+              height=100,
+              disabled=True
+           )
+           st.text_area(
+              f"{t[lang_key]['Root_Cause_Sys']}",
+              value=suggest_root_cause(sys_whys, lang_key),
+              height=100,
+              disabled=True
+           )
 
         # D6: Permanent Corrective Actions (three text areas: Occ/Det/Sys)
         elif step == "D6":
