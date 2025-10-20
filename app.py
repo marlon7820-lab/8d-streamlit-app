@@ -425,9 +425,10 @@ systemic_categories = {
 }
 
 # ---------------------------
-# Root cause suggestion & helper functions
+# Root cause suggestion & helper functions (SMART)
 # ---------------------------
-def suggest_root_cause(whys):
+def suggest_root_cause_smart(whys):
+    """Analyze 5-Whys and give an intelligent root cause suggestion."""
     text = " ".join(whys).lower()
     if any(word in text for word in ["training", "knowledge", "human error"]):
         return "The root cause may be attributed to insufficient training or a knowledge gap"
@@ -442,18 +443,21 @@ def suggest_root_cause(whys):
     if any(word in text for word in ["design", "specification", "drawing"]):
         return "The root cause may be attributed to design or engineering issue"
     if any(word in text for word in ["management", "supervision", "resource"]):
-        return "The root cause may be attributed management or resource-related issue"
+        return "The root cause may be attributed to management or resource-related issue"
     if any(word in text for word in ["temperature", "humidity", "contamination", "environment"]):
         return "The root cause may be attributed to environmental or external factor"
     return "No clear root cause suggestion (provide more 5-Whys)"
 
-def render_whys_no_repeat_with_other(why_list, categories, label_prefix):
+def render_whys_smart_root_cause(why_list, categories, label_prefix):
+    """
+    Render 5-Why dropdowns with "Other" option and show smart root cause dynamically.
+    Returns updated why_list.
+    """
     for idx in range(len(why_list)):
-        # Build options for this selectbox
+        # Build dropdown options excluding what has already been selected
         selected_so_far = [w for i, w in enumerate(why_list) if w.strip() and i != idx]
-        options = [""] + [f"{cat}: {item}" for cat, items in categories.items() 
-                          for item in items 
-                          if f"{cat}: {item}" not in selected_so_far] + ["Other"]
+        options = [""] + [f"{cat}: {item}" for cat, items in categories.items()
+                          for item in items if f"{cat}: {item}" not in selected_so_far] + ["Other"]
 
         current_val = why_list[idx] if why_list[idx] in options else ""
         selection = st.selectbox(
@@ -463,11 +467,15 @@ def render_whys_no_repeat_with_other(why_list, categories, label_prefix):
             key=f"{label_prefix}_{idx}_{lang_key}"
         )
 
-        # If "Other" is selected, show a free text box
         if selection == "Other":
             why_list[idx] = st.text_input(f"Please specify {label_prefix} {idx+1}", key=f"{label_prefix}_{idx}_other_{lang_key}")
         else:
             why_list[idx] = selection
+
+    # Show dynamic root cause suggestion below the why list
+    whys_cleaned = [w for w in why_list if w.strip()]
+    if whys_cleaned:
+        st.text_area(f"Suggested Root Cause ({label_prefix})", value=suggest_root_cause_smart(whys_cleaned), height=80, disabled=True)
     return why_list
 # ---------------------------
 # Render Tabs with Uploads
