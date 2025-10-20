@@ -549,29 +549,56 @@ line-height:1.5;
                 key=f"ans_{step}"
             )
         # D5 5-Why + "Other" dropdown replacement
-        elif step == "D5":
-           
-           # Existing 5-Why whys below (unchanged)
-           st.markdown("#### Occurrence Analysis")
-           st.session_state.d5_occ_whys = render_whys_smart_root_cause(st.session_state.d5_occ_whys, occurrence_categories, t[lang_key]['Occurrence_Why'])
-           if st.button("➕ Add another Occurrence Why", key=f"add_occ_{i}"):
-               st.session_state.d5_occ_whys.append("")
-           st.markdown("#### Detection Analysis")
-           st.session_state.d5_det_whys = render_whys_smart_root_cause(st.session_state.d5_det_whys, detection_categories, t[lang_key]['Detection_Why'])
-           if st.button("➕ Add another Detection Why", key=f"add_det_{i}"):
-               st.session_state.d5_det_whys.append("")
-           st.markdown("#### Systemic Analysis")
-           st.session_state.d5_sys_whys = render_whys_smart_root_cause(st.session_state.d5_sys_whys, systemic_categories, t[lang_key]['Systemic_Why'])
-           if st.button("➕ Add another Systemic Why", key=f"add_sys_{i}"):
-               st.session_state.d5_sys_whys.append("")
+elif step == "D5":
+    st.markdown("#### Occurrence Analysis")
+    st.session_state.d5_occ_whys = render_whys_no_repeat_with_other(
+        st.session_state.d5_occ_whys,
+        occurrence_categories,
+        t[lang_key]['Occurrence_Why']
+    )
+    if st.button("➕ Add another Occurrence Why", key=f"add_occ_{i}"):
+        st.session_state.d5_occ_whys.append("")
 
-           # Dynamic Root Causes suggestion display (unchanged)
-           occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
-           det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
-           sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
-           st.text_area(f"{t[lang_key]['Root_Cause_Occ']}", value=suggest_root_cause(occ_whys) if occ_whys else "No occurrence whys provided yet", height=80, disabled=True)
-           st.text_area(f"{t[lang_key]['Root_Cause_Det']}", value=suggest_root_cause(det_whys) if det_whys else "No detection whys provided yet", height=80, disabled=True)
-           st.text_area(f"{t[lang_key]['Root_Cause_Sys']}", value=suggest_root_cause(sys_whys) if sys_whys else "No systemic whys provided yet", height=80, disabled=True)
+    st.markdown("#### Detection Analysis")
+    st.session_state.d5_det_whys = render_whys_no_repeat_with_other(
+        st.session_state.d5_det_whys,
+        detection_categories,
+        t[lang_key]['Detection_Why']
+    )
+    if st.button("➕ Add another Detection Why", key=f"add_det_{i}"):
+        st.session_state.d5_det_whys.append("")
+
+    st.markdown("#### Systemic Analysis")
+    st.session_state.d5_sys_whys = render_whys_no_repeat_with_other(
+        st.session_state.d5_sys_whys,
+        systemic_categories,
+        t[lang_key]['Systemic_Why']
+    )
+    if st.button("➕ Add another Systemic Why", key=f"add_sys_{i}"):
+        st.session_state.d5_sys_whys.append("")
+
+    # Dynamic Root Causes suggestion display (unchanged)
+    occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
+    det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
+    sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
+
+    st.text_area(
+        f"{t[lang_key]['Root_Cause_Occ']}",
+        value=suggest_root_cause(occ_whys) if occ_whys else "No occurrence whys provided yet",
+        height=80,
+        disabled=True
+    )
+    st.text_area(
+        f"{t[lang_key]['Root_Cause_Det']}",
+        value=suggest_root_cause(det_whys) if det_whys else "No detection whys provided yet",
+        height=80,
+        disabled=True
+    )
+    st.text_area(
+        f"{t[lang_key]['Root_Cause_Sys']}",
+        value=suggest_root_cause(sys_whys) if sys_whys else "No systemic whys provided yet",
+        height=80,
+        disabled=True
 
         # D6: Permanent Corrective Actions (three text areas: Occ/Det/Sys)
         elif step == "D6":
