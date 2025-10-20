@@ -590,7 +590,7 @@ line-height:1.5;
     )
 
         # D6: Permanent Corrective Actions (three text areas: Occ/Det/Sys)
-        elif step == "D6":
+         elif step == "D6":
             st.session_state[step].setdefault("occ_answer", st.session_state["D6"].get("occ_answer", ""))
             st.session_state[step].setdefault("det_answer", st.session_state["D6"].get("det_answer", ""))
             st.session_state[step].setdefault("sys_answer", st.session_state["D6"].get("sys_answer", ""))
@@ -617,7 +617,7 @@ line-height:1.5;
             st.session_state["D6"]["sys_answer"] = st.session_state[step]["sys_answer"]
 
         # D7: Countermeasure Confirmation (three text areas: verification for Occ/Det/Sys)
-        elif step == "D7":
+         elif step == "D7":
             st.session_state[step].setdefault("occ_answer", st.session_state["D7"].get("occ_answer", ""))
             st.session_state[step].setdefault("det_answer", st.session_state["D7"].get("det_answer", ""))
             st.session_state[step].setdefault("sys_answer", st.session_state["D7"].get("sys_answer", ""))
@@ -644,14 +644,14 @@ line-height:1.5;
             st.session_state["D7"]["sys_answer"] = st.session_state[step]["sys_answer"]
 
         # D8: Follow-up Activities / Lessons Learned (single text area)
-        elif step == "D8":
+         elif step == "D8":
             st.session_state[step]["answer"] = st.text_area(
                 "Your Answer",
                 value=st.session_state[step]["answer"],
                 key=f"ans_{step}"
             )
 
-        else:
+         else:
             # Default for D1, D2, D3, or any other single-answer steps
             if step not in ["D4", "D5", "D6", "D7", "D8"]:
                 st.session_state[step]["answer"] = st.text_area(
