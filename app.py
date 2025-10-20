@@ -589,7 +589,7 @@ line-height:1.5;
         disabled=True
     )
 
-        elif step == "D6":
+    elif step == "D6":
     # Permanent Corrective Actions (three text areas: Occ/Det/Sys)
     st.session_state[step].setdefault("occ_answer", st.session_state["D6"].get("occ_answer", ""))
     st.session_state[step].setdefault("det_answer", st.session_state["D6"].get("det_answer", ""))
