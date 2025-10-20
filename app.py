@@ -554,15 +554,15 @@ line-height:1.5;
            
            # Existing 5-Why whys below (unchanged)
            st.markdown("#### Occurrence Analysis")
-           st.session_state.d5_occ_whys = render_whys_no_repeat_with_other(st.session_state.d5_occ_whys, occurrence_categories, t[lang_key]['Occurrence_Why'])
+           st.session_state.d5_occ_whys = render_whys_smart_root_cause(st.session_state.d5_occ_whys, occurrence_categories, t[lang_key]['Occurrence_Why'])
            if st.button("➕ Add another Occurrence Why", key=f"add_occ_{i}"):
                st.session_state.d5_occ_whys.append("")
            st.markdown("#### Detection Analysis")
-           st.session_state.d5_det_whys = render_whys_no_repeat_with_other(st.session_state.d5_det_whys, detection_categories, t[lang_key]['Detection_Why'])
+           st.session_state.d5_det_whys = render_whys_smart_root_cause(st.session_state.d5_det_whys, detection_categories, t[lang_key]['Detection_Why'])
            if st.button("➕ Add another Detection Why", key=f"add_det_{i}"):
                st.session_state.d5_det_whys.append("")
            st.markdown("#### Systemic Analysis")
-           st.session_state.d5_sys_whys = render_whys_no_repeat_with_other(st.session_state.d5_sys_whys, systemic_categories, t[lang_key]['Systemic_Why'])
+           st.session_state.d5_sys_whys = render_whys_smart_root_cause(st.session_state.d5_sys_whys, systemic_categories, t[lang_key]['Systemic_Why'])
            if st.button("➕ Add another Systemic Why", key=f"add_sys_{i}"):
                st.session_state.d5_sys_whys.append("")
 
