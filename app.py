@@ -429,8 +429,8 @@ systemic_categories = {
 # ---------------------------
 def suggest_root_cause(whys):
     """
-    Analyze all provided whys and produce a smarter consolidated root cause suggestion.
-    Pure offline, no AI.
+    Smarter root cause suggestion: analyzes all Whys, detects multiple contributing categories,
+    and returns a more natural, combined suggestion for focus areas.
     """
     text = " ".join([w.lower() for w in whys if w.strip()])
     
@@ -444,6 +444,32 @@ def suggest_root_cause(whys):
         "Management / Resources": ["management", "supervision", "resource", "leadership", "accountability"],
         "Environment / External": ["temperature", "humidity", "contamination", "environment", "vibration", "power", "esd"]
     }
+
+    # Count occurrences
+    scores = {cat:0 for cat in categories}
+    for cat, keywords in categories.items():
+        for kw in keywords:
+            scores[cat] += text.count(kw)
+
+    # Keep only categories with at least one hit
+    scored_cats = {k:v for k,v in scores.items() if v > 0}
+    if not scored_cats:
+        return "No clear root cause suggestion (provide more detailed 5-Whys)"
+
+    # Sort by hits
+    sorted_cats = sorted(scored_cats.items(), key=lambda x: x[1], reverse=True)
+    top_cats = [cat for cat, score in sorted_cats[:3]]  # focus on top 3
+
+    # Build natural language suggestion
+    if len(top_cats) == 1:
+        return f"The root cause is likely related to {top_cats[0].lower()}. Focus your analysis in this area."
+    elif len(top_cats) == 2:
+        return f"The root cause is likely related to a combination of {top_cats[0].lower()} and {top_cats[1].lower()}. Consider focusing your investigation in these areas."
+    else:
+        # three or more categories
+        last = top_cats[-1].lower()
+        firsts = ", ".join([c.lower() for c in top_cats[:-1]])
+        return f"The root cause is likely related to a combination of {firsts}, and {last}. Focus your analysis on these areas."
 
     scores = {cat:0 for cat in categories}
     for cat, keywords in categories.items():
