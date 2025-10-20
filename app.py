@@ -279,37 +279,39 @@ for sub in ["occ_answer", "det_answer", "sys_answer"]:
     st.session_state["D7"].setdefault(sub, "")
 
 # ---------------------------
-# D5 categories
+# Cleaned & Standardized D5 categories
 # ---------------------------
+
+# Occurrence (issues that actually happen in process, material, design, equipment, or environment)
 occurrence_categories = {
     "Machine / Equipment": [
         "Equipment malfunction or inadequate maintenance",
-        "Calibration issues or drift",
-        "Tooling or fixture wear or damage",
+        "Calibration drift or misalignment",
+        "Tooling or fixture wear/damage",
         "Machine parameters not optimized",
-        "Lack of preventive maintenance schedule",
         "Sensor malfunction or misalignment",
         "Process automation fault not detected",
-        "Unstable process due to poor machine setup"
+        "Unstable process due to poor machine setup",
+        "Preventive maintenance schedule not followed"
     ],
     "Material / Component": [
-        "Wrong material or component used",
+        "Incorrect material or component used",
         "Supplier provided off-spec component",
         "Material defect not visible during inspection",
         "Damage during storage, handling, or transport",
-        "Incorrect labeling, Missing label or lot traceability error",
+        "Incorrect or missing labeling / lot traceability error",
         "Material substitution without approval",
         "Material specification not aligned with requirements"
     ],
     "Process / Method": [
         "Incorrect process step sequence",
         "Inadequate process control or parameter definition",
-        "Inadequate work instructions / unclear procedure",
+        "Unclear or missing work instructions / procedure",
         "Process drift over time not detected",
         "Control plan not followed on production floor",
-        "Incorrect torque, solder, or assembly process",
+        "Incorrect torque, soldering, or assembly process",
         "Outdated or missing process FMEA linkage",
-        "Inadequate process capability (Cp/Cpk below target)",
+        "Process capability (Cp/Cpk) below target",
         "Lack of standardized process or method"
     ],
     "Design / Engineering": [
@@ -326,71 +328,73 @@ occurrence_categories = {
         "Contamination or dust affecting product",
         "Power fluctuation or interruption",
         "External vibration or noise interference",
-        "Unstable environmental monitoring process"
+        "Environmental monitoring process unstable"
     ]
 }
 
+# Detection (issues in QA, validation, FMEA, test setup, or organizational checks)
 detection_categories = {
     "QA / Inspection": [
-        "QA checklist incomplete or not updated",
+        "Incomplete or outdated QA checklist",
         "No automated inspection system in place",
         "Manual inspection prone to human error",
         "Inspection frequency too low to detect issue",
-        "Inspection criteria unclear or inconsistent",
+        "Unclear or inconsistent inspection criteria",
         "Measurement system not capable (GR&R issues)",
         "Incoming inspection missed recent supplier issue",
-        "Ineffective detection method or gauge desing",
-        "Lack of defined acceptance criteria",
+        "Ineffective detection method or gauge design",
+        "Undefined acceptance criteria",
         "Inadequate automation or sensing",
         "Final inspection missed due to sampling plan"
     ],
     "Validation / Process": [
         "Process validation not updated after design/process change",
         "Insufficient verification of new parameters or components",
-        "Design validation not complete or not representative of real conditions",
-        "Inadequate control plan coverage for potential failure modes",
-        "Lack of ongoing process monitoring (SPC / CpK tracking)",
-        "Ineffective containment validation",
-        "Incorrect or outdated process limits not aligned with FMEA"
+        "Design validation incomplete or not representative of real conditions",
+        "Control plan coverage inadequate for potential failure modes",
+        "Ongoing process monitoring missing (SPC / CpK)",
+        "Containment validation ineffective",
+        "Incorrect or outdated process limits"
     ],
     "FMEA / Control Plan": [
         "Failure mode not captured in PFMEA",
         "Detection controls missing or ineffective in PFMEA",
         "Control plan not updated after corrective actions",
         "FMEA not reviewed after customer complaint",
-        "Detection ranking not realistic to actual inspection capability",
+        "Detection ranking unrealistic to inspection capability",
         "PFMEA and control plan not properly linked"
     ],
     "Test / Equipment": [
         "Test equipment calibration overdue",
         "Testing software parameters incorrect",
-        "Test setup does not detect this specific failure mode",
+        "Test setup cannot detect this failure mode",
         "Detection threshold too wide to capture failure",
         "Test data not logged or reviewed regularly"
     ],
     "Organizational": [
         "Feedback loop from quality incidents not implemented",
         "Weak feedback loop from Production / Quality",
-        "Lack of detection feedback in regular team meetings",
-        "Lack of incoming or in-process audit",
-        "Training gaps in inspection or test personnel",
+        "Detection feedback missing in team meetings",
+        "Incoming or in-process audit missing",
+        "Training gaps in inspection/test personnel",
         "Quality alerts not properly communicated to operators"
     ]
 }
 
+# Systemic (management, training, SOPs, supplier, quality system)
 systemic_categories = {
     "Management / Organization": [
-        "Inadequate leadership or supervision structure",
-        "Insufficient resource allocation to critical processes",
+        "Inadequate leadership or supervision",
+        "Insufficient resource allocation",
         "Delayed response to known production issues",
         "Lack of accountability or ownership of quality issues",
-        "Ineffective escalation process for recurring problems",
-        "Weak cross-functional communication between departments"
+        "Ineffective escalation for recurring problems",
+        "Weak cross-functional communication"
     ],
     "Process / Procedure": [
-        "Standard Operating Procedures (SOPs) outdated or missing",
-        "Process FMEA not reviewed regularly",
-        "Control plan not aligned with PFMEA or actual process",
+        "SOPs outdated or missing",
+        "Process FMEA not regularly reviewed",
+        "Control plan misaligned with PFMEA or actual process",
         "Lessons learned not integrated into similar processes",
         "Inefficient document control system",
         "Preventive maintenance procedures not standardized"
@@ -398,24 +402,24 @@ systemic_categories = {
     "Training": [
         "No defined training matrix or certification tracking",
         "New hires not trained on critical control points",
-        "Ineffective training system or onboarding process",
-        "Knowledge not shared between shifts or teams",
+        "Ineffective training or onboarding process",
+        "Knowledge not shared between shifts/teams",
         "Competence requirements not clearly defined"
     ],
     "Supplier / External": [
-        "Supplier not included in 8D or FMEA review process",
-        "Supplier corrective actions not verified for effectiveness",
-        "Inadequate incoming material audit process",
+        "Supplier not included in 8D or FMEA review",
+        "Supplier corrective actions not verified",
+        "Incoming material audit process inadequate",
         "Supplier process changes not communicated to customer",
         "Long lead time for supplier quality issue closure",
-        "Supplier violation of cleanpoint"
+        "Supplier violation of standards"
     ],
     "Quality System / Feedback": [
-        "Internal audits ineffective or not completed",
+        "Internal audits ineffective or incomplete",
         "Quality KPI tracking not linked to root cause analysis",
-        "Ineffective use of 5-Why or other problem solving tools",
-        "Customer complaints not feeding back into design reviews",
-        "Lessons learned not shared / reused",
+        "Ineffective use of 5-Why or problem-solving tools",
+        "Customer complaints not feeding into design reviews",
+        "Lessons learned not shared or reused",
         "No systemic review after multiple 8Ds in same area"
     ]
 }
