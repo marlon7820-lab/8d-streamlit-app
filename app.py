@@ -65,10 +65,10 @@ div.stSelectbox:hover, div.stTextInput:hover, div.stTextArea:hover {
     color: #000000 !important;        /* black text */
     background-color: #ffffff !important; /* white background */
     font-weight: bold !important;     /* bold */
+    opacity: 1 !important;            /* remove fade */
 }
 </style>
 """, unsafe_allow_html=True)
-
 # ---------------------------
 # Reset Session check
 # ---------------------------
