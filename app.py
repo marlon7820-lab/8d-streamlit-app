@@ -427,8 +427,7 @@ systemic_categories = {
 # ---------------------------
 # Root cause suggestion & helper functions (SMART)
 # ---------------------------
-def suggest_root_cause_smart(whys):
-    """Analyze 5-Whys and give an intelligent root cause suggestion."""
+def suggest_root_cause(whys):
     text = " ".join(whys).lower()
     if any(word in text for word in ["training", "knowledge", "human error"]):
         return "The root cause may be attributed to insufficient training or a knowledge gap"
@@ -443,7 +442,7 @@ def suggest_root_cause_smart(whys):
     if any(word in text for word in ["design", "specification", "drawing"]):
         return "The root cause may be attributed to design or engineering issue"
     if any(word in text for word in ["management", "supervision", "resource"]):
-        return "The root cause may be attributed to management or resource-related issue"
+        return "The root cause may be attributed management or resource-related issue"
     if any(word in text for word in ["temperature", "humidity", "contamination", "environment"]):
         return "The root cause may be attributed to environmental or external factor"
     return "No clear root cause suggestion (provide more 5-Whys)"
