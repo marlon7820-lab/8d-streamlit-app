@@ -917,7 +917,7 @@ line-height:1.5;
             """)
 
     # Optional: show example entry below
-    st.caption(f"💡 {t[lang_key]['Example']}: {example[lang_key]}")
+    st.caption(f"💡 {t[lang_key]['Example']}: {example_dict[lang_key]}")
 # ---------------------------
 # Collect all answers for Excel export
 # ---------------------------
