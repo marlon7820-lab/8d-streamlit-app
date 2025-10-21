@@ -670,7 +670,9 @@ def render_whys_no_repeat_with_other(why_list, categories, label_prefix):
 # ---------------------------
 # Progress tracker (NEW)
 # ---------------------------
-st.markdown("### 🧭 8D Completion Progress")
+st.markdown("### 🧭 **8D Completion Tracker**")
+st.progress(progress / total_steps)
+st.caption(f"✅ {progress}/{total_steps} steps completed")
 
 progress = 0
 total_steps = len(["D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8"])
