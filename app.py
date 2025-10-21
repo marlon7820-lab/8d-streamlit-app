@@ -302,7 +302,14 @@ for sub in ["occ_answer", "det_answer", "sys_answer"]:
     st.session_state["D6"].setdefault(sub, "")
     st.session_state.setdefault(("D7"), st.session_state.get("D7", {}))
     st.session_state["D7"].setdefault(sub, "")
-# 📘 Guidance Expander (bilingual)
+    
+for step, note_dict, example_dict in npqp_steps:
+    if step not in st.session_state:
+        st.session_state[step] = {"answer": "", "extra": ""}
+        if step in ["D1","D3","D4","D7"]:
+            st.session_state[step]["uploaded_files"] = []
+
+    # Guidance expander (bilingual)
     with st.expander("📘 Need help writing this section?" if lang_key == "en" else "📘 ¿Necesitas ayuda para redactar esta sección?"):
         if lang_key == "en":
             st.markdown("""
@@ -317,9 +324,8 @@ for sub in ["occ_answer", "det_answer", "sys_answer"]:
             - Ejemplo: *"El cliente reportó que el radio no enciende después de 2 horas de operación en condiciones de calor"*
             """)
 
-    # Optional: show example entry below
+    # Show example entry safely
     st.caption(f"💡 {t[lang_key]['Example']}: {example_dict[lang_key]}")
-
 # ---------------------------
 # Cleaned & Standardized D5 categories
 # ---------------------------
