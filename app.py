@@ -194,36 +194,50 @@ st.markdown("""
 # Step-specific guidance content (bilingual)
 # ---------------------------
 guidance_content = {
+    guidance_content = {
     "D1": {
-        "en": {"title": "Define the Team","tips": """
-- Identify all team members involved in solving the issue.
-- Include functions like Quality, Engineering, Production, Supplier, etc.
-- Assign clear roles and responsibilities.
-- Example: *John (Quality) – Team Leader; Maria (Engineering) – Root Cause Analyst*.
+        "en": {"title": "Define the Team & Describe the Problem","tips": """
+- **Define the Team**:
+  - Identify all team members involved in solving the issue.
+  - Include functions like Quality, Engineering, Production, Supplier, etc.
+  - Assign clear roles and responsibilities.
+  - Example: *John (Quality) – Team Leader; Maria (Engineering) – Root Cause Analyst*.
+
+- **Describe the Problem**:
+  - Focus on **facts and measurable data** (avoid assumptions).
+  - Use 5W2H (Who, What, Where, When, Why, How, How Many).
+  - Example: *Customer reports radio does not power on after 2 hours of use in hot conditions*.
 """
         },
-        "es": {"title": "Definir el Equipo","tips": """
-- Identifica a todos los miembros del equipo involucrados.
-- Incluye áreas como Calidad, Ingeniería, Producción, Proveedor, etc.
-- Asigna roles y responsabilidades claras.
-- Ejemplo: *Juan (Calidad) – Líder del Equipo; María (Ingeniería) – Análisis de Causa Raíz*.
+        "es": {"title": "Definir el Equipo y Describir el Problema","tips": """
+- **Definir el Equipo**:
+  - Identifica a todos los miembros del equipo involucrados.
+  - Incluye áreas como Calidad, Ingeniería, Producción, Proveedor, etc.
+  - Asigna roles y responsabilidades claras.
+  - Ejemplo: *Juan (Calidad) – Líder del Equipo; María (Ingeniería) – Análisis de Causa Raíz*.
+
+- **Describir el Problema**:
+  - Enfócate en **hechos y datos medibles** (evita suposiciones).
+  - Usa 5W2H (Quién, Qué, Dónde, Cuándo, Por qué, Cómo, Cuántos).
+  - Ejemplo: *El cliente reporta que el radio no enciende después de 2 horas de uso en condiciones de calor*.
 """
         }
     },
     "D2": {
-        "en": {"title": "Describe the Problem","tips": """
-- Focus on **facts and measurable data** (avoid assumptions).
-- Use 5W2H (Who, What, Where, When, Why, How, How Many).
-- Example: *Customer reports radio does not power on after 2 hours of use in hot conditions*.
+        "en": {"title": "Similar Parts That Could Be Affected","tips": """
+- Identify parts, models, colors, or assemblies that could also be affected.
+- Consider variations in suppliers, batches, or production lines.
+- Example: *Front vs. rear speaker, similar model radios, alternate supplier components.*
 """
         },
-        "es": {"title": "Describir el Problema","tips": """
-- Enfócate en **hechos y datos medibles** (evita suposiciones).
-- Usa 5W2H (Quién, Qué, Dónde, Cuándo, Por qué, Cómo, Cuántos).
-- Ejemplo: *El cliente reporta que el radio no enciende después de 2 horas de uso en condiciones de calor*.
+        "es": {"title": "Partes Similares que Podrían Verse Afectadas","tips": """
+- Identifica piezas, modelos, colores o ensamblajes que también podrían verse afectados.
+- Considera variaciones de proveedores, lotes o líneas de producción.
+- Ejemplo: *Altavoz delantero vs trasero, radios de modelo similar, componentes de proveedor alternativo.*
 """
         }
-    },
+    }
+}
     "D3": {
         "en": {"title": "Implement Containment","tips": """
 - Describe temporary actions to isolate defective material.
