@@ -816,7 +816,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     with tabs[i]:
         st.markdown(f"### {t[lang_key][step]}")
 
-        # Training Guidance & Example
+        # Training Guidance & Example box
         note_text = note_dict[lang_key]
         example_text = example_dict[lang_key]
         st.markdown(f"""
@@ -834,16 +834,26 @@ line-height:1.5;
 💡 <b>{t[lang_key]['Example']}:</b> {example_text}
 </div>
 """, unsafe_allow_html=True)
-        
-# ---------------------------
-# Step-specific bilingual guidance expander
-# ---------------------------
-current_step = step  # Example: "D1", "D2", ...
-if current_step in guidance_content:
-    step_help = guidance_content[current_step][lang_key]
-    expander_label = f"📘 {step_help['title']}"
-    with st.expander(expander_label):
-        st.markdown(step_help["tips"])
+
+        # Bilingual guidance expander (step-specific)
+        with st.expander(
+            "📘 Need help writing this section?" if lang_key == "en" else "📘 ¿Necesitas ayuda para redactar esta sección?"
+        ):
+            if lang_key == "en":
+                st.markdown(f"""
+- Focus on facts and data (avoid assumptions)
+- Be specific: Who, What, Where, When, How Many
+- Example for this step: *"{example_text}"*
+""")
+            else:
+                st.markdown(f"""
+- Enfócate en hechos y datos (evita suposiciones)
+- Sé específico: Quién, Qué, Dónde, Cuándo, Cuántos
+- Ejemplo para este paso: *"{example_text}"*
+""")
+
+        # Show example entry safely
+        st.caption(f"💡 {t[lang_key]['Example']}: {example_text}")
         
         # File uploads for D1, D3, D4, D7
         if step in ["D1","D3","D4","D7"]:
