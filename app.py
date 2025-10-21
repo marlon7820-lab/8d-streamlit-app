@@ -585,122 +585,6 @@ systemic_categories_es = {
         "No hay revisión sistémica después de múltiples 8Ds en la misma área"
     ]
 }
-# ---------------------------
-# Step-specific guidance content (bilingual)
-# ---------------------------
-guidance_content = {
-    "D1": {
-        "en": {"title": "Define the Team", "tips": """
-- Identify all team members involved in solving the issue.
-- Include functions like Quality, Engineering, Production, Supplier, etc.
-- Assign clear roles and responsibilities.
-- Example: *John (Quality) – Team Leader; Maria (Engineering) – Root Cause Analyst*.
-"""
-        },
-        "es": {"title": "Definir el Equipo", "tips": """
-- Identifica a todos los miembros del equipo involucrados.
-- Incluye áreas como Calidad, Ingeniería, Producción, Proveedor, etc.
-- Asigna roles y responsabilidades claras.
-- Ejemplo: *Juan (Calidad) – Líder del Equipo; María (Ingeniería) – Análisis de Causa Raíz*.
-"""
-        }
-    },
-    "D2": {
-        "en": {"title": "Describe the Problem", "tips": """
-- Focus on **facts and measurable data** (avoid assumptions).
-- Use 5W2H (Who, What, Where, When, Why, How, How Many).
-- Example: *Customer reports radio does not power on after 2 hours of use in hot conditions*.
-"""
-        },
-        "es": {"title": "Describir el Problema", "tips": """
-- Enfócate en **hechos y datos medibles** (evita suposiciones).
-- Usa 5W2H (Quién, Qué, Dónde, Cuándo, Por qué, Cómo, Cuántos).
-- Ejemplo: *El cliente reporta que el radio no enciende después de 2 horas de uso en condiciones de calor*.
-"""
-        }
-    },
-    "D3": {
-        "en": {"title": "Implement Containment", "tips": """
-- Describe temporary actions to isolate defective material.
-- Example: *Quarantined 200 pcs in warehouse, stopped shipments to customer.*
-"""
-        },
-        "es": {"title": "Implementar Contención", "tips": """
-- Describe las acciones temporales para aislar material defectuoso.
-- Ejemplo: *Se pusieron en cuarentena 200 piezas en almacén, se detuvieron envíos al cliente.*
-"""
-        }
-    },
-    "D4": {
-        "en": {"title": "Identify Root Cause", "tips": """
-- Use tools like 5 Why’s or Fishbone Diagram.
-- Verify the root cause with evidence.
-- Example: *Incorrect torque due to missing calibration on assembly tool.*
-"""
-        },
-        "es": {"title": "Identificar la Causa Raíz", "tips": """
-- Usa herramientas como 5 Porqués o Diagrama de Ishikawa.
-- Verifica la causa raíz con evidencia.
-- Ejemplo: *Par incorrecto debido a falta de calibración en herramienta de ensamble.*
-"""
-        }
-    },
-    "D5": {
-        "en": {"title": "Verify Permanent Corrective Actions", "tips": """
-- Define permanent solutions to eliminate the root cause.
-- Validate with testing or simulation.
-- Example: *Implemented torque monitoring system to prevent missed calibrations.*
-"""
-        },
-        "es": {"title": "Verificar Acciones Correctivas Permanentes", "tips": """
-- Define soluciones permanentes para eliminar la causa raíz.
-- Valida con pruebas o simulaciones.
-- Ejemplo: *Se implementó sistema de monitoreo de torque para evitar calibraciones omitidas.*
-"""
-        }
-    },
-    "D6": {
-        "en": {"title": "Implement and Validate Corrective Actions", "tips": """
-- Confirm corrective actions are applied and effective.
-- Example: *All assembly stations now equipped with digital torque sensors.*
-"""
-        },
-        "es": {"title": "Implementar y Validar Acciones Correctivas", "tips": """
-- Confirma que las acciones correctivas se aplican y son efectivas.
-- Ejemplo: *Todas las estaciones de ensamble ahora tienen sensores de torque digitales.*
-"""
-        }
-    },
-    "D7": {
-        "en": {"title": "Prevent Recurrence", "tips": """
-- Update documentation, training, and procedures.
-- Example: *Updated Work Instruction #WI-321 and retrained all operators.*
-"""
-        },
-        "es": {"title": "Prevenir Recurrencia", "tips": """
-- Actualiza documentación, entrenamiento y procedimientos.
-- Ejemplo: *Se actualizó la Instrucción de Trabajo #WI-321 y se capacitó a todos los operadores.*
-"""
-        }
-    },
-    "D8": {
-        "en": {"title": "Follow-Up Activities (Lessons Learned / Recurrence Prevention)", "tips": """
-- Document lessons learned from this 8D process.
-- Identify opportunities to prevent similar issues in other products or lines.
-- Example: *Standardized torque verification checklist applied to all new model launches.*
-- Ensure sustainability of corrective actions through regular audits or reviews.
-"""
-        },
-        "es": {"title": "Actividades de Seguimiento (Lecciones Aprendidas / Prevención de Recurrencia)", "tips": """
-- Documenta las lecciones aprendidas de este proceso 8D.
-- Identifica oportunidades para prevenir problemas similares en otros productos o líneas.
-- Ejemplo: *Lista de verificación de torque estandarizada aplicada a todos los nuevos lanzamientos de modelo.*
-- Asegura la sostenibilidad de las acciones correctivas mediante auditorías o revisiones regulares.
-"""
-        }
-    }
-}
-
 
 # ---------------------------
 # Root cause suggestion & helper functions
@@ -754,10 +638,6 @@ def suggest_root_cause(whys, lang_key="en"):
         }
     }
 
-# ---------------------------
-# Helper function for top categories formatting
-# ---------------------------
-def format_top_cats(top_cats, lang_key, rc_texts):
     if len(top_cats) == 1:
         return rc_texts[lang_key]["single"].format(top_cats[0])
     elif len(top_cats) == 2:
@@ -765,14 +645,12 @@ def format_top_cats(top_cats, lang_key, rc_texts):
     else:
         return rc_texts[lang_key]["triple"].format(top_cats[0], top_cats[1])
 
-# ---------------------------
-# Function for 5-whys selectboxes without duplicates
-# ---------------------------
-def render_whys_no_repeat_with_other(why_list, categories, label_prefix, lang_key):
+def render_whys_no_repeat_with_other(why_list, categories, label_prefix):
     for idx in range(len(why_list)):
+        # Build options for this selectbox
         selected_so_far = [w for i, w in enumerate(why_list) if w.strip() and i != idx]
-        options = [""] + [f"{cat}: {item}" for cat, items in categories.items()
-                          for item in items
+        options = [""] + [f"{cat}: {item}" for cat, items in categories.items() 
+                          for item in items 
                           if f"{cat}: {item}" not in selected_so_far] + ["Other"]
 
         current_val = why_list[idx] if why_list[idx] in options else ""
@@ -783,27 +661,29 @@ def render_whys_no_repeat_with_other(why_list, categories, label_prefix, lang_ke
             key=f"{label_prefix}_{idx}_{lang_key}"
         )
 
+        # If "Other" is selected, show a free text box
         if selection == "Other":
             why_list[idx] = st.text_input(f"Please specify {label_prefix} {idx+1}", key=f"{label_prefix}_{idx}_other_{lang_key}")
         else:
             why_list[idx] = selection
     return why_list
-
 # ---------------------------
-# Progress tracker
+# Progress tracker (NEW)
 # ---------------------------
 st.markdown("### 🧭 8D Completion Progress")
-steps = ["D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8"]
-total_steps = len(steps)
-progress = 0
 
-for step in steps:
-    # Only count if "answer" exists and is non-empty
+progress = 0
+total_steps = len(["D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8"])
+
+# Count how many steps have any filled text
+for step in ["D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8"]:
+    # Adjust field name if your data is stored differently (e.g., "description" instead of "answer")
     if st.session_state.get(step, {}).get("answer", "").strip():
         progress += 1
 
 st.progress(progress / total_steps)
 st.write(f"Completed {progress} of {total_steps} steps")
+
 # ---------------------------
 # Render Tabs with Uploads
 # ---------------------------
@@ -835,16 +715,6 @@ line-height:1.5;
 💡 <b>{t[lang_key]['Example']}:</b> {example_text}
 </div>
 """, unsafe_allow_html=True)
-
-        # ---------------------------
-# Step-specific bilingual guidance expander
-# ---------------------------
-current_step = step  # Example: "D1", "D2", ...
-if current_step in guidance_content:
-    step_help = guidance_content[current_step][lang_key]
-    expander_label = f"📘 {step_help['title']}"
-    with st.expander(expander_label):
-        st.markdown(step_help["tips"])
 
         # File uploads for D1, D3, D4, D7
         if step in ["D1","D3","D4","D7"]:
