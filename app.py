@@ -208,7 +208,7 @@ guidance_content = {
   - Example: *Customer reports radio does not power on after 2 hours of use in hot conditions*.
 """
     },
-    "es": {"title": "Definir el Equipo y Describir el Problema","tips": """
+        "es": {"title": "Definir el Equipo y Describir el Problema","tips": """
 - **Definir el Equipo**:
   - Identifica a todos los miembros del equipo involucrados.
   - Incluye áreas como Calidad, Ingeniería, Producción, Proveedor, etc.
@@ -221,22 +221,36 @@ guidance_content = {
   - Ejemplo: *El cliente reporta que el radio no enciende después de 2 horas de uso en condiciones de calor*.
 """
     }
-},
-"D2": {
-    "en": {"title": "Similar Parts That Could Be Affected","tips": """
+    },
+    "D2": {
+        "en": {"title": "Similar Parts That Could Be Affected","tips": """
 - Identify parts, models, colors, or assemblies that could also be affected.
 - Consider variations in suppliers, batches, or production lines.
 - Example: *Front vs. rear speaker, similar model radios, alternate supplier components.*
 """
-    },
-    "es": {"title": "Partes Similares que Podrían Verse Afectadas","tips": """
+        },
+        "es": {"title": "Partes Similares que Podrían Verse Afectadas","tips": """
 - Identifica piezas, modelos, colores o ensamblajes que también podrían verse afectados.
 - Considera variaciones de proveedores, lotes o líneas de producción.
 - Ejemplo: *Altavoz delantero vs trasero, radios de modelo similar, componentes de proveedor alternativo.*
 """
-    }
-}
+        }
+    },
     "D3": {
+        "en": {"title": "Initial Analysis","tips": """
+- Gather and review all relevant data.
+- Look for patterns, trends, or unusual occurrences.
+- Example: *Review production logs and defect reports to identify common failure points.*
+"""
+        },
+        "es": {"title": "Análisis Inicial","tips": """
+- Recolecta y revisa todos los datos relevantes.
+- Busca patrones, tendencias o sucesos inusuales.
+- Ejemplo: *Revisar registros de producción e informes de defectos para identificar puntos de falla comunes.*
+"""
+        }
+    },
+    "D4": {
         "en": {"title": "Implement Containment","tips": """
 - Describe temporary actions to isolate defective material.
 - Example: *Quarantined 200 pcs in warehouse, stopped shipments to customer.*
@@ -248,7 +262,7 @@ guidance_content = {
 """
         }
     },
-    "D4": {
+    "D5": {
         "en": {"title": "Identify Root Cause","tips": """
 - Use tools like 5 Why’s or Fishbone Diagram.
 - Verify the root cause with evidence.
@@ -262,7 +276,7 @@ guidance_content = {
 """
         }
     },
-    "D5": {
+    "D6": {
         "en": {"title": "Verify Permanent Corrective Actions","tips": """
 - Define permanent solutions to eliminate the root cause.
 - Validate with testing or simulation.
@@ -273,18 +287,6 @@ guidance_content = {
 - Define soluciones permanentes para eliminar la causa raíz.
 - Valida con pruebas o simulaciones.
 - Ejemplo: *Se implementó sistema de monitoreo de torque para evitar calibraciones omitidas.*
-"""
-        }
-    },
-    "D6": {
-        "en": {"title": "Implement and Validate Corrective Actions","tips": """
-- Confirm corrective actions are applied and effective.
-- Example: *All assembly stations now equipped with digital torque sensors.*
-"""
-        },
-        "es": {"title": "Implementar y Validar Acciones Correctivas","tips": """
-- Confirma que las acciones correctivas se aplican y son efectivas.
-- Ejemplo: *Todas las estaciones de ensamble ahora tienen sensores de torque digitales.*
 """
         }
     },
@@ -317,6 +319,7 @@ guidance_content = {
         }
     }
 }  # <-- final closing brace
+
 # ---------------------------
 # Sidebar: App Controls
 # ---------------------------
