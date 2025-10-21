@@ -298,9 +298,9 @@ st.session_state.setdefault("d4_status", "")
 st.session_state.setdefault("d4_containment", "")
 
 for sub in ["occ_answer", "det_answer", "sys_answer"]:
-    st.session_state.setdefault(("D6"), st.session_state.get("D6", {}))
+    st.session_state.setdefault("D6", {})
     st.session_state["D6"].setdefault(sub, "")
-    st.session_state.setdefault(("D7"), st.session_state.get("D7", {}))
+    st.session_state.setdefault("D7", {})
     st.session_state["D7"].setdefault(sub, "")
 
 # ---------------------------
