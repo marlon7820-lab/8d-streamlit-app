@@ -901,7 +901,23 @@ line-height:1.5;
                     value=st.session_state[step]["answer"],
                     key=f"ans_{step}"
                 )
+ # 📘 Guidance Expander (bilingual)
+    with st.expander("📘 Need help writing this section?" if lang_key == "en" else "📘 ¿Necesitas ayuda para redactar esta sección?"):
+        if lang_key == "en":
+            st.markdown("""
+            - Focus on facts and data (avoid assumptions)
+            - Be specific: Who, What, Where, When, How Many
+            - Example: *"Customer reported radio does not power on after 2 hours of operation in hot conditions"*
+            """)
+        else:
+            st.markdown("""
+            - Enfócate en hechos y datos (evita suposiciones)
+            - Sé específico: Quién, Qué, Dónde, Cuándo, Cuántos
+            - Ejemplo: *"El cliente reportó que el radio no enciende después de 2 horas de operación en condiciones de calor"*
+            """)
 
+    # Optional: show example entry below
+    st.caption(f"💡 {t[lang_key]['Example']}: {example[lang_key]}")
 # ---------------------------
 # Collect all answers for Excel export
 # ---------------------------
