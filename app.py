@@ -585,58 +585,6 @@ systemic_categories_es = {
         "No hay revisión sistémica después de múltiples 8Ds en la misma área"
     ]
 }
-
-# ---------------------------
-# Root cause suggestion & helper functions
-# ---------------------------
-def suggest_root_cause(whys, lang_key="en"):
-    """
-    Analyze whys (occ/det/sys) and return top 1–3 contributing root cause categories.
-    Supports English and Spanish.
-    """
-    text = " ".join([w.lower() for w in whys if w.strip()])
-    
-    categories = {
-        "Training / Knowledge": ["training", "knowledge", "human error", "competence", "onboarding", "guidance"],
-        "Equipment / Tooling": ["equipment", "tool", "machine", "fixture", "calibration", "maintenance", "sensor"],
-        "Process / Procedure": ["process", "procedure", "standard", "control plan", "method", "capability", "instructions", "fmea"],
-        "Communication / Info": ["communication", "information", "handover", "feedback", "miscommunication"],
-        "Material / Supplier": ["material", "supplier", "component", "part", "specification", "labeling", "lot"],
-        "Design / Engineering": ["design", "specification", "drawing", "tolerance", "robust", "dfmea", "verification", "validation"],
-        "Management / Resources": ["management", "supervision", "resource", "leadership", "accountability"],
-        "Environment / External": ["temperature", "humidity", "contamination", "environment", "vibration", "power", "esd"]
-    }
-
-    # Count hits per category
-    scores = {cat:0 for cat in categories}
-    for cat, keywords in categories.items():
-        for kw in keywords:
-            scores[cat] += text.count(kw)
-    
-    scored_cats = {k:v for k,v in scores.items() if v > 0}
-    if not scored_cats:
-        return {
-            "en": "No clear root cause suggestion (provide more detailed 5-Whys)",
-            "es": "No hay sugerencia clara de causa raíz (proporcione más detalles en los 5 Porqués)"
-        }[lang_key]
-
-    # Top 3 categories
-    sorted_cats = sorted(scored_cats.items(), key=lambda x: x[1], reverse=True)
-    top_cats = [cat for cat, score in sorted_cats[:3]]
-
-    # Bilingual mapping
-    rc_texts = {
-        "en": {
-            "single": "The root cause is likely related to {0}. Focus your analysis in this area.",
-            "double": "The root cause is likely related to a combination of {0} and {1}. Consider focusing your investigation in these areas.",
-            "triple": "The root cause is likely related to a combination of {0}, and {1}. Focus your analysis on these areas."
-        },
-        "es": {
-            "single": "La causa raíz probablemente está relacionada con {0}. Enfoca tu análisis en esta área.",
-            "double": "La causa raíz probablemente está relacionada con una combinación de {0} y {1}. Considera enfocar tu investigación en estas áreas.",
-            "triple": "La causa raíz probablemente está relacionada con una combinación de {0}, y {1}. Enfoca tu análisis en estas áreas."
-        }
-    }
 # ---------------------------
 # Step-specific guidance content (bilingual)
 # ---------------------------
@@ -752,6 +700,59 @@ guidance_content = {
         }
     }
 }
+
+
+# ---------------------------
+# Root cause suggestion & helper functions
+# ---------------------------
+def suggest_root_cause(whys, lang_key="en"):
+    """
+    Analyze whys (occ/det/sys) and return top 1–3 contributing root cause categories.
+    Supports English and Spanish.
+    """
+    text = " ".join([w.lower() for w in whys if w.strip()])
+    
+    categories = {
+        "Training / Knowledge": ["training", "knowledge", "human error", "competence", "onboarding", "guidance"],
+        "Equipment / Tooling": ["equipment", "tool", "machine", "fixture", "calibration", "maintenance", "sensor"],
+        "Process / Procedure": ["process", "procedure", "standard", "control plan", "method", "capability", "instructions", "fmea"],
+        "Communication / Info": ["communication", "information", "handover", "feedback", "miscommunication"],
+        "Material / Supplier": ["material", "supplier", "component", "part", "specification", "labeling", "lot"],
+        "Design / Engineering": ["design", "specification", "drawing", "tolerance", "robust", "dfmea", "verification", "validation"],
+        "Management / Resources": ["management", "supervision", "resource", "leadership", "accountability"],
+        "Environment / External": ["temperature", "humidity", "contamination", "environment", "vibration", "power", "esd"]
+    }
+
+    # Count hits per category
+    scores = {cat:0 for cat in categories}
+    for cat, keywords in categories.items():
+        for kw in keywords:
+            scores[cat] += text.count(kw)
+    
+    scored_cats = {k:v for k,v in scores.items() if v > 0}
+    if not scored_cats:
+        return {
+            "en": "No clear root cause suggestion (provide more detailed 5-Whys)",
+            "es": "No hay sugerencia clara de causa raíz (proporcione más detalles en los 5 Porqués)"
+        }[lang_key]
+
+    # Top 3 categories
+    sorted_cats = sorted(scored_cats.items(), key=lambda x: x[1], reverse=True)
+    top_cats = [cat for cat, score in sorted_cats[:3]]
+
+    # Bilingual mapping
+    rc_texts = {
+        "en": {
+            "single": "The root cause is likely related to {0}. Focus your analysis in this area.",
+            "double": "The root cause is likely related to a combination of {0} and {1}. Consider focusing your investigation in these areas.",
+            "triple": "The root cause is likely related to a combination of {0}, and {1}. Focus your analysis on these areas."
+        },
+        "es": {
+            "single": "La causa raíz probablemente está relacionada con {0}. Enfoca tu análisis en esta área.",
+            "double": "La causa raíz probablemente está relacionada con una combinación de {0} y {1}. Considera enfocar tu investigación en estas áreas.",
+            "triple": "La causa raíz probablemente está relacionada con una combinación de {0}, y {1}. Enfoca tu análisis en estas áreas."
+        }
+    }
 
 # ---------------------------
 # Helper function for top categories formatting
