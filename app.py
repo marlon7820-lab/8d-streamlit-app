@@ -831,6 +831,117 @@ line-height:1.5;
 </div>
 """, unsafe_allow_html=True)
 
+# ---------------------------
+        # Step-specific answer text boxes (always visible)
+        # ---------------------------
+        if step in ["D4", "D6", "D7"]:
+            # D4 text areas
+            if step == "D4":
+                st.session_state[step]["location"] = st.selectbox(
+                    "Location of Material",
+                    ["", "Work in Progress", "Stores Stock", "Warehouse Stock", "Service Parts", "Other"],
+                    index=0,
+                    key="d4_location"
+                )
+                st.session_state[step]["status"] = st.selectbox(
+                    "Status of Activities",
+                    ["", "Pending", "In Progress", "Completed", "Other"],
+                    index=0,
+                    key="d4_status"
+                )
+                st.session_state[step]["answer"] = st.text_area(
+                    "Containment Actions / Notes",
+                    value=st.session_state[step]["answer"],
+                    key=f"ans_{step}"
+                )
+
+            # D6: Corrective Actions
+            if step == "D6":
+                st.session_state[step].setdefault("occ_answer", st.session_state["D6"].get("occ_answer", ""))
+                st.session_state[step].setdefault("det_answer", st.session_state["D6"].get("det_answer", ""))
+                st.session_state[step].setdefault("sys_answer", st.session_state["D6"].get("sys_answer", ""))
+
+                st.session_state[step]["occ_answer"] = st.text_area(
+                    "D6 - Corrective Actions for Occurrence Root Cause",
+                    value=st.session_state[step]["occ_answer"],
+                    key="d6_occ"
+                )
+                st.session_state[step]["det_answer"] = st.text_area(
+                    "D6 - Corrective Actions for Detection Root Cause",
+                    value=st.session_state[step]["det_answer"],
+                    key="d6_det"
+                )
+                st.session_state[step]["sys_answer"] = st.text_area(
+                    "D6 - Corrective Actions for Systemic Root Cause",
+                    value=st.session_state[step]["sys_answer"],
+                    key="d6_sys"
+                )
+
+            # D7: Countermeasure Verification
+            if step == "D7":
+                st.session_state[step].setdefault("occ_answer", st.session_state["D7"].get("occ_answer", ""))
+                st.session_state[step].setdefault("det_answer", st.session_state["D7"].get("det_answer", ""))
+                st.session_state[step].setdefault("sys_answer", st.session_state["D7"].get("sys_answer", ""))
+
+                st.session_state[step]["occ_answer"] = st.text_area(
+                    "D7 - Occurrence Countermeasure Verification",
+                    value=st.session_state[step]["occ_answer"],
+                    key="d7_occ"
+                )
+                st.session_state[step]["det_answer"] = st.text_area(
+                    "D7 - Detection Countermeasure Verification",
+                    value=st.session_state[step]["det_answer"],
+                    key="d7_det"
+                )
+                st.session_state[step]["sys_answer"] = st.text_area(
+                    "D7 - Systemic Countermeasure Verification",
+                    value=st.session_state[step]["sys_answer"],
+                    key="d7_sys"
+                )
+
+        else:
+            # D1, D2, D3, D5, D8 default single answer box
+            st.session_state[step]["answer"] = st.text_area(
+                "Your Answer",
+                value=st.session_state[step]["answer"],
+                key=f"ans_{step}"
+            )
+
+        # ---------------------------
+        # Step-specific bilingual guidance expander
+        # ---------------------------
+        if step in guidance_content:
+            step_help = guidance_content[step][lang_key]
+            with st.expander(f"📘 {step_help['title']}"):
+                st.markdown(step_help["tips"])
+
+        # ---------------------------
+        # Example caption below input
+        # ---------------------------
+        example_text = example_dict[lang_key] if example_dict else ""
+        if example_text:
+            st.caption(f"💡 {t[lang_key]['Example']}: {example_text}")
+
+        # ---------------------------
+        # File uploads for D1, D3, D4, D7 (not inside guidance expander!)
+        # ---------------------------
+        if step in ["D1","D3","D4","D7"]:
+            uploaded_files = st.file_uploader(
+                f"Upload files/photos for {step}",
+                type=["png", "jpg", "jpeg", "pdf", "xlsx", "txt"],
+                accept_multiple_files=True,
+                key=f"upload_{step}"
+            )
+            if uploaded_files:
+                st.session_state[step]["uploaded_files"] = uploaded_files
+
+            # Display uploaded files
+            if st.session_state[step].get("uploaded_files"):
+                st.markdown("**Uploaded Files / Photos:**")
+                for f in st.session_state[step]["uploaded_files"]:
+                    st.write(f"{f.name}")
+                    if f.type.startswith("image/"):
+                        st.image(f, width=192)
         # ---------------------------
 # Step-specific bilingual guidance expander
 # ---------------------------
