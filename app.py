@@ -589,19 +589,15 @@ systemic_categories_es = {
 # Step-specific guidance content (bilingual)
 # ---------------------------
 guidance_content = {
-    "D1": {
-        "en": {
-            "title": "Define the Team",
-            "tips": """
+   "D1": {
+        "en": {"title": "Define the Team","tips": """
             - Identify all team members involved in solving the issue.
             - Include functions like Quality, Engineering, Production, Supplier, etc.
             - Assign clear roles and responsibilities.
             - Example: *John (Quality) – Team Leader; Maria (Engineering) – Root Cause Analyst*.
             """
         },
-        "es": {
-            "title": "Definir el Equipo",
-            "tips": """
+        "es": {"title": "Definir el Equipo","tips": """
             - Identifica a todos los miembros del equipo involucrados.
             - Incluye áreas como Calidad, Ingeniería, Producción, Proveedor, etc.
             - Asigna roles y responsabilidades claras.
@@ -635,7 +631,7 @@ guidance_content = {
         "en": {"title": "Identify Root Cause", "tips": "- Use tools like 5 Why’s or Fishbone Diagram.\n- Verify the root cause with evidence.\n- Example: *Incorrect torque due to missing calibration on assembly tool.*"},
         "es": {"title": "Identificar la Causa Raíz", "tips": "- Usa herramientas como 5 Porqués o Diagrama de Ishikawa.\n- Verifica la causa raíz con evidencia.\n- Ejemplo: *Par incorrecto debido a falta de calibración en herramienta de ensamble.*"}
     },
-    "D5": {
+    "D5": { 
         "en": {"title": "Verify Permanent Corrective Actions", "tips": "- Define permanent solutions to eliminate the root cause.\n- Validate with testing or simulation.\n- Example: *Implemented torque monitoring system to prevent missed calibrations.*"},
         "es": {"title": "Verificar Acciones Correctivas Permanentes", "tips": "- Define soluciones permanentes para eliminar la causa raíz.\n- Valida con pruebas o simulaciones.\n- Ejemplo: *Se implementó sistema de monitoreo de torque para evitar calibraciones omitidas.*"}
     },
@@ -646,26 +642,24 @@ guidance_content = {
     "D7": {
         "en": {"title": "Prevent Recurrence", "tips": "- Update documentation, training, and procedures.\n- Example: *Updated Work Instruction #WI-321 and retrained all operators.*"},
         "es": {"title": "Prevenir Recurrencia", "tips": "- Actualiza documentación, entrenamiento y procedimientos.\n- Ejemplo: *Se actualizó la Instrucción de Trabajo #WI-321 y se capacitó a todos los operadores.*"}
-     "D8": {
-    "en": {
-        "title": "Follow-Up Activities (Lessons Learned / Recurrence Prevention)",
-        "tips": """
+    },
+    "D8": {
+        "en": {"title": "Follow-Up Activities (Lessons Learned / Recurrence Prevention)", "tips": """
         - Document lessons learned from this 8D process.
         - Identify opportunities to prevent similar issues in other products or lines.
         - Example: *Standardized torque verification checklist applied to all new model launches.*
         - Ensure sustainability of corrective actions through regular audits or reviews.
         """
     },
-    "es": {
-        "title": "Actividades de Seguimiento (Lecciones Aprendidas / Prevención de Recurrencia)",
-        "tips": """
+        "es": {"title": "Actividades de Seguimiento (Lecciones Aprendidas / Prevención de Recurrencia)", "tips": """
         - Documenta las lecciones aprendidas de este proceso 8D.
         - Identifica oportunidades para prevenir problemas similares en otros productos o líneas.
         - Ejemplo: *Lista de verificación de torque estandarizada aplicada a todos los nuevos lanzamientos de modelo.*
         - Asegura la sostenibilidad de las acciones correctivas mediante auditorías o revisiones regulares.
         """
     }
-}   
+}  
+        
 # ---------------------------
 # Root cause suggestion & helper functions
 # ---------------------------
