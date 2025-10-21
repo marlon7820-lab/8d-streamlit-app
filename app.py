@@ -732,8 +732,9 @@ line-height:1.5;
 
     # Optional: show example entry below
     st.caption(f"💡 {t[lang_key]['Example']}: {example[lang_key]}")
+    
         # File uploads for D1, D3, D4, D7
-      if step in ["D1","D3","D4","D7"]:
+        if step in ["D1","D3","D4","D7"]:
             uploaded_files = st.file_uploader(
                 f"Upload files/photos for {step}",
                 type=["png", "jpg", "jpeg", "pdf", "xlsx", "txt"],
