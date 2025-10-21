@@ -589,7 +589,7 @@ systemic_categories_es = {
 # Step-specific guidance content (bilingual)
 # ---------------------------
 guidance_content = {
-   "D1": {
+    "D1": {
         "en": {"title": "Define the Team","tips": """
             - Identify all team members involved in solving the issue.
             - Include functions like Quality, Engineering, Production, Supplier, etc.
@@ -658,7 +658,7 @@ guidance_content = {
         - Asegura la sostenibilidad de las acciones correctivas mediante auditorías o revisiones regulares.
         """
     }
-}  
+}  # <-- final closing brace for guidance_content
         
 # ---------------------------
 # Root cause suggestion & helper functions
