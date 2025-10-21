@@ -835,22 +835,10 @@ line-height:1.5;
 </div>
 """, unsafe_allow_html=True)
 
-        # Bilingual guidance expander (step-specific)
-        with st.expander(
-            "📘 Need help writing this section?" if lang_key == "en" else "📘 ¿Necesitas ayuda para redactar esta sección?"
-        ):
-            if lang_key == "en":
-                st.markdown(f"""
-- Focus on facts and data (avoid assumptions)
-- Be specific: Who, What, Where, When, How Many
-- Example for this step: *"{example_text}"*
-""")
-            else:
-                st.markdown(f"""
-- Enfócate en hechos y datos (evita suposiciones)
-- Sé específico: Quién, Qué, Dónde, Cuándo, Cuántos
-- Ejemplo para este paso: *"{example_text}"*
-""")
+        # Step-specific guidance expander from guidance_content
+        gc = guidance_content[step][lang_key]
+        with st.expander(f"📘 {gc['title']}"):
+            st.markdown(gc["tips"])
 
         # Show example entry safely
         st.caption(f"💡 {t[lang_key]['Example']}: {example_text}")
