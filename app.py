@@ -298,9 +298,9 @@ st.session_state.setdefault("d4_status", "")
 st.session_state.setdefault("d4_containment", "")
 
 for sub in ["occ_answer", "det_answer", "sys_answer"]:
-    st.session_state.setdefault("D6", {})
+    st.session_state.setdefault(("D6"), st.session_state.get("D6", {}))
     st.session_state["D6"].setdefault(sub, "")
-    st.session_state.setdefault("D7", {})
+    st.session_state.setdefault(("D7"), st.session_state.get("D7", {}))
     st.session_state["D7"].setdefault(sub, "")
 
 # ---------------------------
@@ -585,122 +585,7 @@ systemic_categories_es = {
         "No hay revisión sistémica después de múltiples 8Ds en la misma área"
     ]
 }
-# ---------------------------
-# Step-specific guidance content (bilingual)
-# ---------------------------
-guidance_content = {
-    "D1": {
-        "en": {"title": "Define the Team","tips": """
-- Identify all team members involved in solving the issue.
-- Include functions like Quality, Engineering, Production, Supplier, etc.
-- Assign clear roles and responsibilities.
-- Example: *John (Quality) – Team Leader; Maria (Engineering) – Root Cause Analyst*.
-"""
-        },
-        "es": {"title": "Definir el Equipo","tips": """
-- Identifica a todos los miembros del equipo involucrados.
-- Incluye áreas como Calidad, Ingeniería, Producción, Proveedor, etc.
-- Asigna roles y responsabilidades claras.
-- Ejemplo: *Juan (Calidad) – Líder del Equipo; María (Ingeniería) – Análisis de Causa Raíz*.
-"""
-        }
-    },
-    "D2": {
-        "en": {"title": "Describe the Problem","tips": """
-- Focus on **facts and measurable data** (avoid assumptions).
-- Use 5W2H (Who, What, Where, When, Why, How, How Many).
-- Example: *Customer reports radio does not power on after 2 hours of use in hot conditions*.
-"""
-        },
-        "es": {"title": "Describir el Problema","tips": """
-- Enfócate en **hechos y datos medibles** (evita suposiciones).
-- Usa 5W2H (Quién, Qué, Dónde, Cuándo, Por qué, Cómo, Cuántos).
-- Ejemplo: *El cliente reporta que el radio no enciende después de 2 horas de uso en condiciones de calor*.
-"""
-        }
-    },
-    "D3": {
-        "en": {"title": "Implement Containment","tips": """
-- Describe temporary actions to isolate defective material.
-- Example: *Quarantined 200 pcs in warehouse, stopped shipments to customer.*
-"""
-        },
-        "es": {"title": "Implementar Contención","tips": """
-- Describe las acciones temporales para aislar material defectuoso.
-- Ejemplo: *Se pusieron en cuarentena 200 piezas en almacén, se detuvieron envíos al cliente.*
-"""
-        }
-    },
-    "D4": {
-        "en": {"title": "Identify Root Cause","tips": """
-- Use tools like 5 Why’s or Fishbone Diagram.
-- Verify the root cause with evidence.
-- Example: *Incorrect torque due to missing calibration on assembly tool.*
-"""
-        },
-        "es": {"title": "Identificar la Causa Raíz","tips": """
-- Usa herramientas como 5 Porqués o Diagrama de Ishikawa.
-- Verifica la causa raíz con evidencia.
-- Ejemplo: *Par incorrecto debido a falta de calibración en herramienta de ensamble.*
-"""
-        }
-    },
-    "D5": {
-        "en": {"title": "Verify Permanent Corrective Actions","tips": """
-- Define permanent solutions to eliminate the root cause.
-- Validate with testing or simulation.
-- Example: *Implemented torque monitoring system to prevent missed calibrations.*
-"""
-        },
-        "es": {"title": "Verificar Acciones Correctivas Permanentes","tips": """
-- Define soluciones permanentes para eliminar la causa raíz.
-- Valida con pruebas o simulaciones.
-- Ejemplo: *Se implementó sistema de monitoreo de torque para evitar calibraciones omitidas.*
-"""
-        }
-    },
-    "D6": {
-        "en": {"title": "Implement and Validate Corrective Actions","tips": """
-- Confirm corrective actions are applied and effective.
-- Example: *All assembly stations now equipped with digital torque sensors.*
-"""
-        },
-        "es": {"title": "Implementar y Validar Acciones Correctivas","tips": """
-- Confirma que las acciones correctivas se aplican y son efectivas.
-- Ejemplo: *Todas las estaciones de ensamble ahora tienen sensores de torque digitales.*
-"""
-        }
-    },
-    "D7": {
-        "en": {"title": "Prevent Recurrence","tips": """
-- Update documentation, training, and procedures.
-- Example: *Updated Work Instruction #WI-321 and retrained all operators.*
-"""
-        },
-        "es": {"title": "Prevenir Recurrencia","tips": """
-- Actualiza documentación, entrenamiento y procedimientos.
-- Ejemplo: *Se actualizó la Instrucción de Trabajo #WI-321 y se capacitó a todos los operadores.*
-"""
-        }
-    },
-    "D8": {
-        "en": {"title": "Follow-Up Activities (Lessons Learned / Recurrence Prevention)","tips": """
-- Document lessons learned from this 8D process.
-- Identify opportunities to prevent similar issues in other products or lines.
-- Example: *Standardized torque verification checklist applied to all new model launches.*
-- Ensure sustainability of corrective actions through regular audits or reviews.
-"""
-        },
-        "es": {"title": "Actividades de Seguimiento (Lecciones Aprendidas / Prevención de Recurrencia)","tips": """
-- Documenta las lecciones aprendidas de este proceso 8D.
-- Identifica oportunidades para prevenir problemas similares en otros productos o líneas.
-- Ejemplo: *Lista de verificación de torque estandarizada aplicada a todos los nuevos lanzamientos de modelo.*
-- Asegura la sostenibilidad de las acciones correctivas mediante auditorías o revisiones regulares.
-"""
-        }
-    }
-}  # <-- final closing brace
-        
+
 # ---------------------------
 # Root cause suggestion & helper functions
 # ---------------------------
@@ -831,126 +716,6 @@ line-height:1.5;
 </div>
 """, unsafe_allow_html=True)
 
-# ---------------------------
-        # Step-specific answer text boxes (always visible)
-        # ---------------------------
-        if step in ["D4", "D6", "D7"]:
-            # D4 text areas
-            if step == "D4":
-                st.session_state[step]["location"] = st.selectbox(
-                    "Location of Material",
-                    ["", "Work in Progress", "Stores Stock", "Warehouse Stock", "Service Parts", "Other"],
-                    index=0,
-                    key="d4_location"
-                )
-                st.session_state[step]["status"] = st.selectbox(
-                    "Status of Activities",
-                    ["", "Pending", "In Progress", "Completed", "Other"],
-                    index=0,
-                    key="d4_status"
-                )
-                st.session_state[step]["answer"] = st.text_area(
-                    "Containment Actions / Notes",
-                    value=st.session_state[step]["answer"],
-                    key=f"ans_{step}"
-                )
-
-            # D6: Corrective Actions
-            if step == "D6":
-                st.session_state[step].setdefault("occ_answer", st.session_state["D6"].get("occ_answer", ""))
-                st.session_state[step].setdefault("det_answer", st.session_state["D6"].get("det_answer", ""))
-                st.session_state[step].setdefault("sys_answer", st.session_state["D6"].get("sys_answer", ""))
-
-                st.session_state[step]["occ_answer"] = st.text_area(
-                    "D6 - Corrective Actions for Occurrence Root Cause",
-                    value=st.session_state[step]["occ_answer"],
-                    key="d6_occ"
-                )
-                st.session_state[step]["det_answer"] = st.text_area(
-                    "D6 - Corrective Actions for Detection Root Cause",
-                    value=st.session_state[step]["det_answer"],
-                    key="d6_det"
-                )
-                st.session_state[step]["sys_answer"] = st.text_area(
-                    "D6 - Corrective Actions for Systemic Root Cause",
-                    value=st.session_state[step]["sys_answer"],
-                    key="d6_sys"
-                )
-
-            # D7: Countermeasure Verification
-            if step == "D7":
-                st.session_state[step].setdefault("occ_answer", st.session_state["D7"].get("occ_answer", ""))
-                st.session_state[step].setdefault("det_answer", st.session_state["D7"].get("det_answer", ""))
-                st.session_state[step].setdefault("sys_answer", st.session_state["D7"].get("sys_answer", ""))
-
-                st.session_state[step]["occ_answer"] = st.text_area(
-                    "D7 - Occurrence Countermeasure Verification",
-                    value=st.session_state[step]["occ_answer"],
-                    key="d7_occ"
-                )
-                st.session_state[step]["det_answer"] = st.text_area(
-                    "D7 - Detection Countermeasure Verification",
-                    value=st.session_state[step]["det_answer"],
-                    key="d7_det"
-                )
-                st.session_state[step]["sys_answer"] = st.text_area(
-                    "D7 - Systemic Countermeasure Verification",
-                    value=st.session_state[step]["sys_answer"],
-                    key="d7_sys"
-                )
-
-        else:
-            # D1, D2, D3, D5, D8 default single answer box
-            st.session_state[step]["answer"] = st.text_area(
-                "Your Answer",
-                value=st.session_state[step]["answer"],
-                key=f"ans_{step}"
-            )
-
-        # ---------------------------
-        # Step-specific bilingual guidance expander
-        # ---------------------------
-        if step in guidance_content:
-            step_help = guidance_content[step][lang_key]
-            with st.expander(f"📘 {step_help['title']}"):
-                st.markdown(step_help["tips"])
-
-        # ---------------------------
-        # Example caption below input
-        # ---------------------------
-        example_text = example_dict[lang_key] if example_dict else ""
-        if example_text:
-            st.caption(f"💡 {t[lang_key]['Example']}: {example_text}")
-
-        # ---------------------------
-        # File uploads for D1, D3, D4, D7 (not inside guidance expander!)
-        # ---------------------------
-        if step in ["D1","D3","D4","D7"]:
-            uploaded_files = st.file_uploader(
-                f"Upload files/photos for {step}",
-                type=["png", "jpg", "jpeg", "pdf", "xlsx", "txt"],
-                accept_multiple_files=True,
-                key=f"upload_{step}"
-            )
-            if uploaded_files:
-                st.session_state[step]["uploaded_files"] = uploaded_files
-
-            # Display uploaded files
-            if st.session_state[step].get("uploaded_files"):
-                st.markdown("**Uploaded Files / Photos:**")
-                for f in st.session_state[step]["uploaded_files"]:
-                    st.write(f"{f.name}")
-                    if f.type.startswith("image/"):
-                        st.image(f, width=192)
-        # ---------------------------
-# Step-specific bilingual guidance expander
-# ---------------------------
-current_step = step  # Example: "D1", "D2", ...
-if current_step in guidance_content:
-    step_help = guidance_content[current_step][lang_key]
-    expander_label = f"📘 {step_help['title']}"
-    with st.expander(expander_label):
-        st.markdown(step_help["tips"])
         # File uploads for D1, D3, D4, D7
         if step in ["D1","D3","D4","D7"]:
             uploaded_files = st.file_uploader(
@@ -1066,42 +831,77 @@ if current_step in guidance_content:
               disabled=True
            )
 
-        # ---------------------------
-# D6 Text Areas (3 boxes)
-# ---------------------------
-if step == "D6":
-    for i, field in enumerate(["extra1", "extra2", "extra3"]):
-        st.session_state[step].setdefault(field, "")
-        st.session_state[step][field] = st.text_area(
-            f"D6 - Your Answer {field}",
-            value=st.session_state[step][field],
-            key=f"ans_{step}_{field}_{i}"
-        )
+        # D6: Permanent Corrective Actions (three text areas: Occ/Det/Sys)
+        elif step == "D6":
+            st.session_state[step].setdefault("occ_answer", st.session_state["D6"].get("occ_answer", ""))
+            st.session_state[step].setdefault("det_answer", st.session_state["D6"].get("det_answer", ""))
+            st.session_state[step].setdefault("sys_answer", st.session_state["D6"].get("sys_answer", ""))
 
-# ---------------------------
-# D7 Text Areas (3 boxes)
-# ---------------------------
-if step == "D7":
-    for i, field in enumerate(["extra1", "extra2", "extra3"]):
-        st.session_state[step].setdefault(field, "")
-        st.session_state[step][field] = st.text_area(
-            f"D7 - Your Answer {field}",
-            value=st.session_state[step][field],
-            key=f"ans_{step}_{field}_{i}"
-        )
+            st.session_state[step]["occ_answer"] = st.text_area(
+                "D6 - Corrective Actions for Occurrence Root Cause",
+                value=st.session_state[step]["occ_answer"],
+                key="d6_occ"
+            )
+            st.session_state[step]["det_answer"] = st.text_area(
+                "D6 - Corrective Actions for Detection Root Cause",
+                value=st.session_state[step]["det_answer"],
+                key="d6_det"
+            )
+            st.session_state[step]["sys_answer"] = st.text_area(
+                "D6 - Corrective Actions for Systemic Root Cause",
+                value=st.session_state[step]["sys_answer"],
+                key="d6_sys"
+            )
 
-# ---------------------------
-# D8 Text Areas (3 boxes)
-# ---------------------------
-if step == "D8":
-    for i, field in enumerate(["extra1", "extra2", "extra3"]):
-        st.session_state[step].setdefault(field, "")
-        st.session_state[step][field] = st.text_area(
-            f"D8 - Your Answer {field}",
-            value=st.session_state[step][field],
-            key=f"ans_{step}_{field}_{i}"
-        )
- 
+            # Mirror into top-level D6 storage so export code can find them consistently
+            st.session_state["D6"]["occ_answer"] = st.session_state[step]["occ_answer"]
+            st.session_state["D6"]["det_answer"] = st.session_state[step]["det_answer"]
+            st.session_state["D6"]["sys_answer"] = st.session_state[step]["sys_answer"]
+
+        # D7: Countermeasure Confirmation (three text areas: verification for Occ/Det/Sys)
+        elif step == "D7":
+            st.session_state[step].setdefault("occ_answer", st.session_state["D7"].get("occ_answer", ""))
+            st.session_state[step].setdefault("det_answer", st.session_state["D7"].get("det_answer", ""))
+            st.session_state[step].setdefault("sys_answer", st.session_state["D7"].get("sys_answer", ""))
+
+            st.session_state[step]["occ_answer"] = st.text_area(
+                "D7 - Occurrence Countermeasure Verification",
+                value=st.session_state[step]["occ_answer"],
+                key="d7_occ"
+            )
+            st.session_state[step]["det_answer"] = st.text_area(
+                "D7 - Detection Countermeasure Verification",
+                value=st.session_state[step]["det_answer"],
+                key="d7_det"
+            )
+            st.session_state[step]["sys_answer"] = st.text_area(
+                "D7 - Systemic Countermeasure Verification",
+                value=st.session_state[step]["sys_answer"],
+                key="d7_sys"
+            )
+
+            # Mirror into top-level D7 storage so export code can find them consistently
+            st.session_state["D7"]["occ_answer"] = st.session_state[step]["occ_answer"]
+            st.session_state["D7"]["det_answer"] = st.session_state[step]["det_answer"]
+            st.session_state["D7"]["sys_answer"] = st.session_state[step]["sys_answer"]
+
+        # D8: Follow-up Activities / Lessons Learned (single text area)
+        elif step == "D8":
+            st.session_state[step]["answer"] = st.text_area(
+                "Your Answer",
+                value=st.session_state[step]["answer"],
+                key=f"ans_{step}"
+            )
+
+        else:
+            # Default for D1, D2, D3, or any other single-answer steps
+            if step not in ["D4", "D5", "D6", "D7", "D8"]:
+                st.session_state[step]["answer"] = st.text_area(
+                    "Your Answer",
+                    value=st.session_state[step]["answer"],
+                    key=f"ans_{step}"
+                )
+
 # ---------------------------
 # Collect all answers for Excel export
 # ---------------------------
