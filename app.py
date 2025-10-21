@@ -1066,76 +1066,41 @@ if current_step in guidance_content:
               disabled=True
            )
 
-        # D6: Permanent Corrective Actions (three text areas: Occ/Det/Sys)
-        elif step == "D6":
-            st.session_state[step].setdefault("occ_answer", st.session_state["D6"].get("occ_answer", ""))
-            st.session_state[step].setdefault("det_answer", st.session_state["D6"].get("det_answer", ""))
-            st.session_state[step].setdefault("sys_answer", st.session_state["D6"].get("sys_answer", ""))
+        # ---------------------------
+# D6 Text Areas (3 boxes)
+# ---------------------------
+if step == "D6":
+    for i, field in enumerate(["extra1", "extra2", "extra3"]):
+        st.session_state[step].setdefault(field, "")
+        st.session_state[step][field] = st.text_area(
+            f"D6 - Your Answer {field}",
+            value=st.session_state[step][field],
+            key=f"ans_{step}_{field}_{i}"
+        )
 
-            st.session_state[step]["occ_answer"] = st.text_area(
-                "D6 - Corrective Actions for Occurrence Root Cause",
-                value=st.session_state[step]["occ_answer"],
-                key="d6_occ"
-            )
-            st.session_state[step]["det_answer"] = st.text_area(
-                "D6 - Corrective Actions for Detection Root Cause",
-                value=st.session_state[step]["det_answer"],
-                key="d6_det"
-            )
-            st.session_state[step]["sys_answer"] = st.text_area(
-                "D6 - Corrective Actions for Systemic Root Cause",
-                value=st.session_state[step]["sys_answer"],
-                key="d6_sys"
-            )
+# ---------------------------
+# D7 Text Areas (3 boxes)
+# ---------------------------
+if step == "D7":
+    for i, field in enumerate(["extra1", "extra2", "extra3"]):
+        st.session_state[step].setdefault(field, "")
+        st.session_state[step][field] = st.text_area(
+            f"D7 - Your Answer {field}",
+            value=st.session_state[step][field],
+            key=f"ans_{step}_{field}_{i}"
+        )
 
-            # Mirror into top-level D6 storage so export code can find them consistently
-            st.session_state["D6"]["occ_answer"] = st.session_state[step]["occ_answer"]
-            st.session_state["D6"]["det_answer"] = st.session_state[step]["det_answer"]
-            st.session_state["D6"]["sys_answer"] = st.session_state[step]["sys_answer"]
-
-        # D7: Countermeasure Confirmation (three text areas: verification for Occ/Det/Sys)
-        elif step == "D7":
-            st.session_state[step].setdefault("occ_answer", st.session_state["D7"].get("occ_answer", ""))
-            st.session_state[step].setdefault("det_answer", st.session_state["D7"].get("det_answer", ""))
-            st.session_state[step].setdefault("sys_answer", st.session_state["D7"].get("sys_answer", ""))
-
-            st.session_state[step]["occ_answer"] = st.text_area(
-                "D7 - Occurrence Countermeasure Verification",
-                value=st.session_state[step]["occ_answer"],
-                key="d7_occ"
-            )
-            st.session_state[step]["det_answer"] = st.text_area(
-                "D7 - Detection Countermeasure Verification",
-                value=st.session_state[step]["det_answer"],
-                key="d7_det"
-            )
-            st.session_state[step]["sys_answer"] = st.text_area(
-                "D7 - Systemic Countermeasure Verification",
-                value=st.session_state[step]["sys_answer"],
-                key="d7_sys"
-            )
-
-            # Mirror into top-level D7 storage so export code can find them consistently
-            st.session_state["D7"]["occ_answer"] = st.session_state[step]["occ_answer"]
-            st.session_state["D7"]["det_answer"] = st.session_state[step]["det_answer"]
-            st.session_state["D7"]["sys_answer"] = st.session_state[step]["sys_answer"]
-
-        # D8: Follow-up Activities / Lessons Learned (single text area)
-        elif step == "D8":
-            st.session_state[step]["answer"] = st.text_area(
-                "Your Answer",
-                value=st.session_state[step]["answer"],
-                key=f"ans_{step}"
-            )
-
-        else:
-            # Default for D1, D2, D3, or any other single-answer steps
-            if step not in ["D4", "D5", "D6", "D7", "D8"]:
-                st.session_state[step]["answer"] = st.text_area(
-                    "Your Answer",
-                    value=st.session_state[step]["answer"],
-                    key=f"ans_{step}"
-                )
+# ---------------------------
+# D8 Text Areas (3 boxes)
+# ---------------------------
+if step == "D8":
+    for i, field in enumerate(["extra1", "extra2", "extra3"]):
+        st.session_state[step].setdefault(field, "")
+        st.session_state[step][field] = st.text_area(
+            f"D8 - Your Answer {field}",
+            value=st.session_state[step][field],
+            key=f"ans_{step}_{field}_{i}"
+        )
  
 # ---------------------------
 # Collect all answers for Excel export
