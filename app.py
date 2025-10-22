@@ -409,7 +409,7 @@ npqp_steps = [
 ]
 
 # ---------------------------
-# Initialize session state
+# Initialize session state (cleaned)
 # ---------------------------
 for step, _, _ in npqp_steps:
     if step not in st.session_state:
@@ -427,9 +427,9 @@ st.session_state.setdefault("d4_status", "")
 st.session_state.setdefault("d4_containment", "")
 
 for sub in ["occ_answer", "det_answer", "sys_answer"]:
-    st.session_state.setdefault(("D6"), st.session_state.get("D6", {}))
+    st.session_state.setdefault("D6", {})
     st.session_state["D6"].setdefault(sub, "")
-    st.session_state.setdefault(("D7"), st.session_state.get("D7", {}))
+    st.session_state.setdefault("D7", {})
     st.session_state["D7"].setdefault(sub, "")
     
 for step, note_dict, example_dict in npqp_steps:
@@ -720,7 +720,37 @@ systemic_categories_es = {
         "No hay revisión sistémica después de múltiples 8Ds en la misma área"
     ]
 }
+def categorize_problem_statement(text):
+    """Detects automotive problem type from D1–D3 inputs."""
+    text = text.lower()
 
+    categories = []
+
+    if any(word in text for word in ["no function", "does not power", "short", "open", "voltage", "signal", "pcb", "solder", "electrical", "current", "fuse"]):
+        categories.append("Electrical / Electronic Failure")
+
+    if any(word in text for word in ["rattle", "noise", "vibration", "fit", "gap", "alignment", "bracket", "mount", "housing", "crack", "bent"]):
+        categories.append("Mechanical / Structural Issue")
+
+    if any(word in text for word in ["scratch", "paint", "surface", "appearance", "finish", "stain", "mark", "burr"]):
+        categories.append("Cosmetic / Appearance Issue")
+
+    if any(word in text for word in ["software", "programming", "firmware", "logic", "update"]):
+        categories.append("Software / Logic Error")
+
+    if any(word in text for word in ["variation", "drift", "process", "machine", "line", "tool", "calibration", "mold", "press"]):
+        categories.append("Process Variation / Equipment Issue")
+
+    if any(word in text for word in ["supplier", "component", "material", "resin", "plating", "connector", "pin", "sub-supplier"]):
+        categories.append("Supplier Quality Issue")
+
+    if any(word in text for word in ["operator", "training", "procedure", "instruction", "communication", "shift", "label"]):
+        categories.append("Human / Procedural Error")
+
+    if not categories:
+        categories.append("Uncategorized / Needs Further Investigation")
+
+    return categories
 # ---------------------------
 # Root cause suggestion & helper functions
 # ---------------------------
@@ -838,6 +868,38 @@ def render_whys_no_repeat_with_other(why_list, categories, label_prefix):
         else:
             why_list[idx] = selection
     return why_list
+
+def suggest_corrective_actions_panasonic(d5_text):
+    """Suggest practical corrective actions aligned with automotive requirements."""
+    text = d5_text.lower()
+    actions = []
+
+    if "training" in text or "operator" in text:
+        actions.append("Conduct operator retraining and record in training matrix.")
+        actions.append("Revise work instruction with visual aids and revision control.")
+    if "torque" in text:
+        actions.append("Calibrate torque tools and verify PM record completion.")
+        actions.append("Implement poka-yoke to prevent missed torque application.")
+    if "fixture" in text or "jig" in text:
+        actions.append("Repair or replace worn fixtures and document verification results.")
+    if "pcb" in text or "solder" in text:
+        actions.append("Review solder profile and implement SPC control for reflow parameters.")
+    if "communication" in text:
+        actions.append("Introduce standardized shift handover form and team leader review.")
+    if "inspection" in text:
+        actions.append("Update inspection criteria and provide visual standard to inspectors.")
+    if "supplier" in text:
+        actions.append("Issue SCAR and verify supplier’s 8D response effectiveness.")
+    if "maintenance" in text:
+        actions.append("Revise PM schedule and ensure escalation for overdue tasks.")
+    if "design" in text:
+        actions.append("Initiate design review with cross-functional team for robustness improvement.")
+    if "process" in text:
+        actions.append("Introduce process monitoring dashboard with trend alarms.")
+    if not actions:
+        actions.append("Review D5 root cause and define verifiable corrective action plan.")
+
+    return "\n".join(set(actions))
 # ---------------------------
 # Progress tracker (NEW)
 # ---------------------------
@@ -892,7 +954,7 @@ def generate_suggestions_based_on(occ_whys, det_whys, sys_whys):
 
     return suggestions
 # ---------------------------
-# Render Tabs with Uploads
+# Render Tabs
 # ---------------------------
 tab_labels = [
     f"🟢 {t[lang_key][step]}" if st.session_state[step]["answer"].strip() else f"🔴 {t[lang_key][step]}"
@@ -904,7 +966,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     with tabs[i]:
         st.markdown(f"### {t[lang_key][step]}")
 
-        # Training Guidance & Example box
+        # Training Guidance & Example
         note_text = note_dict[lang_key]
         example_text = example_dict[lang_key]
         st.markdown(f"""
@@ -923,19 +985,18 @@ line-height:1.5;
 </div>
 """, unsafe_allow_html=True)
 
-        # Step-specific guidance expander from guidance_content
+        # Step-specific guidance
         gc = guidance_content[step][lang_key]
         with st.expander(f"📘 {gc['title']}"):
             st.markdown(gc["tips"])
 
-        # Show example entry safely
         st.caption(f"💡 {t[lang_key]['Example']}: {example_text}")
         
         # File uploads for D1, D3, D4, D7
         if step in ["D1","D3","D4","D7"]:
             uploaded_files = st.file_uploader(
                 f"Upload files/photos for {step}",
-                type=["png", "jpg", "jpeg", "pdf", "xlsx", "txt"],
+                type=["png","jpg","jpeg","pdf","xlsx","txt"],
                 accept_multiple_files=True,
                 key=f"upload_{step}"
             )
@@ -944,15 +1005,14 @@ line-height:1.5;
                     if file not in st.session_state[step]["uploaded_files"]:
                         st.session_state[step]["uploaded_files"].append(file)
 
-        # Display uploaded files (aligned with file upload, not nested too deep)
-        if step in ["D1","D3","D4","D7"] and st.session_state[step].get("uploaded_files"):
-            st.markdown("**Uploaded Files / Photos:**")
-            for f in st.session_state[step]["uploaded_files"]:
-                st.write(f"{f.name}")
-                if f.type.startswith("image/"):
-                    st.image(f, width=192)  # roughly 2 inches wide, height auto-scaled
-    
-        # Step-specific inputs (same level as upload check)
+            if st.session_state[step].get("uploaded_files"):
+                st.markdown("**Uploaded Files / Photos:**")
+                for f in st.session_state[step]["uploaded_files"]:
+                    st.write(f"{f.name}")
+                    if f.type.startswith("image/"):
+                        st.image(f, width=192)
+
+        # D4 Step-specific inputs
         if step == "D4":
             st.session_state[step]["location"] = st.selectbox(
                 "Location of Material",
@@ -971,119 +1031,60 @@ line-height:1.5;
                 value=st.session_state[step]["answer"],
                 key=f"ans_{step}"
             )
-        # D5 5-Why + "Other" dropdown replacement
-        elif step == "D5": 
-           # Occurrence Analysis
-           if lang_key == "es":
-               st.session_state.d5_occ_whys = render_whys_no_repeat_with_other(
-                   st.session_state.d5_occ_whys,
-                   occurrence_categories_es,
-                   t[lang_key]['Occurrence_Why']
-               )
-           else:
-               st.session_state.d5_occ_whys = render_whys_no_repeat_with_other(
-                   st.session_state.d5_occ_whys,
-                   occurrence_categories,
-                   t[lang_key]['Occurrence_Why']
-               )
-       
-           if st.button("➕ Add another Occurrence Why", key=f"add_occ_{i}"):
-               st.session_state.d5_occ_whys.append("")
-               
-           # Detection Analysis
-           if lang_key == "es":
-               st.session_state.d5_det_whys = render_whys_no_repeat_with_other(
-                   st.session_state.d5_det_whys,
-                   detection_categories_es,
-                   t[lang_key]['Detection_Why']
-               )
-           else:
-               st.session_state.d5_det_whys = render_whys_no_repeat_with_other(
-                   st.session_state.d5_det_whys,
-                   detection_categories,
-                   t[lang_key]['Detection_Why']
-               )
+            if st.button("💡 Suggest Root Cause", key=f"suggest_d5"):
+                problem_text = st.session_state["D1"]["answer"] + " " + st.session_state["D3"]["answer"]
+                d5_input = " ".join(st.session_state.d5_occ_whys + st.session_state.d5_det_whys + st.session_state.d5_sys_whys)
+                st.session_state["D5"]["suggested_root_causes"] = suggest_root_cause_panasonic_v2(problem_text, d5_input)
+                st.success("✅ Smart automotive root cause suggestions generated!")
 
-           if st.button("➕ Add another Detection Why", key=f"add_det_{i}"):
-               st.session_state.d5_det_whys.append("")
-               
-           # Systemic Analysis
-           if lang_key == "es":
-               st.session_state.d5_sys_whys = render_whys_no_repeat_with_other(
-                   st.session_state.d5_sys_whys,
-                   systemic_categories_es,
-                   t[lang_key]['Systemic_Why']
-              )
-           else:
-               st.session_state.d5_sys_whys = render_whys_no_repeat_with_other(
-                   st.session_state.d5_sys_whys,
-                   systemic_categories,
-                   t[lang_key]['Systemic_Why']
-              )
-           if st.button("➕ Add another Systemic Why", key=f"add_sys_{i}"):
-               st.session_state.d5_sys_whys.append("")
+            if "suggested_root_causes" in st.session_state.get("D5", {}):
+                st.text_area("Suggested Root Causes (Editable)", st.session_state["D5"]["suggested_root_causes"], height=200)
 
-           # Dynamic Root Causes suggestion display (unchanged)
-           occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
-           det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
-           sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
-           st.text_area(
-               f"{t[lang_key]['Root_Cause_Occ']}",
-               value=suggest_root_cause(occ_whys, lang_key),
-               height=100,
-               disabled=True
-           )
-           st.text_area(
-              f"{t[lang_key]['Root_Cause_Det']}",
-              value=suggest_root_cause(det_whys, lang_key),
-              height=100,
-              disabled=True
-           )
-           st.text_area(
-              f"{t[lang_key]['Root_Cause_Sys']}",
-              value=suggest_root_cause(sys_whys, lang_key),
-              height=100,
-              disabled=True
-           )
+        # D5 5-Why + "Other"
+        elif step == "D5":
+            # Occurrence
+            occ_cats = occurrence_categories_es if lang_key=="es" else occurrence_categories
+            st.session_state.d5_occ_whys = render_whys_no_repeat_with_other(st.session_state.d5_occ_whys, occ_cats, t[lang_key]['Occurrence_Why'])
+            if st.button("➕ Add another Occurrence Why", key=f"add_occ_{i}"):
+                st.session_state.d5_occ_whys.append("")
+            # Detection
+            det_cats = detection_categories_es if lang_key=="es" else detection_categories
+            st.session_state.d5_det_whys = render_whys_no_repeat_with_other(st.session_state.d5_det_whys, det_cats, t[lang_key]['Detection_Why'])
+            if st.button("➕ Add another Detection Why", key=f"add_det_{i}"):
+                st.session_state.d5_det_whys.append("")
+            # Systemic
+            sys_cats = systemic_categories_es if lang_key=="es" else systemic_categories
+            st.session_state.d5_sys_whys = render_whys_no_repeat_with_other(st.session_state.d5_sys_whys, sys_cats, t[lang_key]['Systemic_Why'])
+            if st.button("➕ Add another Systemic Why", key=f"add_sys_{i}"):
+                st.session_state.d5_sys_whys.append("")
 
-        # D6: Permanent Corrective Actions (with smart suggestion button)
+            # Display dynamic Root Cause suggestions
+            st.text_area(f"{t[lang_key]['Root_Cause_Occ']}", value=suggest_root_cause(st.session_state.d5_occ_whys, lang_key), height=100, disabled=True)
+            st.text_area(f"{t[lang_key]['Root_Cause_Det']}", value=suggest_root_cause(st.session_state.d5_det_whys, lang_key), height=100, disabled=True)
+            st.text_area(f"{t[lang_key]['Root_Cause_Sys']}", value=suggest_root_cause(st.session_state.d5_sys_whys, lang_key), height=100, disabled=True)
+
+        # D6 Corrective Actions
         elif step == "D6":
             st.session_state[step].setdefault("occ_answer", st.session_state["D6"].get("occ_answer", ""))
             st.session_state[step].setdefault("det_answer", st.session_state["D6"].get("det_answer", ""))
             st.session_state[step].setdefault("sys_answer", st.session_state["D6"].get("sys_answer", ""))
 
-            # ✅ NEW: Smart Suggestion button
             if st.button("💡 Suggest corrective actions", key="btn_suggest_d6"):
-                occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
-                det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
-                sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
-                
-                suggestions = generate_suggestions_based_on(occ_whys, det_whys, sys_whys)
-                
+                suggestions = generate_suggestions_based_on(
+                    [w for w in st.session_state.d5_occ_whys if w.strip()],
+                    [w for w in st.session_state.d5_det_whys if w.strip()],
+                    [w for w in st.session_state.d5_sys_whys if w.strip()]
+                )
                 st.session_state[step]["occ_answer"] = suggestions["occ"]
                 st.session_state[step]["det_answer"] = suggestions["det"]
                 st.session_state[step]["sys_answer"] = suggestions["sys"]
-
                 st.success("✅ Suggestions generated based on D5 root causes!")
 
-            # Text areas (kept as is)
-            st.session_state[step]["occ_answer"] = st.text_area(
-                "D6 - Corrective Actions for Occurrence Root Cause",
-                value=st.session_state[step]["occ_answer"],
-                key="d6_occ"
-            )
-            st.session_state[step]["det_answer"] = st.text_area(
-                "D6 - Corrective Actions for Detection Root Cause",
-                value=st.session_state[step]["det_answer"],
-                key="d6_det"
-            )
-            st.session_state[step]["sys_answer"] = st.text_area(
-                "D6 - Corrective Actions for Systemic Root Cause",
-                value=st.session_state[step]["sys_answer"],
-                key="d6_sys"
-            )
+            st.session_state[step]["occ_answer"] = st.text_area("D6 - Corrective Actions for Occurrence Root Cause", value=st.session_state[step]["occ_answer"], key="d6_occ")
+            st.session_state[step]["det_answer"] = st.text_area("D6 - Corrective Actions for Detection Root Cause", value=st.session_state[step]["det_answer"], key="d6_det")
+            st.session_state[step]["sys_answer"] = st.text_area("D6 - Corrective Actions for Systemic Root Cause", value=st.session_state[step]["sys_answer"], key="d6_sys")
 
-            # Mirror into top-level D6 storage
+            # Mirror to top-level D6 storage
             st.session_state["D6"]["occ_answer"] = st.session_state[step]["occ_answer"]
             st.session_state["D6"]["det_answer"] = st.session_state[step]["det_answer"]
             st.session_state["D6"]["sys_answer"] = st.session_state[step]["sys_answer"]
