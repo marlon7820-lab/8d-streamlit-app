@@ -1167,8 +1167,26 @@ elif step == "D7":
     st.session_state[step].setdefault("det_answer", st.session_state["D7"].get("det_answer", ""))
     st.session_state[step].setdefault("sys_answer", st.session_state["D7"].get("sys_answer", ""))
 
-            st.session_state[step]["occ_answer"] = st.text_area(
-                "D7
+    st.session_state[step]["occ_answer"] = st.text_area(
+        "D7 - Prevent Recurrence for Occurrence Root Cause",
+        value=st.session_state[step]["occ_answer"],
+        key="d7_occ"
+    )
+    st.session_state[step]["det_answer"] = st.text_area(
+        "D7 - Prevent Recurrence for Detection Root Cause",
+        value=st.session_state[step]["det_answer"],
+        key="d7_det"
+    )
+    st.session_state[step]["sys_answer"] = st.text_area(
+        "D7 - Prevent Recurrence for Systemic Root Cause",
+        value=st.session_state[step]["sys_answer"],
+        key="d7_sys"
+    )
+
+    # Mirror into top-level storage
+    st.session_state["D7"]["occ_answer"] = st.session_state[step]["occ_answer"]
+    st.session_state["D7"]["det_answer"] = st.session_state[step]["det_answer"]
+    st.session_state["D7"]["sys_answer"] = st.session_state[step]["sys_answer"]
 elif step == "D8":
     st.session_state[step]["answer"] = st.text_area(
         "Your Answer",
