@@ -1010,46 +1010,47 @@ line-height:1.5;
               disabled=True
            )
 
+        # D6: Permanent Corrective Actions (with smart suggestion button)
         elif step == "D6":
-    st.session_state[step].setdefault("occ_answer", st.session_state["D6"].get("occ_answer", ""))
-    st.session_state[step].setdefault("det_answer", st.session_state["D6"].get("det_answer", ""))
-    st.session_state[step].setdefault("sys_answer", st.session_state["D6"].get("sys_answer", ""))
+            st.session_state[step].setdefault("occ_answer", st.session_state["D6"].get("occ_answer", ""))
+            st.session_state[step].setdefault("det_answer", st.session_state["D6"].get("det_answer", ""))
+            st.session_state[step].setdefault("sys_answer", st.session_state["D6"].get("sys_answer", ""))
 
-    # ✅ NEW: Smart Suggestion button
-    if st.button("💡 Suggest corrective actions", key="btn_suggest_d6"):
-        occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
-        det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
-        sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
-        
-        suggestions = generate_suggestions_based_on(occ_whys, det_whys, sys_whys)
-        
-        st.session_state[step]["occ_answer"] = suggestions["occ"]
-        st.session_state[step]["det_answer"] = suggestions["det"]
-        st.session_state[step]["sys_answer"] = suggestions["sys"]
+            # ✅ NEW: Smart Suggestion button
+            if st.button("💡 Suggest corrective actions", key="btn_suggest_d6"):
+                occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
+                det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
+                sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
+                
+                suggestions = generate_suggestions_based_on(occ_whys, det_whys, sys_whys)
+                
+                st.session_state[step]["occ_answer"] = suggestions["occ"]
+                st.session_state[step]["det_answer"] = suggestions["det"]
+                st.session_state[step]["sys_answer"] = suggestions["sys"]
 
-        st.success("✅ Suggestions generated based on D5 root causes!")
+                st.success("✅ Suggestions generated based on D5 root causes!")
 
-    # Text areas (kept as is)
-    st.session_state[step]["occ_answer"] = st.text_area(
-        "D6 - Corrective Actions for Occurrence Root Cause",
-        value=st.session_state[step]["occ_answer"],
-        key="d6_occ"
-    )
-    st.session_state[step]["det_answer"] = st.text_area(
-        "D6 - Corrective Actions for Detection Root Cause",
-        value=st.session_state[step]["det_answer"],
-        key="d6_det"
-    )
-    st.session_state[step]["sys_answer"] = st.text_area(
-        "D6 - Corrective Actions for Systemic Root Cause",
-        value=st.session_state[step]["sys_answer"],
-        key="d6_sys"
-    )
+            # Text areas (kept as is)
+            st.session_state[step]["occ_answer"] = st.text_area(
+                "D6 - Corrective Actions for Occurrence Root Cause",
+                value=st.session_state[step]["occ_answer"],
+                key="d6_occ"
+            )
+            st.session_state[step]["det_answer"] = st.text_area(
+                "D6 - Corrective Actions for Detection Root Cause",
+                value=st.session_state[step]["det_answer"],
+                key="d6_det"
+            )
+            st.session_state[step]["sys_answer"] = st.text_area(
+                "D6 - Corrective Actions for Systemic Root Cause",
+                value=st.session_state[step]["sys_answer"],
+                key="d6_sys"
+            )
 
-    # Mirror into top-level D6 storage so export code can find them consistently
-    st.session_state["D6"]["occ_answer"] = st.session_state[step]["occ_answer"]
-    st.session_state["D6"]["det_answer"] = st.session_state[step]["det_answer"]
-    st.session_state["D6"]["sys_answer"] = st.session_state[step]["sys_answer"]
+            # Mirror into top-level D6 storage
+            st.session_state["D6"]["occ_answer"] = st.session_state[step]["occ_answer"]
+            st.session_state["D6"]["det_answer"] = st.session_state[step]["det_answer"]
+            st.session_state["D6"]["sys_answer"] = st.session_state[step]["sys_answer"]
 
         # D7: Countermeasure Confirmation (three text areas: verification for Occ/Det/Sys)
         elif step == "D7":
