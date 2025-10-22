@@ -724,36 +724,72 @@ systemic_categories_es = {
 # ---------------------------
 # Root cause suggestion & helper functions
 # ---------------------------
-def suggest_root_cause(whys, lang_key="en"):
-    """
-    Analyze whys (occ/det/sys) and return top 1–3 contributing root cause categories.
-    Supports English and Spanish.
-    """
-    text = " ".join([w.lower() for w in whys if w.strip()])
-    
-    categories = {
-        "Training / Knowledge": ["training", "knowledge", "human error", "competence", "onboarding", "guidance"],
-        "Equipment / Tooling": ["equipment", "tool", "machine", "fixture", "calibration", "maintenance", "sensor"],
-        "Process / Procedure": ["process", "procedure", "standard", "control plan", "method", "capability", "instructions", "fmea"],
-        "Communication / Info": ["communication", "information", "handover", "feedback", "miscommunication"],
-        "Material / Supplier": ["material", "supplier", "component", "part", "specification", "labeling", "lot"],
-        "Design / Engineering": ["design", "specification", "drawing", "tolerance", "robust", "dfmea", "verification", "validation"],
-        "Management / Resources": ["management", "supervision", "resource", "leadership", "accountability"],
-        "Environment / External": ["temperature", "humidity", "contamination", "environment", "vibration", "power", "esd"]
-    }
+def suggest_root_cause_panasonic_v2(problem_text, d5_input):
+    """Generate detailed, automotive-relevant root cause suggestions."""
+    categories = categorize_problem_statement(problem_text)
+    text = d5_input.lower()
+    suggestions = []
 
-    # Count hits per category
-    scores = {cat:0 for cat in categories}
-    for cat, keywords in categories.items():
-        for kw in keywords:
-            scores[cat] += text.count(kw)
-    
-    scored_cats = {k:v for k,v in scores.items() if v > 0}
-    if not scored_cats:
-        return {
-            "en": "No clear root cause suggestion (provide more detailed 5-Whys)",
-            "es": "No hay sugerencia clara de causa raíz (proporcione más detalles en los 5 Porqués)"
-        }[lang_key]
+    # --------------- Category-Specific Smart Causes ---------------
+    for cat in categories:
+
+        if cat == "Electrical / Electronic Failure":
+            if "solder" in text or "pcb" in text:
+                suggestions.append("Solder joint reliability insufficient due to incorrect reflow temperature profile.")
+            else:
+                suggestions.append("Insufficient control of solder paste volume caused intermittent electrical contact.")
+            suggestions.append("Design FMEA did not identify potential open/short due to connector misalignment.")
+            suggestions.append("ESD handling procedures not consistently followed during assembly.")
+            suggestions.append("Component placement variation due to stencil wear or vision offset in SMT process.")
+
+        elif cat == "Mechanical / Structural Issue":
+            suggestions.append("Fixture wear or clamp pressure variation caused dimensional shift during assembly.")
+            suggestions.append("Improper torque sequence caused uneven stress on housing components.")
+            suggestions.append("Operator missed applying screw torque due to unclear visual aid or label.")
+            suggestions.append("Part design lacks robustness for assembly tolerance stack-up.")
+
+        elif cat == "Cosmetic / Appearance Issue":
+            suggestions.append("Material surface contamination due to improper cleaning before painting/coating.")
+            suggestions.append("Handling gloves or work area not controlled for contamination.")
+            suggestions.append("Insufficient inspection criteria for cosmetic zone led to acceptance of defective parts.")
+
+        elif cat == "Software / Logic Error":
+            suggestions.append("Firmware update not verified on production ECU variant.")
+            suggestions.append("Incorrect software version flashed due to lack of version control procedure.")
+            suggestions.append("Test validation did not include boundary or fail-safe condition checks.")
+
+        elif cat == "Process Variation / Equipment Issue":
+            suggestions.append("Process parameters drifted due to sensor calibration out of tolerance.")
+            suggestions.append("Tool wear not detected due to lack of preventive maintenance.")
+            suggestions.append("Machine alarm disabled, allowing operation outside specification.")
+            suggestions.append("PFMEA not updated after process change, missing new risk mode.")
+
+        elif cat == "Supplier Quality Issue":
+            suggestions.append("Incoming inspection frequency reduced without risk-based justification.")
+            suggestions.append("Supplier change not communicated via PPAP or ECR approval.")
+            suggestions.append("Material property deviation not detected due to incomplete COA review.")
+
+        elif cat == "Human / Procedural Error":
+            suggestions.append("Work instruction missing step for critical torque verification.")
+            suggestions.append("Operator training matrix not updated to include recent revisions.")
+            suggestions.append("Communication between shifts inadequate for defect detection.")
+            suggestions.append("Supervisor did not verify first-off inspection per process control plan.")
+
+    # General / Cross-Functional additions
+    if "pfmea" in text or "control plan" in text:
+        suggestions.append("Control Plan not aligned with latest PFMEA risk levels.")
+    if "inspection" in text or "check" in text:
+        suggestions.append("Inspection criteria not clearly defined or visual standard outdated.")
+    if "maintenance" in text:
+        suggestions.append("Preventive maintenance not performed as scheduled due to resource constraint.")
+    if "design" in text:
+        suggestions.append("Design for manufacturability feedback not incorporated in early phase.")
+    if "change" in text:
+        suggestions.append("Process change implemented without required validation or notification.")
+    if not suggestions:
+        suggestions.append("Further 5-Why analysis required to isolate specific root cause mode.")
+
+    return "\n".join(set(suggestions))
 
     # Top 3 categories
     sorted_cats = sorted(scored_cats.items(), key=lambda x: x[1], reverse=True)
