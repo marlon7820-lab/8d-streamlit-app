@@ -1207,35 +1207,54 @@ else:
 # ---------------------------
 data_rows = []
 
+# Collect D5 whys separately
 occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
 det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
 sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
 
+# Suggested root cause text for D5
 occ_rc_text = suggest_root_cause(occ_whys) if occ_whys else "No occurrence whys provided yet"
 det_rc_text = suggest_root_cause(det_whys) if det_whys else "No detection whys provided yet"
 sys_rc_text = suggest_root_cause(sys_whys) if sys_whys else "No systemic whys provided yet"
 
-
 for step, _, _ in npqp_steps:
-    # D6 and D7 should export their 3 sub-answers as separate rows
+    # D6: Permanent Corrective Actions (three text areas: Occ/Det/Sys)
     if step == "D6":
         data_rows.append(("D6 - Occurrence Countermeasure", st.session_state.get("D6", {}).get("occ_answer", ""), ""))
         data_rows.append(("D6 - Detection Countermeasure", st.session_state.get("D6", {}).get("det_answer", ""), ""))
         data_rows.append(("D6 - Systemic Countermeasure", st.session_state.get("D6", {}).get("sys_answer", ""), ""))
+    
+    # D7: Countermeasure Verification
     elif step == "D7":
         data_rows.append(("D7 - Occurrence Countermeasure Verification", st.session_state.get("D7", {}).get("occ_answer", ""), ""))
         data_rows.append(("D7 - Detection Countermeasure Verification", st.session_state.get("D7", {}).get("det_answer", ""), ""))
         data_rows.append(("D7 - Systemic Countermeasure Verification", st.session_state.get("D7", {}).get("sys_answer", ""), ""))
+    
+    # D5: Root Causes and individual whys
     elif step == "D5":
-        data_rows.append(("D5 - Root Cause (Occurrence)", occ_rc_text, " | ".join(occ_whys)))
-        data_rows.append(("D5 - Root Cause (Detection)", det_rc_text, " | ".join(det_whys)))
-        data_rows.append(("D5 - Root Cause (Systemic)", sys_rc_text, " | ".join(sys_whys)))
+        # Export each Occurrence Why individually
+        for idx, why in enumerate(occ_whys):
+            data_rows.append((f"D5 - Occurrence Why {idx+1}", why, "Occurrence"))
+        # Export each Detection Why individually
+        for idx, why in enumerate(det_whys):
+            data_rows.append((f"D5 - Detection Why {idx+1}", why, "Detection"))
+        # Export each Systemic Why individually
+        for idx, why in enumerate(sys_whys):
+            data_rows.append((f"D5 - Systemic Why {idx+1}", why, "Systemic"))
+        # Export summarized root causes
+        data_rows.append(("D5 - Root Cause (Occurrence)", occ_rc_text, ""))
+        data_rows.append(("D5 - Root Cause (Detection)", det_rc_text, ""))
+        data_rows.append(("D5 - Root Cause (Systemic)", sys_rc_text, ""))
+    
+    # D4: special fields (location, status)
     elif step == "D4":
         loc = st.session_state[step].get("location", "")
         status = st.session_state[step].get("status", "")
         answer = st.session_state[step].get("answer", "")
         extra = f"Location: {loc} | Status: {status}"
         data_rows.append((step, answer, extra))
+    
+    # Other steps (D1, D2, D3, D8)
     else:
         answer = st.session_state[step].get("answer", "")
         extra = st.session_state[step].get("extra", "")
