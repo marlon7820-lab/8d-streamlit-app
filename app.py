@@ -1025,11 +1025,9 @@ line-height:1.5;
                 st.write(f"{f.name}")
                 if f.type.startswith("image/"):
                     st.image(f, width=192)
-
-        # ---------------------------
-# D4–D8 Steps Rendering
 # ---------------------------
-
+# D4–D8 Steps Rendering (inside tabs loop)
+# ---------------------------
 if step == "D4":
     # D4 special fields
     st.session_state[step]["location"] = st.selectbox(
@@ -1050,72 +1048,56 @@ if step == "D4":
         key=f"ans_{step}"
     )
 
-    # D5 suggestion button inside D4 tab
-    if st.button("💡 Suggest Root Cause", key=f"suggest_d5"):
+    # Optional: Smart suggestion for D5 root causes from D4 tab
+    if st.button("💡 Suggest Root Cause (D5)", key="suggest_d5_from_d4"):
         problem_text = st.session_state["D1"]["answer"] + " " + st.session_state["D3"]["answer"]
-        d5_input = st.session_state["D5"]["why1"] + " " + st.session_state["D5"]["why2"] + " " + st.session_state["D5"]["why3"]
+        d5_input = (
+            st.session_state["D5"].get("why1", "") + " " +
+            st.session_state["D5"].get("why2", "") + " " +
+            st.session_state["D5"].get("why3", "")
+        )
         st.session_state["D5"]["suggested_root_causes"] = suggest_root_cause_panasonic_v2(problem_text, d5_input)
         st.success("✅ Smart automotive root cause suggestions generated!")
 
     if "suggested_root_causes" in st.session_state["D5"]:
-        st.text_area("Suggested Root Causes (Editable)", st.session_state["D5"]["suggested_root_causes"], height=200)
+        st.text_area(
+            "Suggested Root Causes (Editable)",
+            value=st.session_state["D5"]["suggested_root_causes"],
+            height=200
+        )
 
-# ---------------------------
-# D5: 5-Why Analysis + Root Cause Suggestions
-# ---------------------------
 elif step == "D5":
-    # Occurrence Analysis
-    if lang_key == "es":
-        st.session_state.d5_occ_whys = render_whys_no_repeat_with_other(
-            st.session_state.d5_occ_whys,
-            occurrence_categories_es,
-            t[lang_key]['Occurrence_Why']
-        )
-    else:
-        st.session_state.d5_occ_whys = render_whys_no_repeat_with_other(
-            st.session_state.d5_occ_whys,
-            occurrence_categories,
-            t[lang_key]['Occurrence_Why']
-        )
-
+    # --- Occurrence Whys ---
+    categories_occ = occurrence_categories_es if lang_key == "es" else occurrence_categories
+    st.session_state.d5_occ_whys = render_whys_no_repeat_with_other(
+        st.session_state.get("d5_occ_whys", ["", "", ""]),
+        categories_occ,
+        t[lang_key]['Occurrence_Why']
+    )
     if st.button("➕ Add another Occurrence Why", key="add_occ"):
         st.session_state.d5_occ_whys.append("")
 
-    # Detection Analysis
-    if lang_key == "es":
-        st.session_state.d5_det_whys = render_whys_no_repeat_with_other(
-            st.session_state.d5_det_whys,
-            detection_categories_es,
-            t[lang_key]['Detection_Why']
-        )
-    else:
-        st.session_state.d5_det_whys = render_whys_no_repeat_with_other(
-            st.session_state.d5_det_whys,
-            detection_categories,
-            t[lang_key]['Detection_Why']
-        )
-
+    # --- Detection Whys ---
+    categories_det = detection_categories_es if lang_key == "es" else detection_categories
+    st.session_state.d5_det_whys = render_whys_no_repeat_with_other(
+        st.session_state.get("d5_det_whys", ["", "", ""]),
+        categories_det,
+        t[lang_key]['Detection_Why']
+    )
     if st.button("➕ Add another Detection Why", key="add_det"):
         st.session_state.d5_det_whys.append("")
 
-    # Systemic Analysis
-    if lang_key == "es":
-        st.session_state.d5_sys_whys = render_whys_no_repeat_with_other(
-            st.session_state.d5_sys_whys,
-            systemic_categories_es,
-            t[lang_key]['Systemic_Why']
-        )
-    else:
-        st.session_state.d5_sys_whys = render_whys_no_repeat_with_other(
-            st.session_state.d5_sys_whys,
-            systemic_categories,
-            t[lang_key]['Systemic_Why']
-        )
-
+    # --- Systemic Whys ---
+    categories_sys = systemic_categories_es if lang_key == "es" else systemic_categories
+    st.session_state.d5_sys_whys = render_whys_no_repeat_with_other(
+        st.session_state.get("d5_sys_whys", ["", "", ""]),
+        categories_sys,
+        t[lang_key]['Systemic_Why']
+    )
     if st.button("➕ Add another Systemic Why", key="add_sys"):
         st.session_state.d5_sys_whys.append("")
 
-    # Dynamic Root Cause suggestion display
+    # Dynamic Root Cause suggestions display
     occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
     det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
     sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
@@ -1139,29 +1121,24 @@ elif step == "D5":
         disabled=True
     )
 
-# ---------------------------
-# D6: Permanent Corrective Actions (with smart suggestion)
-# ---------------------------
 elif step == "D6":
+    # Initialize
     st.session_state[step].setdefault("occ_answer", st.session_state["D6"].get("occ_answer", ""))
     st.session_state[step].setdefault("det_answer", st.session_state["D6"].get("det_answer", ""))
     st.session_state[step].setdefault("sys_answer", st.session_state["D6"].get("sys_answer", ""))
 
-    # ✅ Smart Suggestion button
+    # Smart suggestion
     if st.button("💡 Suggest corrective actions", key="btn_suggest_d6"):
-        occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
-        det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
-        sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
-
+        occ_whys = [w for w in st.session_state.get("d5_occ_whys", []) if w.strip()]
+        det_whys = [w for w in st.session_state.get("d5_det_whys", []) if w.strip()]
+        sys_whys = [w for w in st.session_state.get("d5_sys_whys", []) if w.strip()]
         suggestions = generate_suggestions_based_on(occ_whys, det_whys, sys_whys)
-
         st.session_state[step]["occ_answer"] = suggestions["occ"]
         st.session_state[step]["det_answer"] = suggestions["det"]
         st.session_state[step]["sys_answer"] = suggestions["sys"]
-
         st.success("✅ Suggestions generated based on D5 root causes!")
 
-    # Text areas for D6 answers
+    # Text areas
     st.session_state[step]["occ_answer"] = st.text_area(
         "D6 - Corrective Actions for Occurrence Root Cause",
         value=st.session_state[step]["occ_answer"],
@@ -1178,15 +1155,13 @@ elif step == "D6":
         key="d6_sys"
     )
 
-    # Mirror into top-level D6 storage
+    # Mirror into top-level storage
     st.session_state["D6"]["occ_answer"] = st.session_state[step]["occ_answer"]
     st.session_state["D6"]["det_answer"] = st.session_state[step]["det_answer"]
     st.session_state["D6"]["sys_answer"] = st.session_state[step]["sys_answer"]
 
-# ---------------------------
-# D7: Countermeasure Verification
-# ---------------------------
 elif step == "D7":
+    # Initialize
     st.session_state[step].setdefault("occ_answer", st.session_state["D7"].get("occ_answer", ""))
     st.session_state[step].setdefault("det_answer", st.session_state["D7"].get("det_answer", ""))
     st.session_state[step].setdefault("sys_answer", st.session_state["D7"].get("sys_answer", ""))
@@ -1207,12 +1182,11 @@ elif step == "D7":
         key="d7_sys"
     )
 
-    # Mirror into top-level D7 storage for export
+    # Mirror into top-level storage for export
     st.session_state["D7"]["occ_answer"] = st.session_state[step]["occ_answer"]
     st.session_state["D7"]["det_answer"] = st.session_state[step]["det_answer"]
     st.session_state["D7"]["sys_answer"] = st.session_state[step]["sys_answer"]
 
-# ---------------------------
 elif step == "D8":
     st.session_state[step]["answer"] = st.text_area(
         "Your Answer",
@@ -1220,10 +1194,8 @@ elif step == "D8":
         key=f"ans_{step}"
     )
 
-# ---------------------------
 else:
-    # Default for D1, D2, D3, or any other single-answer steps
-    if step not in ["D4", "D5", "D6", "D7", "D8"]:
+    if step not in ["D4","D5","D6","D7","D8"]:
         st.session_state[step]["answer"] = st.text_area(
             "Your Answer",
             value=st.session_state[step]["answer"],
