@@ -955,18 +955,18 @@ def generate_suggestions_based_on(occ_whys, det_whys, sys_whys):
     return suggestions
 
 # ---------------------------
-# Helper function to safely suggest root causes
+# Helper function to safely suggest root causes (fixed)
 # ---------------------------
-def suggest_root_cause(whys_list, lang_key):
+def suggest_root_cause(whys_list, lang_key=None):
     """
     Returns a string combining the non-empty whys from a list.
-    This replaces the missing function that caused NameError.
+    If lang_key is provided, it can adjust placeholder text if needed.
     """
     if not whys_list or all(w.strip() == "" for w in whys_list):
-        # If empty, return a placeholder message
+        if lang_key == "es":
+            return "No se han ingresado causas aún."
         return "No whys entered yet."
     
-    # Join all whys with a bullet point for readability
     return "\n".join([f"• {w}" for w in whys_list if w.strip()])
 
 # ---------------------------
@@ -1061,104 +1061,128 @@ line-height:1.5;
             if "suggested_root_causes" in st.session_state["D5"]:
                 st.text_area("Suggested Root Causes (Editable)", st.session_state["D5"]["suggested_root_causes"], height=200)
 
-        # D5: 5-Why Analysis
-        elif step == "D5": 
-            # Occurrence Analysis
-            if lang_key == "es":
-                st.session_state.d5_occ_whys = render_whys_no_repeat_with_other(
-                    st.session_state.d5_occ_whys,
-                    occurrence_categories_es,
-                    t[lang_key]['Occurrence_Why']
-                )
-            else:
-                st.session_state.d5_occ_whys = render_whys_no_repeat_with_other(
-                    st.session_state.d5_occ_whys,
-                    occurrence_categories,
-                    t[lang_key]['Occurrence_Why']
-                )
-            if st.button("➕ Add another Occurrence Why", key=f"add_occ_{i}"):
-                st.session_state.d5_occ_whys.append("")
-                
-            # Detection Analysis
-            if lang_key == "es":
-                st.session_state.d5_det_whys = render_whys_no_repeat_with_other(
-                    st.session_state.d5_det_whys,
-                    detection_categories_es,
-                    t[lang_key]['Detection_Why']
-                )
-            else:
-                st.session_state.d5_det_whys = render_whys_no_repeat_with_other(
-                    st.session_state.d5_det_whys,
-                    detection_categories,
-                    t[lang_key]['Detection_Why']
-                )
-            if st.button("➕ Add another Detection Why", key=f"add_det_{i}"):
-                st.session_state.d5_det_whys.append("")
-                
-            # Systemic Analysis
-            if lang_key == "es":
-                st.session_state.d5_sys_whys = render_whys_no_repeat_with_other(
-                    st.session_state.d5_sys_whys,
-                    systemic_categories_es,
-                    t[lang_key]['Systemic_Why']
-               )
-            else:
-                st.session_state.d5_sys_whys = render_whys_no_repeat_with_other(
-                    st.session_state.d5_sys_whys,
-                    systemic_categories,
-                    t[lang_key]['Systemic_Why']
-               )
-            if st.button("➕ Add another Systemic Why", key=f"add_sys_{i}"):
-                st.session_state.d5_sys_whys.append("")
+        # ---------------------------
+# D5: 5-Why Analysis + Root Cause Suggestions
+# ---------------------------
+elif step == "D5": 
+    # Occurrence Analysis
+    if lang_key == "es":
+        st.session_state.d5_occ_whys = render_whys_no_repeat_with_other(
+            st.session_state.d5_occ_whys,
+            occurrence_categories_es,
+            t[lang_key]['Occurrence_Why']
+        )
+    else:
+        st.session_state.d5_occ_whys = render_whys_no_repeat_with_other(
+            st.session_state.d5_occ_whys,
+            occurrence_categories,
+            t[lang_key]['Occurrence_Why']
+        )
+    
+    if st.button("➕ Add another Occurrence Why", key=f"add_occ_{i}"):
+        st.session_state.d5_occ_whys.append("")
+    
+    # Detection Analysis
+    if lang_key == "es":
+        st.session_state.d5_det_whys = render_whys_no_repeat_with_other(
+            st.session_state.d5_det_whys,
+            detection_categories_es,
+            t[lang_key]['Detection_Why']
+        )
+    else:
+        st.session_state.d5_det_whys = render_whys_no_repeat_with_other(
+            st.session_state.d5_det_whys,
+            detection_categories,
+            t[lang_key]['Detection_Why']
+        )
 
-            # Dynamic Root Causes suggestion display
-            occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
-            det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
-            sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
+    if st.button("➕ Add another Detection Why", key=f"add_det_{i}"):
+        st.session_state.d5_det_whys.append("")
+    
+    # Systemic Analysis
+    if lang_key == "es":
+        st.session_state.d5_sys_whys = render_whys_no_repeat_with_other(
+            st.session_state.d5_sys_whys,
+            systemic_categories_es,
+            t[lang_key]['Systemic_Why']
+        )
+    else:
+        st.session_state.d5_sys_whys = render_whys_no_repeat_with_other(
+            st.session_state.d5_sys_whys,
+            systemic_categories,
+            t[lang_key]['Systemic_Why']
+        )
+    if st.button("➕ Add another Systemic Why", key=f"add_sys_{i}"):
+        st.session_state.d5_sys_whys.append("")
 
-            st.text_area(f"{t[lang_key]['Root_Cause_Occ']}", value=suggest_root_cause(occ_whys, lang_key), height=100, disabled=True)
-            st.text_area(f"{t[lang_key]['Root_Cause_Det']}", value=suggest_root_cause(det_whys, lang_key), height=100, disabled=True)
-            st.text_area(f"{t[lang_key]['Root_Cause_Sys']}", value=suggest_root_cause(sys_whys, lang_key), height=100, disabled=True)
+    # Dynamic Root Cause suggestion display
+    occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
+    det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
+    sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
 
-        # D6: Permanent Corrective Actions
-        elif step == "D6":
-            st.session_state[step].setdefault("occ_answer", st.session_state["D6"].get("occ_answer", ""))
-            st.session_state[step].setdefault("det_answer", st.session_state["D6"].get("det_answer", ""))
-            st.session_state[step].setdefault("sys_answer", st.session_state["D6"].get("sys_answer", ""))
+    st.text_area(
+        f"{t[lang_key]['Root_Cause_Occ']}",
+        value=suggest_root_cause(occ_whys, lang_key),
+        height=100,
+        disabled=True
+    )
+    st.text_area(
+        f"{t[lang_key]['Root_Cause_Det']}",
+        value=suggest_root_cause(det_whys, lang_key),
+        height=100,
+        disabled=True
+    )
+    st.text_area(
+        f"{t[lang_key]['Root_Cause_Sys']}",
+        value=suggest_root_cause(sys_whys, lang_key),
+        height=100,
+        disabled=True
+    )
 
-            if st.button("💡 Suggest corrective actions", key="btn_suggest_d6"):
-                occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
-                det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
-                sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
-                
-                suggestions = generate_suggestions_based_on(occ_whys, det_whys, sys_whys)
-                
-                st.session_state[step]["occ_answer"] = suggestions["occ"]
-                st.session_state[step]["det_answer"] = suggestions["det"]
-                st.session_state[step]["sys_answer"] = suggestions["sys"]
 
-                st.success("✅ Suggestions generated based on D5 root causes!")
+# ---------------------------
+# D6: Permanent Corrective Actions (with smart suggestion)
+# ---------------------------
+elif step == "D6":
+    st.session_state[step].setdefault("occ_answer", st.session_state["D6"].get("occ_answer", ""))
+    st.session_state[step].setdefault("det_answer", st.session_state["D6"].get("det_answer", ""))
+    st.session_state[step].setdefault("sys_answer", st.session_state["D6"].get("sys_answer", ""))
 
-            st.session_state[step]["occ_answer"] = st.text_area(
-                "D6 - Corrective Actions for Occurrence Root Cause",
-                value=st.session_state[step]["occ_answer"],
-                key="d6_occ"
-            )
-            st.session_state[step]["det_answer"] = st.text_area(
-                "D6 - Corrective Actions for Detection Root Cause",
-                value=st.session_state[step]["det_answer"],
-                key="d6_det"
-            )
-            st.session_state[step]["sys_answer"] = st.text_area(
-                "D6 - Corrective Actions for Systemic Root Cause",
-                value=st.session_state[step]["sys_answer"],
-                key="d6_sys"
-            )
+    # ✅ Smart Suggestion button
+    if st.button("💡 Suggest corrective actions", key="btn_suggest_d6"):
+        occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
+        det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
+        sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
+        
+        suggestions = generate_suggestions_based_on(occ_whys, det_whys, sys_whys)
+        
+        st.session_state[step]["occ_answer"] = suggestions["occ"]
+        st.session_state[step]["det_answer"] = suggestions["det"]
+        st.session_state[step]["sys_answer"] = suggestions["sys"]
 
-            # Mirror into top-level D6 storage
-            st.session_state["D6"]["occ_answer"] = st.session_state[step]["occ_answer"]
-            st.session_state["D6"]["det_answer"] = st.session_state[step]["det_answer"]
-            st.session_state["D6"]["sys_answer"] = st.session_state[step]["sys_answer"]
+        st.success("✅ Suggestions generated based on D5 root causes!")
+
+    # Text areas for D6 answers
+    st.session_state[step]["occ_answer"] = st.text_area(
+        "D6 - Corrective Actions for Occurrence Root Cause",
+        value=st.session_state[step]["occ_answer"],
+        key="d6_occ"
+    )
+    st.session_state[step]["det_answer"] = st.text_area(
+        "D6 - Corrective Actions for Detection Root Cause",
+        value=st.session_state[step]["det_answer"],
+        key="d6_det"
+    )
+    st.session_state[step]["sys_answer"] = st.text_area(
+        "D6 - Corrective Actions for Systemic Root Cause",
+        value=st.session_state[step]["sys_answer"],
+        key="d6_sys"
+    )
+
+    # Mirror into top-level D6 storage
+    st.session_state["D6"]["occ_answer"] = st.session_state[step]["occ_answer"]
+    st.session_state["D6"]["det_answer"] = st.session_state[step]["det_answer"]
+    st.session_state["D6"]["sys_answer"] = st.session_state[step]["sys_answer"]
 
         # D7: Countermeasure Confirmation (three text areas: verification for Occ/Det/Sys)
         elif step == "D7":
