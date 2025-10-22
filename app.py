@@ -1160,7 +1160,8 @@ line-height:1.5;
             st.session_state["D6"]["occ_answer"] = st.session_state[step]["occ_answer"]
             st.session_state["D6"]["det_answer"] = st.session_state[step]["det_answer"]
             st.session_state["D6"]["sys_answer"] = st.session_state[step]["sys_answer"]
-           )
+            )
+            
 
         elif step == "D7":
             # Initialize
