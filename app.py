@@ -818,6 +818,43 @@ for step in ["D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8"]:
 
 st.progress(progress / total_steps)
 st.write(f"Completed {progress} of {total_steps} steps")
+
+# ---------------------------
+# AI-like Corrective Action Suggestion Logic
+# ---------------------------
+import re
+
+def generate_suggestions_based_on(occ_whys, det_whys, sys_whys):
+    """Generates suggested corrective actions based on the whys entered."""
+    suggestions = {"occ": "", "det": "", "sys": ""}
+
+    # Occurrence-related
+    if re.search("training", " ".join(occ_whys), re.IGNORECASE):
+        suggestions["occ"] = "Create or update a training plan for affected operators."
+    elif re.search("design", " ".join(occ_whys), re.IGNORECASE):
+        suggestions["occ"] = "Review product design for robustness; add poka-yoke features."
+    elif re.search("supplier", " ".join(occ_whys), re.IGNORECASE):
+        suggestions["occ"] = "Request supplier containment and corrective action verification."
+    else:
+        suggestions["occ"] = "Review process documentation and update as needed."
+
+    # Detection-related
+    if re.search("inspection", " ".join(det_whys), re.IGNORECASE):
+        suggestions["det"] = "Improve inspection frequency or add automated detection tools."
+    elif re.search("test", " ".join(det_whys), re.IGNORECASE):
+        suggestions["det"] = "Update test procedures to include failure scenarios."
+    else:
+        suggestions["det"] = "Reassess detection methods for better early issue identification."
+
+    # Systemic-related
+    if re.search("communication", " ".join(sys_whys), re.IGNORECASE):
+        suggestions["sys"] = "Implement standardized communication protocols between teams."
+    elif re.search("procedure", " ".join(sys_whys), re.IGNORECASE):
+        suggestions["sys"] = "Revise and standardize related work instructions and procedures."
+    else:
+        suggestions["sys"] = "Establish periodic reviews to ensure systemic alignment."
+
+    return suggestions
 # ---------------------------
 # Render Tabs with Uploads
 # ---------------------------
@@ -973,32 +1010,46 @@ line-height:1.5;
               disabled=True
            )
 
-        # D6: Permanent Corrective Actions (three text areas: Occ/Det/Sys)
         elif step == "D6":
-            st.session_state[step].setdefault("occ_answer", st.session_state["D6"].get("occ_answer", ""))
-            st.session_state[step].setdefault("det_answer", st.session_state["D6"].get("det_answer", ""))
-            st.session_state[step].setdefault("sys_answer", st.session_state["D6"].get("sys_answer", ""))
+    st.session_state[step].setdefault("occ_answer", st.session_state["D6"].get("occ_answer", ""))
+    st.session_state[step].setdefault("det_answer", st.session_state["D6"].get("det_answer", ""))
+    st.session_state[step].setdefault("sys_answer", st.session_state["D6"].get("sys_answer", ""))
 
-            st.session_state[step]["occ_answer"] = st.text_area(
-                "D6 - Corrective Actions for Occurrence Root Cause",
-                value=st.session_state[step]["occ_answer"],
-                key="d6_occ"
-            )
-            st.session_state[step]["det_answer"] = st.text_area(
-                "D6 - Corrective Actions for Detection Root Cause",
-                value=st.session_state[step]["det_answer"],
-                key="d6_det"
-            )
-            st.session_state[step]["sys_answer"] = st.text_area(
-                "D6 - Corrective Actions for Systemic Root Cause",
-                value=st.session_state[step]["sys_answer"],
-                key="d6_sys"
-            )
+    # ✅ NEW: Smart Suggestion button
+    if st.button("💡 Suggest corrective actions", key="btn_suggest_d6"):
+        occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
+        det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
+        sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
+        
+        suggestions = generate_suggestions_based_on(occ_whys, det_whys, sys_whys)
+        
+        st.session_state[step]["occ_answer"] = suggestions["occ"]
+        st.session_state[step]["det_answer"] = suggestions["det"]
+        st.session_state[step]["sys_answer"] = suggestions["sys"]
 
-            # Mirror into top-level D6 storage so export code can find them consistently
-            st.session_state["D6"]["occ_answer"] = st.session_state[step]["occ_answer"]
-            st.session_state["D6"]["det_answer"] = st.session_state[step]["det_answer"]
-            st.session_state["D6"]["sys_answer"] = st.session_state[step]["sys_answer"]
+        st.success("✅ Suggestions generated based on D5 root causes!")
+
+    # Text areas (kept as is)
+    st.session_state[step]["occ_answer"] = st.text_area(
+        "D6 - Corrective Actions for Occurrence Root Cause",
+        value=st.session_state[step]["occ_answer"],
+        key="d6_occ"
+    )
+    st.session_state[step]["det_answer"] = st.text_area(
+        "D6 - Corrective Actions for Detection Root Cause",
+        value=st.session_state[step]["det_answer"],
+        key="d6_det"
+    )
+    st.session_state[step]["sys_answer"] = st.text_area(
+        "D6 - Corrective Actions for Systemic Root Cause",
+        value=st.session_state[step]["sys_answer"],
+        key="d6_sys"
+    )
+
+    # Mirror into top-level D6 storage so export code can find them consistently
+    st.session_state["D6"]["occ_answer"] = st.session_state[step]["occ_answer"]
+    st.session_state["D6"]["det_answer"] = st.session_state[step]["det_answer"]
+    st.session_state["D6"]["sys_answer"] = st.session_state[step]["sys_answer"]
 
         # D7: Countermeasure Confirmation (three text areas: verification for Occ/Det/Sys)
         elif step == "D7":
