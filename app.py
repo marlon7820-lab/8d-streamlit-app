@@ -986,11 +986,11 @@ line-height:1.5;
                     lines.insert(0, f"🔹 Problem Statement: {d2}")
                 return "\n".join(lines)
 
-           st.text_area(
-               f"{t[lang_key]['Root_Cause_Summary']}",
-               value=build_smart_root_cause(d2_concern, occ_whys, det_whys, sys_whys),
-               height=180,
-               disabled=True
+         st.text_area(
+             f"{t[lang_key]['Root_Cause_Summary']}",
+             value=build_smart_root_cause(d2_concern, occ_whys, det_whys, sys_whys),
+             height=180,
+             disabled=True
           )
 
         elif step == "D6":
