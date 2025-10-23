@@ -878,185 +878,185 @@ line-height:1.5;
                     st.image(f, width=192)
 
         # ---------------------------
-        # Step-specific inputs
-        # ---------------------------
-        if step == "D4":
-            st.session_state[step]["location"] = st.selectbox(
-                "Location of Material",
-                ["", "Work in Progress", "Stores Stock", "Warehouse Stock", "Service Parts", "Other"],
-                index=0,
-                key="d4_location"
-            )
-            st.session_state[step]["status"] = st.selectbox(
-                "Status of Activities",
-                ["", "Pending", "In Progress", "Completed", "Other"],
-                index=0,
-                key="d4_status"
-            )
-            st.session_state[step]["answer"] = st.text_area(
-                "Containment Actions / Notes",
-                value=st.session_state[step]["answer"],
-                key=f"ans_{step}"
-            )
+# Step-specific inputs
+# ---------------------------
+if step == "D4":
+    st.session_state[step]["location"] = st.selectbox(
+        "Location of Material",
+        ["", "Work in Progress", "Stores Stock", "Warehouse Stock", "Service Parts", "Other"],
+        index=0,
+        key="d4_location"
+    )
+    st.session_state[step]["status"] = st.selectbox(
+        "Status of Activities",
+        ["", "Pending", "In Progress", "Completed", "Other"],
+        index=0,
+        key="d4_status"
+    )
+    st.session_state[step]["answer"] = st.text_area(
+        "Containment Actions / Notes",
+        value=st.session_state[step]["answer"],
+        key=f"ans_{step}"
+    )
 
-        elif step == "D5":
-            # ---------------------------
-            # 🧩 Show D1 concern safely at the top
-            # ---------------------------
-            d1_concern = st.session_state.get("D1", {}).get("answer", "").strip()
-            if d1_concern:
-                st.info(d1_concern)
-                st.caption("💡 Begin your Why analysis from this concern reported by the customer.")
-            else:
-                st.warning("No Customer Concern defined yet in D1. Please complete D1 to D4 before proceeding with D5.")
+elif step == "D5":
+    # ---------------------------
+    # 🧩 Show D1 concern safely at the top
+    # ---------------------------
+    d1_concern = st.session_state.get("D1", {}).get("answer", "").strip()
+    if d1_concern:
+        st.info(d1_concern)
+        st.caption("💡 Begin your Why analysis from this concern reported by the customer.")
+    else:
+        st.warning("No Customer Concern defined yet in D1. Please complete D1 to D4 before proceeding with D5.")
 
-            # ---------------------------
-            # Occurrence Analysis
-            # ---------------------------
-            if lang_key == "es":
-                st.session_state.d5_occ_whys = render_whys_no_repeat_with_other(
-                    st.session_state.d5_occ_whys,
-                    occurrence_categories_es,
-                    t[lang_key]['Occurrence_Why']
-                )
-            else:
-                st.session_state.d5_occ_whys = render_whys_no_repeat_with_other(
-                    st.session_state.d5_occ_whys,
-                    occurrence_categories,
-                    t[lang_key]['Occurrence_Why']
-                )
+    # ---------------------------
+    # Occurrence Analysis
+    # ---------------------------
+    if lang_key == "es":
+        st.session_state.d5_occ_whys = render_whys_no_repeat_with_other(
+            st.session_state.d5_occ_whys,
+            occurrence_categories_es,
+            t[lang_key]['Occurrence_Why']
+        )
+    else:
+        st.session_state.d5_occ_whys = render_whys_no_repeat_with_other(
+            st.session_state.d5_occ_whys,
+            occurrence_categories,
+            t[lang_key]['Occurrence_Why']
+        )
 
-            if st.button("➕ Add another Occurrence Why", key=f"add_occ_{i}"):
-                st.session_state.d5_occ_whys.append("")
+    if st.button("➕ Add another Occurrence Why", key=f"add_occ_{i}"):
+        st.session_state.d5_occ_whys.append("")
 
-            # Detection Analysis
-            if lang_key == "es":
-                st.session_state.d5_det_whys = render_whys_no_repeat_with_other(
-                    st.session_state.d5_det_whys,
-                    detection_categories_es,
-                    t[lang_key]['Detection_Why']
-                )
-            else:
-                st.session_state.d5_det_whys = render_whys_no_repeat_with_other(
-                    st.session_state.d5_det_whys,
-                    detection_categories,
-                    t[lang_key]['Detection_Why']
-                )
+    # Detection Analysis
+    if lang_key == "es":
+        st.session_state.d5_det_whys = render_whys_no_repeat_with_other(
+            st.session_state.d5_det_whys,
+            detection_categories_es,
+            t[lang_key]['Detection_Why']
+        )
+    else:
+        st.session_state.d5_det_whys = render_whys_no_repeat_with_other(
+            st.session_state.d5_det_whys,
+            detection_categories,
+            t[lang_key]['Detection_Why']
+        )
 
-            if st.button("➕ Add another Detection Why", key=f"add_det_{i}"):
-                st.session_state.d5_det_whys.append("")
+    if st.button("➕ Add another Detection Why", key=f"add_det_{i}"):
+        st.session_state.d5_det_whys.append("")
 
-            # Systemic Analysis
-            if lang_key == "es":
-                st.session_state.d5_sys_whys = render_whys_no_repeat_with_other(
-                    st.session_state.d5_sys_whys,
-                    systemic_categories_es,
-                    t[lang_key]['Systemic_Why']
-                )
-            else:
-                st.session_state.d5_sys_whys = render_whys_no_repeat_with_other(
-                    st.session_state.d5_sys_whys,
-                    systemic_categories,
-                    t[lang_key]['Systemic_Why']
-                )
+    # Systemic Analysis
+    if lang_key == "es":
+        st.session_state.d5_sys_whys = render_whys_no_repeat_with_other(
+            st.session_state.d5_sys_whys,
+            systemic_categories_es,
+            t[lang_key]['Systemic_Why']
+        )
+    else:
+        st.session_state.d5_sys_whys = render_whys_no_repeat_with_other(
+            st.session_state.d5_sys_whys,
+            systemic_categories,
+            t[lang_key]['Systemic_Why']
+        )
 
-            if st.button("➕ Add another Systemic Why", key=f"add_sys_{i}"):
-                st.session_state.d5_sys_whys.append("")
+    if st.button("➕ Add another Systemic Why", key=f"add_sys_{i}"):
+        st.session_state.d5_sys_whys.append("")
 
-            # ---------------------------
-            # Smart Root Cause Suggestions
-            # ---------------------------
-            occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
-            det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
-            sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
+    # ---------------------------
+    # Smart Root Cause Suggestions
+    # ---------------------------
+    occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
+    det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
+    sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
 
-            # Build structured root cause suggestions
-            def build_smart_root_cause(d2, occ_list, det_list, sys_list):
-                lines = []
-                if occ_list:
-                    for occ in occ_list:
-                        lines.append(f"📌 Occurrence (4M): {occ}")
-                if det_list:
-                    for det in det_list:
-                        lines.append(f"📌 Detection Gap: {det}")
-                if sys_list:
-                    for sys in sys_list:
-                        lines.append(f"📌 Systemic Issue: {sys}")
-                if d2:
-                    lines.insert(0, f"🔹 Problem Statement: {d2}")
-                return "\n".join(lines)
+    # Build structured root cause suggestions
+    def build_smart_root_cause(d2, occ_list, det_list, sys_list):
+        lines = []
+        if occ_list:
+            for occ in occ_list:
+                lines.append(f"📌 Occurrence (4M): {occ}")
+        if det_list:
+            for det in det_list:
+                lines.append(f"📌 Detection Gap: {det}")
+        if sys_list:
+            for sys in sys_list:
+                lines.append(f"📌 Systemic Issue: {sys}")
+        if d2:
+            lines.insert(0, f"🔹 Problem Statement: {d2}")
+        return "\n".join(lines)
 
-         st.text_area(
-             f"{t[lang_key]['Root_Cause_Summary']}",
-             value=build_smart_root_cause(d2_concern, occ_whys, det_whys, sys_whys),
-             height=180,
-             disabled=True
-          )
+    st.text_area(
+        f"{t[lang_key]['Root_Cause_Summary']}",
+        value=build_smart_root_cause(d1_concern, occ_whys, det_whys, sys_whys),
+        height=180,
+        disabled=True
+    )
 
-        elif step == "D6":
-            st.session_state[step].setdefault("occ_answer", st.session_state["D6"].get("occ_answer", ""))
-            st.session_state[step].setdefault("det_answer", st.session_state["D6"].get("det_answer", ""))
-            st.session_state[step].setdefault("sys_answer", st.session_state["D6"].get("sys_answer", ""))
+elif step == "D6":
+    st.session_state[step].setdefault("occ_answer", st.session_state["D6"].get("occ_answer", ""))
+    st.session_state[step].setdefault("det_answer", st.session_state["D6"].get("det_answer", ""))
+    st.session_state[step].setdefault("sys_answer", st.session_state["D6"].get("sys_answer", ""))
 
-            st.session_state[step]["occ_answer"] = st.text_area(
-                "D6 - Corrective Actions for Occurrence Root Cause",
-                value=st.session_state[step]["occ_answer"],
-                key="d6_occ"
-            )
-            st.session_state[step]["det_answer"] = st.text_area(
-                "D6 - Corrective Actions for Detection Root Cause",
-                value=st.session_state[step]["det_answer"],
-                key="d6_det"
-            )
-            st.session_state[step]["sys_answer"] = st.text_area(
-                "D6 - Corrective Actions for Systemic Root Cause",
-                value=st.session_state[step]["sys_answer"],
-                key="d6_sys"
-            )
+    st.session_state[step]["occ_answer"] = st.text_area(
+        "D6 - Corrective Actions for Occurrence Root Cause",
+        value=st.session_state[step]["occ_answer"],
+        key="d6_occ"
+    )
+    st.session_state[step]["det_answer"] = st.text_area(
+        "D6 - Corrective Actions for Detection Root Cause",
+        value=st.session_state[step]["det_answer"],
+        key="d6_det"
+    )
+    st.session_state[step]["sys_answer"] = st.text_area(
+        "D6 - Corrective Actions for Systemic Root Cause",
+        value=st.session_state[step]["sys_answer"],
+        key="d6_sys"
+    )
 
-            st.session_state["D6"]["occ_answer"] = st.session_state[step]["occ_answer"]
-            st.session_state["D6"]["det_answer"] = st.session_state[step]["det_answer"]
-            st.session_state["D6"]["sys_answer"] = st.session_state[step]["sys_answer"]
+    st.session_state["D6"]["occ_answer"] = st.session_state[step]["occ_answer"]
+    st.session_state["D6"]["det_answer"] = st.session_state[step]["det_answer"]
+    st.session_state["D6"]["sys_answer"] = st.session_state[step]["sys_answer"]
 
-        elif step == "D7":
-            st.session_state[step].setdefault("occ_answer", st.session_state["D7"].get("occ_answer", ""))
-            st.session_state[step].setdefault("det_answer", st.session_state["D7"].get("det_answer", ""))
-            st.session_state[step].setdefault("sys_answer", st.session_state["D7"].get("sys_answer", ""))
+elif step == "D7":
+    st.session_state[step].setdefault("occ_answer", st.session_state["D7"].get("occ_answer", ""))
+    st.session_state[step].setdefault("det_answer", st.session_state["D7"].get("det_answer", ""))
+    st.session_state[step].setdefault("sys_answer", st.session_state["D7"].get("sys_answer", ""))
 
-            st.session_state[step]["occ_answer"] = st.text_area(
-                "D7 - Occurrence Countermeasure Verification",
-                value=st.session_state[step]["occ_answer"],
-                key="d7_occ"
-            )
-            st.session_state[step]["det_answer"] = st.text_area(
-                "D7 - Detection Countermeasure Verification",
-                value=st.session_state[step]["det_answer"],
-                key="d7_det"
-            )
-            st.session_state[step]["sys_answer"] = st.text_area(
-                "D7 - Systemic Countermeasure Verification",
-                value=st.session_state[step]["sys_answer"],
-                key="d7_sys"
-            )
+    st.session_state[step]["occ_answer"] = st.text_area(
+        "D7 - Occurrence Countermeasure Verification",
+        value=st.session_state[step]["occ_answer"],
+        key="d7_occ"
+    )
+    st.session_state[step]["det_answer"] = st.text_area(
+        "D7 - Detection Countermeasure Verification",
+        value=st.session_state[step]["det_answer"],
+        key="d7_det"
+    )
+    st.session_state[step]["sys_answer"] = st.text_area(
+        "D7 - Systemic Countermeasure Verification",
+        value=st.session_state[step]["sys_answer"],
+        key="d7_sys"
+    )
 
-            st.session_state["D7"]["occ_answer"] = st.session_state[step]["occ_answer"]
-            st.session_state["D7"]["det_answer"] = st.session_state[step]["det_answer"]
-            st.session_state["D7"]["sys_answer"] = st.session_state[step]["sys_answer"]
+    st.session_state["D7"]["occ_answer"] = st.session_state[step]["occ_answer"]
+    st.session_state["D7"]["det_answer"] = st.session_state[step]["det_answer"]
+    st.session_state["D7"]["sys_answer"] = st.session_state[step]["sys_answer"]
 
-        elif step == "D8":
-            st.session_state[step]["answer"] = st.text_area(
-                "Your Answer",
-                value=st.session_state[step]["answer"],
-                key=f"ans_{step}"
-            )
+elif step == "D8":
+    st.session_state[step]["answer"] = st.text_area(
+        "Your Answer",
+        value=st.session_state[step]["answer"],
+        key=f"ans_{step}"
+    )
 
-        else:
-            if step not in ["D4", "D5", "D6", "D7", "D8"]:
-                st.session_state[step]["answer"] = st.text_area(
-                    "Your Answer",
-                    value=st.session_state[step]["answer"],
-                    key=f"ans_{step}"
-                )
+else:
+    if step not in ["D4", "D5", "D6", "D7", "D8"]:
+        st.session_state[step]["answer"] = st.text_area(
+            "Your Answer",
+            value=st.session_state[step]["answer"],
+            key=f"ans_{step}"
+        )
 
 # ---------------------------
 # Collect all answers for Excel export
