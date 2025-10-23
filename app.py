@@ -910,25 +910,41 @@ elif step == "D5":
         st.warning("No Customer Concern defined yet in D1. Please complete D1 to D4 before proceeding with D5.")
 
     # ---------------------------
-    # Occurrence Analysis
+    # Occurrence Analysis (4M: Material, Machine, Method, Measurement)
     # ---------------------------
+    occurrence_categories_4m = {
+        "Material": ["Wrong material specification", "Supplier defect", "Material contamination"],
+        "Machine": ["Tooling worn", "Equipment misalignment", "Machine failure"],
+        "Method": ["Process deviation", "Incorrect procedure", "SOP not followed"],
+        "Measurement": ["Inspection missed", "Measurement error", "Testing gap"]
+    }
+
     if lang_key == "es":
+        # Translate categories if needed
+        occurrence_categories_es_4m = {
+            "Material": ["Especificación de material incorrecta", "Defecto del proveedor", "Contaminación del material"],
+            "Machine": ["Herramienta desgastada", "Desalineación del equipo", "Falla de la máquina"],
+            "Method": ["Desviación del proceso", "Procedimiento incorrecto", "SOP no seguido"],
+            "Measurement": ["Inspección perdida", "Error de medición", "Falta de prueba"]
+        }
         st.session_state.d5_occ_whys = render_whys_no_repeat_with_other(
             st.session_state.d5_occ_whys,
-            occurrence_categories_es,
+            occurrence_categories_es_4m,
             t[lang_key]['Occurrence_Why']
         )
     else:
         st.session_state.d5_occ_whys = render_whys_no_repeat_with_other(
             st.session_state.d5_occ_whys,
-            occurrence_categories,
+            occurrence_categories_4m,
             t[lang_key]['Occurrence_Why']
         )
 
     if st.button("➕ Add another Occurrence Why", key=f"add_occ_{i}"):
         st.session_state.d5_occ_whys.append("")
 
+    # ---------------------------
     # Detection Analysis
+    # ---------------------------
     if lang_key == "es":
         st.session_state.d5_det_whys = render_whys_no_repeat_with_other(
             st.session_state.d5_det_whys,
@@ -945,7 +961,9 @@ elif step == "D5":
     if st.button("➕ Add another Detection Why", key=f"add_det_{i}"):
         st.session_state.d5_det_whys.append("")
 
+    # ---------------------------
     # Systemic Analysis
+    # ---------------------------
     if lang_key == "es":
         st.session_state.d5_sys_whys = render_whys_no_repeat_with_other(
             st.session_state.d5_sys_whys,
@@ -991,7 +1009,6 @@ elif step == "D5":
         height=180,
         disabled=True
     )
-
 elif step == "D6":
     st.session_state[step].setdefault("occ_answer", st.session_state["D6"].get("occ_answer", ""))
     st.session_state[step].setdefault("det_answer", st.session_state["D6"].get("det_answer", ""))
