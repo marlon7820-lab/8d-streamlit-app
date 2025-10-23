@@ -993,7 +993,7 @@ line-height:1.5;
     
                 return "\n".join(lines)
 
-           # Replace the original suggest_root_cause call with the smarter version
+             # Replace the original suggest_root_cause call with the smarter version
              st.text_area(
                  f"{t[lang_key]['Root_Cause_Occ']}",
                  value=smart_root_cause_suggestion(d1_concern, occ_whys, [], []),  # only Occurrence
