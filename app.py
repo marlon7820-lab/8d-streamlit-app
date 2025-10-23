@@ -890,14 +890,11 @@ if step == "D4":
 # ---------------------------
 elif step == "D5":
     # --- Initialize Why lists safely ---
-    if "d5_occ_whys" not in st.session_state:
-        st.session_state["d5_occ_whys"] = [""]
-    if "d5_det_whys" not in st.session_state:
-        st.session_state["d5_det_whys"] = [""]
-    if "d5_sys_whys" not in st.session_state:
-        st.session_state["d5_sys_whys"] = [""]
+    for key in ["d5_occ_whys", "d5_det_whys", "d5_sys_whys"]:
+        if key not in st.session_state:
+            st.session_state[key] = [""]
 
-    # --- Display D2 customer concern safely ---
+    # --- Display D2 concern safely ---
     d2_concern = st.session_state.get("D2", {}).get("answer", "").strip()
     if d2_concern:
         st.info(d2_concern)
@@ -907,57 +904,56 @@ elif step == "D5":
 
     # --- Occurrence Why inputs ---
     st.markdown("### Occurrence Analysis")
-    for i, why in enumerate(st.session_state.d5_occ_whys):
-        st.session_state.d5_occ_whys[i] = st.text_input(
-            f"Occurrence Why {i+1}",
-            value=why,
-            key=f"occ_{i}"
+    occ_whys = st.session_state["d5_occ_whys"]
+    for idx in range(len(occ_whys)):
+        occ_whys[idx] = st.text_input(
+            f"Occurrence Why {idx+1}",
+            value=occ_whys[idx],
+            key=f"d5_occ_{idx}"
         )
     if st.button("➕ Add another Occurrence Why", key="add_occ"):
-        st.session_state.d5_occ_whys.append("")
+        occ_whys.append("")
 
     # --- Detection Why inputs ---
     st.markdown("### Detection Analysis")
-    for i, why in enumerate(st.session_state.d5_det_whys):
-        st.session_state.d5_det_whys[i] = st.text_input(
-            f"Detection Why {i+1}",
-            value=why,
-            key=f"det_{i}"
+    det_whys = st.session_state["d5_det_whys"]
+    for idx in range(len(det_whys)):
+        det_whys[idx] = st.text_input(
+            f"Detection Why {idx+1}",
+            value=det_whys[idx],
+            key=f"d5_det_{idx}"
         )
     if st.button("➕ Add another Detection Why", key="add_det"):
-        st.session_state.d5_det_whys.append("")
+        det_whys.append("")
 
     # --- Systemic Why inputs ---
     st.markdown("### Systemic Analysis")
-    for i, why in enumerate(st.session_state.d5_sys_whys):
-        st.session_state.d5_sys_whys[i] = st.text_input(
-            f"Systemic Why {i+1}",
-            value=why,
-            key=f"sys_{i}"
+    sys_whys = st.session_state["d5_sys_whys"]
+    for idx in range(len(sys_whys)):
+        sys_whys[idx] = st.text_input(
+            f"Systemic Why {idx+1}",
+            value=sys_whys[idx],
+            key=f"d5_sys_{idx}"
         )
     if st.button("➕ Add another Systemic Why", key="add_sys"):
-        st.session_state.d5_sys_whys.append("")
+        sys_whys.append("")
 
     # --- Root Cause Suggestions ---
-    occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
-    det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
-    sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
-
     st.text_area(
         f"{t[lang_key]['Root_Cause_Occ']}",
-        value=suggest_root_cause(occ_whys, lang_key),
+        value=suggest_root_cause([w for w in occ_whys if w.strip()], lang_key),
         height=100,
         disabled=True
     )
     st.text_area(
         f"{t[lang_key]['Root_Cause_Det']}",
-        value=suggest_root_cause(det_whys, lang_key),
+        value=suggest_root_cause([w for w in det_whys if w.strip()], lang_key),
         height=100,
         disabled=True
     )
     st.text_area(
         f"{t[lang_key]['Root_Cause_Sys']}",
-        value=suggest_root_cause(sys_whys, lang_key),
+        value=suggest_root_cause([w for w in sys_whys if w.strip()], lang_key),
         height=100,
         disabled=True
     )
