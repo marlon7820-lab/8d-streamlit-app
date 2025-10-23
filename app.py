@@ -859,28 +859,7 @@ line-height:1.5;
         # Show example entry safely
         st.caption(f"💡 {t[lang_key]['Example']}: {example_text}")
         
-     # File uploads for D1, D3, D4, D7
-if step in ["D1","D3","D4","D7"]:
-    uploaded_files = st.file_uploader(
-        f"Upload files/photos for {step}",
-        type=["png", "jpg", "jpeg", "pdf", "xlsx", "txt"],
-        accept_multiple_files=True,
-        key=f"upload_{step}"
-    )
-    if uploaded_files:
-        for file in uploaded_files:
-            if file not in st.session_state[step]["uploaded_files"]:
-                st.session_state[step]["uploaded_files"].append(file)
-
-# Display uploaded files (aligned with file upload, not nested too deep)
-if step in ["D1","D3","D4","D7"] and st.session_state[step].get("uploaded_files"):
-    st.markdown("**Uploaded Files / Photos:**")
-    for f in st.session_state[step]["uploaded_files"]:
-        st.write(f"{f.name}")
-        if f.type.startswith("image/"):
-            st.image(f, width=192)  # roughly 2 inches wide, height auto-scaled
-
-# Step-specific inputs (same level as upload check)
+     # Step-specific inputs (same level as upload check)
 if step == "D4":
     st.session_state[step]["location"] = st.selectbox(
         "Location of Material",
@@ -900,9 +879,10 @@ if step == "D4":
         key=f"ans_{step}"
     )
 
-# D5 5-Why + "Other" dropdown replacement with D2 concern display
 elif step == "D5":
-    # --- Display D2 concern safely ---
+    # ---------------------------
+    # 🧩 New: Show D2 concern safely at the top of D5
+    # ---------------------------
     d2_concern = st.session_state.get("D2", {}).get("answer", "").strip()
     if d2_concern:
         st.info(d2_concern)
@@ -910,7 +890,9 @@ elif step == "D5":
     else:
         st.warning("No Customer Concern defined yet in D2. Please complete D2 before proceeding with D5.")
 
+    # ---------------------------
     # Occurrence Analysis
+    # ---------------------------
     if lang_key == "es":
         st.session_state.d5_occ_whys = render_whys_no_repeat_with_other(
             st.session_state.d5_occ_whys,
@@ -923,10 +905,13 @@ elif step == "D5":
             occurrence_categories,
             t[lang_key]['Occurrence_Why']
         )
+
     if st.button("➕ Add another Occurrence Why", key=f"add_occ_{i}"):
         st.session_state.d5_occ_whys.append("")
 
+    # ---------------------------
     # Detection Analysis
+    # ---------------------------
     if lang_key == "es":
         st.session_state.d5_det_whys = render_whys_no_repeat_with_other(
             st.session_state.d5_det_whys,
@@ -939,10 +924,13 @@ elif step == "D5":
             detection_categories,
             t[lang_key]['Detection_Why']
         )
+
     if st.button("➕ Add another Detection Why", key=f"add_det_{i}"):
         st.session_state.d5_det_whys.append("")
 
+    # ---------------------------
     # Systemic Analysis
+    # ---------------------------
     if lang_key == "es":
         st.session_state.d5_sys_whys = render_whys_no_repeat_with_other(
             st.session_state.d5_sys_whys,
@@ -955,10 +943,13 @@ elif step == "D5":
             systemic_categories,
             t[lang_key]['Systemic_Why']
         )
+
     if st.button("➕ Add another Systemic Why", key=f"add_sys_{i}"):
         st.session_state.d5_sys_whys.append("")
 
-    # Dynamic Root Causes suggestion display (unchanged)
+    # ---------------------------
+    # Root Cause Suggestions (unchanged)
+    # ---------------------------
     occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
     det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
     sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
@@ -981,7 +972,7 @@ elif step == "D5":
         disabled=True
     )
 
-# D6: Permanent Corrective Actions (three text areas: Occ/Det/Sys)
+# D6, D7, D8 remain exactly as in your original working code
 elif step == "D6":
     st.session_state[step].setdefault("occ_answer", st.session_state["D6"].get("occ_answer", ""))
     st.session_state[step].setdefault("det_answer", st.session_state["D6"].get("det_answer", ""))
@@ -1003,12 +994,10 @@ elif step == "D6":
         key="d6_sys"
     )
 
-    # Mirror into top-level D6 storage so export code can find them consistently
     st.session_state["D6"]["occ_answer"] = st.session_state[step]["occ_answer"]
     st.session_state["D6"]["det_answer"] = st.session_state[step]["det_answer"]
     st.session_state["D6"]["sys_answer"] = st.session_state[step]["sys_answer"]
 
-# D7: Countermeasure Confirmation (three text areas: verification for Occ/Det/Sys)
 elif step == "D7":
     st.session_state[step].setdefault("occ_answer", st.session_state["D7"].get("occ_answer", ""))
     st.session_state[step].setdefault("det_answer", st.session_state["D7"].get("det_answer", ""))
@@ -1030,12 +1019,10 @@ elif step == "D7":
         key="d7_sys"
     )
 
-    # Mirror into top-level D7 storage so export code can find them consistently
     st.session_state["D7"]["occ_answer"] = st.session_state[step]["occ_answer"]
     st.session_state["D7"]["det_answer"] = st.session_state[step]["det_answer"]
     st.session_state["D7"]["sys_answer"] = st.session_state[step]["sys_answer"]
 
-# D8: Follow-up Activities / Lessons Learned (single text area)
 elif step == "D8":
     st.session_state[step]["answer"] = st.text_area(
         "Your Answer",
@@ -1044,110 +1031,12 @@ elif step == "D8":
     )
 
 else:
-    # Default for D1, D2, D3, or any other single-answer steps
     if step not in ["D4", "D5", "D6", "D7", "D8"]:
         st.session_state[step]["answer"] = st.text_area(
             "Your Answer",
             value=st.session_state[step]["answer"],
             key=f"ans_{step}"
         )
-# ---------------------------
-# Collect all answers for Excel export
-# ---------------------------
-data_rows = []
-
-occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
-det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
-sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
-
-occ_rc_text = suggest_root_cause(occ_whys) if occ_whys else "No occurrence whys provided yet"
-det_rc_text = suggest_root_cause(det_whys) if det_whys else "No detection whys provided yet"
-sys_rc_text = suggest_root_cause(sys_whys) if sys_whys else "No systemic whys provided yet"
-
-
-for step, _, _ in npqp_steps:
-    # D6 and D7 should export their 3 sub-answers as separate rows
-    if step == "D6":
-        data_rows.append(("D6 - Occurrence Countermeasure", st.session_state.get("D6", {}).get("occ_answer", ""), ""))
-        data_rows.append(("D6 - Detection Countermeasure", st.session_state.get("D6", {}).get("det_answer", ""), ""))
-        data_rows.append(("D6 - Systemic Countermeasure", st.session_state.get("D6", {}).get("sys_answer", ""), ""))
-    elif step == "D7":
-        data_rows.append(("D7 - Occurrence Countermeasure Verification", st.session_state.get("D7", {}).get("occ_answer", ""), ""))
-        data_rows.append(("D7 - Detection Countermeasure Verification", st.session_state.get("D7", {}).get("det_answer", ""), ""))
-        data_rows.append(("D7 - Systemic Countermeasure Verification", st.session_state.get("D7", {}).get("sys_answer", ""), ""))
-    elif step == "D5":
-        data_rows.append(("D5 - Root Cause (Occurrence)", occ_rc_text, " | ".join(occ_whys)))
-        data_rows.append(("D5 - Root Cause (Detection)", det_rc_text, " | ".join(det_whys)))
-        data_rows.append(("D5 - Root Cause (Systemic)", sys_rc_text, " | ".join(sys_whys)))
-    elif step == "D4":
-        loc = st.session_state[step].get("location", "")
-        status = st.session_state[step].get("status", "")
-        answer = st.session_state[step].get("answer", "")
-        extra = f"Location: {loc} | Status: {status}"
-        data_rows.append((step, answer, extra))
-    else:
-        answer = st.session_state[step].get("answer", "")
-        extra = st.session_state[step].get("extra", "")
-        data_rows.append((step, answer, extra))
-# D6: Permanent Corrective Actions (three text areas: Occ/Det/Sys)
-elif step == "D6":
-    st.session_state[step].setdefault("occ_answer", st.session_state["D6"].get("occ_answer", ""))
-    st.session_state[step].setdefault("det_answer", st.session_state["D6"].get("det_answer", ""))
-    st.session_state[step].setdefault("sys_answer", st.session_state["D6"].get("sys_answer", ""))
-
-    st.session_state[step]["occ_answer"] = st.text_area(
-        f"D6 - {t[lang_key]['Root_Cause_Occ']}:",
-        value=st.session_state[step]["occ_answer"],
-        height=120,
-        key=f"D6_occ_{lang_key}"
-    )
-    st.session_state[step]["det_answer"] = st.text_area(
-        f"D6 - {t[lang_key]['Root_Cause_Det']}:",
-        value=st.session_state[step]["det_answer"],
-        height=120,
-        key=f"D6_det_{lang_key}"
-    )
-    st.session_state[step]["sys_answer"] = st.text_area(
-        f"D6 - {t[lang_key]['Root_Cause_Sys']}:",
-        value=st.session_state[step]["sys_answer"],
-        height=120,
-        key=f"D6_sys_{lang_key}"
-    )
-
-# D7: Countermeasure Confirmation
-elif step == "D7":
-    st.session_state[step].setdefault("occ_answer", st.session_state["D7"].get("occ_answer", ""))
-    st.session_state[step].setdefault("det_answer", st.session_state["D7"].get("det_answer", ""))
-    st.session_state[step].setdefault("sys_answer", st.session_state["D7"].get("sys_answer", ""))
-
-    st.session_state[step]["occ_answer"] = st.text_area(
-        f"D7 - {t[lang_key]['Root_Cause_Occ']} Confirmation:",
-        value=st.session_state[step]["occ_answer"],
-        height=100,
-        key=f"D7_occ_{lang_key}"
-    )
-    st.session_state[step]["det_answer"] = st.text_area(
-        f"D7 - {t[lang_key]['Root_Cause_Det']} Confirmation:",
-        value=st.session_state[step]["det_answer"],
-        height=100,
-        key=f"D7_det_{lang_key}"
-    )
-    st.session_state[step]["sys_answer"] = st.text_area(
-        f"D7 - {t[lang_key]['Root_Cause_Sys']} Confirmation:",
-        value=st.session_state[step]["sys_answer"],
-        height=100,
-        key=f"D7_sys_{lang_key}"
-    )
-
-# D8: Follow-Up / Lessons Learned
-elif step == "D8":
-    st.session_state[step].setdefault("answer", st.session_state[step].get("answer", ""))
-    st.session_state[step]["answer"] = st.text_area(
-        "Document lessons learned / recurrence prevention measures",
-        value=st.session_state[step]["answer"],
-        height=200,
-        key=f"D8_{lang_key}"
-    )
 # ---------------------------
 # Excel generation (formatted + images/files)
 # ---------------------------
