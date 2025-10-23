@@ -860,7 +860,9 @@ line-height:1.5;
         st.caption(f"💡 {t[lang_key]['Example']}: {example_text}")
         
    # Step-specific inputs (same level as upload check)
+
 if step == "D4":
+    # Restore exactly your previous D4 logic
     st.session_state[step]["location"] = st.selectbox(
         "Location of Material",
         ["", "Work in Progress", "Stores Stock", "Warehouse Stock", "Service Parts", "Other"],
@@ -881,7 +883,7 @@ if step == "D4":
 
 elif step == "D5":
     # ---------------------------
-    # 🧩 Show D2 concern safely at the top of D5
+    # Show D2 concern safely at the top of D5
     # ---------------------------
     d2_concern = st.session_state.get("D2", {}).get("answer", "").strip()
     if d2_concern:
@@ -891,7 +893,7 @@ elif step == "D5":
         st.warning("No Customer Concern defined yet in D2. Please complete D2 before proceeding with D5.")
 
     # ---------------------------
-    # Occurrence Analysis
+    # Occurrence Analysis with Other option logic
     # ---------------------------
     if lang_key == "es":
         st.session_state.d5_occ_whys = render_whys_no_repeat_with_other(
@@ -943,7 +945,7 @@ elif step == "D5":
     if st.button("➕ Add another Systemic Why", key="add_sys"):
         st.session_state.d5_sys_whys.append("")
 
-    # Root Cause Suggestions (unchanged)
+    # Root Cause Suggestions
     occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
     det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
     sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
@@ -966,8 +968,8 @@ elif step == "D5":
         disabled=True
     )
 
-# D6, D7, D8 remain exactly as in your original working code
 elif step == "D6":
+    # Restore your original D6 logic exactly
     st.session_state[step].setdefault("occ_answer", st.session_state["D6"].get("occ_answer", ""))
     st.session_state[step].setdefault("det_answer", st.session_state["D6"].get("det_answer", ""))
     st.session_state[step].setdefault("sys_answer", st.session_state["D6"].get("sys_answer", ""))
@@ -993,6 +995,7 @@ elif step == "D6":
     st.session_state["D6"]["sys_answer"] = st.session_state[step]["sys_answer"]
 
 elif step == "D7":
+    # Restore your original D7 logic exactly
     st.session_state[step].setdefault("occ_answer", st.session_state["D7"].get("occ_answer", ""))
     st.session_state[step].setdefault("det_answer", st.session_state["D7"].get("det_answer", ""))
     st.session_state[step].setdefault("sys_answer", st.session_state["D7"].get("sys_answer", ""))
@@ -1079,9 +1082,9 @@ def generate_excel():
                               step_data.get("answer",""),
                               f"Location: {step_data.get('location','')} | Status: {step_data.get('status','')}"))
         elif s == "D5":
-            occ = "\n".join([w for w in step_data.get("occ_whys", []) if w.strip()])
-            det = "\n".join([w for w in step_data.get("det_whys", []) if w.strip()])
-            sysc = "\n".join([w for w in step_data.get("sys_whys", []) if w.strip()])
+            occ = "\n".join([w for w in step_data.get("d5_occ_whys", []) if w.strip()])
+            det = "\n".join([w for w in step_data.get("d5_det_whys", []) if w.strip()])
+            sysc = "\n".join([w for w in step_data.get("d5_sys_whys", []) if w.strip()])
             extra = f"Occurrence:\n{occ}\nDetection:\n{det}\nSystemic:\n{sysc}"
             data_rows.append((s, "", extra))
         elif s in ["D6","D7"]:
@@ -1110,7 +1113,7 @@ def generate_excel():
 
     last_row = ws.max_row + 2
     for step in ["D1","D3","D4","D7"]:
-        uploaded_files = st.session_state.get(step, {}).get("uploaded_files", [])
+        uploaded_files = st.session_state[step].get("uploaded_files", [])
         if uploaded_files:
             ws.cell(row=last_row, column=1, value=f"{step} Uploaded Files / Photos").font = Font(bold=True)
             last_row += 1
@@ -1137,7 +1140,7 @@ def generate_excel():
     for col in range(1, 4):
         ws.column_dimensions[get_column_letter(col)].width = 40
 
-    # ✅ Return bytes
+    # Return the workbook as BytesIO
     output = io.BytesIO()
     wb.save(output)
     return output.getvalue()
@@ -1145,12 +1148,8 @@ def generate_excel():
 # Move download button to sidebar
 with st.sidebar:
     st.download_button(
-        label=t[lang_key]['Download'],  # no extra icon
-        data=generate_excel(),  # function that returns BytesIO of XLSX
+        label=t[lang_key]['Download'],
+        data=generate_excel(),
         file_name=f"8D_Report_{st.session_state['report_date']}.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
-
-# ---------------------------
-# (End)
-# ---------------------------
