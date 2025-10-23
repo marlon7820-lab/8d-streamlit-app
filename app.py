@@ -1089,7 +1089,65 @@ for step, _, _ in npqp_steps:
         answer = st.session_state[step].get("answer", "")
         extra = st.session_state[step].get("extra", "")
         data_rows.append((step, answer, extra))
+# D6: Permanent Corrective Actions (three text areas: Occ/Det/Sys)
+elif step == "D6":
+    st.session_state[step].setdefault("occ_answer", st.session_state["D6"].get("occ_answer", ""))
+    st.session_state[step].setdefault("det_answer", st.session_state["D6"].get("det_answer", ""))
+    st.session_state[step].setdefault("sys_answer", st.session_state["D6"].get("sys_answer", ""))
 
+    st.session_state[step]["occ_answer"] = st.text_area(
+        f"D6 - {t[lang_key]['Root_Cause_Occ']}:",
+        value=st.session_state[step]["occ_answer"],
+        height=120,
+        key=f"D6_occ_{lang_key}"
+    )
+    st.session_state[step]["det_answer"] = st.text_area(
+        f"D6 - {t[lang_key]['Root_Cause_Det']}:",
+        value=st.session_state[step]["det_answer"],
+        height=120,
+        key=f"D6_det_{lang_key}"
+    )
+    st.session_state[step]["sys_answer"] = st.text_area(
+        f"D6 - {t[lang_key]['Root_Cause_Sys']}:",
+        value=st.session_state[step]["sys_answer"],
+        height=120,
+        key=f"D6_sys_{lang_key}"
+    )
+
+# D7: Countermeasure Confirmation
+elif step == "D7":
+    st.session_state[step].setdefault("occ_answer", st.session_state["D7"].get("occ_answer", ""))
+    st.session_state[step].setdefault("det_answer", st.session_state["D7"].get("det_answer", ""))
+    st.session_state[step].setdefault("sys_answer", st.session_state["D7"].get("sys_answer", ""))
+
+    st.session_state[step]["occ_answer"] = st.text_area(
+        f"D7 - {t[lang_key]['Root_Cause_Occ']} Confirmation:",
+        value=st.session_state[step]["occ_answer"],
+        height=100,
+        key=f"D7_occ_{lang_key}"
+    )
+    st.session_state[step]["det_answer"] = st.text_area(
+        f"D7 - {t[lang_key]['Root_Cause_Det']} Confirmation:",
+        value=st.session_state[step]["det_answer"],
+        height=100,
+        key=f"D7_det_{lang_key}"
+    )
+    st.session_state[step]["sys_answer"] = st.text_area(
+        f"D7 - {t[lang_key]['Root_Cause_Sys']} Confirmation:",
+        value=st.session_state[step]["sys_answer"],
+        height=100,
+        key=f"D7_sys_{lang_key}"
+    )
+
+# D8: Follow-Up / Lessons Learned
+elif step == "D8":
+    st.session_state[step].setdefault("answer", st.session_state[step].get("answer", ""))
+    st.session_state[step]["answer"] = st.text_area(
+        "Document lessons learned / recurrence prevention measures",
+        value=st.session_state[step]["answer"],
+        height=200,
+        key=f"D8_{lang_key}"
+    )
 # ---------------------------
 # Excel generation (formatted + images/files)
 # ---------------------------
