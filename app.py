@@ -993,7 +993,7 @@ line-height:1.5;
                     for sys in sys_list:
                         lines.append(f"   - {sys}")
 
-            return "\n".join(lines)
+                return "\n".join(lines)
                  
             st.text_area(
                 f"{t[lang_key]['Root_Cause_Occ']}",
