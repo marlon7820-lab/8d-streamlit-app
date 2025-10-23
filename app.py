@@ -976,8 +976,8 @@ line-height:1.5;
                 lines = []
                 if d1_concern:
                     lines.append(f"🔹 Problem Statement: {d1_concern}")
-                   for occ in occ_list:
-                
+                    for occ in occ_list:
+                   
                 if occ_list:
                     lines.append("📌 Occurrence Root Causes (focus on 4M, excluding Man):")
                     for occ in occ_list:
