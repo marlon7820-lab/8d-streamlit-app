@@ -877,9 +877,8 @@ line-height:1.5;
                 if f.type.startswith("image/"):
                     st.image(f, width=192)
 
-        # ---------------------------
-# Step-specific inputs
-# ---------------------------
+       # Step-specific inputs
+       # ---------------------------
 if step == "D4":
     st.session_state[step]["location"] = st.selectbox(
         "Location of Material",
@@ -988,7 +987,7 @@ elif step == "D5":
 
     st.text_area(
         f"{t[lang_key]['Root_Cause_Summary']}",
-        value=build_smart_root_cause(d1_concern, occ_whys, det_whys, sys_whys),
+        value=build_smart_root_cause(d2_concern, occ_whys, det_whys, sys_whys),
         height=180,
         disabled=True
     )
