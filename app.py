@@ -994,27 +994,26 @@ line-height:1.5;
                 return "\n".join(lines)
 
            # Replace the original suggest_root_cause call with the smarter version
-           st.text_area(
-               f"{t[lang_key]['Root_Cause_Occ']}",
-               value=smart_root_cause_suggestion(d1_concern, occ_whys, [], []),  # only Occurrence
-               height=100,
-               disabled=True
+               st.text_area(
+                   f"{t[lang_key]['Root_Cause_Occ']}",
+                   value=smart_root_cause_suggestion(d1_concern, occ_whys, [], []),  # only Occurrence
+                   height=100,
+                   disabled=True
            )
-           st.text_area(
-               f"{t[lang_key]['Root_Cause_Det']}",
-               value=smart_root_cause_suggestion(d1_concern, [], det_whys, []),  # only Detection
-               height=100,
-               disabled=True
+               st.text_area(
+                   f"{t[lang_key]['Root_Cause_Det']}",
+                   value=smart_root_cause_suggestion(d1_concern, [], det_whys, []),  # only Detection
+                   height=100,
+                   disabled=True
            )
-           st.text_area(
-               f"{t[lang_key]['Root_Cause_Sys']}",
-               value=smart_root_cause_suggestion(d1_concern, [], [], sys_whys),  # only Systemic
-               height=100,
-               disabled=True
+               st.text_area(
+                   f"{t[lang_key]['Root_Cause_Sys']}",
+                   value=smart_root_cause_suggestion(d1_concern, [], [], sys_whys),  # only Systemic
+                   height=100,
+                   disabled=True
            )
 
             
-
         elif step == "D6":
             st.session_state[step].setdefault("occ_answer", st.session_state["D6"].get("occ_answer", ""))
             st.session_state[step].setdefault("det_answer", st.session_state["D6"].get("det_answer", ""))
