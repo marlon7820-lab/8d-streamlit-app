@@ -962,56 +962,56 @@ line-height:1.5;
 
             if st.button("➕ Add another Systemic Why", key=f"add_sys_{i}"):
                 st.session_state.d5_sys_whys.append("")
-# Root Cause Suggestions
-occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
-det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
-sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
+            # Root Cause Suggestions
+            occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
+            det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
+            sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
 
-def smart_root_cause_suggestion(d1_concern, occ_list, det_list, sys_list):
-    """
-    Build smarter root cause suggestions based on the customer concern (D1)
-    and the selected whys for Occurrence (4M), Detection, and Systemic.
-    """
-    lines = []
-    if d1_concern:
-        lines.append(f"🔹 Problem Statement: {d1_concern}")
+            def smart_root_cause_suggestion(d1_concern, occ_list, det_list, sys_list):
+                """
+                Build smarter root cause suggestions based on the customer concern (D1)
+                and the selected whys for Occurrence (4M), Detection, and Systemic.
+                """
+                lines = []
+                if d1_concern:
+                    lines.append(f"🔹 Problem Statement: {d1_concern}")
     
-    if occ_list:
-        lines.append("📌 Occurrence Root Causes (focus on 4M, excluding Man):")
-        for occ in occ_list:
-            lines.append(f"   - {occ}")
+                if occ_list:
+                    lines.append("📌 Occurrence Root Causes (focus on 4M, excluding Man):")
+                    for occ in occ_list:
+                        lines.append(f"   - {occ}")
     
-    if det_list:
-        lines.append("📌 Detection Gaps:")
-        for det in det_list:
-            lines.append(f"   - {det}")
+                if det_list:
+                    lines.append("📌 Detection Gaps:")
+                    for det in det_list:
+                        lines.append(f"   - {det}")
     
-    if sys_list:
-        lines.append("📌 Systemic Issues:")
-        for sys in sys_list:
-            lines.append(f"   - {sys}")
+                if sys_list:
+                    lines.append("📌 Systemic Issues:")
+                    for sys in sys_list:
+                        lines.append(f"   - {sys}")
     
-    return "\n".join(lines)
+                return "\n".join(lines)
 
-# Replace the original suggest_root_cause call with the smarter version
-st.text_area(
-    f"{t[lang_key]['Root_Cause_Occ']}",
-    value=smart_root_cause_suggestion(d1_concern, occ_whys, [], []),  # only Occurrence
-    height=100,
-    disabled=True
-)
-st.text_area(
-    f"{t[lang_key]['Root_Cause_Det']}",
-    value=smart_root_cause_suggestion(d1_concern, [], det_whys, []),  # only Detection
-    height=100,
-    disabled=True
-)
-st.text_area(
-    f"{t[lang_key]['Root_Cause_Sys']}",
-    value=smart_root_cause_suggestion(d1_concern, [], [], sys_whys),  # only Systemic
-    height=100,
-    disabled=True
-)
+           # Replace the original suggest_root_cause call with the smarter version
+           st.text_area(
+               f"{t[lang_key]['Root_Cause_Occ']}",
+               value=smart_root_cause_suggestion(d1_concern, occ_whys, [], []),  # only Occurrence
+               height=100,
+               disabled=True
+           )
+           st.text_area(
+               f"{t[lang_key]['Root_Cause_Det']}",
+               value=smart_root_cause_suggestion(d1_concern, [], det_whys, []),  # only Detection
+               height=100,
+               disabled=True
+           )
+           st.text_area(
+               f"{t[lang_key]['Root_Cause_Sys']}",
+               value=smart_root_cause_suggestion(d1_concern, [], [], sys_whys),  # only Systemic
+               height=100,
+               disabled=True
+           )
 
             
 
