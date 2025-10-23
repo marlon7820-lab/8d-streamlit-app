@@ -856,9 +856,6 @@ line-height:1.5;
         with st.expander(f"📘 {gc['title']}"):
             st.markdown(gc["tips"])
 
-        # Show example entry safely
-        st.caption(f"💡 {t[lang_key]['Example']}: {example_text}")
-
         # File uploads for D1, D3, D4, D7
         if step in ["D1","D3","D4","D7"]:
             uploaded_files = st.file_uploader(
