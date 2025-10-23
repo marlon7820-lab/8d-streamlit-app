@@ -859,7 +859,7 @@ line-height:1.5;
         # Show example entry safely
         st.caption(f"💡 {t[lang_key]['Example']}: {example_text}")
         
-    # Step-specific inputs (same level as upload check)
+   # Step-specific inputs (same level as upload check)
 if step == "D4":
     st.session_state[step]["location"] = st.selectbox(
         "Location of Material",
@@ -881,7 +881,7 @@ if step == "D4":
 
 elif step == "D5":
     # ---------------------------
-    # 🧩 New: Show D2 concern safely at the top of D5
+    # 🧩 Show D2 concern safely at the top of D5
     # ---------------------------
     d2_concern = st.session_state.get("D2", {}).get("answer", "").strip()
     if d2_concern:
@@ -906,12 +906,10 @@ elif step == "D5":
             t[lang_key]['Occurrence_Why']
         )
 
-    if st.button("➕ Add another Occurrence Why", key=f"add_occ_{i}"):
+    if st.button("➕ Add another Occurrence Why", key="add_occ"):
         st.session_state.d5_occ_whys.append("")
 
-    # ---------------------------
     # Detection Analysis
-    # ---------------------------
     if lang_key == "es":
         st.session_state.d5_det_whys = render_whys_no_repeat_with_other(
             st.session_state.d5_det_whys,
@@ -925,12 +923,10 @@ elif step == "D5":
             t[lang_key]['Detection_Why']
         )
 
-    if st.button("➕ Add another Detection Why", key=f"add_det_{i}"):
+    if st.button("➕ Add another Detection Why", key="add_det"):
         st.session_state.d5_det_whys.append("")
 
-    # ---------------------------
     # Systemic Analysis
-    # ---------------------------
     if lang_key == "es":
         st.session_state.d5_sys_whys = render_whys_no_repeat_with_other(
             st.session_state.d5_sys_whys,
@@ -944,12 +940,10 @@ elif step == "D5":
             t[lang_key]['Systemic_Why']
         )
 
-    if st.button("➕ Add another Systemic Why", key=f"add_sys_{i}"):
+    if st.button("➕ Add another Systemic Why", key="add_sys"):
         st.session_state.d5_sys_whys.append("")
 
-    # ---------------------------
     # Root Cause Suggestions (unchanged)
-    # ---------------------------
     occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
     det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
     sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
@@ -1037,6 +1031,7 @@ else:
             value=st.session_state[step]["answer"],
             key=f"ans_{step}"
         )
+
 # ---------------------------
 # Excel generation (formatted + images/files)
 # ---------------------------
@@ -1075,6 +1070,29 @@ def generate_excel():
         cell.alignment = Alignment(horizontal="center", vertical="center")
         cell.border = border
 
+    # Collect all step data safely
+    data_rows = []
+    for s in ["D1","D2","D3","D4","D5","D6","D7","D8"]:
+        step_data = st.session_state.get(s, {})
+        if s == "D4":
+            data_rows.append((s,
+                              step_data.get("answer",""),
+                              f"Location: {step_data.get('location','')} | Status: {step_data.get('status','')}"))
+        elif s == "D5":
+            occ = "\n".join([w for w in step_data.get("occ_whys", []) if w.strip()])
+            det = "\n".join([w for w in step_data.get("det_whys", []) if w.strip()])
+            sysc = "\n".join([w for w in step_data.get("sys_whys", []) if w.strip()])
+            extra = f"Occurrence:\n{occ}\nDetection:\n{det}\nSystemic:\n{sysc}"
+            data_rows.append((s, "", extra))
+        elif s in ["D6","D7"]:
+            occ = step_data.get("occ_answer","")
+            det = step_data.get("det_answer","")
+            sysc = step_data.get("sys_answer","")
+            extra = f"Occurrence:\n{occ}\nDetection:\n{det}\nSystemic:\n{sysc}"
+            data_rows.append((s, "", extra))
+        else:
+            data_rows.append((s, step_data.get("answer",""), ""))
+
     # Append step answers
     for step_label, answer_text, extra_text in data_rows:
         ws.append([step_label, answer_text, extra_text])
@@ -1092,7 +1110,7 @@ def generate_excel():
 
     last_row = ws.max_row + 2
     for step in ["D1","D3","D4","D7"]:
-        uploaded_files = st.session_state[step].get("uploaded_files", [])
+        uploaded_files = st.session_state.get(step, {}).get("uploaded_files", [])
         if uploaded_files:
             ws.cell(row=last_row, column=1, value=f"{step} Uploaded Files / Photos").font = Font(bold=True)
             last_row += 1
@@ -1119,7 +1137,7 @@ def generate_excel():
     for col in range(1, 4):
         ws.column_dimensions[get_column_letter(col)].width = 40
 
-    # ✅ The return must be inside the function
+    # ✅ Return bytes
     output = io.BytesIO()
     wb.save(output)
     return output.getvalue()
