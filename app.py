@@ -967,6 +967,34 @@ line-height:1.5;
             occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
             det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
             sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
+
+            def smart_root_cause_suggestion(d1_concern, occ_list, det_list, sys_list):
+                """
+                Build smarter root cause suggestions based on the customer concern (D1)
+                and the selected whys for Occurrence (4M), Detection, and Systemic.
+                """
+                lines = []
+                if d1_concern:
+                    lines.append(f"🔹 Problem Statement: {d1_concern}")
+                    for occ in occ_list:
+                
+                if occ_list:
+                    lines.append("📌 Occurrence Root Causes (focus on 4M, excluding Man):")
+                    for occ in occ_list:
+                        lines.append(f"   - {occ}")
+
+                if det_list:
+                    lines.append("📌 Detection Gaps:")
+                    for det in det_list:
+                        lines.append(f"   - {det}")
+                    
+                if sys_list:
+                    lines.append("📌 Systemic Issues:")
+                    for sys in sys_list:
+                        lines.append(f"   - {sys}")
+
+            return "\n".join(lines)
+                 
             st.text_area(
                 f"{t[lang_key]['Root_Cause_Occ']}",
                 value=suggest_root_cause(occ_whys, lang_key),
