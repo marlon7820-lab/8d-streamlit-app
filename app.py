@@ -963,28 +963,35 @@ line-height:1.5;
             if st.button("➕ Add another Systemic Why", key=f"add_sys_{i}"):
                 st.session_state.d5_sys_whys.append("")
 
-            # Root Cause Suggestions
-            occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
-            det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
-            sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
-            st.text_area(
-                f"{t[lang_key]['Root_Cause_Occ']}",
-                value=suggest_root_cause(occ_whys, lang_key),
-                height=100,
-                disabled=True
-            )
-            st.text_area(
-                f"{t[lang_key]['Root_Cause_Det']}",
-                value=suggest_root_cause(det_whys, lang_key),
-                height=100,
-                disabled=True
-            )
-            st.text_area(
-                f"{t[lang_key]['Root_Cause_Sys']}",
-                value=suggest_root_cause(sys_whys, lang_key),
-                height=100,
-                disabled=True
-            )
+            # ---------------------------
+    # Smart Root Cause Suggestions
+    # ---------------------------
+    occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
+    det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
+    sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
+
+    # Build structured root cause suggestions
+    def build_smart_root_cause(d2, occ_list, det_list, sys_list):
+        lines = []
+        if occ_list:
+            for occ in occ_list:
+                lines.append(f"📌 Occurrence (4M): {occ}")
+        if det_list:
+            for det in det_list:
+                lines.append(f"📌 Detection Gap: {det}")
+        if sys_list:
+            for sys in sys_list:
+                lines.append(f"📌 Systemic Issue: {sys}")
+        if d2:
+            lines.insert(0, f"🔹 Problem Statement: {d2}")
+        return "\n".join(lines)
+
+    st.text_area(
+        f"{t[lang_key]['Root_Cause_Summary']}",
+        value=build_smart_root_cause(d2_concern, occ_whys, det_whys, sys_whys),
+        height=180,
+        disabled=True
+    )
 
         elif step == "D6":
             st.session_state[step].setdefault("occ_answer", st.session_state["D6"].get("occ_answer", ""))
