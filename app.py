@@ -859,47 +859,48 @@ line-height:1.5;
         # Show example entry safely
         st.caption(f"💡 {t[lang_key]['Example']}: {example_text}")
         
-        # File uploads for D1, D3, D4, D7
-        if step in ["D1","D3","D4","D7"]:
-            uploaded_files = st.file_uploader(
-                f"Upload files/photos for {step}",
-                type=["png", "jpg", "jpeg", "pdf", "xlsx", "txt"],
-                accept_multiple_files=True,
-                key=f"upload_{step}"
-            )
-            if uploaded_files:
-                for file in uploaded_files:
-                    if file not in st.session_state[step]["uploaded_files"]:
-                        st.session_state[step]["uploaded_files"].append(file)
+       # File uploads for D1, D3, D4, D7
+if step in ["D1", "D3", "D4", "D7"]:
+    uploaded_files = st.file_uploader(
+        f"Upload files/photos for {step}",
+        type=["png", "jpg", "jpeg", "pdf", "xlsx", "txt"],
+        accept_multiple_files=True,
+        key=f"upload_{step}"
+    )
+    if uploaded_files:
+        for file in uploaded_files:
+            if file not in st.session_state[step]["uploaded_files"]:
+                st.session_state[step]["uploaded_files"].append(file)
 
-        # Display uploaded files (aligned with file upload, not nested too deep)
-        if step in ["D1","D3","D4","D7"] and st.session_state[step].get("uploaded_files"):
-            st.markdown("**Uploaded Files / Photos:**")
-            for f in st.session_state[step]["uploaded_files"]:
-                st.write(f"{f.name}")
-                if f.type.startswith("image/"):
-                    st.image(f, width=192)  # roughly 2 inches wide, height auto-scaled
-    
-        # Step-specific inputs (same level as upload check)
-        if step == "D4":
-            st.session_state[step]["location"] = st.selectbox(
-                "Location of Material",
-                ["", "Work in Progress", "Stores Stock", "Warehouse Stock", "Service Parts", "Other"],
-                index=0,
-                key="d4_location"
-            )
-            st.session_state[step]["status"] = st.selectbox(
-                "Status of Activities",
-                ["", "Pending", "In Progress", "Completed", "Other"],
-                index=0,
-                key="d4_status"
-            )
-            st.session_state[step]["answer"] = st.text_area(
-                "Containment Actions / Notes",
-                value=st.session_state[step]["answer"],
-                key=f"ans_{step}"
-            )
-             elif step == "D5":
+# Display uploaded files (aligned with file upload, not nested too deep)
+if step in ["D1", "D3", "D4", "D7"] and st.session_state[step].get("uploaded_files"):
+    st.markdown("**Uploaded Files / Photos:**")
+    for f in st.session_state[step]["uploaded_files"]:
+        st.write(f"{f.name}")
+        if f.type.startswith("image/"):
+            st.image(f, width=192)  # roughly 2 inches wide, height auto-scaled
+
+# Step-specific inputs (same level as upload check)
+if step == "D4":
+    st.session_state[step]["location"] = st.selectbox(
+        "Location of Material",
+        ["", "Work in Progress", "Stores Stock", "Warehouse Stock", "Service Parts", "Other"],
+        index=0,
+        key="d4_location"
+    )
+    st.session_state[step]["status"] = st.selectbox(
+        "Status of Activities",
+        ["", "Pending", "In Progress", "Completed", "Other"],
+        index=0,
+        key="d4_status"
+    )
+    st.session_state[step]["answer"] = st.text_area(
+        "Containment Actions / Notes",
+        value=st.session_state[step]["answer"],
+        key=f"ans_{step}"
+    )
+
+elif step == "D5":
     # ---------------------------
     # 🧩 New: Start from Customer Concern (D2)
     # ---------------------------
@@ -994,77 +995,73 @@ line-height:1.5;
         disabled=True
     )
 
-        # D6: Permanent Corrective Actions (three text areas: Occ/Det/Sys)
-        elif step == "D6":
-            st.session_state[step].setdefault("occ_answer", st.session_state["D6"].get("occ_answer", ""))
-            st.session_state[step].setdefault("det_answer", st.session_state["D6"].get("det_answer", ""))
-            st.session_state[step].setdefault("sys_answer", st.session_state["D6"].get("sys_answer", ""))
+elif step == "D6":
+    st.session_state[step].setdefault("occ_answer", st.session_state["D6"].get("occ_answer", ""))
+    st.session_state[step].setdefault("det_answer", st.session_state["D6"].get("det_answer", ""))
+    st.session_state[step].setdefault("sys_answer", st.session_state["D6"].get("sys_answer", ""))
 
-            st.session_state[step]["occ_answer"] = st.text_area(
-                "D6 - Corrective Actions for Occurrence Root Cause",
-                value=st.session_state[step]["occ_answer"],
-                key="d6_occ"
-            )
-            st.session_state[step]["det_answer"] = st.text_area(
-                "D6 - Corrective Actions for Detection Root Cause",
-                value=st.session_state[step]["det_answer"],
-                key="d6_det"
-            )
-            st.session_state[step]["sys_answer"] = st.text_area(
-                "D6 - Corrective Actions for Systemic Root Cause",
-                value=st.session_state[step]["sys_answer"],
-                key="d6_sys"
-            )
+    st.session_state[step]["occ_answer"] = st.text_area(
+        "D6 - Corrective Actions for Occurrence Root Cause",
+        value=st.session_state[step]["occ_answer"],
+        key="d6_occ"
+    )
+    st.session_state[step]["det_answer"] = st.text_area(
+        "D6 - Corrective Actions for Detection Root Cause",
+        value=st.session_state[step]["det_answer"],
+        key="d6_det"
+    )
+    st.session_state[step]["sys_answer"] = st.text_area(
+        "D6 - Corrective Actions for Systemic Root Cause",
+        value=st.session_state[step]["sys_answer"],
+        key="d6_sys"
+    )
 
-            # Mirror into top-level D6 storage so export code can find them consistently
-            st.session_state["D6"]["occ_answer"] = st.session_state[step]["occ_answer"]
-            st.session_state["D6"]["det_answer"] = st.session_state[step]["det_answer"]
-            st.session_state["D6"]["sys_answer"] = st.session_state[step]["sys_answer"]
+    # Mirror into top-level D6 storage
+    st.session_state["D6"]["occ_answer"] = st.session_state[step]["occ_answer"]
+    st.session_state["D6"]["det_answer"] = st.session_state[step]["det_answer"]
+    st.session_state["D6"]["sys_answer"] = st.session_state[step]["sys_answer"]
 
-        # D7: Countermeasure Confirmation (three text areas: verification for Occ/Det/Sys)
-        elif step == "D7":
-            st.session_state[step].setdefault("occ_answer", st.session_state["D7"].get("occ_answer", ""))
-            st.session_state[step].setdefault("det_answer", st.session_state["D7"].get("det_answer", ""))
-            st.session_state[step].setdefault("sys_answer", st.session_state["D7"].get("sys_answer", ""))
+elif step == "D7":
+    st.session_state[step].setdefault("occ_answer", st.session_state["D7"].get("occ_answer", ""))
+    st.session_state[step].setdefault("det_answer", st.session_state["D7"].get("det_answer", ""))
+    st.session_state[step].setdefault("sys_answer", st.session_state["D7"].get("sys_answer", ""))
 
-            st.session_state[step]["occ_answer"] = st.text_area(
-                "D7 - Occurrence Countermeasure Verification",
-                value=st.session_state[step]["occ_answer"],
-                key="d7_occ"
-            )
-            st.session_state[step]["det_answer"] = st.text_area(
-                "D7 - Detection Countermeasure Verification",
-                value=st.session_state[step]["det_answer"],
-                key="d7_det"
-            )
-            st.session_state[step]["sys_answer"] = st.text_area(
-                "D7 - Systemic Countermeasure Verification",
-                value=st.session_state[step]["sys_answer"],
-                key="d7_sys"
-            )
+    st.session_state[step]["occ_answer"] = st.text_area(
+        "D7 - Occurrence Countermeasure Verification",
+        value=st.session_state[step]["occ_answer"],
+        key="d7_occ"
+    )
+    st.session_state[step]["det_answer"] = st.text_area(
+        "D7 - Detection Countermeasure Verification",
+        value=st.session_state[step]["det_answer"],
+        key="d7_det"
+    )
+    st.session_state[step]["sys_answer"] = st.text_area(
+        "D7 - Systemic Countermeasure Verification",
+        value=st.session_state[step]["sys_answer"],
+        key="d7_sys"
+    )
 
-            # Mirror into top-level D7 storage so export code can find them consistently
-            st.session_state["D7"]["occ_answer"] = st.session_state[step]["occ_answer"]
-            st.session_state["D7"]["det_answer"] = st.session_state[step]["det_answer"]
-            st.session_state["D7"]["sys_answer"] = st.session_state[step]["sys_answer"]
+    # Mirror into top-level D7 storage
+    st.session_state["D7"]["occ_answer"] = st.session_state[step]["occ_answer"]
+    st.session_state["D7"]["det_answer"] = st.session_state[step]["det_answer"]
+    st.session_state["D7"]["sys_answer"] = st.session_state[step]["sys_answer"]
 
-        # D8: Follow-up Activities / Lessons Learned (single text area)
-        elif step == "D8":
-            st.session_state[step]["answer"] = st.text_area(
-                "Your Answer",
-                value=st.session_state[step]["answer"],
-                key=f"ans_{step}"
-            )
+elif step == "D8":
+    st.session_state[step]["answer"] = st.text_area(
+        "Your Answer",
+        value=st.session_state[step]["answer"],
+        key=f"ans_{step}"
+    )
 
-        else:
-            # Default for D1, D2, D3, or any other single-answer steps
-            if step not in ["D4", "D5", "D6", "D7", "D8"]:
-                st.session_state[step]["answer"] = st.text_area(
-                    "Your Answer",
-                    value=st.session_state[step]["answer"],
-                    key=f"ans_{step}"
-                )
-
+else:
+    # Default for D1, D2, D3, or any other single-answer steps
+    if step not in ["D4", "D5", "D6", "D7", "D8"]:
+        st.session_state[step]["answer"] = st.text_area(
+            "Your Answer",
+            value=st.session_state[step]["answer"],
+            key=f"ans_{step}"
+        )
 # ---------------------------
 # Collect all answers for Excel export
 # ---------------------------
