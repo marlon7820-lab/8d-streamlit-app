@@ -908,7 +908,7 @@ line-height:1.5;
                 st.info(d1_concern)
                 st.caption("💡 Begin your Why analysis from this concern reported by the customer.")
             else:
-                st.warning("No Customer Concern defined yet in D1. Please complete D1 before proceeding with D5.")
+                st.warning("No Customer Concern defined yet in D1. Please complete D1 to D4 before proceeding with D5.")
 
             # ---------------------------
             # Occurrence Analysis
