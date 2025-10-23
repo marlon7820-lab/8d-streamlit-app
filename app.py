@@ -904,14 +904,14 @@ line-height:1.5;
 
         elif step == "D5":
             # ---------------------------
-            # 🧩 Show D2 concern safely at the top
+            # 🧩 Show D1 concern safely at the top
             # ---------------------------
-            d2_concern = st.session_state.get("D2", {}).get("answer", "").strip()
-            if d2_concern:
-                st.info(d2_concern)
+            d1_concern = st.session_state.get("D1", {}).get("answer", "").strip()
+            if d1_concern:
+                st.info(d1_concern)
                 st.caption("💡 Begin your Why analysis from this concern reported by the customer.")
             else:
-                st.warning("No Customer Concern defined yet in D2. Please complete D2 before proceeding with D5.")
+                st.warning("No Customer Concern defined yet in D1. Please complete D1 before proceeding with D5.")
 
             # ---------------------------
             # Occurrence Analysis
