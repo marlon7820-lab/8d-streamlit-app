@@ -899,8 +899,7 @@ line-height:1.5;
                 key=f"ans_{step}"
             )
 
-
-elif step == "D5":
+        elif step == "D5":
             # ---------------------------
             # 🧩 Show D1 concern safely at the top
             # ---------------------------
