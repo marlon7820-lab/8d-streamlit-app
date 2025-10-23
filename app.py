@@ -859,7 +859,7 @@ line-height:1.5;
         # Show example entry safely
         st.caption(f"💡 {t[lang_key]['Example']}: {example_text}")
         
-      # File uploads for D1, D3, D4, D7
+     # File uploads for D1, D3, D4, D7
 if step in ["D1","D3","D4","D7"]:
     uploaded_files = st.file_uploader(
         f"Upload files/photos for {step}",
@@ -872,15 +872,15 @@ if step in ["D1","D3","D4","D7"]:
             if file not in st.session_state[step]["uploaded_files"]:
                 st.session_state[step]["uploaded_files"].append(file)
 
-# Display uploaded files
+# Display uploaded files (aligned with file upload, not nested too deep)
 if step in ["D1","D3","D4","D7"] and st.session_state[step].get("uploaded_files"):
     st.markdown("**Uploaded Files / Photos:**")
     for f in st.session_state[step]["uploaded_files"]:
         st.write(f"{f.name}")
         if f.type.startswith("image/"):
-            st.image(f, width=192)
+            st.image(f, width=192)  # roughly 2 inches wide, height auto-scaled
 
-# Step-specific inputs
+# Step-specific inputs (same level as upload check)
 if step == "D4":
     st.session_state[step]["location"] = st.selectbox(
         "Location of Material",
@@ -900,9 +900,9 @@ if step == "D4":
         key=f"ans_{step}"
     )
 
-# D5: 5-Why + "Other" dropdown replacement with D2 concern display
+# D5 5-Why + "Other" dropdown replacement with D2 concern display
 elif step == "D5":
-    # Show D2 concern at the top
+    # --- Display D2 concern safely ---
     d2_concern = st.session_state.get("D2", {}).get("answer", "").strip()
     if d2_concern:
         st.info(d2_concern)
@@ -958,7 +958,7 @@ elif step == "D5":
     if st.button("➕ Add another Systemic Why", key=f"add_sys_{i}"):
         st.session_state.d5_sys_whys.append("")
 
-    # Dynamic Root Causes suggestion display
+    # Dynamic Root Causes suggestion display (unchanged)
     occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
     det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
     sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
@@ -981,11 +981,12 @@ elif step == "D5":
         disabled=True
     )
 
-# D6: Permanent Corrective Actions
+# D6: Permanent Corrective Actions (three text areas: Occ/Det/Sys)
 elif step == "D6":
     st.session_state[step].setdefault("occ_answer", st.session_state["D6"].get("occ_answer", ""))
     st.session_state[step].setdefault("det_answer", st.session_state["D6"].get("det_answer", ""))
     st.session_state[step].setdefault("sys_answer", st.session_state["D6"].get("sys_answer", ""))
+
     st.session_state[step]["occ_answer"] = st.text_area(
         "D6 - Corrective Actions for Occurrence Root Cause",
         value=st.session_state[step]["occ_answer"],
@@ -1001,15 +1002,18 @@ elif step == "D6":
         value=st.session_state[step]["sys_answer"],
         key="d6_sys"
     )
+
+    # Mirror into top-level D6 storage so export code can find them consistently
     st.session_state["D6"]["occ_answer"] = st.session_state[step]["occ_answer"]
     st.session_state["D6"]["det_answer"] = st.session_state[step]["det_answer"]
     st.session_state["D6"]["sys_answer"] = st.session_state[step]["sys_answer"]
 
-# D7: Countermeasure Confirmation
+# D7: Countermeasure Confirmation (three text areas: verification for Occ/Det/Sys)
 elif step == "D7":
     st.session_state[step].setdefault("occ_answer", st.session_state["D7"].get("occ_answer", ""))
     st.session_state[step].setdefault("det_answer", st.session_state["D7"].get("det_answer", ""))
     st.session_state[step].setdefault("sys_answer", st.session_state["D7"].get("sys_answer", ""))
+
     st.session_state[step]["occ_answer"] = st.text_area(
         "D7 - Occurrence Countermeasure Verification",
         value=st.session_state[step]["occ_answer"],
@@ -1025,11 +1029,13 @@ elif step == "D7":
         value=st.session_state[step]["sys_answer"],
         key="d7_sys"
     )
+
+    # Mirror into top-level D7 storage so export code can find them consistently
     st.session_state["D7"]["occ_answer"] = st.session_state[step]["occ_answer"]
     st.session_state["D7"]["det_answer"] = st.session_state[step]["det_answer"]
     st.session_state["D7"]["sys_answer"] = st.session_state[step]["sys_answer"]
 
-# D8: Follow-up Activities / Lessons Learned
+# D8: Follow-up Activities / Lessons Learned (single text area)
 elif step == "D8":
     st.session_state[step]["answer"] = st.text_area(
         "Your Answer",
@@ -1037,8 +1043,8 @@ elif step == "D8":
         key=f"ans_{step}"
     )
 
-# Default for D1, D2, D3, or any other single-answer steps
 else:
+    # Default for D1, D2, D3, or any other single-answer steps
     if step not in ["D4", "D5", "D6", "D7", "D8"]:
         st.session_state[step]["answer"] = st.text_area(
             "Your Answer",
