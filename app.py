@@ -859,28 +859,7 @@ line-height:1.5;
         # Show example entry safely
         st.caption(f"💡 {t[lang_key]['Example']}: {example_text}")
         
-       # File uploads for D1, D3, D4, D7
-if step in ["D1","D3","D4","D7"]:
-    uploaded_files = st.file_uploader(
-        f"Upload files/photos for {step}",
-        type=["png", "jpg", "jpeg", "pdf", "xlsx", "txt"],
-        accept_multiple_files=True,
-        key=f"upload_{step}"
-    )
-    if uploaded_files:
-        for file in uploaded_files:
-            if file not in st.session_state[step]["uploaded_files"]:
-                st.session_state[step]["uploaded_files"].append(file)
-
-# Display uploaded files
-if step in ["D1","D3","D4","D7"] and st.session_state[step].get("uploaded_files"):
-    st.markdown("**Uploaded Files / Photos:**")
-    for f in st.session_state[step]["uploaded_files"]:
-        st.write(f"{f.name}")
-        if f.type.startswith("image/"):
-            st.image(f, width=192)
-
-# Step-specific inputs
+       # Step-specific inputs (same level as upload check)
 if step == "D4":
     st.session_state[step]["location"] = st.selectbox(
         "Location of Material",
@@ -902,9 +881,8 @@ if step == "D4":
 
 elif step == "D5":
     # ---------------------------
-    # 🧩 New: Start from Customer Concern (D2)
+    # 🧩 New: Show D2 concern safely at the top of D5
     # ---------------------------
-    st.markdown("### 🧩 Starting Point: Customer Concern")
     d2_concern = st.session_state.get("D2", {}).get("answer", "").strip()
     if d2_concern:
         st.info(d2_concern)
@@ -912,7 +890,9 @@ elif step == "D5":
     else:
         st.warning("No Customer Concern defined yet in D2. Please complete D2 before proceeding with D5.")
 
+    # ---------------------------
     # Occurrence Analysis
+    # ---------------------------
     if lang_key == "es":
         st.session_state.d5_occ_whys = render_whys_no_repeat_with_other(
             st.session_state.d5_occ_whys,
@@ -925,10 +905,13 @@ elif step == "D5":
             occurrence_categories,
             t[lang_key]['Occurrence_Why']
         )
-    if st.button("➕ Add another Occurrence Why", key="add_occ"):
+
+    if st.button("➕ Add another Occurrence Why", key=f"add_occ_{i}"):
         st.session_state.d5_occ_whys.append("")
 
+    # ---------------------------
     # Detection Analysis
+    # ---------------------------
     if lang_key == "es":
         st.session_state.d5_det_whys = render_whys_no_repeat_with_other(
             st.session_state.d5_det_whys,
@@ -941,10 +924,13 @@ elif step == "D5":
             detection_categories,
             t[lang_key]['Detection_Why']
         )
-    if st.button("➕ Add another Detection Why", key="add_det"):
+
+    if st.button("➕ Add another Detection Why", key=f"add_det_{i}"):
         st.session_state.d5_det_whys.append("")
 
+    # ---------------------------
     # Systemic Analysis
+    # ---------------------------
     if lang_key == "es":
         st.session_state.d5_sys_whys = render_whys_no_repeat_with_other(
             st.session_state.d5_sys_whys,
@@ -957,14 +943,16 @@ elif step == "D5":
             systemic_categories,
             t[lang_key]['Systemic_Why']
         )
-    if st.button("➕ Add another Systemic Why", key="add_sys"):
+
+    if st.button("➕ Add another Systemic Why", key=f"add_sys_{i}"):
         st.session_state.d5_sys_whys.append("")
 
-    # Root Cause Suggestions
+    # ---------------------------
+    # Root Cause Suggestions (unchanged)
+    # ---------------------------
     occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
     det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
     sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
-
     st.text_area(
         f"{t[lang_key]['Root_Cause_Occ']}",
         value=suggest_root_cause(occ_whys, lang_key),
@@ -984,6 +972,7 @@ elif step == "D5":
         disabled=True
     )
 
+# D6, D7, D8 remain exactly as in your original working code
 elif step == "D6":
     st.session_state[step].setdefault("occ_answer", st.session_state["D6"].get("occ_answer", ""))
     st.session_state[step].setdefault("det_answer", st.session_state["D6"].get("det_answer", ""))
