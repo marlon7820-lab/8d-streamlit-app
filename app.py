@@ -859,7 +859,7 @@ line-height:1.5;
         # Show example entry safely
         st.caption(f"💡 {t[lang_key]['Example']}: {example_text}")
         
-     # Step-specific inputs (same level as upload check)
+    # Step-specific inputs (same level as upload check)
 if step == "D4":
     st.session_state[step]["location"] = st.selectbox(
         "Location of Material",
