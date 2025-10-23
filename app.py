@@ -907,44 +907,28 @@ elif step == "D5":
         st.info(d1_concern)
         st.caption("💡 Begin your Why analysis from this concern reported by the customer.")
     else:
-        st.warning("No Customer Concern defined yet in D1. Please complete D1 to D4 before proceeding with D5.")
+        st.warning("No Customer Concern defined yet in D1. Please complete D1 before proceeding with D5.")
 
     # ---------------------------
-    # Occurrence Analysis (4M: Material, Machine, Method, Measurement)
+    # Occurrence Analysis
     # ---------------------------
-    occurrence_categories_4m = {
-        "Material": ["Wrong material specification", "Supplier defect", "Material contamination"],
-        "Machine": ["Tooling worn", "Equipment misalignment", "Machine failure"],
-        "Method": ["Process deviation", "Incorrect procedure", "SOP not followed"],
-        "Measurement": ["Inspection missed", "Measurement error", "Testing gap"]
-    }
-
     if lang_key == "es":
-        # Translate categories if needed
-        occurrence_categories_es_4m = {
-            "Material": ["Especificación de material incorrecta", "Defecto del proveedor", "Contaminación del material"],
-            "Machine": ["Herramienta desgastada", "Desalineación del equipo", "Falla de la máquina"],
-            "Method": ["Desviación del proceso", "Procedimiento incorrecto", "SOP no seguido"],
-            "Measurement": ["Inspección perdida", "Error de medición", "Falta de prueba"]
-        }
         st.session_state.d5_occ_whys = render_whys_no_repeat_with_other(
             st.session_state.d5_occ_whys,
-            occurrence_categories_es_4m,
+            occurrence_categories_es,
             t[lang_key]['Occurrence_Why']
         )
     else:
         st.session_state.d5_occ_whys = render_whys_no_repeat_with_other(
             st.session_state.d5_occ_whys,
-            occurrence_categories_4m,
+            occurrence_categories,
             t[lang_key]['Occurrence_Why']
         )
 
     if st.button("➕ Add another Occurrence Why", key=f"add_occ_{i}"):
         st.session_state.d5_occ_whys.append("")
 
-    # ---------------------------
     # Detection Analysis
-    # ---------------------------
     if lang_key == "es":
         st.session_state.d5_det_whys = render_whys_no_repeat_with_other(
             st.session_state.d5_det_whys,
@@ -961,9 +945,7 @@ elif step == "D5":
     if st.button("➕ Add another Detection Why", key=f"add_det_{i}"):
         st.session_state.d5_det_whys.append("")
 
-    # ---------------------------
     # Systemic Analysis
-    # ---------------------------
     if lang_key == "es":
         st.session_state.d5_sys_whys = render_whys_no_repeat_with_other(
             st.session_state.d5_sys_whys,
@@ -981,34 +963,39 @@ elif step == "D5":
         st.session_state.d5_sys_whys.append("")
 
     # ---------------------------
-    # Smart Root Cause Suggestions
+    # Smarter Root Cause Suggestions
     # ---------------------------
     occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
     det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
     sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
 
-    # Build structured root cause suggestions
-    def build_smart_root_cause(d2, occ_list, det_list, sys_list):
+    def build_smart_root_cause(d1, occ_list, det_list, sys_list):
         lines = []
+        if d1:
+            lines.append(f"🔹 Problem Statement: {d1}")
         if occ_list:
             for occ in occ_list:
-                lines.append(f"📌 Occurrence (4M): {occ}")
+                # Only 4M (Machine, Method, Material, Measurement)
+                if occ in ["Machine", "Method", "Material", "Measurement"]:
+                    lines.append(f"📌 Occurrence (4M): {occ}")
+                else:
+                    # Keep custom/other reasons too
+                    lines.append(f"📌 Occurrence (Other): {occ}")
         if det_list:
             for det in det_list:
                 lines.append(f"📌 Detection Gap: {det}")
         if sys_list:
             for sys in sys_list:
                 lines.append(f"📌 Systemic Issue: {sys}")
-        if d2:
-            lines.insert(0, f"🔹 Problem Statement: {d2}")
         return "\n".join(lines)
 
     st.text_area(
         f"{t[lang_key]['Root_Cause_Summary']}",
-        value=build_smart_root_cause(d2_concern, occ_whys, det_whys, sys_whys),
+        value=build_smart_root_cause(d1_concern, occ_whys, det_whys, sys_whys),
         height=180,
         disabled=True
     )
+
 elif step == "D6":
     st.session_state[step].setdefault("occ_answer", st.session_state["D6"].get("occ_answer", ""))
     st.session_state[step].setdefault("det_answer", st.session_state["D6"].get("det_answer", ""))
