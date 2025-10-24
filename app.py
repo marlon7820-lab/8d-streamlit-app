@@ -899,170 +899,170 @@ line-height:1.5;
                 key=f"ans_{step}"
             )
 
-        elif step == "D5":
-    # ---------------------------
-    # 🧩 Show D1 concern safely at the top
-    # ---------------------------
-    d1_concern = st.session_state.get("D1", {}).get("answer", "").strip()
-    if d1_concern:
-        st.info(d1_concern)
-        st.caption("💡 Begin your Why analysis from this concern reported by the customer.")
-    else:
-        st.warning("No Customer Concern defined yet in D1. Please complete D1 before proceeding with D5.")
-
-    # ---------------------------
-    # Occurrence Analysis
-    # ---------------------------
-    if lang_key == "es":
-        st.session_state.d5_occ_whys = render_whys_no_repeat_with_other(
-            st.session_state.d5_occ_whys,
-            occurrence_categories_es,
-            t[lang_key]['Occurrence_Why']
-        )
-    else:
-        st.session_state.d5_occ_whys = render_whys_no_repeat_with_other(
-            st.session_state.d5_occ_whys,
-            occurrence_categories,
-            t[lang_key]['Occurrence_Why']
-        )
-
-    if st.button("➕ Add another Occurrence Why", key=f"add_occ_{i}"):
-        st.session_state.d5_occ_whys.append("")
-
-    # ---------------------------
-    # Detection Analysis
-    # ---------------------------
-    if lang_key == "es":
-        st.session_state.d5_det_whys = render_whys_no_repeat_with_other(
-            st.session_state.d5_det_whys,
-            detection_categories_es,
-            t[lang_key]['Detection_Why']
-        )
-    else:
-        st.session_state.d5_det_whys = render_whys_no_repeat_with_other(
-            st.session_state.d5_det_whys,
-            detection_categories,
-            t[lang_key]['Detection_Why']
-        )
-
-    if st.button("➕ Add another Detection Why", key=f"add_det_{i}"):
-        st.session_state.d5_det_whys.append("")
-
-    # ---------------------------
-    # Systemic Analysis
-    # ---------------------------
-    if lang_key == "es":
-        st.session_state.d5_sys_whys = render_whys_no_repeat_with_other(
-            st.session_state.d5_sys_whys,
-            systemic_categories_es,
-            t[lang_key]['Systemic_Why']
-        )
-    else:
-        st.session_state.d5_sys_whys = render_whys_no_repeat_with_other(
-            st.session_state.d5_sys_whys,
-            systemic_categories,
-            t[lang_key]['Systemic_Why']
-        )
-
-    if st.button("➕ Add another Systemic Why", key=f"add_sys_{i}"):
-        st.session_state.d5_sys_whys.append("")
-
-    # ---------------------------
-    # Root Cause Suggestions
-    # ---------------------------
-    occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
-    det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
-    sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
-
-    # --- SMART ROOT CAUSE FUNCTION ---
-    def smart_root_cause_suggestion(d1_concern, occ_list, det_list, sys_list, lang="en"):
-        """
-        Build intelligent root cause summaries based on the concern (D1)
-        and the selected whys for Occurrence (4M), Detection, and Systemic.
-        Focuses on identifying underlying technical or process root causes.
-        """
-        if not any([occ_list, det_list, sys_list]):
-            return "⚠️ No Why analysis provided yet."
-
-        # Keywords for 4M analysis
-        patterns = {
-            "Machine": ["equipment", "machine", "tool", "fixture", "wear", "maintenance", "calibration"],
-            "Method": ["procedure", "process", "assembly", "sequence", "standard", "instruction", "setup"],
-            "Material": ["component", "supplier", "batch", "raw", "contamination", "mix", "specification"],
-            "Measurement": ["inspection", "test", "measurement", "gauge", "criteria", "frequency"]
-        }
-
-        # Function to detect category from text
-        def classify_4m(text):
-            text_lower = text.lower()
-            for m, kws in patterns.items():
-                if any(k in text_lower for k in kws):
-                    return m
-            return "Other"
-
-        insights = []
+    elif step == "D5":
+        # ---------------------------
+        # 🧩 Show D1 concern safely at the top
+        # ---------------------------
+        d1_concern = st.session_state.get("D1", {}).get("answer", "").strip()
         if d1_concern:
-            insights.append(f"🔹 **Problem Statement:** {d1_concern}")
+                st.info(d1_concern)
+                st.caption("💡 Begin your Why analysis from this concern reported by the customer.")
+        else:
+            st.warning("No Customer Concern defined yet in D1. Please complete D1 before proceeding with D5.")
 
-        # --- Analyze Occurrence Whys (4M) ---
-        occ_classified = {}
-        for w in occ_list:
-            cat = classify_4m(w)
-            occ_classified.setdefault(cat, []).append(w)
+        # ---------------------------
+        # Occurrence Analysis
+        # ---------------------------
+        if lang_key == "es":
+            st.session_state.d5_occ_whys = render_whys_no_repeat_with_other(
+                st.session_state.d5_occ_whys,
+                occurrence_categories_es,
+                t[lang_key]['Occurrence_Why']
+            )
+        else:
+            st.session_state.d5_occ_whys = render_whys_no_repeat_with_other(
+                st.session_state.d5_occ_whys,
+                occurrence_categories,
+                t[lang_key]['Occurrence_Why']
+            )
 
-        for cat, whys in occ_classified.items():
-            if cat != "Other":
-                insights.append(f"📌 **{cat}-related root cause(s):**")
-                insights.append(f"   - {', '.join(whys)}")
+        if st.button("➕ Add another Occurrence Why", key=f"add_occ_{i}"):
+            st.session_state.d5_occ_whys.append("")
 
-        # --- Detection & Systemic logic ---
-        if det_list:
-            insights.append("🔍 **Detection weaknesses identified:**")
-            insights.extend([f"   - {d}" for d in det_list])
+        # ---------------------------
+        # Detection Analysis
+        # ---------------------------
+        if lang_key == "es":
+            st.session_state.d5_det_whys = render_whys_no_repeat_with_other(
+                st.session_state.d5_det_whys,
+                detection_categories_es,
+                t[lang_key]['Detection_Why']
+            )
+        else:
+            st.session_state.d5_det_whys = render_whys_no_repeat_with_other(
+                st.session_state.d5_det_whys,
+                detection_categories,
+                t[lang_key]['Detection_Why']
+            )
 
-        if sys_list:
-            insights.append("🏭 **Systemic contributing factors:**")
-            insights.extend([f"   - {s}" for s in sys_list])
+        if st.button("➕ Add another Detection Why", key=f"add_det_{i}"):
+            st.session_state.d5_det_whys.append("")
 
-        # --- Build synthesized root cause statement ---
-        synthesized = []
-        if occ_classified.get("Method"):
-            synthesized.append("Inadequate or missing process standard / control plan.")
-        if occ_classified.get("Machine"):
-            synthesized.append("Equipment degradation or lack of preventive maintenance.")
-        if occ_classified.get("Material"):
-            synthesized.append("Supplier or component quality variation.")
-        if occ_classified.get("Measurement"):
-            synthesized.append("Insufficient inspection or gauge control.")
-        if det_list:
-            synthesized.append("Detection method did not identify the nonconformance before shipment.")
-        if sys_list:
-            synthesized.append("Systemic weakness in management of change or lessons learned.")
+        # ---------------------------
+        # Systemic Analysis
+        # ---------------------------
+        if lang_key == "es":
+            st.session_state.d5_sys_whys = render_whys_no_repeat_with_other(
+                st.session_state.d5_sys_whys,
+                systemic_categories_es,
+                t[lang_key]['Systemic_Why']
+            )
+        else:
+            st.session_state.d5_sys_whys = render_whys_no_repeat_with_other(
+                st.session_state.d5_sys_whys,
+                systemic_categories,
+                t[lang_key]['Systemic_Why']
+            )
 
-        if synthesized:
-            insights.append("💡 **Possible True Root Cause Suggestion:** " + " ".join(synthesized))
+        if st.button("➕ Add another Systemic Why", key=f"add_sys_{i}"):
+            st.session_state.d5_sys_whys.append("")
 
-        return "\n".join(insights)
+        # ---------------------------
+        # Root Cause Suggestions
+        # ---------------------------
+        occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
+        det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
+        sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
 
-    # --- Display the smart root cause text areas ---
-    st.text_area(
-        f"{t[lang_key]['Root_Cause_Occ']}",
-        value=smart_root_cause_suggestion(d1_concern, occ_whys, [], [], lang_key),
-        height=120,
-        disabled=True
-    )
-    st.text_area(
-        f"{t[lang_key]['Root_Cause_Det']}",
-        value=smart_root_cause_suggestion(d1_concern, [], det_whys, [], lang_key),
-        height=120,
-        disabled=True
-    )
-    st.text_area(
-        f"{t[lang_key]['Root_Cause_Sys']}",
-        value=smart_root_cause_suggestion(d1_concern, [], [], sys_whys, lang_key),
-        height=120,
-        disabled=True
-    )
+        # --- SMART ROOT CAUSE FUNCTION ---
+        def smart_root_cause_suggestion(d1_concern, occ_list, det_list, sys_list, lang="en"):
+            """
+            Build intelligent root cause summaries based on the concern (D1)
+            and the selected whys for Occurrence (4M), Detection, and Systemic.
+            Focuses on identifying underlying technical or process root causes.
+            """
+            if not any([occ_list, det_list, sys_list]):
+                return "⚠️ No Why analysis provided yet."
+
+            # Keywords for 4M analysis
+            patterns = {
+                "Machine": ["equipment", "machine", "tool", "fixture", "wear", "maintenance", "calibration"],
+                "Method": ["procedure", "process", "assembly", "sequence", "standard", "instruction", "setup"],
+                "Material": ["component", "supplier", "batch", "raw", "contamination", "mix", "specification"],
+                "Measurement": ["inspection", "test", "measurement", "gauge", "criteria", "frequency"]
+            }
+
+            # Function to detect category from text
+            def classify_4m(text):
+                text_lower = text.lower()
+                for m, kws in patterns.items():
+                    if any(k in text_lower for k in kws):
+                        return m
+                return "Other"
+
+            insights = []
+            if d1_concern:
+                insights.append(f"🔹 **Problem Statement:** {d1_concern}")
+
+            # --- Analyze Occurrence Whys (4M) ---
+            occ_classified = {}
+            for w in occ_list:
+                cat = classify_4m(w)
+                occ_classified.setdefault(cat, []).append(w)
+
+            for cat, whys in occ_classified.items():
+                if cat != "Other":
+                    insights.append(f"📌 **{cat}-related root cause(s):**")
+                    insights.append(f"   - {', '.join(whys)}")
+
+            # --- Detection & Systemic logic ---
+            if det_list:
+                insights.append("🔍 **Detection weaknesses identified:**")
+                insights.extend([f"   - {d}" for d in det_list])
+
+            if sys_list:
+                insights.append("🏭 **Systemic contributing factors:**")
+                insights.extend([f"   - {s}" for s in sys_list])
+
+            # --- Build synthesized root cause statement ---
+            synthesized = []
+            if occ_classified.get("Method"):
+                synthesized.append("Inadequate or missing process standard / control plan.")
+            if occ_classified.get("Machine"):
+                synthesized.append("Equipment degradation or lack of preventive maintenance.")
+            if occ_classified.get("Material"):
+                synthesized.append("Supplier or component quality variation.")
+            if occ_classified.get("Measurement"):
+                synthesized.append("Insufficient inspection or gauge control.")
+            if det_list:
+                synthesized.append("Detection method did not identify the nonconformance before shipment.")
+            if sys_list:
+                synthesized.append("Systemic weakness in management of change or lessons learned.")
+
+            if synthesized:
+                insights.append("💡 **Possible True Root Cause Suggestion:** " + " ".join(synthesized))
+
+            return "\n".join(insights)
+
+        # --- Display the smart root cause text areas ---
+        st.text_area(
+            f"{t[lang_key]['Root_Cause_Occ']}",
+            value=smart_root_cause_suggestion(d1_concern, occ_whys, [], [], lang_key),
+            height=120,
+            disabled=True
+        )
+        st.text_area(
+            f"{t[lang_key]['Root_Cause_Det']}",
+            value=smart_root_cause_suggestion(d1_concern, [], det_whys, [], lang_key),
+            height=120,
+            disabled=True
+        )
+        st.text_area(
+            f"{t[lang_key]['Root_Cause_Sys']}",
+            value=smart_root_cause_suggestion(d1_concern, [], [], sys_whys, lang_key),
+            height=120,
+            disabled=True
+        )
 
 
         elif step == "D6":
