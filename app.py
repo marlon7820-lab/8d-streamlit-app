@@ -1247,48 +1247,21 @@ sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
 
 # --- Call the same smart bilingual root cause function used in D5 ---
 if occ_whys or det_whys or sys_whys:
-    # English suggestions
-    occ_text_en, det_text_en, sys_text_en = smart_root_cause_suggestion(
+    occ_text, det_text, sys_text = smart_root_cause_suggestion(
         st.session_state.get("D1", {}).get("answer", ""),
         occ_whys, det_whys, sys_whys,
-        lang="en"
+        lang=lang_key
     )
-    # Spanish suggestions
-    occ_text_es, det_text_es, sys_text_es = smart_root_cause_suggestion(
-        st.session_state.get("D1", {}).get("answer", ""),
-        occ_whys, det_whys, sys_whys,
-        lang="es"
-    )
-    # Combine bilingual text
-    occ_text = f"{occ_text_en} / {occ_text_es}"
-    det_text = f"{det_text_en} / {det_text_es}"
-    sys_text = f"{sys_text_en} / {sys_text_es}"
 else:
-    occ_text = det_text = sys_text = "⚠️ No Why analysis provided yet / ⚠️ No se ha proporcionado análisis de causas."
+    if lang_key == "es":
+        occ_text = det_text = sys_text = "⚠️ No se ha proporcionado análisis de causas."
+    else:
+        occ_text = det_text = sys_text = "⚠️ No Why analysis provided yet."
 
 # Save in session for consistency
 st.session_state["D5"]["occ_root_cause"] = occ_text
 st.session_state["D5"]["det_root_cause"] = det_text
 st.session_state["D5"]["sys_root_cause"] = sys_text
-
-# --- Helper to classify 4M for Excel extra notes ---
-def classify_4m(text):
-    text_lower = text.lower()
-    patterns = {
-        "Machine": ["equipment", "machine", "tool", "fixture", "wear", "maintenance", "calibration"],
-        "Method": ["procedure", "process", "assembly", "sequence", "standard", "instruction", "setup"],
-        "Material": ["component", "supplier", "batch", "raw", "contamination", "mix", "specification"],
-        "Measurement": ["inspection", "test", "measurement", "gauge", "criteria", "frequency"]
-    }
-    for m, kws in patterns.items():
-        if any(k in text_lower for k in kws):
-            return m
-    return "Other"
-
-# Prepare 4M extra notes
-occ_extra = " | ".join([f"{w} ({classify_4m(w)})" for w in occ_whys])
-det_extra = " | ".join([f"{w} ({classify_4m(w)})" for w in det_whys])
-sys_extra = " | ".join([f"{w} ({classify_4m(w)})" for w in sys_whys])
 
 for step, _, _ in npqp_steps:
     if step == "D6":
@@ -1300,9 +1273,9 @@ for step, _, _ in npqp_steps:
         data_rows.append(("D7 - Detection Countermeasure Verification", st.session_state.get("D7", {}).get("det_answer", ""), ""))
         data_rows.append(("D7 - Systemic Countermeasure Verification", st.session_state.get("D7", {}).get("sys_answer", ""), ""))
     elif step == "D5":
-        data_rows.append(("D5 - Root Cause (Occurrence)", st.session_state["D5"].get("occ_root_cause", ""), occ_extra))
-        data_rows.append(("D5 - Root Cause (Detection)", st.session_state["D5"].get("det_root_cause", ""), det_extra))
-        data_rows.append(("D5 - Root Cause (Systemic)", st.session_state["D5"].get("sys_root_cause", ""), sys_extra))
+        data_rows.append(("D5 - Root Cause (Occurrence)", st.session_state["D5"].get("occ_root_cause", ""), " | ".join(occ_whys)))
+        data_rows.append(("D5 - Root Cause (Detection)", st.session_state["D5"].get("det_root_cause", ""), " | ".join(det_whys)))
+        data_rows.append(("D5 - Root Cause (Systemic)", st.session_state["D5"].get("sys_root_cause", ""), " | ".join(sys_whys)))
     elif step == "D4":
         loc = st.session_state[step].get("location", "")
         status = st.session_state[step].get("status", "")
@@ -1352,16 +1325,33 @@ def generate_excel():
         cell.alignment = Alignment(horizontal="center", vertical="center")
         cell.border = border
 
-    # Append step answers
+    # 4M colors
+    color_map = {
+        "Machine": "FFC7CE",       # light red
+        "Method": "C6EFCE",        # light green
+        "Material": "FFEB9C",      # light yellow
+        "Measurement": "9BC2E6",   # light blue
+    }
+
+    def highlight_4m_words(cell_text):
+        for key in color_map:
+            if key.lower() in cell_text.lower():
+                return PatternFill(start_color=color_map[key], end_color=color_map[key], fill_type="solid")
+        return PatternFill(start_color="FFFFFF", end_color="FFFFFF", fill_type="solid")
+
+    # Append step answers with 4M highlights
     for step_label, answer_text, extra_text in data_rows:
         ws.append([step_label, answer_text, extra_text])
         r = ws.max_row
         for c in range(1, 4):
             cell = ws.cell(row=r, column=c)
             cell.alignment = Alignment(wrap_text=True, vertical="top")
+            cell.border = border
             if c == 2:
                 cell.font = Font(bold=True)
-            cell.border = border
+            # Highlight 4M keywords in answer and extra
+            if c in [2, 3] and cell.value:
+                cell.fill = highlight_4m_words(cell.value)
 
     # Insert uploaded images below table
     from PIL import Image as PILImage
@@ -1396,7 +1386,6 @@ def generate_excel():
     for col in range(1, 4):
         ws.column_dimensions[get_column_letter(col)].width = 60
 
-    # ✅ The return must be inside the function
     output = io.BytesIO()
     wb.save(output)
     return output.getvalue()
@@ -1409,7 +1398,3 @@ with st.sidebar:
         file_name=f"8D_Report_{st.session_state['report_date']}.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
-
-# ---------------------------
-# (End)
-# ---------------------------
