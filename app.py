@@ -1288,7 +1288,7 @@ for step, _, _ in npqp_steps:
         data_rows.append((step, answer, extra))
 
 # ---------------------------
-# Excel generation function
+# Excel generation function (with bilingual color formatting)
 # ---------------------------
 def generate_excel():
     wb = Workbook()
@@ -1325,21 +1325,17 @@ def generate_excel():
         cell.alignment = Alignment(horizontal="center", vertical="center")
         cell.border = border
 
-    # 4M colors
-    color_map = {
-        "Machine": "FFC7CE",       # light red
-        "Method": "C6EFCE",        # light green
-        "Material": "FFEB9C",      # light yellow
-        "Measurement": "9BC2E6",   # light blue
-    }
+    # Color fills for specific root cause categories
+    occ_fill = PatternFill(start_color="FFA500", end_color="FFA500", fill_type="solid")  # orange
+    det_fill = PatternFill(start_color="32CD32", end_color="32CD32", fill_type="solid")  # green
+    sys_fill = PatternFill(start_color="D3D3D3", end_color="D3D3D3", fill_type="solid")  # gray
 
-    def highlight_4m_words(cell_text):
-        for key in color_map:
-            if key.lower() in cell_text.lower():
-                return PatternFill(start_color=color_map[key], end_color=color_map[key], fill_type="solid")
-        return PatternFill(start_color="FFFFFF", end_color="FFFFFF", fill_type="solid")
+    # Bilingual keywords for color logic
+    occ_keywords = ["Occurrence", "Ocurrencia"]
+    det_keywords = ["Detection", "Detección"]
+    sys_keywords = ["Systemic", "Sistémica"]
 
-    # Append step answers with 4M highlights
+    # Append step answers with bilingual color formatting
     for step_label, answer_text, extra_text in data_rows:
         ws.append([step_label, answer_text, extra_text])
         r = ws.max_row
@@ -1349,16 +1345,20 @@ def generate_excel():
             cell.border = border
             if c == 2:
                 cell.font = Font(bold=True)
-            # Highlight 4M keywords in answer and extra
-            if c in [2, 3] and cell.value:
-                cell.fill = highlight_4m_words(cell.value)
+                # Apply bilingual color formatting
+                if any(k in step_label for k in occ_keywords):
+                    cell.fill = occ_fill
+                elif any(k in step_label for k in det_keywords):
+                    cell.fill = det_fill
+                elif any(k in step_label for k in sys_keywords):
+                    cell.fill = sys_fill
 
     # Insert uploaded images below table
     from PIL import Image as PILImage
     from io import BytesIO
 
     last_row = ws.max_row + 2
-    for step in ["D1","D3","D4","D7"]:
+    for step in ["D1", "D3", "D4", "D7"]:
         uploaded_files = st.session_state[step].get("uploaded_files", [])
         if uploaded_files:
             ws.cell(row=last_row, column=1, value=f"{step} Uploaded Files / Photos").font = Font(bold=True)
@@ -1386,6 +1386,7 @@ def generate_excel():
     for col in range(1, 4):
         ws.column_dimensions[get_column_letter(col)].width = 60
 
+    # ✅ Return as bytes
     output = io.BytesIO()
     wb.save(output)
     return output.getvalue()
@@ -1393,8 +1394,12 @@ def generate_excel():
 # Move download button to sidebar
 with st.sidebar:
     st.download_button(
-        label=t[lang_key]['Download'],  # no extra icon
-        data=generate_excel(),  # function that returns BytesIO of XLSX
+        label=t[lang_key]['Download'],
+        data=generate_excel(),
         file_name=f"8D_Report_{st.session_state['report_date']}.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
+
+# ---------------------------
+# (End)
+# ---------------------------
