@@ -991,7 +991,6 @@ line-height:1.5;
                     "Measurement": ["inspection", "test", "measurement", "gauge", "criteria", "frequency"]
              }
 
-                # Function to detect category from text
                 def classify_4m(text):
                     text_lower = text.lower()
                     for m, kws in patterns.items():
@@ -1023,6 +1022,11 @@ line-height:1.5;
                     insights.append("🏭 **Systemic contributing factors:**")
                     insights.extend([f"   - {s}" for s in sys_list])
 
+                # --- Prepare suggestions lists ---
+                occ_suggestions = []
+                det_suggestions = []
+                sys_suggestions = []
+
                 # --- Build synthesized root cause statement ---
                 synthesized = []
                 if occ_classified.get("Method"):
@@ -1036,7 +1040,7 @@ line-height:1.5;
                 if det_list:
                     det_suggestions.append("Detection method did not identify the nonconformance before shipment.")
                 if sys_list:
-                    det.append("Systemic weakness in management of change or lessons learned.")
+                    sys_suggestions.append("Systemic weakness in management of change or lessons learned.")
                 if not synthesized:
                     return "No specific root cause pattern detected yet. Review your Why analysis for more clarity."
 
