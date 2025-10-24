@@ -977,9 +977,8 @@ line-height:1.5;
             # --- SMART ROOT CAUSE FUNCTION ---
             def smart_root_cause_suggestion(d1_concern, occ_list, det_list, sys_list, lang="en"):
                 """
-                Build intelligent root cause summaries based on the concern (D1)
-                and the selected whys for Occurrence (4M), Detection, and Systemic.
-                Focuses on identifying underlying technical or process root causes.
+                Generate concise, action-oriented root cause suggestions based on Why analysis.
+                Focuses on the true root cause synthesis rather than full detail display.
                 """
                 if not any([occ_list, det_list, sys_list]):
                     return "⚠️ No Why analysis provided yet."
@@ -1027,7 +1026,7 @@ line-height:1.5;
                 # --- Build synthesized root cause statement ---
                 synthesized = []
                 if occ_classified.get("Method"):
-                    synthesized.append("Inadequate or missing process standard / control plan.")
+                    synthesized.append("Inadequate or missing process control or standard.")
                 if occ_classified.get("Machine"):
                     synthesized.append("Equipment degradation or lack of preventive maintenance.")
                 if occ_classified.get("Material"):
@@ -1038,11 +1037,12 @@ line-height:1.5;
                     synthesized.append("Detection method did not identify the nonconformance before shipment.")
                 if sys_list:
                     synthesized.append("Systemic weakness in management of change or lessons learned.")
+                if not synthesized:
+                    return "No specific root cause pattern detected yet. Review your Why analysis for more clarity."
 
-                if synthesized:
-                    insights.append("💡 **Possible True Root Cause Suggestion:** " + " ".join(synthesized))
-
-                return "\n".join(insights)
+                # Combine and simplify into one actionable statement
+                suggestion = " and ".join(synthesized)
+                return f"💡 **Possible Root Cause Suggestion:** {suggestion.capitalize()} Focus your analysis in these areas."
 
             # --- Display the smart root cause text areas ---
             st.text_area(
