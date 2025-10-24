@@ -1028,7 +1028,7 @@ line-height:1.5;
                 if occ_classified.get("Method"):
                     occ_suggestions.append("Inadequate or missing process control or standard.")
                 if occ_classified.get("Machine"):
-                    occ_suggestions.append("Equipment degradation or lack of preventive maintenance.")
+                    occ_suggestions.append("equipment degradation or lack of preventive maintenance")
                 if occ_classified.get("Material"):
                     occ_suggestions.append("Supplier or component quality variation.")
                 if occ_classified.get("Measurement"):
