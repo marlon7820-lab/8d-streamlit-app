@@ -1169,29 +1169,7 @@ line-height:1.5;
             st.text_area(f"{t[lang_key]['Root_Cause_Det']}", value=det_text, height=120, disabled=True)
             st.text_area(f"{t[lang_key]['Root_Cause_Sys']}", value=sys_text, height=120, disabled=True)
 
-
         elif step == "D6":
-            st.session_state[step].setdefault("occ_answer", st.session_state["D6"].get("occ_answer", ""))
-            st.session_state[step].setdefault("det_answer", st.session_state["D6"].get("det_answer", ""))
-            st.session_state[step].setdefault("sys_answer", st.session_state["D6"].get("sys_answer", ""))
-
-            st.session_state[step]["occ_answer"] = st.text_area(
-                "D6 - Corrective Actions for Occurrence Root Cause",
-                value=st.session_state[step]["occ_answer"],
-                key="d6_occ"
-            )
-            st.session_state[step]["det_answer"] = st.text_area(
-                "D6 - Corrective Actions for Detection Root Cause",
-                value=st.session_state[step]["det_answer"],
-                key="d6_det"
-            )
-            st.session_state[step]["sys_answer"] = st.text_area(
-                "D6 - Corrective Actions for Systemic Root Cause",
-                value=st.session_state[step]["sys_answer"],
-                key="d6_sys"
-            )
-
-           elif step == "D6":
             st.session_state[step].setdefault("occ_answer", st.session_state["D6"].get("occ_answer", ""))
             st.session_state[step].setdefault("det_answer", st.session_state["D6"].get("det_answer", ""))
             st.session_state[step].setdefault("sys_answer", st.session_state["D6"].get("sys_answer", ""))
