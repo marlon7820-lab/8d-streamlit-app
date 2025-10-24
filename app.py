@@ -981,7 +981,7 @@ line-height:1.5;
                 Focuses on the true root cause synthesis rather than full detail display.
                 """
                 if not any([occ_list, det_list, sys_list]):
-                    return "⚠️ No Why analysis provided yet."
+                    return "⚠️ No Why analysis provided yet.", "", ""
 
                 # Keywords for 4M analysis
                 patterns = {
@@ -1008,20 +1008,6 @@ line-height:1.5;
                     cat = classify_4m(w)
                     occ_classified.setdefault(cat, []).append(w)
 
-                for cat, whys in occ_classified.items():
-                    if cat != "Other":
-                        insights.append(f"📌 **{cat}-related root cause(s):**")
-                        insights.append(f"   - {', '.join(whys)}")
-
-                # --- Detection & Systemic logic ---
-                if det_list:
-                    insights.append("🔍 **Detection weaknesses identified:**")
-                    insights.extend([f"   - {d}" for d in det_list])
-
-                if sys_list:
-                    insights.append("🏭 **Systemic contributing factors:**")
-                    insights.extend([f"   - {s}" for s in sys_list])
-
                 # --- Prepare suggestions lists ---
                 occ_suggestions = []
                 det_suggestions = []
@@ -1041,9 +1027,9 @@ line-height:1.5;
                     det_suggestions.append("Detection method did not identify the nonconformance before shipment.")
                 if sys_list:
                     sys_suggestions.append("Systemic weakness in management of change or lessons learned.")
-                if not synthesized:
-                    return "No specific root cause pattern detected yet. Review your Why analysis for more clarity."
-
+            
+                # --- Build final concise suggestion text ---
+                # Occurrence 
                 if occ_suggestions:
                     if len(occ_suggestions) == 1:
                         occ_text = occ_suggestions[0]
@@ -1053,38 +1039,28 @@ line-height:1.5;
                 else:
                     occ_result = "No Occurrence root cause detected yet. Review your analysis."
 
-                # --- Detection ---
-                det_result = ""
-                if det_sguggestions:
+                # Detection
+                if det_suggestions:
                     det_result = f"💡 **Possible Detection Root Cause Suggestion:** {', '.join(det_suggestions)}. Focus on improving detection methods."
+                else:
+                    det_result = "No Detection root cause detected yet. Review your analysis."
 
-                # --- Systemic ---
-                sys_result = ""
+                # Systemic
                 if sys_suggestions:
                     sys_result = f"💡 **Possible Systemic Root Cause Suggestion:** {', '.join(sys_suggestions)}. Address these systemic factors."
+                else:
+                    sys_result = "No Systemic root cause detected yet. Review your analysis."
 
                 return occ_result, det_result, sys_result
 
-         # --- Display the smart root cause text areas ---
-            st.text_area(
-                f"{t[lang_key]['Root_Cause_Occ']}",
-                value=smart_root_cause_suggestion(d1_concern, occ_whys, [], [], lang_key),
-                height=120,
-                disabled=True
-            )
-            st.text_area(
-                f"{t[lang_key]['Root_Cause_Det']}",
-                value=smart_root_cause_suggestion(d1_concern, [], det_whys, [], lang_key),
-                height=120,
-                disabled=True
-            )
-            st.text_area(
-                f"{t[lang_key]['Root_Cause_Sys']}",
-                value=smart_root_cause_suggestion(d1_concern, [], [], sys_whys, lang_key),
-                height=120,
-                disabled=True
-            )
+        # --- Call function once and unpack ---
+        occ_text, det_text, sys_text = smart_root_cause_suggestion(d1_concern, occ_whys, det_whys, sys_whys, lang_key)
 
+        # --- Display the smart root cause text areas ---
+        st.text_area(f"{t[lang_key]['Root_Cause_Occ']}", value=occ_text, height=120, disabled=True)
+        st.text_area(f"{t[lang_key]['Root_Cause_Det']}", value=det_text, height=120, disabled=True)
+        st.text_area(f"{t[lang_key]['Root_Cause_Sys']}", value=sys_text, height=120, disabled=True)
+            )
 
         elif step == "D6":
             st.session_state[step].setdefault("occ_answer", st.session_state["D6"].get("occ_answer", ""))
