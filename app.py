@@ -996,7 +996,7 @@ line-height:1.5;
                 for m, kws in patterns.items():
                     if any(k in text_lower for k in kws):
                         return m
-                 return "Other"
+                return "Other"
 
             insights = []
             if d1_concern:
