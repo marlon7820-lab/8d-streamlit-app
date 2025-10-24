@@ -899,7 +899,7 @@ line-height:1.5;
                 key=f"ans_{step}"
             )
 
-        elif step == "D5":
+             elif step == "D5":
             # ---------------------------
             # 🧩 Show D1 concern safely at the top
             # ---------------------------
@@ -924,7 +924,7 @@ line-height:1.5;
                     st.session_state.d5_occ_whys,
                     occurrence_categories,
                     t[lang_key]['Occurrence_Why']
-               )
+                )
 
             if st.button("➕ Add another Occurrence Why", key=f"add_occ_{i}"):
                 st.session_state.d5_occ_whys.append("")
@@ -989,7 +989,7 @@ line-height:1.5;
                     "Method": ["procedure", "process", "assembly", "sequence", "standard", "instruction", "setup"],
                     "Material": ["component", "supplier", "batch", "raw", "contamination", "mix", "specification"],
                     "Measurement": ["inspection", "test", "measurement", "gauge", "criteria", "frequency"]
-             }
+                }
 
                 def classify_4m(text):
                     text_lower = text.lower()
@@ -1038,16 +1038,15 @@ line-height:1.5;
 
                 return occ_result, det_result, sys_result
 
-        # --- Call function once and unpack ---
-        occ_text, det_text, sys_text = smart_root_cause_suggestion(d1_concern, occ_whys, det_whys, sys_whys, lang_key)
+            # --- Call function once and unpack ---
+            occ_text, det_text, sys_text = smart_root_cause_suggestion(d1_concern, occ_whys, det_whys, sys_whys, lang_key)
 
-        # --- Display the smart root cause text areas ---
-        st.text_area(f"{t[lang_key]['Root_Cause_Occ']}", value=occ_text, height=120, disabled=True)
-        st.text_area(f"{t[lang_key]['Root_Cause_Det']}", value=det_text, height=120, disabled=True)
-        st.text_area(f"{t[lang_key]['Root_Cause_Sys']}", value=sys_text, height=120, disabled=True)
+            # --- Display the smart root cause text areas ---
+            st.text_area(f"{t[lang_key]['Root_Cause_Occ']}", value=occ_text, height=120, disabled=True)
+            st.text_area(f"{t[lang_key]['Root_Cause_Det']}", value=det_text, height=120, disabled=True)
+            st.text_area(f"{t[lang_key]['Root_Cause_Sys']}", value=sys_text, height=120, disabled=True)
 
 
-   # D6: Permanent Corrective Actions (three text areas: Occ/Det/Sys)
         elif step == "D6":
             st.session_state[step].setdefault("occ_answer", st.session_state["D6"].get("occ_answer", ""))
             st.session_state[step].setdefault("det_answer", st.session_state["D6"].get("det_answer", ""))
@@ -1069,12 +1068,10 @@ line-height:1.5;
                 key="d6_sys"
             )
 
-            # Mirror into top-level D6 storage so export code can find them consistently
             st.session_state["D6"]["occ_answer"] = st.session_state[step]["occ_answer"]
             st.session_state["D6"]["det_answer"] = st.session_state[step]["det_answer"]
             st.session_state["D6"]["sys_answer"] = st.session_state[step]["sys_answer"]
 
-        # D7: Countermeasure Confirmation (three text areas: verification for Occ/Det/Sys)
         elif step == "D7":
             st.session_state[step].setdefault("occ_answer", st.session_state["D7"].get("occ_answer", ""))
             st.session_state[step].setdefault("det_answer", st.session_state["D7"].get("det_answer", ""))
@@ -1096,12 +1093,10 @@ line-height:1.5;
                 key="d7_sys"
             )
 
-            # Mirror into top-level D7 storage so export code can find them consistently
             st.session_state["D7"]["occ_answer"] = st.session_state[step]["occ_answer"]
             st.session_state["D7"]["det_answer"] = st.session_state[step]["det_answer"]
             st.session_state["D7"]["sys_answer"] = st.session_state[step]["sys_answer"]
 
-        # D8: Follow-up Activities / Lessons Learned (single text area)
         elif step == "D8":
             st.session_state[step]["answer"] = st.text_area(
                 "Your Answer",
@@ -1110,14 +1105,13 @@ line-height:1.5;
             )
 
         else:
-            # Default for D1, D2, D3, or any other single-answer steps
             if step not in ["D4", "D5", "D6", "D7", "D8"]:
                 st.session_state[step]["answer"] = st.text_area(
                     "Your Answer",
                     value=st.session_state[step]["answer"],
                     key=f"ans_{step}"
                 )
-
+   
 
 # ---------------------------
 # Collect all answers for Excel export
