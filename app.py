@@ -1026,25 +1026,42 @@ line-height:1.5;
                 # --- Build synthesized root cause statement ---
                 synthesized = []
                 if occ_classified.get("Method"):
-                    synthesized.append("Inadequate or missing process control or standard.")
+                    occ_suggestions.append("Inadequate or missing process control or standard.")
                 if occ_classified.get("Machine"):
-                    synthesized.append("Equipment degradation or lack of preventive maintenance.")
+                    occ_suggestions.append("Equipment degradation or lack of preventive maintenance.")
                 if occ_classified.get("Material"):
-                    synthesized.append("Supplier or component quality variation.")
+                    occ_suggestions.append("Supplier or component quality variation.")
                 if occ_classified.get("Measurement"):
-                    synthesized.append("Insufficient inspection or gauge control.")
+                    occ_suggestions.append("Insufficient inspection or gauge control.")
                 if det_list:
-                    synthesized.append("Detection method did not identify the nonconformance before shipment.")
+                    det_suggestions.append("Detection method did not identify the nonconformance before shipment.")
                 if sys_list:
-                    synthesized.append("Systemic weakness in management of change or lessons learned.")
+                    det.append("Systemic weakness in management of change or lessons learned.")
                 if not synthesized:
                     return "No specific root cause pattern detected yet. Review your Why analysis for more clarity."
 
-                # Combine and simplify into one actionable statement
-                suggestion = " and ".join(synthesized)
-                return f"💡 **Possible Root Cause Suggestion:** {suggestion.capitalize()} You should focus your analysis in these areas."
+                if occ_suggestions:
+                    if len(occ_suggestions) == 1:
+                        occ_text = occ_suggestions[0]
+                    else:
+                        occ_text = ", ".join(occ_suggestions[:-1]) + " and " + occ_suggestions[-1]
+                    occ_result = f"💡 **Possible Occurrence Root Cause Suggestion:** {occ_text}. You should focus your analysis in these areas."
+                else:
+                    occ_result = "No Occurrence root cause detected yet. Review your analysis."
 
-            # --- Display the smart root cause text areas ---
+                # --- Detection ---
+                det_result = ""
+                if det_list:
+                    det_result = f"💡 **Possible Detection Root Cause Suggestion:** {', '.join(det_list)}. Focus on improving detection methods."
+
+                # --- Systemic ---
+                sys_result = ""
+                if sys_list:
+                    sys_result = f"💡 **Possible Systemic Root Cause Suggestion:** {', '.join(sys_list)}. Address these systemic factors."
+
+                return occ_result, det_result, sys_result
+
+         # --- Display the smart root cause text areas ---
             st.text_area(
                 f"{t[lang_key]['Root_Cause_Occ']}",
                 value=smart_root_cause_suggestion(d1_concern, occ_whys, [], [], lang_key),
