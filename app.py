@@ -918,13 +918,13 @@ line-height:1.5;
                     st.session_state.d5_occ_whys,
                     occurrence_categories_es,
                     t[lang_key]['Occurrence_Why']
-             )
+                )
             else:
                 st.session_state.d5_occ_whys = render_whys_no_repeat_with_other(
                     st.session_state.d5_occ_whys,
                     occurrence_categories,
                     t[lang_key]['Occurrence_Why']
-            )
+               )
 
             if st.button("➕ Add another Occurrence Why", key=f"add_occ_{i}"):
                 st.session_state.d5_occ_whys.append("")
@@ -937,13 +937,13 @@ line-height:1.5;
                     st.session_state.d5_det_whys,
                     detection_categories_es,
                     t[lang_key]['Detection_Why']
-            )
+                )
             else:
                 st.session_state.d5_det_whys = render_whys_no_repeat_with_other(
                     st.session_state.d5_det_whys,
                     detection_categories,
                     t[lang_key]['Detection_Why']
-            )
+                )
 
             if st.button("➕ Add another Detection Why", key=f"add_det_{i}"):
                 st.session_state.d5_det_whys.append("")
@@ -956,13 +956,13 @@ line-height:1.5;
                     st.session_state.d5_sys_whys,
                     systemic_categories_es,
                     t[lang_key]['Systemic_Why']
-            )
+                )
             else:
                 st.session_state.d5_sys_whys = render_whys_no_repeat_with_other(
                     st.session_state.d5_sys_whys,
                     systemic_categories,
                     t[lang_key]['Systemic_Why']
-            )
+                )
 
             if st.button("➕ Add another Systemic Why", key=f"add_sys_{i}"):
                 st.session_state.d5_sys_whys.append("")
@@ -1008,13 +1008,8 @@ line-height:1.5;
                     cat = classify_4m(w)
                     occ_classified.setdefault(cat, []).append(w)
 
-                # --- Prepare suggestions lists ---
-                occ_suggestions = []
-                det_suggestions = []
-                sys_suggestions = []
-
-                # --- Build synthesized root cause statement ---
-                synthesized = []
+                occ_suggestions, det_suggestions, sys_suggestions = [], [], []
+                
                 if occ_classified.get("Method"):
                     occ_suggestions.append("Inadequate or missing process control or standard.")
                 if occ_classified.get("Machine"):
@@ -1028,28 +1023,18 @@ line-height:1.5;
                 if sys_list:
                     sys_suggestions.append("Systemic weakness in management of change or lessons learned.")
             
-                # --- Build final concise suggestion text ---
-                # Occurrence 
+                # Occurrence
                 if occ_suggestions:
-                    if len(occ_suggestions) == 1:
-                        occ_text = occ_suggestions[0]
-                    else:
-                        occ_text = ", ".join(occ_suggestions[:-1]) + " and " + occ_suggestions[-1]
+                    occ_text = ", ".join(occ_suggestions[:-1]) + " and " + occ_suggestions[-1] if len(occ_suggestions) > 1 else occ_suggestions[0]
                     occ_result = f"💡 **Possible Occurrence Root Cause Suggestion:** {occ_text}. You should focus your analysis in these areas."
                 else:
                     occ_result = "No Occurrence root cause detected yet. Review your analysis."
 
                 # Detection
-                if det_suggestions:
-                    det_result = f"💡 **Possible Detection Root Cause Suggestion:** {', '.join(det_suggestions)}. Focus on improving detection methods."
-                else:
-                    det_result = "No Detection root cause detected yet. Review your analysis."
+                det_result = f"💡 **Possible Detection Root Cause Suggestion:** {', '.join(det_suggestions)}. Focus on improving detection methods." if det_suggestions else "No Detection root cause detected yet. Review your analysis."
 
                 # Systemic
-                if sys_suggestions:
-                    sys_result = f"💡 **Possible Systemic Root Cause Suggestion:** {', '.join(sys_suggestions)}. Address these systemic factors."
-                else:
-                    sys_result = "No Systemic root cause detected yet. Review your analysis."
+                sys_result = f"💡 **Possible Systemic Root Cause Suggestion:** {', '.join(sys_suggestions)}. Address these systemic factors." if sys_suggestions else "No Systemic root cause detected yet. Review your analysis."
 
                 return occ_result, det_result, sys_result
 
