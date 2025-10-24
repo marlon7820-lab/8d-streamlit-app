@@ -1128,43 +1128,36 @@ line-height:1.5;
                     insights.append(f"🔹 **Problem Statement:** {d1_concern}")
 
                 # --- Analyze Occurrence Whys (4M) ---
-                occ_classified = {}
+                occ_categories_detected = set()
                 for w in occ_list:
-                    cat = classify_4m(w)
-                    occ_classified.setdefault(cat, []).append(w)
+                    text_lower = w.lower()
+                    for cat, kws in patterns.items():
+                        if any(k in text_lower for k in kws):
+                            occ_categories_detected.add(cat)
 
                 occ_suggestions, det_suggestions, sys_suggestions = [], [], []
                 
-                if occ_classified.get("Method"):
-                    occ_suggestions.append("Inadequate or missing process control or standard.")
-                if occ_classified.get("Machine"):
-                    occ_suggestions.append("equipment degradation or lack of preventive maintenance")
-                if occ_classified.get("Material"):
-                    occ_suggestions.append("Supplier or component quality variation.")
-                if occ_classified.get("Measurement"):
-                    occ_suggestions.append("Insufficient inspection or gauge control.")
-                if det_list:
-                    det_suggestions.append("Detection method did not identify the nonconformance before shipment.")
-                if sys_list:
-                    sys_suggestions.append("Systemic weakness in management of change or lessons learned.")
-
-                # Remove trailing periods just in case
-                occ_suggestions = [s.rstrip('.') for s in occ_suggestions]
-                det_suggestions = [s.rstrip('.') for s in det_suggestions]
-                sys_suggestions = [s.rstrip('.') for s in sys_suggestions]
-            
-                # Occurrence
-                if occ_suggestions:
-                    occ_text = ", ".join(occ_suggestions[:-1]) + " and " + occ_suggestions[-1] if len(occ_suggestions) > 1 else occ_suggestions[0]
-                    occ_result = f"💡 **Possible Occurrence Root Cause Suggestion:** {occ_text}. You should focus your analysis in these areas."
-                else:
-                    occ_result = "No Occurrence root cause detected yet. Review your analysis."
+                # Occurrence 4M suggestions
+                for cat in occ_categories_detected:
+                    occ_suggestions.extend(suggestions[cat][lang])
 
                 # Detection
-                det_result = f"💡 **Possible Detection Root Cause Suggestion:** {', '.join(det_suggestions)}. Focus on improving detection methods." if det_suggestions else "No Detection root cause detected yet. Review your analysis."
+                if det_list:
+                    det_suggestions.extend(suggestions["Detection"][lang])
 
                 # Systemic
-                sys_result = f"💡 **Possible Systemic Root Cause Suggestion:** {', '.join(sys_suggestions)}. Address these systemic factors." if sys_suggestions else "No Systemic root cause detected yet. Review your analysis."
+                if sys_list:
+                    sys_suggestions.extend(suggestions["Systemic"][lang])
+
+                # Remove duplicates
+                occ_suggestions = list(dict.fromkeys(occ_suggestions))
+                det_suggestions = list(dict.fromkeys(det_suggestions))
+                sys_suggestions = list(dict.fromkeys(sys_suggestions))
+
+                # Format results
+                occ_result = f"💡 **Possible Occurrence Root Cause Suggestion:** {', '.join(occ_suggestions)}." if occ_suggestions else ("No Occurrence root cause detected yet." if lang=="en" else "No se detectó causa raíz de ocurrencia aún.")
+                det_result = f"💡 **Possible Detection Root Cause Suggestion:** {', '.join(det_suggestions)}." if det_suggestions else ("No Detection root cause detected yet." if lang=="en" else "No se detectó causa raíz de detección aún.")
+                sys_result = f"💡 **Possible Systemic Root Cause Suggestion:** {', '.join(sys_suggestions)}." if sys_suggestions else ("No Systemic root cause detected yet." if lang=="en" else "No se detectó causa raíz sistémica aún.")
 
                 return occ_result, det_result, sys_result
 
