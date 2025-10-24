@@ -1245,13 +1245,25 @@ occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
 det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
 sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
 
-occ_rc_text = suggest_root_cause(occ_whys) if occ_whys else "No occurrence whys provided yet"
-det_rc_text = suggest_root_cause(det_whys) if det_whys else "No detection whys provided yet"
-sys_rc_text = suggest_root_cause(sys_whys) if sys_whys else "No systemic whys provided yet"
+# --- Call the same smart bilingual root cause function used in D5 ---
+if occ_whys or det_whys or sys_whys:
+    occ_text, det_text, sys_text = smart_root_cause_suggestion(
+        st.session_state.get("D1", {}).get("answer", ""),
+        occ_whys, det_whys, sys_whys,
+        lang=lang_key
+    )
+else:
+    if lang_key == "es":
+        occ_text = det_text = sys_text = "⚠️ No se ha proporcionado análisis de causas."
+    else:
+        occ_text = det_text = sys_text = "⚠️ No Why analysis provided yet."
 
+# Save in session for consistency
+st.session_state["D5"]["occ_root_cause"] = occ_text
+st.session_state["D5"]["det_root_cause"] = det_text
+st.session_state["D5"]["sys_root_cause"] = sys_text
 
 for step, _, _ in npqp_steps:
-    # D6 and D7 should export their 3 sub-answers as separate rows
     if step == "D6":
         data_rows.append(("D6 - Occurrence Countermeasure", st.session_state.get("D6", {}).get("occ_answer", ""), ""))
         data_rows.append(("D6 - Detection Countermeasure", st.session_state.get("D6", {}).get("det_answer", ""), ""))
@@ -1261,9 +1273,9 @@ for step, _, _ in npqp_steps:
         data_rows.append(("D7 - Detection Countermeasure Verification", st.session_state.get("D7", {}).get("det_answer", ""), ""))
         data_rows.append(("D7 - Systemic Countermeasure Verification", st.session_state.get("D7", {}).get("sys_answer", ""), ""))
     elif step == "D5":
-        data_rows.append(("D5 - Root Cause (Occurrence)", occ_rc_text, " | ".join(occ_whys)))
-        data_rows.append(("D5 - Root Cause (Detection)", det_rc_text, " | ".join(det_whys)))
-        data_rows.append(("D5 - Root Cause (Systemic)", sys_rc_text, " | ".join(sys_whys)))
+        data_rows.append(("D5 - Root Cause (Occurrence)", st.session_state["D5"].get("occ_root_cause", ""), " | ".join(occ_whys)))
+        data_rows.append(("D5 - Root Cause (Detection)", st.session_state["D5"].get("det_root_cause", ""), " | ".join(det_whys)))
+        data_rows.append(("D5 - Root Cause (Systemic)", st.session_state["D5"].get("sys_root_cause", ""), " | ".join(sys_whys)))
     elif step == "D4":
         loc = st.session_state[step].get("location", "")
         status = st.session_state[step].get("status", "")
@@ -1276,7 +1288,7 @@ for step, _, _ in npqp_steps:
         data_rows.append((step, answer, extra))
 
 # ---------------------------
-# Excel generation (formatted + images/files)
+# Excel generation function
 # ---------------------------
 def generate_excel():
     wb = Workbook()
