@@ -968,23 +968,28 @@ line-height:1.5;
         st.session_state.d5_sys_whys.append("")
 
     # ---------------------------
-    # Root Cause Suggestions
+    # Root Cause Suggestions (intelligent synthesis)
     # ---------------------------
     occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
     det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
     sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
 
-    # --- SMART ROOT CAUSE FUNCTION ---
     def smart_root_cause_suggestion(d1_concern, occ_list, det_list, sys_list, lang="en"):
         """
         Build intelligent root cause summaries based on the concern (D1)
         and the selected whys for Occurrence (4M), Detection, and Systemic.
         Focuses on identifying underlying technical or process root causes.
         """
+
         if not any([occ_list, det_list, sys_list]):
             return "⚠️ No Why analysis provided yet."
 
-        # Keywords for 4M analysis
+        insights = []
+
+        if d1_concern:
+            insights.append(f"🔹 **Problem Statement:** {d1_concern}")
+
+        # Keywords for 4M analysis (excluding Man)
         patterns = {
             "Machine": ["equipment", "machine", "tool", "fixture", "wear", "maintenance", "calibration"],
             "Method": ["procedure", "process", "assembly", "sequence", "standard", "instruction", "setup"],
@@ -992,17 +997,12 @@ line-height:1.5;
             "Measurement": ["inspection", "test", "measurement", "gauge", "criteria", "frequency"]
         }
 
-        # Function to detect category from text
         def classify_4m(text):
             text_lower = text.lower()
             for m, kws in patterns.items():
                 if any(k in text_lower for k in kws):
                     return m
             return "Other"
-
-        insights = []
-        if d1_concern:
-            insights.append(f"🔹 **Problem Statement:** {d1_concern}")
 
         # --- Analyze Occurrence Whys (4M) ---
         occ_classified = {}
@@ -1025,44 +1025,51 @@ line-height:1.5;
             insights.extend([f"   - {s}" for s in sys_list])
 
         # --- Build synthesized root cause statement ---
-        synthesized = []
-        if occ_classified.get("Method"):
-            synthesized.append("Inadequate or missing process standard / control plan.")
-        if occ_classified.get("Machine"):
-            synthesized.append("Equipment degradation or lack of preventive maintenance.")
-        if occ_classified.get("Material"):
-            synthesized.append("Supplier or component quality variation.")
-        if occ_classified.get("Measurement"):
-            synthesized.append("Insufficient inspection or gauge control.")
-        if det_list:
-            synthesized.append("Detection method did not identify the nonconformance before shipment.")
-        if sys_list:
-            synthesized.append("Systemic weakness in management of change or lessons learned.")
+        if occ_list or det_list or sys_list:
+            synthesized = "💡 **Possible True Root Cause Suggestion:** "
+            parts = []
+            if occ_classified.get("Method"):
+                parts.append("Inadequate or missing process standard / control plan.")
+            if occ_classified.get("Machine"):
+                parts.append("Equipment degradation or lack of preventive maintenance.")
+            if occ_classified.get("Material"):
+                parts.append("Supplier or component quality variation.")
+            if occ_classified.get("Measurement"):
+                parts.append("Insufficient inspection or gauge control.")
+            if det_list:
+                parts.append("Detection method did not identify the nonconformance before shipment.")
+            if sys_list:
+                parts.append("Systemic weakness in management of change or lessons learned.")
 
-        if synthesized:
-            insights.append("💡 **Possible True Root Cause Suggestion:** " + " ".join(synthesized))
+            if parts:
+                insights.append(synthesized + " ".join(parts))
 
         return "\n".join(insights)
 
-    # --- Display the smart root cause text areas ---
+    # ---------------------------
+    # Display intelligent root cause synthesis
+    # ---------------------------
     st.text_area(
         f"{t[lang_key]['Root_Cause_Occ']}",
-        value=smart_root_cause_suggestion(d1_concern, occ_whys, [], [], lang_key),
-        height=120,
+        value=smart_root_cause_suggestion(d1_concern, occ_whys, det_whys, sys_whys, lang_key),
+        height=300,
         disabled=True
     )
+
     st.text_area(
         f"{t[lang_key]['Root_Cause_Det']}",
         value=smart_root_cause_suggestion(d1_concern, [], det_whys, [], lang_key),
         height=120,
         disabled=True
     )
+
     st.text_area(
         f"{t[lang_key]['Root_Cause_Sys']}",
         value=smart_root_cause_suggestion(d1_concern, [], [], sys_whys, lang_key),
         height=120,
         disabled=True
     )
+
 
         elif step == "D6":
             st.session_state[step].setdefault("occ_answer", st.session_state["D6"].get("occ_answer", ""))
