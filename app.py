@@ -1022,6 +1022,11 @@ line-height:1.5;
                     det_suggestions.append("Detection method did not identify the nonconformance before shipment.")
                 if sys_list:
                     sys_suggestions.append("Systemic weakness in management of change or lessons learned.")
+
+                # Remove trailing periods just in case
+                occ_suggestions = [s.rstrip('.') for s in occ_suggestions]
+                det_suggestions = [s.rstrip('.') for s in det_suggestions]
+                sys_suggestions = [s.rstrip('.') for s in sys_suggestions]
             
                 # Occurrence
                 if occ_suggestions:
