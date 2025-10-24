@@ -1055,13 +1055,13 @@ line-height:1.5;
 
                 # --- Detection ---
                 det_result = ""
-                if det_list:
-                    det_result = f"💡 **Possible Detection Root Cause Suggestion:** {', '.join(det_list)}. Focus on improving detection methods."
+                if det_sguggestions:
+                    det_result = f"💡 **Possible Detection Root Cause Suggestion:** {', '.join(det_suggestions)}. Focus on improving detection methods."
 
                 # --- Systemic ---
                 sys_result = ""
-                if sys_list:
-                    sys_result = f"💡 **Possible Systemic Root Cause Suggestion:** {', '.join(sys_list)}. Address these systemic factors."
+                if sys_suggestions:
+                    sys_result = f"💡 **Possible Systemic Root Cause Suggestion:** {', '.join(sys_suggestions)}. Address these systemic factors."
 
                 return occ_result, det_result, sys_result
 
