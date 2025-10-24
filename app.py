@@ -1367,7 +1367,7 @@ def generate_excel():
 
     # Set column widths
     for col in range(1, 4):
-        ws.column_dimensions[get_column_letter(col)].width = 40
+        ws.column_dimensions[get_column_letter(col)].width = 60
 
     # ✅ The return must be inside the function
     output = io.BytesIO()
