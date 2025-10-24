@@ -1042,7 +1042,7 @@ line-height:1.5;
 
                 # Combine and simplify into one actionable statement
                 suggestion = " and ".join(synthesized)
-                return f"💡 **Possible Root Cause Suggestion:** {suggestion.capitalize()} Focus your analysis in these areas."
+                return f"💡 **Possible Root Cause Suggestion:** {suggestion.capitalize()} You should focus your analysis in these areas."
 
             # --- Display the smart root cause text areas ---
             st.text_area(
