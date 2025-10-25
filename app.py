@@ -1080,7 +1080,6 @@ line-height:1.5;
                             "Inspection procedures not standardized or followed",
                             "Inadequate inspection frequency or sampling plan",
                             "Measurement devices not calibrated or appropriate",
-                            "Human error during detection or verification"
                         ],
                         "es": [
                             "El método de detección no identificó la no conformidad antes del envío",
@@ -1105,11 +1104,12 @@ line-height:1.5;
                             "Sistema de gestión de calidad ineficaz",
                             "Seguimiento o verificación de acciones correctivas inadecuado"
                         ]
-                        "Other": {
-                            "en": ["Perform deeper investigation", "Escalate to cross-functional review"],
-                            "es": ["Realizar investigación más profunda", "Escalar a revisión interfuncional"]
+                    },
+                    "Other": {
+                        "en": ["Perform deeper investigation", "Escalate to cross-functional review"],
+                        "es": ["Realizar investigación más profunda", "Escalar a revisión interfuncional"]
                     }
-                }
+                }  # <--- This closing brace was missing or misplaced
 
                 # Keywords for 4M analysis
                 patterns = {
