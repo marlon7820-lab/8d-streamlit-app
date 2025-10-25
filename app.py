@@ -1116,6 +1116,14 @@ line-height:1.5;
                     "Measurement": ["inspection", "test", "measurement", "gauge", "criteria", "frequency"]
                 }
 
+                patterns_es = {
+                    "Machine": ["equipo", "máquina", "herramienta", "utillaje", "desgaste", "mantenimiento", "calibración"],
+                    "Method": ["procedimiento", "proceso", "ensamblaje", "secuencia", "estándar", "instrucción", "configuración"],
+                    "Material": ["componente", "proveedor", "lote", "materia prima", "contaminación", "mezcla", "especificación"],
+                    "Measurement": ["inspección", "prueba", "medición", "calibre", "criterio", "frecuencia"]
+                }
+                patterns = patterns_es if lang=="es" else patterns_en
+                
                 def classify_4m(text):
                     text_lower = text.lower()
                     for m, kws in patterns.items():
