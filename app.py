@@ -1140,7 +1140,7 @@ line-height:1.5;
                 }
             }  # <--- This closing brace was missing or misplaced
 
-                insights = []
+               insights = []
                 if d1_concern:
                     insights.append(f"🔹 **Problem Statement:** {d1_concern}")
 
