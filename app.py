@@ -1167,7 +1167,7 @@ line-height:1.5;
                         if det_suggestions
                         else ("No Detection root cause detected yet." if lang == "en" else "No se detectó causa raíz de detección aún.")
                    )
-                   sys_result = (
+                    sys_result = (
                         f"💡 **Possible Systemic Root Cause Suggestion:** {', '.join(sys_suggestions)}."
                         if sys_suggestions
                         else ("No Systemic root cause detected yet." if lang == "en" else "No se detectó causa raíz sistémica aún.")
