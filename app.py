@@ -1288,12 +1288,15 @@ for step, _, _ in npqp_steps:
         data_rows.append((step, answer, extra))
 
 # ---------------------------
-# Excel generation function
+# Excel generation function (bilingual title + color formatting)
 # ---------------------------
 def generate_excel():
     wb = Workbook()
     ws = wb.active
-    ws.title = "NPQP 8D Report"
+
+    # Bilingual worksheet title
+    ws.title = "Informe 8D NPQP" if lang_key == "es" else "NPQP 8D Report"
+
     thin = Side(border_style="thin", color="000000")
     border = Border(left=thin, right=thin, top=thin, bottom=thin)
 
@@ -1307,16 +1310,23 @@ def generate_excel():
         except:
             pass
 
+    # Bilingual main title
+    main_title = "📋 Asistente de Informe 8D" if lang_key == "es" else "📋 8D Report Assistant"
     ws.merge_cells(start_row=3, start_column=1, end_row=3, end_column=3)
-    ws.cell(row=3, column=1, value="📋 8D Report Assistant").font = Font(bold=True, size=14)
+    ws.cell(row=3, column=1, value=main_title).font = Font(bold=True, size=14)
 
+    # Bilingual header info
     ws.append([t[lang_key]['Report_Date'], st.session_state.report_date])
     ws.append([t[lang_key]['Prepared_By'], st.session_state.prepared_by])
     ws.append([])
 
     # Header row
     header_row = ws.max_row + 1
-    headers = ["Step", "Answer", "Extra / Notes"]
+    if lang_key == "es":
+        headers = ["Etapa", "Respuesta", "Notas / Comentarios"]
+    else:
+        headers = ["Step", "Answer", "Extra / Notes"]
+
     fill = PatternFill(start_color="1E90FF", end_color="1E90FF", fill_type="solid")
     for c_idx, h in enumerate(headers, start=1):
         cell = ws.cell(row=header_row, column=c_idx, value=h)
@@ -1325,26 +1335,44 @@ def generate_excel():
         cell.alignment = Alignment(horizontal="center", vertical="center")
         cell.border = border
 
-    # Append step answers
+    # Color fills for specific root cause categories
+    occ_fill = PatternFill(start_color="FFA500", end_color="FFA500", fill_type="solid")  # orange
+    det_fill = PatternFill(start_color="32CD32", end_color="32CD32", fill_type="solid")  # green
+    sys_fill = PatternFill(start_color="D3D3D3", end_color="D3D3D3", fill_type="solid")  # gray
+
+    # Bilingual keywords for color logic
+    occ_keywords = ["Occurrence", "Ocurrencia"]
+    det_keywords = ["Detection", "Detección"]
+    sys_keywords = ["Systemic", "Sistémica"]
+
+    # Append step answers with bilingual color formatting
     for step_label, answer_text, extra_text in data_rows:
         ws.append([step_label, answer_text, extra_text])
         r = ws.max_row
         for c in range(1, 4):
             cell = ws.cell(row=r, column=c)
             cell.alignment = Alignment(wrap_text=True, vertical="top")
+            cell.border = border
             if c == 2:
                 cell.font = Font(bold=True)
-            cell.border = border
+                # Apply bilingual color formatting
+                if any(k in step_label for k in occ_keywords):
+                    cell.fill = occ_fill
+                elif any(k in step_label for k in det_keywords):
+                    cell.fill = det_fill
+                elif any(k in step_label for k in sys_keywords):
+                    cell.fill = sys_fill
 
     # Insert uploaded images below table
     from PIL import Image as PILImage
     from io import BytesIO
 
     last_row = ws.max_row + 2
-    for step in ["D1","D3","D4","D7"]:
+    for step in ["D1", "D3", "D4", "D7"]:
         uploaded_files = st.session_state[step].get("uploaded_files", [])
         if uploaded_files:
-            ws.cell(row=last_row, column=1, value=f"{step} Uploaded Files / Photos").font = Font(bold=True)
+            title = f"{step} Archivos / Fotos Adjuntas" if lang_key == "es" else f"{step} Uploaded Files / Photos"
+            ws.cell(row=last_row, column=1, value=title).font = Font(bold=True)
             last_row += 1
             for f in uploaded_files:
                 if f.type.startswith("image/"):
@@ -1359,7 +1387,7 @@ def generate_excel():
                         ws.add_image(excel_img, f"A{last_row}")
                         last_row += int(img.height / 15) + 2
                     except Exception as e:
-                        ws.cell(row=last_row, column=1, value=f"Could not add image {f.name}: {e}")
+                        ws.cell(row=last_row, column=1, value=f"No se pudo agregar la imagen {f.name}: {e}" if lang_key == "es" else f"Could not add image {f.name}: {e}")
                         last_row += 1
                 else:
                     ws.cell(row=last_row, column=1, value=f.name)
@@ -1369,7 +1397,7 @@ def generate_excel():
     for col in range(1, 4):
         ws.column_dimensions[get_column_letter(col)].width = 60
 
-    # ✅ The return must be inside the function
+    # ✅ Return as bytes
     output = io.BytesIO()
     wb.save(output)
     return output.getvalue()
@@ -1377,9 +1405,9 @@ def generate_excel():
 # Move download button to sidebar
 with st.sidebar:
     st.download_button(
-        label=t[lang_key]['Download'],  # no extra icon
-        data=generate_excel(),  # function that returns BytesIO of XLSX
-        file_name=f"8D_Report_{st.session_state['report_date']}.xlsx",
+        label=t[lang_key]['Download'],
+        data=generate_excel(),
+        file_name=f"8D_Report_{st.session_state['report_date']}.xlsx" if lang_key == "en" else f"Informe_8D_{st.session_state['report_date']}.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
 
