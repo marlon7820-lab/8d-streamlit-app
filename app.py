@@ -1122,36 +1122,7 @@ line-height:1.5;
                         if any(k in text_lower for k in kws):
                             return m
                     return "Other"
-
-                # ✅ Add this right BELOW classify_4m()
-                # --- D6 Corrective Action Suggestion Generator ---
-                def suggest_d6_actions_from_occurrence(occ_list, lang="en"):
-                    """
-                    Returns a list of short suggested corrective actions for D6 (bilingual)
-                    """
-                    actions_map = {
-                        "Machine": {
-                            "en": ["Perform corrective maintenance & rebuild worn tooling", "Implement preventive maintenance schedule"],
-                            "es": ["Realizar mantenimiento correctivo y reconstrucción de herramientas desgastadas", "Implementar programa de mantenimiento preventivo"]
-                        },
-                        "Method": {
-                            "en": ["Update SOPs and validate process sequence", "Introduce poka-yoke checks at critical steps"],
-                            "es": ["Actualizar SOPs y validar la secuencia de proceso", "Introducir controles poka-yoke en pasos críticos"]
-                        },
-                        "Material": {
-                            "en": ["Tighten supplier control, add incoming inspection", "Quarantine suspect lots and test"],
-                            "es": ["Ajustar control de proveedor, añadir inspección entrante", "Poner en cuarentena lotes sospechosos y realizar pruebas"]
-                        },
-                        "Measurement": {
-                            "en": ["Calibrate gauges & increase inspection frequency", "Define statistical sampling plan"],
-                            "es": ["Calibrar instrumentos y aumentar frecuencia de inspección", "Definir plan de muestreo estadístico"]
-                        },
-                       "Other": {
-                            "en": ["Perform deeper investigation", "Escalate to cross-functional review"],
-                            "es": ["Realizar investigación más profunda", "Escalar a revisión interfuncional"]
-                        }
-                    }
-
+                    
                     categories = []
                     for w in occ_list:
                         categories.append(classify_4m(w))  # uses classify_4m()
@@ -1211,6 +1182,44 @@ line-height:1.5;
             st.text_area(f"{t[lang_key]['Root_Cause_Det']}", value=det_text, height=120, disabled=True)
             st.text_area(f"{t[lang_key]['Root_Cause_Sys']}", value=sys_text, height=120, disabled=True)
 
+        # --- D6 Corrective Action Suggestion Generator ---
+        def suggest_d6_actions_from_occurrence(occ_list, lang="en"):
+            """
+            Returns a list of short suggested corrective actions for D6 (bilingual)
+            """
+            actions_map = {
+                "Machine": {
+                    "en": ["Perform corrective maintenance & rebuild worn tooling", "Implement preventive maintenance schedule"],
+                    "es": ["Realizar mantenimiento correctivo y reconstrucción de herramientas desgastadas", "Implementar programa de mantenimiento preventivo"]
+                },
+                "Method": {
+                    "en": ["Update SOPs and validate process sequence", "Introduce poka-yoke checks at critical steps"],
+                    "es": ["Actualizar SOPs y validar la secuencia de proceso", "Introducir controles poka-yoke en pasos críticos"]
+                },
+                "Material": {
+                    "en": ["Tighten supplier control, add incoming inspection", "Quarantine suspect lots and test"],
+                    "es": ["Ajustar control de proveedor, añadir inspección entrante", "Poner en cuarentena lotes sospechosos y realizar pruebas"]
+                },
+                "Measurement": {
+                    "en": ["Calibrate gauges & increase inspection frequency", "Define statistical sampling plan"],
+                    "es": ["Calibrar instrumentos y aumentar frecuencia de inspección", "Definir plan de muestreo estadístico"]
+                },
+                "Other": {
+                    "en": ["Perform deeper investigation", "Escalate to cross-functional review"],
+                    "es": ["Realizar investigación más profunda", "Escalar a revisión interfuncional"]
+                }
+            }
+
+            categories = []
+            for w in occ_list:
+                categories.append(classify_4m(w))  # uses classify_4m from earlier
+            from collections import Counter
+            most_common = [cat for cat, _ in Counter(categories).most_common(2)]
+            out = []
+            for cat in most_common:
+                if cat in actions_map:
+                    out.extend(actions_map[cat][lang][:2])
+            return out
 
         elif step == "D6":
             st.session_state[step].setdefault("occ_answer", st.session_state["D6"].get("occ_answer", ""))
