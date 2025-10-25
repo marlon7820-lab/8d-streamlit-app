@@ -1119,7 +1119,7 @@ line-height:1.5;
                     "Measurement": ["inspection", "test", "measurement", "gauge", "criteria", "frequency"]
                 }
 
-               patterns_es = {
+                patterns_es = {
                     "Maquinaria": ["equipo", "máquina", "herramienta", "utillaje", "desgaste", "mantenimiento", "calibración"],
                     "Metodo": ["procedimiento", "proceso", "ensamblaje", "secuencia", "estándar", "instrucción", "configuración"],
                     "Material": ["componente", "proveedor", "lote", "materia prima", "contaminación", "mezcla", "especificación"],
