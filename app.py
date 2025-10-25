@@ -1238,7 +1238,7 @@ line-height:1.5;
                 suggested_d6 = suggest_d6_actions_from_occurrence(st.session_state["D5"]["occ_whys"], lang="en")
                 if suggested_d6:
                     with st.expander("💡 Suggested Corrective Actions (Auto-generated)"):
-                        for s in suggested_d6:
+                    for s in suggested_d6:
                     st.markdown(f"- {s}")
 
             st.session_state["D6"]["occ_answer"] = st.session_state[step]["occ_answer"]
