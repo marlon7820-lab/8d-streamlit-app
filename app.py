@@ -1216,39 +1216,39 @@ line-height:1.5;
                     return out
 
 
-                # --- D6 Streamlit Section ---
-                elif step == "D6":
-                    st.session_state[step].setdefault("occ_answer", st.session_state["D6"].get("occ_answer", ""))
-                    st.session_state[step].setdefault("det_answer", st.session_state["D6"].get("det_answer", ""))
-                    st.session_state[step].setdefault("sys_answer", st.session_state["D6"].get("sys_answer", ""))
+        # --- D6 Streamlit Section ---
+        elif step == "D6":
+            st.session_state[step].setdefault("occ_answer", st.session_state["D6"].get("occ_answer", ""))
+            st.session_state[step].setdefault("det_answer", st.session_state["D6"].get("det_answer", ""))
+            st.session_state[step].setdefault("sys_answer", st.session_state["D6"].get("sys_answer", ""))
 
-                    st.session_state[step]["occ_answer"] = st.text_area(
-                        "D6 - Corrective Actions for Occurrence Root Cause",
-                        value=st.session_state[step]["occ_answer"],
-                        key="d6_occ"
-                    )
-                    st.session_state[step]["det_answer"] = st.text_area(
-                        "D6 - Corrective Actions for Detection Root Cause",
-                        value=st.session_state[step]["det_answer"],
-                        key="d6_det"
-                    )
-                    st.session_state[step]["sys_answer"] = st.text_area(
-                        "D6 - Corrective Actions for Systemic Root Cause",
-                        value=st.session_state[step]["sys_answer"],
-                        key="d6_sys"
-                    )
+            st.session_state[step]["occ_answer"] = st.text_area(
+                "D6 - Corrective Actions for Occurrence Root Cause",
+                value=st.session_state[step]["occ_answer"],
+                 key="d6_occ"
+            )
+            st.session_state[step]["det_answer"] = st.text_area(
+                "D6 - Corrective Actions for Detection Root Cause",
+                value=st.session_state[step]["det_answer"],
+                key="d6_det"
+            )
+            st.session_state[step]["sys_answer"] = st.text_area(
+                "D6 - Corrective Actions for Systemic Root Cause",
+                value=st.session_state[step]["sys_answer"],
+                key="d6_sys"
+            )
 
-                    # 🔹 Suggest corrective actions based on D5 root causes
-                    if "D5" in st.session_state and st.session_state["D5"].get("occ_whys"):
-                        suggested_d6 = suggest_d6_actions_from_occurrence(st.session_state["D5"]["occ_whys"], lang=lang_key)
-                        if suggested_d6:
-                            with st.expander("💡 Suggested Corrective Actions (Auto-generated)"):
-                                for s in suggested_d6:
-                                    st.markdown(f"- {s}")
+            # 🔹 Suggest corrective actions based on D5 root causes
+            if "D5" in st.session_state and st.session_state["D5"].get("occ_whys"):
+                suggested_d6 = suggest_d6_actions_from_occurrence(st.session_state["D5"]["occ_whys"], lang=lang_key)
+                if suggested_d6:
+                    with st.expander("💡 Suggested Corrective Actions (Auto-generated)"):
+                        for s in suggested_d6:
+                            st.markdown(f"- {s}")
 
-                    st.session_state["D6"]["occ_answer"] = st.session_state[step]["occ_answer"]
-                    st.session_state["D6"]["det_answer"] = st.session_state[step]["det_answer"]
-                    st.session_state["D6"]["sys_answer"] = st.session_state[step]["sys_answer"]
+            st.session_state["D6"]["occ_answer"] = st.session_state[step]["occ_answer"]
+            st.session_state["D6"]["det_answer"] = st.session_state[step]["det_answer"]
+            st.session_state["D6"]["sys_answer"] = st.session_state[step]["sys_answer"]
 
         elif step == "D7":
             st.session_state[step].setdefault("occ_answer", st.session_state["D7"].get("occ_answer", ""))
