@@ -968,13 +968,21 @@ line-height:1.5;
                 st.session_state.d5_sys_whys.append("")
 
             
-
             # ---------------------------
             # Root Cause Suggestions
             # ---------------------------
             occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
             det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
             sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
+
+            # ---------------------------
+            # Duplicate / Conflict Detection
+            # ---------------------------
+            all_whys = occ_whys + det_whys + sys_whys
+            duplicates = [w for w in set(all_whys) if all_whys.count(w) > 1 and w.strip()]
+            if duplicates:
+                st.warning(f"⚠️ Duplicate entries detected across Occurrence/Detection/Systemic: {', '.join(duplicates)}")
+
 
             # --- Keywords for 4M analysis ---
             patterns_en = {
@@ -993,7 +1001,6 @@ line-height:1.5;
 
             patterns = patterns_es if lang_key == "es" else patterns_en
 
-            # --- 4M classification function ---
             def classify_4m(text):
                 text_lower = text.lower()
                 for m, kws in patterns.items():
@@ -1002,159 +1009,144 @@ line-height:1.5;
                 return "Other"
 
             # ---------------------------
-            # Duplicate / Conflict Detection
+            # Smart Root Cause Suggestion
             # ---------------------------
-            all_whys = occ_whys + det_whys + sys_whys
-            duplicates = [w for w in set(all_whys) if all_whys.count(w) > 1 and w.strip()]
-            if duplicates:
-                st.warning(f"⚠️ Duplicate entries detected across Occurrence/Detection/Systemic: {', '.join(duplicates)}")
-
-            # --- Smart Root Cause Suggestion Function ---
             def smart_root_cause_suggestion(d1_concern, occ_list, det_list, sys_list, lang="en"):
                 if not any([occ_list, det_list, sys_list]):
                     return ("⚠️ No Why analysis provided yet.", "", "") if lang == "en" else ("⚠️ No se ha proporcionado análisis de causas.", "", "")
+
+                suggestions = {
+                    "Method": {
+                        "en": [
+                            "Inadequate or missing process control or standard",
+                            "Incomplete or unclear work instructions / SOPs",
+                            "Outdated or obsolete process standards",
+                            "Incorrect assembly or operation sequence",
+                            "Missing or ineffective process controls",
+                            "Lack of error-proofing (Poka-Yoke)",
+                            "Variability in process execution between operators or shifts",
+                            "Uncommunicated or poorly managed process changes",
+                            "Process not validated or qualified"
+                        ],
+                        "es": [
+                            "Control o estándar de proceso inadecuado o ausente",
+                            "Instrucciones de trabajo / SOP incompletas o poco claras",
+                            "Normas de proceso obsoletas o desactualizadas",
+                            "Secuencia de montaje o operación incorrecta",
+                            "Controles de proceso faltantes o ineficaces",
+                            "Falta de prevención de errores (Poka-Yoke)",
+                            "Variabilidad en la ejecución del proceso entre operadores o turnos",
+                            "Cambios en el proceso no comunicados o mal gestionados",
+                            "Proceso no validado o calificado"
+                        ]
+                     },
+                     "Machine": {
+                        "en": [
+                            "Equipment degradation or lack of preventive maintenance",
+                            "Improper machine setup or adjustment",
+                            "Tooling errors (jigs, fixtures, molds)",
+                            "Calibration issues",
+                            "Machine design limitations",
+                            "Automation or robotics malfunctions",
+                            "Unstable process due to equipment variation"
+                        ],
+                        "es": [
+                            "Degradación del equipo o falta de mantenimiento preventivo",
+                            "Configuración o ajuste incorrecto de la máquina",
+                            "Errores de herramientas (plantillas, fijaciones, moldes)",
+                            "Problemas de calibración",
+                            "Limitaciones del diseño de la máquina",
+                            "Fallas en automatización o robótica",
+                            "Proceso inestable debido a variación del equipo"
+                        ]
+                    },
+                    "Material": {
+                        "en": [
+                            "Supplier or component quality variation",
+                            "Incorrect material grade or specifications",
+                            "Contaminated raw materials",
+                            "Substandard or counterfeit components",
+                            "Improper storage or handling",
+                            "Material deterioration over time (aging, corrosion)",
+                            "Packaging or labeling errors causing wrong part usage",
+                            "Inadequate incoming inspection"
+                        ],
+                        "es": [
+                            "Variación de calidad de proveedor o componente",
+                            "Grado o especificación de material incorrecto",
+                            "Materias primas contaminadas",
+                            "Componentes defectuosos o falsificados",
+                            "Almacenamiento o manipulación inadecuada",
+                            "Deterioro del material con el tiempo (envejecimiento, corrosión)",
+                            "Errores de embalaje o etiquetado causando uso incorrecto",
+                            "Inspección entrante inadecuada"
+                        ]
+                    },
+                    "Measurement": {
+                        "en": [
+                            "Insufficient inspection or gauge control",
+                            "Inaccurate or uncalibrated measuring devices",
+                            "Insufficient inspection frequency or sampling",
+                            "Misinterpretation of measurement results",
+                            "Lack of standardization in inspection procedures",
+                            "Missing or incomplete measurement data",
+                            "Undefined or poorly communicated tolerance limits",
+                            "Measurement method not appropriate for detecting nonconformance"
+                        ],
+                        "es": [
+                            "Inspección o control de medidores insuficiente",
+                            "Dispositivos de medición inexactos o no calibrados",
+                            "Frecuencia de inspección o muestreo insuficiente",
+                            "Mala interpretación de los resultados de medición",
+                            "Falta de estandarización en procedimientos de inspección",
+                            "Datos de medición faltantes o incompletos",
+                            "Límites de tolerancia mal definidos o comunicados",
+                            "Método de medición no adecuado para detectar no conformidades"
+                        ]
+                    },
+                    "Detection": {
+                        "en": [
+                            "Detection method did not identify the nonconformance before shipment",
+                            "Inspection procedures not standardized or followed",
+                            "Inadequate inspection frequency or sampling plan",
+                            "Measurement devices not calibrated or appropriate",
+                        ],
+                        "es": [
+                            "El método de detección no identificó la no conformidad antes del envío",
+                            "Procedimientos de inspección no estandarizados o no seguidos",
+                            "Frecuencia de inspección o plan de muestreo inadecuado",
+                            "Dispositivos de medición no calibrados o inadecuados",
+                            "Error humano durante la detección o verificación"
+                        ]
+                    },
+                    "Systemic": {
+                        "en": [
+                            "Systemic weakness in management of change or lessons learned",
+                            "Insufficient training or knowledge management",
+                            "Lack of cross-functional communication",
+                            "Ineffective quality management system",
+                            "Inadequate corrective action follow-up or verification"
+                        ],
+                        "es": [
+                            "Debilidad sistémica en gestión de cambios o lecciones aprendidas",
+                            "Capacitación o gestión de conocimiento insuficiente",
+                            "Falta de comunicación entre funciones",
+                            "Sistema de gestión de calidad ineficaz",
+                            "Seguimiento o verificación de acciones correctivas inadecuado"
+                        ]
+                    },
+                    "Other": {
+                      "en": ["Perform deeper investigation", "Escalate to cross-functional review"],
+                      "es": ["Realizar investigación más profunda", "Escalar a revisión interfuncional"]
+                    }
+                }  # <--- This closing brace was missing or misplaced
 
                 insights = []
                 if d1_concern:
                     insights.append(f"🔹 **Problem Statement:** {d1_concern}")
 
-                # 4M analysis
-                occ_categories_detected = set()
-                for w in occ_list:
-                    cat = classify_4m(w)
-                    occ_categories_detected.add(cat)
-
-            suggestions = {
-                "Method": {
-                    "en": [
-                        "Inadequate or missing process control or standard",
-                        "Incomplete or unclear work instructions / SOPs",
-                        "Outdated or obsolete process standards",
-                        "Incorrect assembly or operation sequence",
-                        "Missing or ineffective process controls",
-                        "Lack of error-proofing (Poka-Yoke)",
-                        "Variability in process execution between operators or shifts",
-                        "Uncommunicated or poorly managed process changes",
-                        "Process not validated or qualified"
-                    ],
-                    "es": [
-                        "Control o estándar de proceso inadecuado o ausente",
-                        "Instrucciones de trabajo / SOP incompletas o poco claras",
-                        "Normas de proceso obsoletas o desactualizadas",
-                        "Secuencia de montaje o operación incorrecta",
-                        "Controles de proceso faltantes o ineficaces",
-                        "Falta de prevención de errores (Poka-Yoke)",
-                        "Variabilidad en la ejecución del proceso entre operadores o turnos",
-                        "Cambios en el proceso no comunicados o mal gestionados",
-                        "Proceso no validado o calificado"
-                    ]
-                 },
-                "Machine": {
-                    "en": [
-                        "Equipment degradation or lack of preventive maintenance",
-                        "Improper machine setup or adjustment",
-                        "Tooling errors (jigs, fixtures, molds)",
-                        "Calibration issues",
-                        "Machine design limitations",
-                        "Automation or robotics malfunctions",
-                        "Unstable process due to equipment variation"
-                    ],
-                    "es": [
-                        "Degradación del equipo o falta de mantenimiento preventivo",
-                        "Configuración o ajuste incorrecto de la máquina",
-                        "Errores de herramientas (plantillas, fijaciones, moldes)",
-                        "Problemas de calibración",
-                        "Limitaciones del diseño de la máquina",
-                        "Fallas en automatización o robótica",
-                        "Proceso inestable debido a variación del equipo"
-                    ]
-                },
-                "Material": {
-                    "en": [
-                        "Supplier or component quality variation",
-                        "Incorrect material grade or specifications",
-                        "Contaminated raw materials",
-                        "Substandard or counterfeit components",
-                        "Improper storage or handling",
-                        "Material deterioration over time (aging, corrosion)",
-                        "Packaging or labeling errors causing wrong part usage",
-                        "Inadequate incoming inspection"
-                    ],
-                    "es": [
-                        "Variación de calidad de proveedor o componente",
-                        "Grado o especificación de material incorrecto",
-                        "Materias primas contaminadas",
-                        "Componentes defectuosos o falsificados",
-                        "Almacenamiento o manipulación inadecuada",
-                        "Deterioro del material con el tiempo (envejecimiento, corrosión)",
-                        "Errores de embalaje o etiquetado causando uso incorrecto",
-                        "Inspección entrante inadecuada"
-                    ]
-                },
-                "Measurement": {
-                    "en": [
-                        "Insufficient inspection or gauge control",
-                        "Inaccurate or uncalibrated measuring devices",
-                        "Insufficient inspection frequency or sampling",
-                        "Misinterpretation of measurement results",
-                        "Lack of standardization in inspection procedures",
-                        "Missing or incomplete measurement data",
-                        "Undefined or poorly communicated tolerance limits",
-                        "Measurement method not appropriate for detecting nonconformance"
-                    ],
-                    "es": [
-                        "Inspección o control de medidores insuficiente",
-                        "Dispositivos de medición inexactos o no calibrados",
-                        "Frecuencia de inspección o muestreo insuficiente",
-                        "Mala interpretación de los resultados de medición",
-                        "Falta de estandarización en procedimientos de inspección",
-                        "Datos de medición faltantes o incompletos",
-                        "Límites de tolerancia mal definidos o comunicados",
-                        "Método de medición no adecuado para detectar no conformidades"
-                    ]
-                },
-                "Detection": {
-                    "en": [
-                        "Detection method did not identify the nonconformance before shipment",
-                        "Inspection procedures not standardized or followed",
-                        "Inadequate inspection frequency or sampling plan",
-                        "Measurement devices not calibrated or appropriate",
-                    ],
-                    "es": [
-                        "El método de detección no identificó la no conformidad antes del envío",
-                        "Procedimientos de inspección no estandarizados o no seguidos",
-                        "Frecuencia de inspección o plan de muestreo inadecuado",
-                        "Dispositivos de medición no calibrados o inadecuados",
-                        "Error humano durante la detección o verificación"
-                    ]
-                },
-                "Systemic": {
-                    "en": [
-                        "Systemic weakness in management of change or lessons learned",
-                        "Insufficient training or knowledge management",
-                        "Lack of cross-functional communication",
-                        "Ineffective quality management system",
-                        "Inadequate corrective action follow-up or verification"
-                    ],
-                    "es": [
-                        "Debilidad sistémica en gestión de cambios o lecciones aprendidas",
-                        "Capacitación o gestión de conocimiento insuficiente",
-                        "Falta de comunicación entre funciones",
-                        "Sistema de gestión de calidad ineficaz",
-                        "Seguimiento o verificación de acciones correctivas inadecuado"
-                    ]
-                },
-                "Other": {
-                  "en": ["Perform deeper investigation", "Escalate to cross-functional review"],
-                  "es": ["Realizar investigación más profunda", "Escalar a revisión interfuncional"]
-                }
-            }  # <--- This closing brace was missing or misplaced
-
                 # --- Analyze Occurrence Whys (4M) ---
-                occ_categories_detected = set()
-                for w in occ_list:
-                    cat = classify_4m(w)
-                    occ_categories_detected.add(cat)
+                occ_categories_detected = set(classify_4m(w) for w in occ_list)
 
                 occ_suggestions, det_suggestions, sys_suggestions = [], [], []
 
