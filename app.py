@@ -967,12 +967,22 @@ line-height:1.5;
             if st.button("➕ Add another Systemic Why", key=f"add_sys_{i}"):
                 st.session_state.d5_sys_whys.append("")
 
+            
+
             # ---------------------------
             # Root Cause Suggestions
             # ---------------------------
             occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
             det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
             sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
+
+            # ---------------------------
+            # Duplicate / Conflict Detection
+            # ---------------------------
+            all_whys = occ_whys + det_whys + sys_whys
+            duplicates = [w for w in set(all_whys) if all_whys.count(w) > 1 and w.strip()]
+            if duplicates:
+                st.warning(f"⚠️ Duplicate entries detected across Occurrence/Detection/Systemic: {', '.join(duplicates)}")
 
             # --- SMART ROOT CAUSE FUNCTION ---
             def smart_root_cause_suggestion(d1_concern, occ_list, det_list, sys_list, lang="en"):
@@ -1173,6 +1183,17 @@ line-height:1.5;
                 sys_result = f"💡 **Possible Systemic Root Cause Suggestion:** {', '.join(sys_suggestions)}." if sys_suggestions else ("No Systemic root cause detected yet." if lang=="en" else "No se detectó causa raíz sistémica aún.")
 
                 return occ_result, det_result, sys_result
+
+            # ---------------------------
+            # --- 4M Visualization ---
+            # ---------------------------
+            if occ_whys:
+                category_counts = {"Machine":0,"Method":0,"Material":0,"Measurement":0}
+                for w in occ_whys:
+                    cat = classify_4m(w)
+                    if cat in category_counts:
+                        category_counts[cat] += 1
+                st.bar_chart(category_counts)
 
             # --- Call function once and unpack ---
             occ_text, det_text, sys_text = smart_root_cause_suggestion(d1_concern, occ_whys, det_whys, sys_whys, lang_key)
