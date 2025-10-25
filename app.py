@@ -1117,10 +1117,10 @@ line-height:1.5;
                 }
 
                 patterns_es = {
-                    "Machine": ["equipo", "máquina", "herramienta", "utillaje", "desgaste", "mantenimiento", "calibración"],
-                    "Method": ["procedimiento", "proceso", "ensamblaje", "secuencia", "estándar", "instrucción", "configuración"],
+                    "Maquinaria": ["equipo", "máquina", "herramienta", "utillaje", "desgaste", "mantenimiento", "calibración"],
+                    "Metodo": ["procedimiento", "proceso", "ensamblaje", "secuencia", "estándar", "instrucción", "configuración"],
                     "Material": ["componente", "proveedor", "lote", "materia prima", "contaminación", "mezcla", "especificación"],
-                    "Measurement": ["inspección", "prueba", "medición", "calibre", "criterio", "frecuencia"]
+                    "Mediciones": ["inspección", "prueba", "medición", "calibre", "criterio", "frecuencia"]
                 }
                 patterns = patterns_es if lang=="es" else patterns_en
                 
