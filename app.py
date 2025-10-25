@@ -1117,138 +1117,138 @@ line-height:1.5;
                 }
 
                 def classify_4m(text):
-    text_lower = text.lower()
-    for m, kws in patterns.items():
-        if any(k in text_lower for k in kws):
-            return m
-    return "Other"
+                    text_lower = text.lower()
+                    for m, kws in patterns.items():
+                        if any(k in text_lower for k in kws):
+                            return m
+                    return "Other"
 
 
-def smart_root_cause_suggestion(d1_concern, occ_list, det_list, sys_list, lang="en"):
-    insights = []
-    if d1_concern:
-        insights.append(f"🔹 **Problem Statement:** {d1_concern}")
+                def smart_root_cause_suggestion(d1_concern, occ_list, det_list, sys_list, lang="en"):
+                    insights = []
+                    if d1_concern:
+                        insights.append(f"🔹 **Problem Statement:** {d1_concern}")
 
-    # --- Analyze Occurrence Whys (4M) ---
-    occ_categories_detected = set()
-    for w in occ_list:
-        text_lower = w.lower()
-        for cat, kws in patterns.items():
-            if any(k in text_lower for k in kws):
-                occ_categories_detected.add(cat)
+                    # --- Analyze Occurrence Whys (4M) ---
+                    occ_categories_detected = set()
+                    for w in occ_list:
+                        text_lower = w.lower()
+                        for cat, kws in patterns.items():
+                            if any(k in text_lower for k in kws):
+                                occ_categories_detected.add(cat)
 
-    occ_suggestions, det_suggestions, sys_suggestions = [], [], []
+                    occ_suggestions, det_suggestions, sys_suggestions = [], [], []
 
-    # Occurrence 4M suggestions
-    for cat in occ_categories_detected:
-        occ_suggestions.extend(suggestions[cat][lang])
+                    # Occurrence 4M suggestions
+                    for cat in occ_categories_detected:
+                        occ_suggestions.extend(suggestions[cat][lang])
 
-    # Detection
-    if det_list:
-        det_suggestions.extend(suggestions["Detection"][lang])
+                    # Detection
+                    if det_list:
+                        det_suggestions.extend(suggestions["Detection"][lang])
 
-    # Systemic
-    if sys_list:
-        sys_suggestions.extend(suggestions["Systemic"][lang])
+                    # Systemic
+                    if sys_list:
+                        sys_suggestions.extend(suggestions["Systemic"][lang])
 
-    # Remove duplicates
-    occ_suggestions = list(dict.fromkeys(occ_suggestions))
-    det_suggestions = list(dict.fromkeys(det_suggestions))
-    sys_suggestions = list(dict.fromkeys(sys_suggestions))
+                    # Remove duplicates
+                    occ_suggestions = list(dict.fromkeys(occ_suggestions))
+                    det_suggestions = list(dict.fromkeys(det_suggestions))
+                    sys_suggestions = list(dict.fromkeys(sys_suggestions))
 
-    # Format results
-    occ_result = (
-        f"💡 **Possible Occurrence Root Cause Suggestion:** {', '.join(occ_suggestions)}."
-        if occ_suggestions
-        else ("No Occurrence root cause detected yet." if lang == "en" else "No se detectó causa raíz de ocurrencia aún.")
-    )
-    det_result = (
-        f"💡 **Possible Detection Root Cause Suggestion:** {', '.join(det_suggestions)}."
-        if det_suggestions
-        else ("No Detection root cause detected yet." if lang == "en" else "No se detectó causa raíz de detección aún.")
-    )
-    sys_result = (
-        f"💡 **Possible Systemic Root Cause Suggestion:** {', '.join(sys_suggestions)}."
-        if sys_suggestions
-        else ("No Systemic root cause detected yet." if lang == "en" else "No se detectó causa raíz sistémica aún.")
-    )
+                    # Format results
+                    occ_result = (
+                        f"💡 **Possible Occurrence Root Cause Suggestion:** {', '.join(occ_suggestions)}."
+                        if occ_suggestions
+                        else ("No Occurrence root cause detected yet." if lang == "en" else "No se detectó causa raíz de ocurrencia aún.")
+                   )
+                    det_result = (
+                        f"💡 **Possible Detection Root Cause Suggestion:** {', '.join(det_suggestions)}."
+                        if det_suggestions
+                        else ("No Detection root cause detected yet." if lang == "en" else "No se detectó causa raíz de detección aún.")
+                   )
+                   sys_result = (
+                        f"💡 **Possible Systemic Root Cause Suggestion:** {', '.join(sys_suggestions)}."
+                        if sys_suggestions
+                        else ("No Systemic root cause detected yet." if lang == "en" else "No se detectó causa raíz sistémica aún.")
+                   )
 
-    return occ_result, det_result, sys_result
-
-
-# --- D6 Corrective Action Suggestion Generator ---
-def suggest_d6_actions_from_occurrence(occ_list, lang="en"):
-    """
-    Returns a list of short suggested corrective actions for D6 (bilingual)
-    """
-    actions_map = {
-        "Machine": {
-            "en": ["Perform corrective maintenance & rebuild worn tooling", "Implement preventive maintenance schedule"],
-            "es": ["Realizar mantenimiento correctivo y reconstrucción de herramientas desgastadas", "Implementar programa de mantenimiento preventivo"]
-        },
-        "Method": {
-            "en": ["Update SOPs and validate process sequence", "Introduce poka-yoke checks at critical steps"],
-            "es": ["Actualizar SOPs y validar la secuencia de proceso", "Introducir controles poka-yoke en pasos críticos"]
-        },
-        "Material": {
-            "en": ["Tighten supplier control, add incoming inspection", "Quarantine suspect lots and test"],
-            "es": ["Ajustar control de proveedor, añadir inspección entrante", "Poner en cuarentena lotes sospechosos y realizar pruebas"]
-        },
-        "Measurement": {
-            "en": ["Calibrate gauges & increase inspection frequency", "Define statistical sampling plan"],
-            "es": ["Calibrar instrumentos y aumentar frecuencia de inspección", "Definir plan de muestreo estadístico"]
-        },
-        "Other": {
-            "en": ["Perform deeper investigation", "Escalate to cross-functional review"],
-            "es": ["Realizar investigación más profunda", "Escalar a revisión interfuncional"]
-        }
-    }
-
-    categories = []
-    for w in occ_list:
-        categories.append(classify_4m(w))  # uses classify_4m from earlier
-    from collections import Counter
-    most_common = [cat for cat, _ in Counter(categories).most_common(2)]
-    out = []
-    for cat in most_common:
-        if cat in actions_map:
-            out.extend(actions_map[cat][lang][:2])
-    return out
+                    return occ_result, det_result, sys_result
 
 
-# --- D6 Streamlit Section ---
-elif step == "D6":
-    st.session_state[step].setdefault("occ_answer", st.session_state["D6"].get("occ_answer", ""))
-    st.session_state[step].setdefault("det_answer", st.session_state["D6"].get("det_answer", ""))
-    st.session_state[step].setdefault("sys_answer", st.session_state["D6"].get("sys_answer", ""))
+                # --- D6 Corrective Action Suggestion Generator ---
+                def suggest_d6_actions_from_occurrence(occ_list, lang="en"):
+                    """
+                    Returns a list of short suggested corrective actions for D6 (bilingual)
+                    """
+                    actions_map = {
+                        "Machine": {
+                            "en": ["Perform corrective maintenance & rebuild worn tooling", "Implement preventive maintenance schedule"],
+                            "es": ["Realizar mantenimiento correctivo y reconstrucción de herramientas desgastadas", "Implementar programa de mantenimiento preventivo"]
+                        },
+                        "Method": {
+                            "en": ["Update SOPs and validate process sequence", "Introduce poka-yoke checks at critical steps"],
+                            "es": ["Actualizar SOPs y validar la secuencia de proceso", "Introducir controles poka-yoke en pasos críticos"]
+                        },
+                        "Material": {
+                            "en": ["Tighten supplier control, add incoming inspection", "Quarantine suspect lots and test"],
+                            "es": ["Ajustar control de proveedor, añadir inspección entrante", "Poner en cuarentena lotes sospechosos y realizar pruebas"]
+                        },
+                        "Measurement": {
+                            "en": ["Calibrate gauges & increase inspection frequency", "Define statistical sampling plan"],
+                            "es": ["Calibrar instrumentos y aumentar frecuencia de inspección", "Definir plan de muestreo estadístico"]
+                        },
+                        "Other": {
+                            "en": ["Perform deeper investigation", "Escalate to cross-functional review"],
+                            "es": ["Realizar investigación más profunda", "Escalar a revisión interfuncional"]
+                        }
+                    }
 
-    st.session_state[step]["occ_answer"] = st.text_area(
-        "D6 - Corrective Actions for Occurrence Root Cause",
-        value=st.session_state[step]["occ_answer"],
-        key="d6_occ"
-    )
-    st.session_state[step]["det_answer"] = st.text_area(
-        "D6 - Corrective Actions for Detection Root Cause",
-        value=st.session_state[step]["det_answer"],
-        key="d6_det"
-    )
-    st.session_state[step]["sys_answer"] = st.text_area(
-        "D6 - Corrective Actions for Systemic Root Cause",
-        value=st.session_state[step]["sys_answer"],
-        key="d6_sys"
-    )
+                    categories = []
+                    for w in occ_list:
+                        categories.append(classify_4m(w))  # uses classify_4m from earlier
+                    from collections import Counter
+                    most_common = [cat for cat, _ in Counter(categories).most_common(2)]
+                    out = []
+                    for cat in most_common:
+                        if cat in actions_map:
+                            out.extend(actions_map[cat][lang][:2])
+                    return out
 
-    # 🔹 Suggest corrective actions based on D5 root causes
-    if "D5" in st.session_state and st.session_state["D5"].get("occ_whys"):
-        suggested_d6 = suggest_d6_actions_from_occurrence(st.session_state["D5"]["occ_whys"], lang=lang_key)
-        if suggested_d6:
-            with st.expander("💡 Suggested Corrective Actions (Auto-generated)"):
-                for s in suggested_d6:
-                    st.markdown(f"- {s}")
 
-    st.session_state["D6"]["occ_answer"] = st.session_state[step]["occ_answer"]
-    st.session_state["D6"]["det_answer"] = st.session_state[step]["det_answer"]
-    st.session_state["D6"]["sys_answer"] = st.session_state[step]["sys_answer"]
+                # --- D6 Streamlit Section ---
+                elif step == "D6":
+                    st.session_state[step].setdefault("occ_answer", st.session_state["D6"].get("occ_answer", ""))
+                    st.session_state[step].setdefault("det_answer", st.session_state["D6"].get("det_answer", ""))
+                    st.session_state[step].setdefault("sys_answer", st.session_state["D6"].get("sys_answer", ""))
+
+                    st.session_state[step]["occ_answer"] = st.text_area(
+                        "D6 - Corrective Actions for Occurrence Root Cause",
+                        value=st.session_state[step]["occ_answer"],
+                        key="d6_occ"
+                    )
+                    st.session_state[step]["det_answer"] = st.text_area(
+                        "D6 - Corrective Actions for Detection Root Cause",
+                        value=st.session_state[step]["det_answer"],
+                        key="d6_det"
+                    )
+                    st.session_state[step]["sys_answer"] = st.text_area(
+                        "D6 - Corrective Actions for Systemic Root Cause",
+                        value=st.session_state[step]["sys_answer"],
+                        key="d6_sys"
+                    )
+
+                    # 🔹 Suggest corrective actions based on D5 root causes
+                    if "D5" in st.session_state and st.session_state["D5"].get("occ_whys"):
+                        suggested_d6 = suggest_d6_actions_from_occurrence(st.session_state["D5"]["occ_whys"], lang=lang_key)
+                        if suggested_d6:
+                            with st.expander("💡 Suggested Corrective Actions (Auto-generated)"):
+                                for s in suggested_d6:
+                                    st.markdown(f"- {s}")
+
+                    st.session_state["D6"]["occ_answer"] = st.session_state[step]["occ_answer"]
+                    st.session_state["D6"]["det_answer"] = st.session_state[step]["det_answer"]
+                    st.session_state["D6"]["sys_answer"] = st.session_state[step]["sys_answer"]
 
         elif step == "D7":
             st.session_state[step].setdefault("occ_answer", st.session_state["D7"].get("occ_answer", ""))
