@@ -1105,6 +1105,9 @@ line-height:1.5;
                             "Sistema de gestión de calidad ineficaz",
                             "Seguimiento o verificación de acciones correctivas inadecuado"
                         ]
+                        "Other": {
+                            "en": ["Perform deeper investigation", "Escalate to cross-functional review"],
+                            "es": ["Realizar investigación más profunda", "Escalar a revisión interfuncional"]
                     }
                 }
 
@@ -1116,14 +1119,15 @@ line-height:1.5;
                     "Measurement": ["inspection", "test", "measurement", "gauge", "criteria", "frequency"]
                 }
 
-                patterns_es = {
+               patterns_es = {
                     "Maquinaria": ["equipo", "máquina", "herramienta", "utillaje", "desgaste", "mantenimiento", "calibración"],
                     "Metodo": ["procedimiento", "proceso", "ensamblaje", "secuencia", "estándar", "instrucción", "configuración"],
                     "Material": ["componente", "proveedor", "lote", "materia prima", "contaminación", "mezcla", "especificación"],
                     "Mediciones": ["inspección", "prueba", "medición", "calibre", "criterio", "frecuencia"]
                 }
+
                 patterns = patterns_es if lang=="es" else patterns_en
-                
+
                 def classify_4m(text):
                     text_lower = text.lower()
                     for m, kws in patterns.items():
@@ -1138,16 +1142,17 @@ line-height:1.5;
                 # --- Analyze Occurrence Whys (4M) ---
                 occ_categories_detected = set()
                 for w in occ_list:
-                    text_lower = w.lower()
-                    for cat, kws in patterns.items():
-                        if any(k in text_lower for k in kws):
-                            occ_categories_detected.add(cat)
+                    cat = classify_4m(w)
+                    occ_categories_detected.add(cat)
 
                 occ_suggestions, det_suggestions, sys_suggestions = [], [], []
-                
+
                 # Occurrence 4M suggestions
                 for cat in occ_categories_detected:
-                    occ_suggestions.extend(suggestions[cat][lang])
+                    if cat in suggestions:
+                        occ_suggestions.extend(suggestions[cat][lang])
+                    else:
+                        occ_suggestions.extend(suggestions["Other"][lang])
 
                 # Detection
                 if det_list:
