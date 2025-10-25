@@ -1001,11 +1001,6 @@ line-height:1.5;
                         return m
                 return "Other"
 
-            # --- Smart Root Cause Suggestion Function ---
-            def smart_root_cause_suggestion(d1_concern, occ_list, det_list, sys_list, lang="en"):
-                if not any([occ_list, det_list, sys_list]):
-                    return ("⚠️ No Why analysis provided yet.", "", "") if lang == "en" else ("⚠️ No se ha proporcionado análisis de causas.", "", "")
-
             # ---------------------------
             # Duplicate / Conflict Detection
             # ---------------------------
@@ -1013,6 +1008,21 @@ line-height:1.5;
             duplicates = [w for w in set(all_whys) if all_whys.count(w) > 1 and w.strip()]
             if duplicates:
                 st.warning(f"⚠️ Duplicate entries detected across Occurrence/Detection/Systemic: {', '.join(duplicates)}")
+
+            # --- Smart Root Cause Suggestion Function ---
+            def smart_root_cause_suggestion(d1_concern, occ_list, det_list, sys_list, lang="en"):
+                if not any([occ_list, det_list, sys_list]):
+                    return ("⚠️ No Why analysis provided yet.", "", "") if lang == "en" else ("⚠️ No se ha proporcionado análisis de causas.", "", "")
+
+                insights = []
+                if d1_concern:
+                    insights.append(f"🔹 **Problem Statement:** {d1_concern}")
+
+                # 4M analysis
+                occ_categories_detected = set()
+                for w in occ_list:
+                    cat = classify_4m(w)
+                    occ_categories_detected.add(cat)
 
             suggestions = {
                 "Method": {
@@ -1139,10 +1149,6 @@ line-height:1.5;
                   "es": ["Realizar investigación más profunda", "Escalar a revisión interfuncional"]
                 }
             }  # <--- This closing brace was missing or misplaced
-
-               insights = []
-                if d1_concern:
-                    insights.append(f"🔹 **Problem Statement:** {d1_concern}")
 
                 # --- Analyze Occurrence Whys (4M) ---
                 occ_categories_detected = set()
