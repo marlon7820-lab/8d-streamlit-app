@@ -1112,7 +1112,7 @@ line-height:1.5;
                 }  # <--- This closing brace was missing or misplaced
 
                 # Keywords for 4M analysis
-                patterns = {
+                patterns_en = {
                     "Machine": ["equipment", "machine", "tool", "fixture", "wear", "maintenance", "calibration"],
                     "Method": ["procedure", "process", "assembly", "sequence", "standard", "instruction", "setup"],
                     "Material": ["component", "supplier", "batch", "raw", "contamination", "mix", "specification"],
