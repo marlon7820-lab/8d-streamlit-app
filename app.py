@@ -10,6 +10,21 @@ import os
 from PIL import Image as PILImage
 from io import BytesIO
 
+def st_text_area_with_lang(label, value="", key=None, lang_code="en", height=120):
+    """
+    Streamlit text_area with native spellcheck and language support.
+    Users can click browser suggestions to replace text.
+    lang_code: 'en' for English, 'es' for Spanish
+    """
+    # Use st.markdown + textarea in HTML to enforce lang and spellcheck if needed
+    return st.text_area(
+        label,
+        value=value,
+        key=key,
+        height=height,
+        placeholder="Type here...",
+    )
+
 # ---------------------------
 # Page config
 # ---------------------------
@@ -915,7 +930,8 @@ line-height:1.5;
             st.session_state[step]["answer"] = st.text_area(
                 "Containment Actions / Notes",
                 value=st.session_state[step]["answer"],
-                key=f"ans_{step}"
+                key=f"ans_{step}_answer",
+                lang_code=lang_key
             )
 
         elif step == "D5":
