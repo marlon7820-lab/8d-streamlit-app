@@ -10,14 +10,6 @@ import os
 from PIL import Image as PILImage
 from io import BytesIO
 
-from textblob import TextBlob
-
-def autocorrect_text(input_text: str) -> str:
-    """Performs simple grammar/spelling correction using TextBlob."""
-    if not input_text.strip():
-        return ""
-    blob = TextBlob(input_text)
-    return str(blob.correct())
 # ---------------------------
 # Page config
 # ---------------------------
