@@ -881,6 +881,7 @@ line-height:1.5;
         # Step-specific inputs
         # ---------------------------
         if step == "D3":
+            # Multi-select: Where should the non-conforming parts have been detected?
             st.session_state[step]["detection_points"] = st.multiselect(
                 "Where should the non-conforming parts have been detected?",
                 ["During process / manufacture", "After manufacture (e.g. Final inspection)", "Prior to dispatch"],
@@ -888,10 +889,11 @@ line-height:1.5;
                 key="d3_detection_points"
             )
 
-            st.session_state[step]["analysis_notes"] = st.text_area(
-                "Initial Analysis Notes",
-                value=st.session_state[step].get("analysis_notes", ""),
-                key="d3_analysis_notes"
+            # Single text area for D3 answer
+            st.session_state[step]["answer"] = st.text_area(
+                "Your Answer",
+                value=st.session_state[step].get("answer", ""),
+                key="d3_answer"
             )
 
         # ---------------------------
