@@ -1012,9 +1012,12 @@ line-height:1.5;
             # Smart Root Cause Suggestion
             # ---------------------------
             def smart_root_cause_suggestion(d1_concern, occ_list, det_list, sys_list, lang="en"):
+                # if nothing entered, return warnings (bilingual)
                 if not any([occ_list, det_list, sys_list]):
-                    return ("⚠️ No Why analysis provided yet.", "", "") if lang == "en" else ("⚠️ No se ha proporcionado análisis de causas.", "", "")
-
+                    if lang == "es":
+                        return ("⚠️ No se ha proporcionado análisis de causas.", "", "")
+                    return ("⚠️ No Why analysis provided yet.", "", "")
+            
                 suggestions = {
                     "Method": {
                         "en": [
@@ -1145,43 +1148,92 @@ line-height:1.5;
                 if d1_concern:
                     insights.append(f"🔹 **Problem Statement:** {d1_concern}")
 
-                # --- Analyze Occurrence Whys (4M) ---
-                occ_categories_detected = set(classify_4m(w) for w in occ_list)
+                # collect categories from occ_list (prefer 4M mapping)
+                occ_categories_detected = []
+                for w in occ_list:
+                    cat = classify_4m(w)
+                    occ_categories_detected.append(cat)
+
+                # choose unique categories preserving order
+                seen = set()
+                occ_categories_unique = [c for c in occ_categories_detected if not (c in seen or seen.add(c))]
 
                 occ_suggestions, det_suggestions, sys_suggestions = [], [], []
 
-                # Occurrence 4M suggestions
-                for cat in occ_categories_detected:
+                # build occurrence suggestions based on detected categories
+                for cat in occ_categories_unique:
                     if cat in suggestions:
                         occ_suggestions.extend(suggestions[cat][lang])
                     else:
                         occ_suggestions.extend(suggestions["Other"][lang])
 
-                # Detection
+                # detection suggestions when detection whys present
                 if det_list:
                     det_suggestions.extend(suggestions["Detection"][lang])
 
-                # Systemic
+                # systemic suggestions when systemic whys present
                 if sys_list:
                     sys_suggestions.extend(suggestions["Systemic"][lang])
 
-                # Remove duplicates
-                occ_suggestions = list(dict.fromkeys(occ_suggestions))
-                det_suggestions = list(dict.fromkeys(det_suggestions))
-                sys_suggestions = list(dict.fromkeys(sys_suggestions))
+                # dedupe but keep order
+                def dedupe_keep_order(seq):
+                    seen = set()
+                    out = []
+                    for x in seq:
+                        if x not in seen:
+                            seen.add(x)
+                            out.append(x)
+                    return out
 
-                # Format results
-                occ_result = f"💡 **Possible Occurrence Root Cause Suggestion:** {', '.join(occ_suggestions)}." if occ_suggestions else ("No Occurrence root cause detected yet." if lang=="en" else "No se detectó causa raíz de ocurrencia aún.")
-                det_result = f"💡 **Possible Detection Root Cause Suggestion:** {', '.join(det_suggestions)}." if det_suggestions else ("No Detection root cause detected yet." if lang=="en" else "No se detectó causa raíz de detección aún.")
-                sys_result = f"💡 **Possible Systemic Root Cause Suggestion:** {', '.join(sys_suggestions)}." if sys_suggestions else ("No Systemic root cause detected yet." if lang=="en" else "No se detectó causa raíz sistémica aún.")
+                occ_suggestions = dedupe_keep_order(occ_suggestions)
+                det_suggestions = dedupe_keep_order(det_suggestions)
+                sys_suggestions = dedupe_keep_order(sys_suggestions)
 
-                return occ_result, det_result, sys_result
+                # format friendly output (shorten if very long)
+                def format_block(title, items):
+                    if not items:
+                       if lang == "es":
+                            return ""
+                        return ""
+                    # join first up to 6 items; if more, add an ellipsis
+                    display = ", ".join(items[:6])
+                    if len(items) > 6:
+                        display += ", ..."
+                    if lang == "es":
+                        return f"💡 **Sugerencia posible ({title}):** {display}."
+                    return f"💡 **Possible {title} Root Cause Suggestion:** {display}."
 
+                occ_text = format_block("Occurrence", occ_suggestions)
+                det_text = format_block("Detection", det_suggestions)
+                sys_text = format_block("Systemic", sys_suggestions)
 
-            # --- Call function once and unpack ---
-            occ_text, det_text, sys_text = smart_root_cause_suggestion(d1_concern, occ_whys, det_whys, sys_whys, lang_key)
+                # if nothing found, return bilingual fallback messages
+                if not any([occ_suggestions, det_suggestions, sys_suggestions]):
+                    if lang == "es":
+                        return ("No se detectó causa raíz clara. Revise su análisis de Whys.", "", "")
+                    return ("No clear root cause detected. Review your Why analysis.", "", "")
 
-            # --- Display the smart root cause text areas ---
+                return occ_text, det_text, sys_text
+
+            # --- Call generator and unpack (use current UI language) ---
+            occ_text, det_text, sys_text = smart_root_cause_suggestion(d1_concern, occ_whys, det_whys, sys_whys, lang=lang_key)
+
+            # Save suggestions into session for Excel export or later use
+            st.session_state.setdefault("D5", {})
+            st.session_state["D5"]["occ_root_cause"] = occ_text
+            st.session_state["D5"]["det_root_cause"] = det_text
+            st.session_state["D5"]["sys_root_cause"] = sys_text
+
+            # --- Display the smart root cause text areas (compact + expandable) ---
+            with st.expander(t[lang_key].get('Root_Cause_Expander_Label', "Root Cause Suggestions (Auto)"), expanded=True):
+                if occ_text:
+                    st.markdown(occ_text)
+                if det_text:
+                    st.markdown(det_text)
+                if sys_text:
+                    st.markdown(sys_text)
+
+            # also show the three disabled text areas (keeps your UI consistent)
             st.text_area(f"{t[lang_key]['Root_Cause_Occ']}", value=occ_text, height=120, disabled=True)
             st.text_area(f"{t[lang_key]['Root_Cause_Det']}", value=det_text, height=120, disabled=True)
             st.text_area(f"{t[lang_key]['Root_Cause_Sys']}", value=sys_text, height=120, disabled=True)
