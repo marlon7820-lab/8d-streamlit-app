@@ -68,6 +68,12 @@ div.stSelectbox:hover, div.stTextInput:hover, div.stTextArea:hover {
     font-weight: bold !important;     /* bold */
     opacity: 1 !important;            /* remove fade */
 }
+/* Enable native browser spellcheck & autocorrect */
+textarea, input[type="text"] {
+    spellcheck: true !important;
+    autocorrect: on !important;
+    autocapitalize: on !important;
+}
 </style>
 """, unsafe_allow_html=True)
 # ---------------------------
