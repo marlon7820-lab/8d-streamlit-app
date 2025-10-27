@@ -889,12 +889,6 @@ line-height:1.5;
                 key="d3_detection_points"
             )
 
-            # Single text area for D3 answer
-            st.session_state[step]["answer"] = st.text_area(
-                "Your Answer",
-                value=st.session_state[step].get("answer", ""),
-                key="d3_answer"
-            )
 
         # ---------------------------
         # Step-specific inputs
