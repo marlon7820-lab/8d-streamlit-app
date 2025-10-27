@@ -881,15 +881,15 @@ line-height:1.5;
         # Step-specific inputs
         # ---------------------------
         if step == "D3":
-            # Dropdown: Where should the non-conforming parts have been detected?
-            st.session_state[step]["detection_point"] = st.selectbox(
+            # Multi-select: Where should the non-conforming parts have been detected?
+            st.session_state[step]["detection_points"] = st.multiselect(
                 "Where should the non-conforming parts have been detected?",
-                ["", "During process / manufacture", "After manufacture (e.g. Final inspection)", "Prior to dispatch"],
-                index=0,
-                key="d3_detection_point"
+                ["During process / manufacture", "After manufacture (e.g. Final inspection)", "Prior to dispatch"],
+                default=st.session_state[step].get("detection_points", []),
+                key="d3_detection_points"
             )
 
-            # You can add other D3 fields below, e.g., analysis notes
+            # Single text area for initial analysis notes
             st.session_state[step]["analysis_notes"] = st.text_area(
                 "Initial Analysis Notes",
                 value=st.session_state[step].get("analysis_notes", ""),
