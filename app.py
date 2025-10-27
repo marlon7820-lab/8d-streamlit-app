@@ -894,16 +894,16 @@ line-height:1.5;
         # Step-specific inputs
         # ---------------------------
         if step == "D4":
-            st.session_state[step]["location"] = st.selectbox(
+            st.session_state[step]["location"] = st.multiselect(
                 "Location of Material",
                 ["", "Work in Progress", "Stores Stock", "Warehouse Stock", "Service Parts", "Other"],
-                index=0,
+                default=[],
                 key="d4_location"
             )
-            st.session_state[step]["status"] = st.selectbox(
+            st.session_state[step]["status"] = st.multiselect(
                 "Status of Activities",
                 ["", "Pending", "In Progress", "Completed", "Other"],
-                index=0,
+                default=[],
                 key="d4_status"
             )
             st.session_state[step]["answer"] = st.text_area(
