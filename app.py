@@ -870,7 +870,7 @@ line-height:1.5;
                         st.session_state[step]["uploaded_files"].append(file)
 
         # Display uploaded files (aligned with file upload)
-        if step in ["D1","D3","D4","D7"] and st.session_state[step].get("uploaded_files"):
+        if st.session_state[step].get("uploaded_files"):
             st.markdown("**Uploaded Files / Photos:**")
             for f in st.session_state[step]["uploaded_files"]:
                 st.write(f"{f.name}")
@@ -881,7 +881,6 @@ line-height:1.5;
         # Step-specific inputs
         # ---------------------------
         if step == "D3":
-            # Multi-select: Where should the non-conforming parts have been detected?
             st.session_state[step]["detection_points"] = st.multiselect(
                 "Where should the non-conforming parts have been detected?",
                 ["During process / manufacture", "After manufacture (e.g. Final inspection)", "Prior to dispatch"],
@@ -889,12 +888,12 @@ line-height:1.5;
                 key="d3_detection_points"
             )
 
-            # Single text area for initial analysis notes
             st.session_state[step]["analysis_notes"] = st.text_area(
                 "Initial Analysis Notes",
                 value=st.session_state[step].get("analysis_notes", ""),
                 key="d3_analysis_notes"
             )
+
         # ---------------------------
         # Step-specific inputs
         # ---------------------------
