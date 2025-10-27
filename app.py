@@ -1194,7 +1194,7 @@ line-height:1.5;
                     if not items:
                        if lang == "es":
                             return ""
-                        return ""
+                         return ""
                     # join first up to 6 items; if more, add an ellipsis
                     display = ", ".join(items[:6])
                     if len(items) > 6:
