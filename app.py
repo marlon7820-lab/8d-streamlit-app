@@ -880,6 +880,26 @@ line-height:1.5;
         # ---------------------------
         # Step-specific inputs
         # ---------------------------
+        if step == "D3":
+            # Example existing D3 textarea (if you have it)
+            st.session_state[step]["description"] = st.text_area(
+                "Problem Description",
+                value=st.session_state[step].get("description", ""),
+                key="d3_description"
+            )
+
+            # --- New Dropdown: Where Should the Non-Conforming Parts Have Been Detected? ---
+            if lang_key == "es":
+                detect_options = [
+                    "",
+                    "Durante el proceso / fabricación",
+                    "Después de la fabricación (por ejemplo, inspección final)",
+                    "Antes del envío"
+                ]
+                detect_label
+        # ---------------------------
+        # Step-specific inputs
+        # ---------------------------
         if step == "D4":
             st.session_state[step]["location"] = st.selectbox(
                 "Location of Material",
