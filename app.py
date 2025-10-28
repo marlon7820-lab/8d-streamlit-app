@@ -867,7 +867,7 @@ st.write(f"Completed {progress} of {total_steps} steps")
 # Render Tabs with Uploads
 # ---------------------------
 tab_labels = [
-    f"🟢 {t[lang_key][step]}" if st.session_state[step]["answer"].strip() else f"🔴 {t[lang_key][step]}"
+    f"🟢 {t[lang_key][step]}" if st.session_state.get(step, {}).get("answer", "").strip() else f"🔴 {t[lang_key][step]}"
     for step, _, _ in npqp_steps
 ]
 tabs = st.tabs(tab_labels)
