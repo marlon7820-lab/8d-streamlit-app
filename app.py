@@ -355,9 +355,7 @@ if st.sidebar.button("🔄 Reset 8D Session", type="primary"):
     preserved = {k: st.session_state.get(k) for k in preserve_keys if k in st.session_state}
 
     # Clear all other session state
-    for key in list(st.session_state.keys()):
-        if key not in preserve_keys:
-            del st.session_state[key]
+    st.session_state.clear()
 
     # Restore preserved keys
     for k, v in preserved.items():
@@ -365,20 +363,20 @@ if st.sidebar.button("🔄 Reset 8D Session", type="primary"):
 
     # ✅ Re-initialize all 8D steps to safe defaults
     for step in ["D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8"]:
-        st.session_state.setdefault(step, {
+        st.session_state[step] = {
             "answer": "",
             "uploaded_files": [],
-            "location": [],
-            "status": [],
+            "location": "",
+            "status": "",
             "occ_answer": "",
             "det_answer": "",
             "sys_answer": ""
-        })
+        }
 
     # Clear D5 why lists
-    st.session_state.setdefault("d5_occ_whys", [])
-    st.session_state.setdefault("d5_det_whys", [])
-    st.session_state.setdefault("d5_sys_whys", [])
+    st.session_state["d5_occ_whys"] = []
+    st.session_state["d5_det_whys"] = []
+    st.session_state["d5_sys_whys"] = []
     st.rerun()
 
 # ---------------------------
