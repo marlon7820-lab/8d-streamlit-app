@@ -1493,26 +1493,26 @@ def generate_excel():
 
             for f in uploaded_files:
                 if f.type.startswith("image/"):
-                try:
-                    img = PILImage.open(BytesIO(f.getvalue()))
-                    max_width = 300
-                    ratio = max_width / img.width
-                    img = img.resize((int(img.width*ratio), int(img.height*ratio)))
+                    try:
+                        img = PILImage.open(BytesIO(f.getvalue()))
+                        max_width = 300
+                        ratio = max_width / img.width
+                        img = img.resize((int(img.width*ratio), int(img.height*ratio)))
                     
-                    with NamedTemporaryFile(delete=True, suffix=".png") as tmp:
-                        img.save(tmp.name)
-                        excel_img = XLImage(tmp.name)
-                        ws.add_image(excel_img, f"A{last_row}")
-                        last_row += int(img.height / 15) + 2
+                        with NamedTemporaryFile(delete=True, suffix=".png") as tmp:
+                            img.save(tmp.name)
+                            excel_img = XLImage(tmp.name)
+                            ws.add_image(excel_img, f"A{last_row}")
+                            last_row += int(img.height / 15) + 2
 
-                except Exception as e:
-                    ws.cell(row=last_row, column=1, value=(
-                        f"No se pudo agregar la imagen {f.name}: {e}" if lang_key=="es" else f"Could not add image {f.name}: {e}"
-                    ))
+                    except Exception as e:
+                        ws.cell(row=last_row, column=1, value=(
+                            f"No se pudo agregar la imagen {f.name}: {e}" if lang_key=="es" else f"Could not add image {f.name}: {e}"
+                        ))
+                        last_row += 1
+                else:
+                    ws.cell(row=last_row, column=1, value=f.name)
                     last_row += 1
-            else:
-                ws.cell(row=last_row, column=1, value=f.name)
-                last_row += 1
 
     # Set column widths
     for col in range(1, 4):
