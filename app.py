@@ -830,13 +830,19 @@ def render_whys_no_repeat_with_other(why_list, categories, label_prefix):
 st.markdown("### 🧭 8D Completion Progress")
 
 progress = 0
-total_steps = len(["D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8"])
+total_steps = len(["D1","D2","D3","D4","D5","D6","D7","D8"])
 
-# Count how many steps have any filled text
-for step in ["D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8"]:
-    # Adjust field name if your data is stored differently (e.g., "description" instead of "answer")
-    if st.session_state.get(step, {}).get("answer", "").strip():
-        progress += 1
+for step in ["D1","D2","D3","D4","D5","D6","D7","D8"]:
+    if step == "D5":
+        # Count D5 as completed if any whys entered
+        occ = any(w.strip() for w in st.session_state.get("D5", {}).get("d5_occ_whys", []))
+        det = any(w.strip() for w in st.session_state.get("D5", {}).get("d5_det_whys", []))
+        sys_ = any(w.strip() for w in st.session_state.get("D5", {}).get("d5_sys_whys", []))
+        if occ or det or sys_:
+            progress += 1
+    else:
+        if st.session_state.get(step, {}).get("answer", "").strip():
+            progress += 1
 
 st.progress(progress / total_steps)
 st.write(f"Completed {progress} of {total_steps} steps")
@@ -877,22 +883,27 @@ line-height:1.5;
         with st.expander(f"📘 {gc['title']}"):
             st.markdown(gc["tips"])
 
+        # ---------------------------
         # File uploads for D1, D3, D4, D7
+        # ---------------------------
         if step in ["D1","D3","D4","D7"]:
             uploaded_files = st.file_uploader(
-                f"Upload files/photos for {step}",
-                type=["png", "jpg", "jpeg", "pdf", "xlsx", "txt"],
+                f"{'Subir archivos/fotos para' if lang_key=='es' else 'Upload files/photos for'} {step}",
+                type=["png","jpg","jpeg","pdf","xlsx","txt"],
                 accept_multiple_files=True,
                 key=f"upload_{step}"
             )
+
             if uploaded_files:
                 for file in uploaded_files:
-                    if file not in st.session_state[step]["uploaded_files"]:
+                    # Deduplicate by filename
+                    uploaded_names = [f.name for f in st.session_state[step]["uploaded_files"]]
+                    if file.name not in uploaded_names:
                         st.session_state[step]["uploaded_files"].append(file)
 
         # Display uploaded files (aligned with file upload)
         if st.session_state[step].get("uploaded_files"):
-            st.markdown("**Uploaded Files / Photos:**")
+            st.markdown(f"**{'Archivos / Fotos subidas' if lang_key=='es' else 'Uploaded Files / Photos'}:**")
             for f in st.session_state[step]["uploaded_files"]:
                 st.write(f"{f.name}")
                 if f.type.startswith("image/"):
@@ -1470,32 +1481,38 @@ def generate_excel():
     # Insert uploaded images below table
     from PIL import Image as PILImage
     from io import BytesIO
+    from tempfile import NamedTemporaryFile
 
     last_row = ws.max_row + 2
-    for step in ["D1", "D3", "D4", "D7"]:
+    for step in ["D1","D3","D4","D7"]:
         uploaded_files = st.session_state[step].get("uploaded_files", [])
         if uploaded_files:
-            title = f"{step} Archivos / Fotos Adjuntas" if lang_key == "es" else f"{step} Uploaded Files / Photos"
+            title = f"{step} Archivos / Fotos Adjuntas" if lang_key=="es" else f"{step} Uploaded Files / Photos"
             ws.cell(row=last_row, column=1, value=title).font = Font(bold=True)
             last_row += 1
+
             for f in uploaded_files:
                 if f.type.startswith("image/"):
-                    try:
-                        img = PILImage.open(BytesIO(f.getvalue()))
-                        max_width = 300
-                        ratio = max_width / img.width
-                        img = img.resize((int(img.width * ratio), int(img.height * ratio)))
-                        temp_path = f"/tmp/{f.name}"
-                        img.save(temp_path)
-                        excel_img = XLImage(temp_path)
+                try:
+                    img = PILImage.open(BytesIO(f.getvalue()))
+                    max_width = 300
+                    ratio = max_width / img.width
+                    img = img.resize((int(img.width*ratio), int(img.height*ratio)))
+                    
+                    with NamedTemporaryFile(delete=True, suffix=".png") as tmp:
+                        img.save(tmp.name)
+                        excel_img = XLImage(tmp.name)
                         ws.add_image(excel_img, f"A{last_row}")
                         last_row += int(img.height / 15) + 2
-                    except Exception as e:
-                        ws.cell(row=last_row, column=1, value=f"No se pudo agregar la imagen {f.name}: {e}" if lang_key == "es" else f"Could not add image {f.name}: {e}")
-                        last_row += 1
-                else:
-                    ws.cell(row=last_row, column=1, value=f.name)
+
+                except Exception as e:
+                    ws.cell(row=last_row, column=1, value=(
+                        f"No se pudo agregar la imagen {f.name}: {e}" if lang_key=="es" else f"Could not add image {f.name}: {e}"
+                    ))
                     last_row += 1
+            else:
+                ws.cell(row=last_row, column=1, value=f.name)
+                last_row += 1
 
     # Set column widths
     for col in range(1, 4):
