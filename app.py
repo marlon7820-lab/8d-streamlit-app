@@ -994,7 +994,7 @@ line-height:1.5;
             if lang_key == "es":
                 st.session_state.d5_occ_whys = render_whys_no_repeat_with_other(
                     st.session_state.d5_occ_whys,
-                    occurrence_categories_es if,
+                    occurrence_categories_es,
                     t[lang_key]['Occurrence_Why']
                 )
             else:
