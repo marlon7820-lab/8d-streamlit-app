@@ -444,8 +444,8 @@ st.session_state.setdefault("prepared_by", "")
 st.session_state.setdefault("d5_occ_whys", [""]*5)
 st.session_state.setdefault("d5_det_whys", [""]*5)
 st.session_state.setdefault("d5_sys_whys", [""]*5)
-st.session_state.setdefault("d4_location", "")
-st.session_state.setdefault("d4_status", "")
+st.session_state.setdefault("d4_location", [])
+st.session_state.setdefault("d4_status", [])
 st.session_state.setdefault("d4_containment", "")
 
 for sub in ["occ_answer", "det_answer", "sys_answer"]:
