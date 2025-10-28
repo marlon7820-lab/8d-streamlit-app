@@ -873,18 +873,19 @@ st.write(f"Completed {progress} of {total_steps} steps")
 # Render Tabs with Uploads
 # ---------------------------
 tab_labels = [
-    f"🟢 {t[lang_key][step]}" if st.session_state.get(step, {}).get("answer", "").strip() else f"🔴 {t[lang_key][step]}"
+    f"🟢 {t[lang_key].get(step, step)}" if st.session_state.get(step, {}).get("answer", "").strip() 
+    else f"🔴 {t[lang_key].get(step, step)}"
     for step, _, _ in npqp_steps
 ]
 tabs = st.tabs(tab_labels)
 
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     with tabs[i]:
-        st.markdown(f"### {t[lang_key][step]}")
+        st.markdown(f"### {t[lang_key].get(step, step)}")
 
         # Training Guidance & Example box
-        note_text = note_dict[lang_key]
-        example_text = example_dict[lang_key]
+        note_text = note_dict.get(lang_key, "")
+        example_text = example_dict.get(lang_key, "")
         st.markdown(f"""
 <div style="
 background-color:#b3e0ff;
@@ -896,20 +897,24 @@ width:100%;
 font-size:14px;
 line-height:1.5;
 ">
-<b>{t[lang_key]['Training_Guidance']}:</b> {note_text}<br><br>
-💡 <b>{t[lang_key]['Example']}:</b> {example_text}
+<b>{t[lang_key].get('Training_Guidance','Training Guidance')}:</b> {note_text}<br><br>
+💡 <b>{t[lang_key].get('Example','Example')}:</b> {example_text}
 </div>
 """, unsafe_allow_html=True)
 
+
         # Step-specific guidance expander from guidance_content
-        gc = guidance_content[step][lang_key]
-        with st.expander(f"📘 {gc['title']}"):
-            st.markdown(gc["tips"])
+        gc = guidance_content.get(step, {}).get(lang_key, {})
+        with st.expander(f"📘 {gc.get('title','Guidance')}"):
+            st.markdown(gc.get("tips",""))
 
         # ---------------------------
         # File uploads for D1, D3, D4, D7
         # ---------------------------
         if step in ["D1","D3","D4","D7"]:
+            # Initialize session key if missing
+            st.session_state.setdefault(step, {})
+            st.session_state[step].setdefault("uploaded_files", [])
             uploaded_files = st.file_uploader(
                 f"{'Subir archivos/fotos para' if lang_key=='es' else 'Upload files/photos for'} {step}",
                 type=["png","jpg","jpeg","pdf","xlsx","txt"],
@@ -952,13 +957,13 @@ line-height:1.5;
             st.session_state[step]["location"] = st.multiselect(
                 "Location of Material",
                 ["", "Work in Progress", "Stores Stock", "Warehouse Stock", "Service Parts", "Other"],
-                default=[],
+                default=st.session_state[step].get("location", []),
                 key="d4_location"
             )
             st.session_state[step]["status"] = st.multiselect(
                 "Status of Activities",
                 ["", "Pending", "In Progress", "Completed", "Other"],
-                default=[],
+                default=st.session_state[step].get("status", []),
                 key="d4_status"
             )
             st.session_state[step]["answer"] = st_text_area_with_lang(
@@ -980,13 +985,18 @@ line-height:1.5;
             else:
                 st.warning("No Customer Concern defined yet in D1. Please complete D1 before proceeding with D5.")
 
+             # Initialize Why lists safely
+            st.session_state.setdefault("d5_occ_whys", [])
+            st.session_state.setdefault("d5_det_whys", [])
+            st.session_state.setdefault("d5_sys_whys", [])
+
             # ---------------------------
             # Occurrence Analysis
             # ---------------------------
             if lang_key == "es":
                 st.session_state.d5_occ_whys = render_whys_no_repeat_with_other(
                     st.session_state.d5_occ_whys,
-                    occurrence_categories_es,
+                    occurrence_categories_es if,
                     t[lang_key]['Occurrence_Why']
                 )
             else:
@@ -1330,6 +1340,35 @@ line-height:1.5;
                 key="d6_sys"
             )
 
+            # ✅ Bilingual spell correction buttons
+            import re
+            from textblob import TextBlob
+            from googletrans import Translator
+            translator = Translator()
+
+            def correct_text_bilingual(text):
+                try:
+                    lang = translator.detect(text).lang
+                    if lang == "es":
+                        # Translate to English, correct, then back to Spanish
+                        translated = translator.translate(text, src="es", dest="en").text
+                        corrected = str(TextBlob(translated).correct())
+                        return translator.translate(corrected, src="en", dest="es").text
+                    else:
+                        return str(TextBlob(text).correct())
+                except Exception:
+                    return text
+
+            st.markdown("### ✍️ Spelling & Grammar Correction (English/Spanish)")
+            if st.button("Correct D6 Text (All Fields)"):
+                for key in ["occ_answer", "det_answer", "sys_answer"]:
+                    txt = st.session_state[step][key]
+                    if txt.strip():
+                        st.session_state[step][key] = correct_text_bilingual(txt)
+                st.success("✅ D6 text corrected for spelling and grammar (both languages).")
+                st.experimental_rerun()
+
+            # Save back to main session
             st.session_state["D6"]["occ_answer"] = st.session_state[step]["occ_answer"]
             st.session_state["D6"]["det_answer"] = st.session_state[step]["det_answer"]
             st.session_state["D6"]["sys_answer"] = st.session_state[step]["sys_answer"]
@@ -1355,6 +1394,17 @@ line-height:1.5;
                 key="d7_sys"
             )
 
+            # ✅ Bilingual spell correction buttons
+            st.markdown("### ✍️ Spelling & Grammar Correction (English/Spanish)")
+            if st.button("Correct D7 Text (All Fields)"):
+                for key in ["occ_answer", "det_answer", "sys_answer"]:
+                    txt = st.session_state[step][key]
+                    if txt.strip():
+                        st.session_state[step][key] = correct_text_bilingual(txt)
+                st.success("✅ D7 text corrected for spelling and grammar (both languages).")
+                st.experimental_rerun()
+
+            # Save back to main session
             st.session_state["D7"]["occ_answer"] = st.session_state[step]["occ_answer"]
             st.session_state["D7"]["det_answer"] = st.session_state[step]["det_answer"]
             st.session_state["D7"]["sys_answer"] = st.session_state[step]["sys_answer"]
@@ -1370,7 +1420,7 @@ line-height:1.5;
             if step not in ["D4", "D5", "D6", "D7", "D8"]:
                 st.session_state[step]["answer"] = st.text_area(
                     "Your Answer",
-                    value=st.session_state[step]["answer"],
+                    value=st.session_state[step].get("answer",""),
                     key=f"ans_{step}"
                 )
    
