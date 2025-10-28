@@ -938,11 +938,12 @@ line-height:1.5;
                 default=[],
                 key="d4_status"
             )
-            st.session_state[step]["answer"] = st.text_area(
+            st.session_state[step]["answer"] = st_text_area_with_lang(
                 "Containment Actions / Notes",
                 value=st.session_state[step]["answer"],
-                key=f"ans_{step}_answer",
-                lang_code=lang_key
+                key=f"{step}_answer",
+                lang_code=lang_key,
+                height=120
             )
 
         elif step == "D5":
