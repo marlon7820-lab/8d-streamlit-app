@@ -350,7 +350,7 @@ st.sidebar.markdown("---")
 st.sidebar.header("⚙️ App Controls")
 
 if st.sidebar.button("🔄 Reset 8D Session", type="primary"):
-    # Keys to preserve
+    # Keys to preserve (language, tab, etc.)
     preserve_keys = ["lang", "lang_key", "current_tab", "report_date", "prepared_by"]
     preserved = {k: st.session_state.get(k) for k in preserve_keys if k in st.session_state}
 
@@ -363,19 +363,25 @@ if st.sidebar.button("🔄 Reset 8D Session", type="primary"):
     for k, v in preserved.items():
         st.session_state[k] = v
 
-    # ✅ Initialize all 8D steps safely
-    for step in ["D1","D2","D3","D4","D5","D6","D7","D8"]:
-        st.session_state.setdefault(step, {})
-        # Clear text answers
-        st.session_state[step].setdefault("answer", "")
-        st.session_state[step].setdefault("occ_answer", "")
-        st.session_state[step].setdefault("det_answer", "")
-        st.session_state[step].setdefault("sys_answer", "")
-        # Clear file uploads
-        st.session_state[step].setdefault("uploaded_files", [])
-        # Clear dropdowns or selections
-        st.session_state[step].setdefault("location", [])
-        st.session_state[step].setdefault("status", [])
+    # ✅ Re-initialize all 8D steps to safe defaults
+    for step in ["D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8"]:
+        if step not in st.session_state:
+            st.session_state[step] = {}
+        # Steps with single answer
+        if step in ["D1", "D2", "D3", "D4", "D8"]:
+            st.session_state[step].setdefault("answer", "")
+        # D4 drop-downs
+        if step == "D4":
+            st.session_state[step].setdefault("location", [])
+            st.session_state[step].setdefault("status", [])
+        # Steps with file uploads
+        if step in ["D1", "D3", "D4", "D7"]:
+            st.session_state[step].setdefault("uploaded_files", [])
+        # Steps with occ/det/sys answers
+        if step in ["D6", "D7"]:
+            st.session_state[step].setdefault("occ_answer", "")
+            st.session_state[step].setdefault("det_answer", "")
+            st.session_state[step].setdefault("sys_answer", "")
 
     # Clear D5 why lists
     st.session_state["d5_occ_whys"] = []
