@@ -348,16 +348,32 @@ guidance_content = {
 # ---------------------------
 st.sidebar.markdown("---")
 st.sidebar.header("⚙️ App Controls")
-if st.sidebar.button("🔄 Reset 8D Session"):
+
+if st.sidebar.button("🔄 Reset 8D Session", type="primary"):
+    # Preserve essential keys (language, tab, etc.)
     preserve_keys = ["lang", "lang_key", "current_tab"]
-    preserved = {k: st.session_state[k] for k in preserve_keys if k in st.session_state}
+    preserved = {k: st.session_state.get(k) for k in preserve_keys if k in st.session_state}
+
+    # Clear everything else
     for key in list(st.session_state.keys()):
         if key not in preserve_keys:
             del st.session_state[key]
+
+    # Restore preserved values
     for k, v in preserved.items():
         st.session_state[k] = v
-    st.session_state["_reset_8d_session"] = True
-    st.stop()
+
+    # Reinitialize dropdown defaults (D4)
+    st.session_state["d4_location"] = ""
+    st.session_state["d4_status"] = ""
+    st.session_state["d4_containment"] = ""
+
+    # Reinitialize upload placeholders
+    for step in ["D1", "D3", "D4", "D7"]:
+        st.session_state[step] = {"uploaded_files": []}
+
+    # ✅ Instantly rerun for a true one-click reset
+    st.experimental_rerun()
 
 # ---------------------------
 # Language dictionary
@@ -438,7 +454,7 @@ for step, _, _ in npqp_steps:
     if step not in st.session_state:
         st.session_state[step] = {"answer": "", "extra": ""}
         if step in ["D1","D3","D4","D7"]:
-            st.session_state[step]["uploaded_files"] = []
+            st.session_state[step] = {"uploaded_files": []}
 
 st.session_state.setdefault("report_date", datetime.datetime.today().strftime("%B %d, %Y"))
 st.session_state.setdefault("prepared_by", "")
