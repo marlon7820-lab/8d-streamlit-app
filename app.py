@@ -1,5 +1,4 @@
 import streamlit as st
-import streamlit as st
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
 from openpyxl.utils import get_column_letter
@@ -961,7 +960,7 @@ line-height:1.5;
         # ---------------------------
         # Step-specific inputs
         # ---------------------------
-        if step == "D4":
+        elif step == "D4":
             st.session_state[step]["location"] = st.multiselect(
                 "Location of Material",
                 ["", "Work in Progress", "Stores Stock", "Warehouse Stock", "Service Parts", "Other"],
@@ -976,7 +975,7 @@ line-height:1.5;
             )
             st.session_state[step]["answer"] = st_text_area_with_lang(
                 "Containment Actions / Notes",
-                value=st.session_state[step]["answer"],
+                value=st.session_state[step].get("answer",""),
                 key=f"{step}_answer",
                 lang_code=lang_key,
                 height=120
@@ -993,7 +992,7 @@ line-height:1.5;
             else:
                 st.warning("No Customer Concern defined yet in D1. Please complete D1 before proceeding with D5.")
 
-             # Initialize Why lists safely
+            # Initialize Why lists safely
             st.session_state.setdefault("d5_occ_whys", [])
             st.session_state.setdefault("d5_det_whys", [])
             st.session_state.setdefault("d5_sys_whys", [])
@@ -1001,17 +1000,10 @@ line-height:1.5;
             # ---------------------------
             # Occurrence Analysis
             # ---------------------------
-            if lang_key == "es":
-                st.session_state.d5_occ_whys = render_whys_no_repeat_with_other(
-                    st.session_state.d5_occ_whys,
-                    occurrence_categories_es,
-                    t[lang_key]['Occurrence_Why']
-                )
-            else:
-                st.session_state.d5_occ_whys = render_whys_no_repeat_with_other(
-                    st.session_state.d5_occ_whys,
-                    occurrence_categories,
-                    t[lang_key]['Occurrence_Why']
+            st.session_state.d5_occ_whys = render_whys_no_repeat_with_other(
+                st.session_state.d5_occ_whys,
+                occurrence_categories_es if lang_key=="es" else occurrence_categories,
+                t[lang_key]['Occurrence_Why']
                 )
 
             if st.button("➕ Add another Occurrence Why", key=f"add_occ_{i}"):
@@ -1020,38 +1012,21 @@ line-height:1.5;
             # ---------------------------
             # Detection Analysis
             # ---------------------------
-            if lang_key == "es":
-                st.session_state.d5_det_whys = render_whys_no_repeat_with_other(
-                    st.session_state.d5_det_whys,
-                    detection_categories_es,
-                    t[lang_key]['Detection_Why']
-                )
-            else:
-                st.session_state.d5_det_whys = render_whys_no_repeat_with_other(
-                    st.session_state.d5_det_whys,
-                    detection_categories,
-                    t[lang_key]['Detection_Why']
-                )
-
+            st.session_state.d5_det_whys = render_whys_no_repeat_with_other(
+                st.session_state.d5_det_whys,
+                detection_categories_es if lang_key=="es" else detection_categories,
+                t[lang_key]['Detection_Why']
+            )
             if st.button("➕ Add another Detection Why", key=f"add_det_{i}"):
                 st.session_state.d5_det_whys.append("")
-
             # ---------------------------
             # Systemic Analysis
             # ---------------------------
-            if lang_key == "es":
-                st.session_state.d5_sys_whys = render_whys_no_repeat_with_other(
-                    st.session_state.d5_sys_whys,
-                    systemic_categories_es,
-                    t[lang_key]['Systemic_Why']
-                )
-            else:
-                st.session_state.d5_sys_whys = render_whys_no_repeat_with_other(
-                    st.session_state.d5_sys_whys,
-                    systemic_categories,
-                    t[lang_key]['Systemic_Why']
-                )
-
+            st.session_state.d5_sys_whys = render_whys_no_repeat_with_other(
+                st.session_state.d5_sys_whys,
+                systemic_categories_es if lang_key=="es" else systemic_categories,
+                t[lang_key]['Systemic_Why']
+            )
             if st.button("➕ Add another Systemic Why", key=f"add_sys_{i}"):
                 st.session_state.d5_sys_whys.append("")
 
@@ -1067,9 +1042,9 @@ line-height:1.5;
             # Duplicate / Conflict Detection
             # ---------------------------
             all_whys = occ_whys + det_whys + sys_whys
-            duplicates = [w for w in set(all_whys) if all_whys.count(w) > 1 and w.strip()]
+            duplicates = [w for w in set(all_whys) if all_whys.count(w) > 1]
             if duplicates:
-                st.warning(f"⚠️ Duplicate entries detected across Occurrence/Detection/Systemic: {', '.join(duplicates)}")
+                st.warning(f"⚠️ Duplicate entries detected: {', '.join(duplicates)}")
 
 
             # --- Keywords for 4M analysis ---
