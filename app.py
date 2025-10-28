@@ -104,7 +104,8 @@ if st.session_state.get("_reset_8d_session", False):
         st.session_state[k] = v
     st.session_state["_reset_8d_session"] = False
     st.rerun()
-
+    st.session_state["d4_location"] = []
+    st.session_state["d4_status"] = []
 # ---------------------------
 # Main title
 # ---------------------------
