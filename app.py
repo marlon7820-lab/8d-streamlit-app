@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit as st
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
 from openpyxl.utils import get_column_letter
@@ -8,21 +9,6 @@ import io
 import os
 from PIL import Image as PILImage
 from io import BytesIO
-
-def st_text_area_with_lang(label, value="", key=None, lang_code="en", height=120):
-    """
-    Streamlit text_area with native spellcheck and language support.
-    Users can click browser suggestions to replace text.
-    lang_code: 'en' for English, 'es' for Spanish
-    """
-    # Use st.markdown + textarea in HTML to enforce lang and spellcheck if needed
-    return st.text_area(
-        label,
-        value=value,
-        key=key,
-        height=height,
-        placeholder="Type here...",
-    )
 
 # ---------------------------
 # Page config
@@ -82,12 +68,6 @@ div.stSelectbox:hover, div.stTextInput:hover, div.stTextArea:hover {
     font-weight: bold !important;     /* bold */
     opacity: 1 !important;            /* remove fade */
 }
-/* Enable native browser spellcheck & autocorrect */
-textarea, input[type="text"] {
-    spellcheck: true !important;
-    autocorrect: on !important;
-    autocapitalize: on !important;
-}
 </style>
 """, unsafe_allow_html=True)
 # ---------------------------
@@ -103,8 +83,7 @@ if st.session_state.get("_reset_8d_session", False):
         st.session_state[k] = v
     st.session_state["_reset_8d_session"] = False
     st.rerun()
-    st.session_state["d4_location"] = []
-    st.session_state["d4_status"] = []
+
 # ---------------------------
 # Main title
 # ---------------------------
@@ -347,46 +326,16 @@ guidance_content = {
 # ---------------------------
 st.sidebar.markdown("---")
 st.sidebar.header("⚙️ App Controls")
-
-if st.sidebar.button("🔄 Reset 8D Session", type="primary"):
-    # Keys to preserve (language, tab, etc.)
-    preserve_keys = ["lang", "lang_key", "current_tab", "report_date", "prepared_by"]
-    preserved = {k: st.session_state.get(k) for k in preserve_keys if k in st.session_state}
-
-    # Clear all other session state
+if st.sidebar.button("🔄 Reset 8D Session"):
+    preserve_keys = ["lang", "lang_key", "current_tab"]
+    preserved = {k: st.session_state[k] for k in preserve_keys if k in st.session_state}
     for key in list(st.session_state.keys()):
         if key not in preserve_keys:
             del st.session_state[key]
-
-    # Restore preserved keys
     for k, v in preserved.items():
         st.session_state[k] = v
-
-    # ✅ Re-initialize all 8D steps to safe defaults
-    for step in ["D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8"]:
-        if step not in st.session_state:
-            st.session_state[step] = {}
-        # Steps with single answer
-        if step in ["D1", "D2", "D3", "D4", "D8"]:
-            st.session_state[step].setdefault("answer", "")
-        # D4 drop-downs
-        if step == "D4":
-            st.session_state[step].setdefault("location", [])
-            st.session_state[step].setdefault("status", [])
-        # Steps with file uploads
-        if step in ["D1", "D3", "D4", "D7"]:
-            st.session_state[step].setdefault("uploaded_files", [])
-        # Steps with occ/det/sys answers
-        if step in ["D6", "D7"]:
-            st.session_state[step].setdefault("occ_answer", "")
-            st.session_state[step].setdefault("det_answer", "")
-            st.session_state[step].setdefault("sys_answer", "")
-
-    # Clear D5 why lists
-    st.session_state["d5_occ_whys"] = []
-    st.session_state["d5_det_whys"] = []
-    st.session_state["d5_sys_whys"] = []
-    st.rerun()
+    st.session_state["_reset_8d_session"] = True
+    st.stop()
 
 # ---------------------------
 # Language dictionary
@@ -467,15 +416,15 @@ for step, _, _ in npqp_steps:
     if step not in st.session_state:
         st.session_state[step] = {"answer": "", "extra": ""}
         if step in ["D1","D3","D4","D7"]:
-            st.session_state[step] = {"uploaded_files": []}
+            st.session_state[step]["uploaded_files"] = []
 
 st.session_state.setdefault("report_date", datetime.datetime.today().strftime("%B %d, %Y"))
 st.session_state.setdefault("prepared_by", "")
 st.session_state.setdefault("d5_occ_whys", [""]*5)
 st.session_state.setdefault("d5_det_whys", [""]*5)
 st.session_state.setdefault("d5_sys_whys", [""]*5)
-st.session_state.setdefault("d4_location", [])
-st.session_state.setdefault("d4_status", [])
+st.session_state.setdefault("d4_location", "")
+st.session_state.setdefault("d4_status", "")
 st.session_state.setdefault("d4_containment", "")
 
 for sub in ["occ_answer", "det_answer", "sys_answer"]:
@@ -860,19 +809,13 @@ def render_whys_no_repeat_with_other(why_list, categories, label_prefix):
 st.markdown("### 🧭 8D Completion Progress")
 
 progress = 0
-total_steps = len(["D1","D2","D3","D4","D5","D6","D7","D8"])
+total_steps = len(["D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8"])
 
-for step in ["D1","D2","D3","D4","D5","D6","D7","D8"]:
-    if step == "D5":
-        # Count D5 as completed if any whys entered
-        occ = any(w.strip() for w in st.session_state.get("D5", {}).get("d5_occ_whys", []))
-        det = any(w.strip() for w in st.session_state.get("D5", {}).get("d5_det_whys", []))
-        sys_ = any(w.strip() for w in st.session_state.get("D5", {}).get("d5_sys_whys", []))
-        if occ or det or sys_:
-            progress += 1
-    else:
-        if st.session_state.get(step, {}).get("answer", "").strip():
-            progress += 1
+# Count how many steps have any filled text
+for step in ["D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8"]:
+    # Adjust field name if your data is stored differently (e.g., "description" instead of "answer")
+    if st.session_state.get(step, {}).get("answer", "").strip():
+        progress += 1
 
 st.progress(progress / total_steps)
 st.write(f"Completed {progress} of {total_steps} steps")
@@ -880,19 +823,18 @@ st.write(f"Completed {progress} of {total_steps} steps")
 # Render Tabs with Uploads
 # ---------------------------
 tab_labels = [
-    f"🟢 {t[lang_key].get(step, step)}" if st.session_state.get(step, {}).get("answer", "").strip() 
-    else f"🔴 {t[lang_key].get(step, step)}"
+    f"🟢 {t[lang_key][step]}" if st.session_state[step]["answer"].strip() else f"🔴 {t[lang_key][step]}"
     for step, _, _ in npqp_steps
 ]
 tabs = st.tabs(tab_labels)
 
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     with tabs[i]:
-        st.markdown(f"### {t[lang_key].get(step, step)}")
+        st.markdown(f"### {t[lang_key][step]}")
 
         # Training Guidance & Example box
-        note_text = note_dict.get(lang_key, "")
-        example_text = example_dict.get(lang_key, "")
+        note_text = note_dict[lang_key]
+        example_text = example_dict[lang_key]
         st.markdown(f"""
 <div style="
 background-color:#b3e0ff;
@@ -904,41 +846,32 @@ width:100%;
 font-size:14px;
 line-height:1.5;
 ">
-<b>{t[lang_key].get('Training_Guidance','Training Guidance')}:</b> {note_text}<br><br>
-💡 <b>{t[lang_key].get('Example','Example')}:</b> {example_text}
+<b>{t[lang_key]['Training_Guidance']}:</b> {note_text}<br><br>
+💡 <b>{t[lang_key]['Example']}:</b> {example_text}
 </div>
 """, unsafe_allow_html=True)
 
-
         # Step-specific guidance expander from guidance_content
-        gc = guidance_content.get(step, {}).get(lang_key, {})
-        with st.expander(f"📘 {gc.get('title','Guidance')}"):
-            st.markdown(gc.get("tips",""))
+        gc = guidance_content[step][lang_key]
+        with st.expander(f"📘 {gc['title']}"):
+            st.markdown(gc["tips"])
 
-        # ---------------------------
         # File uploads for D1, D3, D4, D7
-        # ---------------------------
         if step in ["D1","D3","D4","D7"]:
-            # Initialize session key if missing
-            st.session_state.setdefault(step, {})
-            st.session_state[step].setdefault("uploaded_files", [])
             uploaded_files = st.file_uploader(
-                f"{'Subir archivos/fotos para' if lang_key=='es' else 'Upload files/photos for'} {step}",
-                type=["png","jpg","jpeg","pdf","xlsx","txt"],
+                f"Upload files/photos for {step}",
+                type=["png", "jpg", "jpeg", "pdf", "xlsx", "txt"],
                 accept_multiple_files=True,
                 key=f"upload_{step}"
             )
-
             if uploaded_files:
                 for file in uploaded_files:
-                    # Deduplicate by filename
-                    uploaded_names = [f.name for f in st.session_state[step]["uploaded_files"]]
-                    if file.name not in uploaded_names:
+                    if file not in st.session_state[step]["uploaded_files"]:
                         st.session_state[step]["uploaded_files"].append(file)
 
         # Display uploaded files (aligned with file upload)
-        if st.session_state[step].get("uploaded_files"):
-            st.markdown(f"**{'Archivos / Fotos subidas' if lang_key=='es' else 'Uploaded Files / Photos'}:**")
+        if step in ["D1","D3","D4","D7"] and st.session_state[step].get("uploaded_files"):
+            st.markdown("**Uploaded Files / Photos:**")
             for f in st.session_state[step]["uploaded_files"]:
                 st.write(f"{f.name}")
                 if f.type.startswith("image/"):
@@ -947,38 +880,23 @@ line-height:1.5;
         # ---------------------------
         # Step-specific inputs
         # ---------------------------
-        if step == "D3":
-            # Multi-select: Where should the non-conforming parts have been detected?
-            st.session_state[step]["detection_points"] = st.multiselect(
-                "Where should the non-conforming parts have been detected?",
-                ["During process / manufacture", "After manufacture (e.g. Final inspection)", "Prior to dispatch"],
-                default=st.session_state[step].get("detection_points", []),
-                key="d3_detection_points"
-            )
-
-
-        # ---------------------------
-        # Step-specific inputs
-        # ---------------------------
-        elif step == "D4":
-            st.session_state[step]["location"] = st.multiselect(
+        if step == "D4":
+            st.session_state[step]["location"] = st.selectbox(
                 "Location of Material",
                 ["", "Work in Progress", "Stores Stock", "Warehouse Stock", "Service Parts", "Other"],
-                default=st.session_state[step].get("location", []),
+                index=0,
                 key="d4_location"
             )
-            st.session_state[step]["status"] = st.multiselect(
+            st.session_state[step]["status"] = st.selectbox(
                 "Status of Activities",
                 ["", "Pending", "In Progress", "Completed", "Other"],
-                default=st.session_state[step].get("status", []),
+                index=0,
                 key="d4_status"
             )
-            st.session_state[step]["answer"] = st_text_area_with_lang(
+            st.session_state[step]["answer"] = st.text_area(
                 "Containment Actions / Notes",
-                value=st.session_state[step].get("answer",""),
-                key=f"{step}_answer",
-                lang_code=lang_key,
-                height=120
+                value=st.session_state[step]["answer"],
+                key=f"ans_{step}"
             )
 
         elif step == "D5":
@@ -992,18 +910,20 @@ line-height:1.5;
             else:
                 st.warning("No Customer Concern defined yet in D1. Please complete D1 before proceeding with D5.")
 
-            # Initialize Why lists safely
-            st.session_state.setdefault("d5_occ_whys", [])
-            st.session_state.setdefault("d5_det_whys", [])
-            st.session_state.setdefault("d5_sys_whys", [])
-
             # ---------------------------
             # Occurrence Analysis
             # ---------------------------
-            st.session_state.d5_occ_whys = render_whys_no_repeat_with_other(
-                st.session_state.d5_occ_whys,
-                occurrence_categories_es if lang_key=="es" else occurrence_categories,
-                t[lang_key]['Occurrence_Why']
+            if lang_key == "es":
+                st.session_state.d5_occ_whys = render_whys_no_repeat_with_other(
+                    st.session_state.d5_occ_whys,
+                    occurrence_categories_es,
+                    t[lang_key]['Occurrence_Why']
+                )
+            else:
+                st.session_state.d5_occ_whys = render_whys_no_repeat_with_other(
+                    st.session_state.d5_occ_whys,
+                    occurrence_categories,
+                    t[lang_key]['Occurrence_Why']
                 )
 
             if st.button("➕ Add another Occurrence Why", key=f"add_occ_{i}"):
@@ -1012,21 +932,38 @@ line-height:1.5;
             # ---------------------------
             # Detection Analysis
             # ---------------------------
-            st.session_state.d5_det_whys = render_whys_no_repeat_with_other(
-                st.session_state.d5_det_whys,
-                detection_categories_es if lang_key=="es" else detection_categories,
-                t[lang_key]['Detection_Why']
-            )
+            if lang_key == "es":
+                st.session_state.d5_det_whys = render_whys_no_repeat_with_other(
+                    st.session_state.d5_det_whys,
+                    detection_categories_es,
+                    t[lang_key]['Detection_Why']
+                )
+            else:
+                st.session_state.d5_det_whys = render_whys_no_repeat_with_other(
+                    st.session_state.d5_det_whys,
+                    detection_categories,
+                    t[lang_key]['Detection_Why']
+                )
+
             if st.button("➕ Add another Detection Why", key=f"add_det_{i}"):
                 st.session_state.d5_det_whys.append("")
+
             # ---------------------------
             # Systemic Analysis
             # ---------------------------
-            st.session_state.d5_sys_whys = render_whys_no_repeat_with_other(
-                st.session_state.d5_sys_whys,
-                systemic_categories_es if lang_key=="es" else systemic_categories,
-                t[lang_key]['Systemic_Why']
-            )
+            if lang_key == "es":
+                st.session_state.d5_sys_whys = render_whys_no_repeat_with_other(
+                    st.session_state.d5_sys_whys,
+                    systemic_categories_es,
+                    t[lang_key]['Systemic_Why']
+                )
+            else:
+                st.session_state.d5_sys_whys = render_whys_no_repeat_with_other(
+                    st.session_state.d5_sys_whys,
+                    systemic_categories,
+                    t[lang_key]['Systemic_Why']
+                )
+
             if st.button("➕ Add another Systemic Why", key=f"add_sys_{i}"):
                 st.session_state.d5_sys_whys.append("")
 
@@ -1042,9 +979,9 @@ line-height:1.5;
             # Duplicate / Conflict Detection
             # ---------------------------
             all_whys = occ_whys + det_whys + sys_whys
-            duplicates = [w for w in set(all_whys) if all_whys.count(w) > 1]
+            duplicates = [w for w in set(all_whys) if all_whys.count(w) > 1 and w.strip()]
             if duplicates:
-                st.warning(f"⚠️ Duplicate entries detected: {', '.join(duplicates)}")
+                st.warning(f"⚠️ Duplicate entries detected across Occurrence/Detection/Systemic: {', '.join(duplicates)}")
 
 
             # --- Keywords for 4M analysis ---
@@ -1075,12 +1012,9 @@ line-height:1.5;
             # Smart Root Cause Suggestion
             # ---------------------------
             def smart_root_cause_suggestion(d1_concern, occ_list, det_list, sys_list, lang="en"):
-                # if nothing entered, return warnings (bilingual)
                 if not any([occ_list, det_list, sys_list]):
-                    if lang == "es":
-                        return ("⚠️ No se ha proporcionado análisis de causas.", "", "")
-                    return ("⚠️ No Why analysis provided yet.", "", "")
-            
+                    return ("⚠️ No Why analysis provided yet.", "", "") if lang == "en" else ("⚠️ No se ha proporcionado análisis de causas.", "", "")
+
                 suggestions = {
                     "Method": {
                         "en": [
@@ -1211,92 +1145,43 @@ line-height:1.5;
                 if d1_concern:
                     insights.append(f"🔹 **Problem Statement:** {d1_concern}")
 
-                # collect categories from occ_list (prefer 4M mapping)
-                occ_categories_detected = []
-                for w in occ_list:
-                    cat = classify_4m(w)
-                    occ_categories_detected.append(cat)
-
-                # choose unique categories preserving order
-                seen = set()
-                occ_categories_unique = [c for c in occ_categories_detected if not (c in seen or seen.add(c))]
+                # --- Analyze Occurrence Whys (4M) ---
+                occ_categories_detected = set(classify_4m(w) for w in occ_list)
 
                 occ_suggestions, det_suggestions, sys_suggestions = [], [], []
 
-                # build occurrence suggestions based on detected categories
-                for cat in occ_categories_unique:
+                # Occurrence 4M suggestions
+                for cat in occ_categories_detected:
                     if cat in suggestions:
                         occ_suggestions.extend(suggestions[cat][lang])
                     else:
                         occ_suggestions.extend(suggestions["Other"][lang])
 
-                # detection suggestions when detection whys present
+                # Detection
                 if det_list:
                     det_suggestions.extend(suggestions["Detection"][lang])
 
-                # systemic suggestions when systemic whys present
+                # Systemic
                 if sys_list:
                     sys_suggestions.extend(suggestions["Systemic"][lang])
 
-                # dedupe but keep order
-                def dedupe_keep_order(seq):
-                    seen = set()
-                    out = []
-                    for x in seq:
-                        if x not in seen:
-                            seen.add(x)
-                            out.append(x)
-                    return out
+                # Remove duplicates
+                occ_suggestions = list(dict.fromkeys(occ_suggestions))
+                det_suggestions = list(dict.fromkeys(det_suggestions))
+                sys_suggestions = list(dict.fromkeys(sys_suggestions))
 
-                occ_suggestions = dedupe_keep_order(occ_suggestions)
-                det_suggestions = dedupe_keep_order(det_suggestions)
-                sys_suggestions = dedupe_keep_order(sys_suggestions)
+                # Format results
+                occ_result = f"💡 **Possible Occurrence Root Cause Suggestion:** {', '.join(occ_suggestions)}." if occ_suggestions else ("No Occurrence root cause detected yet." if lang=="en" else "No se detectó causa raíz de ocurrencia aún.")
+                det_result = f"💡 **Possible Detection Root Cause Suggestion:** {', '.join(det_suggestions)}." if det_suggestions else ("No Detection root cause detected yet." if lang=="en" else "No se detectó causa raíz de detección aún.")
+                sys_result = f"💡 **Possible Systemic Root Cause Suggestion:** {', '.join(sys_suggestions)}." if sys_suggestions else ("No Systemic root cause detected yet." if lang=="en" else "No se detectó causa raíz sistémica aún.")
 
-                # format friendly output (shorten if very long)
-                def format_block(title, items):
-                    if not items:
-                        if lang == "es":
-                            return ""
-                        return ""
-                    # join first up to 6 items; if more, add an ellipsis
-                    display = ", ".join(items[:6])
-                    if len(items) > 6:
-                        display += ", ..."
-                    if lang == "es":
-                        return f"💡 **Sugerencia posible ({title}):** {display}."
-                    return f"💡 **Possible {title} Root Cause Suggestion:** {display}."
+                return occ_result, det_result, sys_result
 
-                occ_text = format_block("Occurrence", occ_suggestions)
-                det_text = format_block("Detection", det_suggestions)
-                sys_text = format_block("Systemic", sys_suggestions)
 
-                # if nothing found, return bilingual fallback messages
-                if not any([occ_suggestions, det_suggestions, sys_suggestions]):
-                    if lang == "es":
-                        return ("No se detectó causa raíz clara. Revise su análisis de Whys.", "", "")
-                    return ("No clear root cause detected. Review your Why analysis.", "", "")
+            # --- Call function once and unpack ---
+            occ_text, det_text, sys_text = smart_root_cause_suggestion(d1_concern, occ_whys, det_whys, sys_whys, lang_key)
 
-                return occ_text, det_text, sys_text
-
-            # --- Call generator and unpack (use current UI language) ---
-            occ_text, det_text, sys_text = smart_root_cause_suggestion(d1_concern, occ_whys, det_whys, sys_whys, lang=lang_key)
-
-            # Save suggestions into session for Excel export or later use
-            st.session_state.setdefault("D5", {})
-            st.session_state["D5"]["occ_root_cause"] = occ_text
-            st.session_state["D5"]["det_root_cause"] = det_text
-            st.session_state["D5"]["sys_root_cause"] = sys_text
-
-            # --- Display the smart root cause text areas (compact + expandable) ---
-            with st.expander(t[lang_key].get('Root_Cause_Expander_Label', "Root Cause Suggestions (Auto)"), expanded=True):
-                if occ_text:
-                    st.markdown(occ_text)
-                if det_text:
-                    st.markdown(det_text)
-                if sys_text:
-                    st.markdown(sys_text)
-
-            # also show the three disabled text areas (keeps your UI consistent)
+            # --- Display the smart root cause text areas ---
             st.text_area(f"{t[lang_key]['Root_Cause_Occ']}", value=occ_text, height=120, disabled=True)
             st.text_area(f"{t[lang_key]['Root_Cause_Det']}", value=det_text, height=120, disabled=True)
             st.text_area(f"{t[lang_key]['Root_Cause_Sys']}", value=sys_text, height=120, disabled=True)
@@ -1323,35 +1208,6 @@ line-height:1.5;
                 key="d6_sys"
             )
 
-            # ✅ Bilingual spell correction buttons
-            import re
-            from textblob import TextBlob
-            from googletrans import Translator
-            translator = Translator()
-
-            def correct_text_bilingual(text):
-                try:
-                    lang = translator.detect(text).lang
-                    if lang == "es":
-                        # Translate to English, correct, then back to Spanish
-                        translated = translator.translate(text, src="es", dest="en").text
-                        corrected = str(TextBlob(translated).correct())
-                        return translator.translate(corrected, src="en", dest="es").text
-                    else:
-                        return str(TextBlob(text).correct())
-                except Exception:
-                    return text
-
-            st.markdown("### ✍️ Spelling & Grammar Correction (English/Spanish)")
-            if st.button("Correct D6 Text (All Fields)"):
-                for key in ["occ_answer", "det_answer", "sys_answer"]:
-                    txt = st.session_state[step][key]
-                    if txt.strip():
-                        st.session_state[step][key] = correct_text_bilingual(txt)
-                st.success("✅ D6 text corrected for spelling and grammar (both languages).")
-                st.experimental_rerun()
-
-            # Save back to main session
             st.session_state["D6"]["occ_answer"] = st.session_state[step]["occ_answer"]
             st.session_state["D6"]["det_answer"] = st.session_state[step]["det_answer"]
             st.session_state["D6"]["sys_answer"] = st.session_state[step]["sys_answer"]
@@ -1377,17 +1233,6 @@ line-height:1.5;
                 key="d7_sys"
             )
 
-            # ✅ Bilingual spell correction buttons
-            st.markdown("### ✍️ Spelling & Grammar Correction (English/Spanish)")
-            if st.button("Correct D7 Text (All Fields)"):
-                for key in ["occ_answer", "det_answer", "sys_answer"]:
-                    txt = st.session_state[step][key]
-                    if txt.strip():
-                        st.session_state[step][key] = correct_text_bilingual(txt)
-                st.success("✅ D7 text corrected for spelling and grammar (both languages).")
-                st.experimental_rerun()
-
-            # Save back to main session
             st.session_state["D7"]["occ_answer"] = st.session_state[step]["occ_answer"]
             st.session_state["D7"]["det_answer"] = st.session_state[step]["det_answer"]
             st.session_state["D7"]["sys_answer"] = st.session_state[step]["sys_answer"]
@@ -1403,7 +1248,7 @@ line-height:1.5;
             if step not in ["D4", "D5", "D6", "D7", "D8"]:
                 st.session_state[step]["answer"] = st.text_area(
                     "Your Answer",
-                    value=st.session_state[step].get("answer",""),
+                    value=st.session_state[step]["answer"],
                     key=f"ans_{step}"
                 )
    
@@ -1538,34 +1383,28 @@ def generate_excel():
     # Insert uploaded images below table
     from PIL import Image as PILImage
     from io import BytesIO
-    from tempfile import NamedTemporaryFile
 
     last_row = ws.max_row + 2
-    for step in ["D1","D3","D4","D7"]:
+    for step in ["D1", "D3", "D4", "D7"]:
         uploaded_files = st.session_state[step].get("uploaded_files", [])
         if uploaded_files:
-            title = f"{step} Archivos / Fotos Adjuntas" if lang_key=="es" else f"{step} Uploaded Files / Photos"
+            title = f"{step} Archivos / Fotos Adjuntas" if lang_key == "es" else f"{step} Uploaded Files / Photos"
             ws.cell(row=last_row, column=1, value=title).font = Font(bold=True)
             last_row += 1
-
             for f in uploaded_files:
                 if f.type.startswith("image/"):
                     try:
                         img = PILImage.open(BytesIO(f.getvalue()))
                         max_width = 300
                         ratio = max_width / img.width
-                        img = img.resize((int(img.width*ratio), int(img.height*ratio)))
-                    
-                        with NamedTemporaryFile(delete=True, suffix=".png") as tmp:
-                            img.save(tmp.name)
-                            excel_img = XLImage(tmp.name)
-                            ws.add_image(excel_img, f"A{last_row}")
-                            last_row += int(img.height / 15) + 2
-
+                        img = img.resize((int(img.width * ratio), int(img.height * ratio)))
+                        temp_path = f"/tmp/{f.name}"
+                        img.save(temp_path)
+                        excel_img = XLImage(temp_path)
+                        ws.add_image(excel_img, f"A{last_row}")
+                        last_row += int(img.height / 15) + 2
                     except Exception as e:
-                        ws.cell(row=last_row, column=1, value=(
-                            f"No se pudo agregar la imagen {f.name}: {e}" if lang_key=="es" else f"Could not add image {f.name}: {e}"
-                        ))
+                        ws.cell(row=last_row, column=1, value=f"No se pudo agregar la imagen {f.name}: {e}" if lang_key == "es" else f"Could not add image {f.name}: {e}")
                         last_row += 1
                 else:
                     ws.cell(row=last_row, column=1, value=f.name)
