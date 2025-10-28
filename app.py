@@ -350,29 +350,35 @@ st.sidebar.markdown("---")
 st.sidebar.header("⚙️ App Controls")
 
 if st.sidebar.button("🔄 Reset 8D Session", type="primary"):
-    # Preserve essential keys (language, tab, etc.)
-    preserve_keys = ["lang", "lang_key", "current_tab"]
+    # Keys to preserve (language, tab, etc.)
+    preserve_keys = ["lang", "lang_key", "current_tab", "report_date", "prepared_by"]
     preserved = {k: st.session_state.get(k) for k in preserve_keys if k in st.session_state}
 
-    # Clear everything else
+    # Clear all other session state
     for key in list(st.session_state.keys()):
         if key not in preserve_keys:
             del st.session_state[key]
 
-    # Restore preserved values
+    # Restore preserved keys
     for k, v in preserved.items():
         st.session_state[k] = v
 
-    # Reinitialize dropdown defaults (D4)
-    st.session_state["d4_location"] = ""
-    st.session_state["d4_status"] = ""
-    st.session_state["d4_containment"] = ""
+    # ✅ Re-initialize all 8D steps to safe defaults
+    for step in ["D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8"]:
+        st.session_state.setdefault(step, {
+            "answer": "",
+            "uploaded_files": [],
+            "location": [],
+            "status": [],
+            "occ_answer": "",
+            "det_answer": "",
+            "sys_answer": ""
+        })
 
-    # Reinitialize upload placeholders
-    for step in ["D1", "D3", "D4", "D7"]:
-        st.session_state[step] = {"uploaded_files": []}
-
-    # ✅ Instantly rerun for a true one-click reset
+    # Clear D5 why lists
+    st.session_state.setdefault("d5_occ_whys", [])
+    st.session_state.setdefault("d5_det_whys", [])
+    st.session_state.setdefault("d5_sys_whys", [])
     st.rerun()
 
 # ---------------------------
