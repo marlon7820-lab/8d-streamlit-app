@@ -373,7 +373,7 @@ if st.sidebar.button("🔄 Reset 8D Session", type="primary"):
         st.session_state[step] = {"uploaded_files": []}
 
     # ✅ Instantly rerun for a true one-click reset
-    st.experimental_rerun()
+    st.rerun()
 
 # ---------------------------
 # Language dictionary
