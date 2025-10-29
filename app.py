@@ -68,7 +68,6 @@ div.stSelectbox:hover, div.stTextInput:hover, div.stTextArea:hover {
     opacity: 1 !important;            /* remove fade */
 }
 
-# Enable native browser spellcheck for all text areas and text inputs
 st.markdown("""
 <style>
 /* Enable browser spellcheck and autocorrect for both English and Spanish */
