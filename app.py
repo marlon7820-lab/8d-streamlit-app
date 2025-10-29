@@ -1,5 +1,4 @@
 import streamlit as st
-import streamlit as st
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
 from openpyxl.utils import get_column_letter
@@ -9,6 +8,13 @@ import io
 import os
 from PIL import Image as PILImage
 from io import BytesIO
+
+# 🔹 Add this new import for autocorrection
+try:
+    from textblob import TextBlob
+except ImportError:
+    st.warning("⚠️ TextBlob is not installed. Run 'pip install textblob' and 'python -m textblob.download_corpora' to enable autocorrection.")
+    TextBlob = None
 
 # ---------------------------
 # Page config
@@ -67,6 +73,13 @@ div.stSelectbox:hover, div.stTextInput:hover, div.stTextArea:hover {
     background-color: #ffffff !important; /* white background */
     font-weight: bold !important;     /* bold */
     opacity: 1 !important;            /* remove fade */
+}
+
+/* Enable native browser spellcheck & autocorrect */
+textarea, input[type="text"] {
+    spellcheck: true !important;
+    autocorrect: on !important;
+    autocapitalize: on !important;
 }
 </style>
 """, unsafe_allow_html=True)
