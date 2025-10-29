@@ -14,6 +14,20 @@ from openpyxl.utils import get_column_letter
 from textblob import TextBlob
 # pip install googletrans==4.0.0-rc1
 from googletrans import Translator
+# ---------------------------
+# Safe imports for optional packages
+# ---------------------------
+try:
+    from textblob import TextBlob
+    TEXTBLOB_AVAILABLE = True
+except ImportError:
+    TEXTBLOB_AVAILABLE = False
+
+try:
+    from googletrans import Translator
+    TRANSLATOR_AVAILABLE = True
+except ImportError:
+    TRANSLATOR_AVAILABLE = False
 
 # ---------------------------
 # Page config
@@ -481,17 +495,32 @@ for step, note_dict, example_dict in npqp_steps:
 
 translator = Translator()
 
-def correct_text_bilingual(text):
-    try:
-        lang = translator.detect(text).lang
-        if lang == "es":
-            translated = translator.translate(text, src="es", dest="en").text
-            corrected = str(TextBlob(translated).correct())
-            return translator.translate(corrected, src="en", dest="es").text
-        else:
-            return str(TextBlob(text).correct())
-    except Exception:
-        return text
+if TEXTBLOB_AVAILABLE and TRANSLATOR_AVAILABLE:
+    translator = Translator()
+    
+    def correct_text_bilingual(text):
+        try:
+            lang = translator.detect(text).lang
+            if lang == "es":
+                # Translate to English, correct, then back to Spanish
+                translated = translator.translate(text, src="es", dest="en").text
+                corrected = str(TextBlob(translated).correct())
+                return translator.translate(corrected, src="en", dest="es").text
+            else:
+                return str(TextBlob(text).correct())
+        except Exception:
+            return text
+
+    st.markdown("### ✍️ Spelling & Grammar Correction (English/Spanish)")
+    if st.button("Correct D6 Text (All Fields)"):
+        for key in ["occ_answer", "det_answer", "sys_answer"]:
+            txt = st.session_state[step][key]
+            if txt.strip():
+                st.session_state[step][key] = correct_text_bilingual(txt)
+        st.success("✅ D6 text corrected for spelling and grammar (both languages).")
+        st.experimental_rerun()
+else:
+    st.warning("⚠️ Spell correction feature unavailable. Please install `textblob` and `googletrans`.")
 
 # ---------------------------
 # Cleaned & Standardized D5 categories
