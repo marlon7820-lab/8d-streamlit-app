@@ -127,8 +127,8 @@ if st.session_state.get("_reset_8d_session", False):
         "sys_answer": ""
     }
 
-    for step in ["D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8"]:
-        st.session_state[step] = default_template.copy()
+for step in ["D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8"]:
+    st.session_state[step] = default_template.copy()
 
     # ✅ Recreate WHY lists for D5
     st.session_state["d5_occ_whys"] = []
