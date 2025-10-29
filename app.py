@@ -969,36 +969,35 @@ line-height:1.5;
 
         
         if step == "D4":
-            # --- Ensure keys exist ---
-            if "location" not in st.session_state[step]:
-                st.session_state[step]["location"] = []
-            if "status" not in st.session_state[step]:
-                st.session_state[step]["status"] = []
+            # --- Ensure keys exist and are lists ---
+            st.session_state[step].setdefault("location", [])
+            st.session_state[step].setdefault("status", [])
+            st.session_state[step].setdefault("answer", "")
 
             # --- Options for bilingual support ---
             if lang_key == "en":
                 loc_options = ["During Process / Manufacture?", "After manufacture (e.g. Final Inspection)", "Prior dispatch"]
                 status_options = ["Pending", "In Progress", "Completed", "Other"]
-            else:  # Spanish
+            else:
                 loc_options = ["Durante el proceso / Fabricación", "Después de fabricación (p. ej., Inspección Final)", "Previo al despacho"]
                 status_options = ["Pendiente", "En Progreso", "Completado", "Otro"]
 
-            # --- Ensure defaults only contain valid options ---
-            default_loc = [x for x in st.session_state[step]["location"] if x in loc_options]
-            default_status = [x for x in st.session_state[step]["status"] if x in status_options]
+            # --- Force defaults to always be lists ---
+            default_loc = list(st.session_state[step]["location"]) if isinstance(st.session_state[step]["location"], (list, tuple)) else []
+            default_status = list(st.session_state[step]["status"]) if isinstance(st.session_state[step]["status"], (list, tuple)) else []
 
             # --- Multi-select dropdowns ---
             st.session_state[step]["location"] = st.multiselect(
                 "Location of Material / Ubicación del Material",
-                options=list(loc_options),  # ✅ make sure this is a list
-                default=default_loc,
+                options=loc_options,
+                default=[x for x in default_loc if x in loc_options],
                 key="d4_location"
             )
 
             st.session_state[step]["status"] = st.multiselect(
                 "Status of Activities / Estado de Actividades",
-                options=list(status_options),  # ✅ make sure this is a list
-                default=default_status,
+                options=status_options,
+                default=[x for x in default_status if x in status_options],
                 key="d4_status"
             )
 
