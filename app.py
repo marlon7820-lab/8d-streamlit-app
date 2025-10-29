@@ -162,7 +162,13 @@ st.sidebar.header("Settings")
 
 lang = st.sidebar.selectbox("Select Language / Seleccionar Idioma", ["English", "Español"])
 lang_key = "en" if lang == "English" else "es"
-
+# ---------------------------
+# Dynamic spellcheck language (English ↔ Spanish)
+# ---------------------------
+if lang == "English":
+    spell_lang = "en"
+else:
+    spell_lang = "es"
 dark_mode = st.sidebar.checkbox("🌙 Dark Mode")
 if dark_mode:
     st.markdown("""
