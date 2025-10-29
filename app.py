@@ -6,6 +6,7 @@ from openpyxl.drawing.image import Image as XLImage
 import datetime
 import io
 import os
+os.system("python -m textblob.download_corpora")
 from PIL import Image as PILImage
 from io import BytesIO
 
