@@ -1392,15 +1392,13 @@ for step, _, _ in npqp_steps:
             label = "Inspection Stage(s)" if lang_key == "en" else "Etapa(s) de Inspección"
             extra = f"{label}: {', '.join(stages)}"
         data_rows.append((step, answer, extra))    
-    elif step == "D4":
-        loc = st.session_state[step].get("location", "")
-        status = st.session_state[step].get("status", "")
+   elif step == "D4":
+        loc_list = st.session_state[step].get("location", [])
+        status_list = st.session_state[step].get("status", [])
         answer = st.session_state[step].get("answer", "")
-        extra = f"Location: {loc} | Status: {status}"
-        data_rows.append((step, answer, extra))
-    else:
-        answer = st.session_state[step].get("answer", "")
-        extra = st.session_state[step].get("extra", "")
+        loc_str = ", ".join(loc_list) if loc_list else ""
+        status_str = ", ".join(status_list) if status_list else ""
+        extra = f"Location(s): {loc_str} | Status(es): {status_str}"
         data_rows.append((step, answer, extra))
 
 # ---------------------------
