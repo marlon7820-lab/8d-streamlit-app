@@ -947,25 +947,25 @@ line-height:1.5;
         # ✅ D3 inspection stage multiselect (bilingual)
         if step == "D3":
             if lang_key == "en":
-            st.session_state[step]["inspection_stage"] = st.multiselect(
-                "Inspection Stage",
-                [
-                    "During Process / Manufacture?",
-                    "After manufacture (e.g. Final Inspection)",
-                    "Prior dispatch"
-                ],
-                key="d3_inspection_stage"
-            )
-        else:
-            st.session_state[step]["inspection_stage"] = st.multiselect(
-                "Etapa de Inspección",
-                [
-                    "Durante el proceso / fabricación",
-                    "Después de la fabricación (por ejemplo, inspección final)",
-                    "Antes del envío"
-                ],
-                key="d3_inspection_stage"
-            )
+                st.session_state[step]["inspection_stage"] = st.multiselect(
+                    "Inspection Stage",
+                    [
+                        "During Process / Manufacture?",
+                        "After manufacture (e.g. Final Inspection)",
+                        "Prior dispatch"
+                    ],
+                    key="d3_inspection_stage"
+                )
+            else:
+                st.session_state[step]["inspection_stage"] = st.multiselect(
+                    "Etapa de Inspección",
+                    [
+                        "Durante el proceso / fabricación",
+                        "Después de la fabricación (por ejemplo, inspección final)",
+                        "Antes del envío"
+                    ],
+                    key="d3_inspection_stage"
+                )
         
         if step == "D4":
         # Ensure keys exist
