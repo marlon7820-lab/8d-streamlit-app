@@ -9,34 +9,20 @@ import os
 from PIL import Image as PILImage
 from io import BytesIO
 
-# 🔹 Ensure TextBlob is installed and import safely
+# 🔹 Optional TextBlob import for autocorrect
 try:
     from textblob import TextBlob
+    textblob_available = True
 except ImportError:
-    import subprocess
-    import sys
-    try:
-        st.info("⚠️ TextBlob not found. Installing automatically...")
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "textblob"])
-        from textblob import TextBlob
-        st.success("✅ TextBlob installed successfully!")
-    except Exception as e:
-        st.error(f"⚠️ Automatic installation failed: {e}")
-        TextBlob = None
-else:
-    TextBlob = TextBlob  # for clarity
+    st.warning("⚠️ TextBlob is not installed. Autocorrect features will be disabled.")
+    TextBlob = None
+    textblob_available = False
 
-# 🔹 Download corpora if missing
-if TextBlob:
-    import os
+# ✅ Optional: Check if corpora is available
+if textblob_available:
     punkt_path = os.path.expanduser("~/.local/share/nltk_data/tokenizers/punkt")
     if not os.path.exists(punkt_path):
-        try:
-            import subprocess
-            subprocess.run([sys.executable, "-m", "textblob.download_corpora"], check=True)
-            st.info("✅ TextBlob corpora downloaded successfully.")
-        except Exception as e:
-            st.warning(f"⚠️ Could not download TextBlob corpora automatically: {e}")
+        st.info("ℹ️ TextBlob corpora not found. Autocorrect may not work until corpora are installed.")
 
 # ---------------------------
 # Page config
