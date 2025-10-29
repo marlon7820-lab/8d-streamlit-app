@@ -34,14 +34,6 @@ st.set_page_config(
 )
 
 # ---------------------------
-# Page config
-# ---------------------------
-st.set_page_config(
-    page_title="8D Report Assistant",
-    page_icon="logo.png",
-    layout="wide"
-)
-# ---------------------------
 # App styles - updated for desktop selectbox outline + thumbnails + Root Cause textarea
 # ---------------------------
 st.markdown("""
@@ -112,24 +104,13 @@ if st.session_state.get("_reset_8d_session", False):
         st.session_state[k] = v
     st.session_state["_reset_8d_session"] = False
 
-    # ✅ Re-initialize 8D structure cleanly to avoid KeyErrors
-    default_template = {
-        "answer": "",
-        "uploaded_files": [],
-        "location": "",
-        "status": "",
-        "occ_answer": "",
-        "det_answer": "",
-        "sys_answer": ""
-    }
-
-    for step in ["D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8"]:
+    default_template = {"answer": "", "uploaded_files": [], "location": "", "status": "", "occ_answer": "", "det_answer": "", "sys_answer": ""}
+    for step in ["D1","D2","D3","D4","D5","D6","D7","D8"]:
         st.session_state[step] = default_template.copy()
 
-    # ✅ Recreate WHY lists for D5
-    st.session_state["d5_occ_whys"] = []
-    st.session_state["d5_det_whys"] = []
-    st.session_state["d5_sys_whys"] = []
+    st.session_state["d5_occ_whys"] = [""]*5
+    st.session_state["d5_det_whys"] = [""]*5
+    st.session_state["d5_sys_whys"] = [""]*5
     st.rerun()
 
 # ---------------------------
@@ -490,11 +471,10 @@ for step, note_dict, example_dict in npqp_steps:
 
 if TEXTBLOB_AVAILABLE and TRANSLATOR_AVAILABLE:
     translator = Translator()
-
     def correct_text_bilingual(text):
         try:
-            lang = translator.detect(text).lang
-            if lang == "es":
+            lang_detected = translator.detect(text).lang
+            if lang_detected == "es":
                 translated = translator.translate(text, src="es", dest="en").text
                 corrected = str(TextBlob(translated).correct())
                 return translator.translate(corrected, src="en", dest="es").text
@@ -505,16 +485,14 @@ if TEXTBLOB_AVAILABLE and TRANSLATOR_AVAILABLE:
 
     st.markdown("### ✍️ Spelling & Grammar Correction (English/Spanish)")
     if st.button("Correct D6 Text (All Fields)"):
-        for step in ["D6"]:
-            for key in ["occ_answer", "det_answer", "sys_answer"]:
-                txt = st.session_state[step][key]
-                if txt.strip():
-                    st.session_state[step][key] = correct_text_bilingual(txt)
-        st.success("✅ D6 text corrected for spelling and grammar (both languages).")
+        for key in ["occ_answer","det_answer","sys_answer"]:
+            txt = st.session_state["D6"][key]
+            if txt.strip():
+                st.session_state["D6"][key] = correct_text_bilingual(txt)
+        st.success("✅ D6 text corrected.")
         st.experimental_rerun()
 else:
-    st.warning("⚠️ Spell correction feature unavailable. Please install `textblob` and `googletrans`.")
-
+    st.warning("⚠️ Spell correction unavailable. Install `textblob` and `googletrans`.")
 # ---------------------------
 # Cleaned & Standardized D5 categories
 # ---------------------------
