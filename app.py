@@ -150,7 +150,6 @@ if dark_mode:
     .stApp {
         background: linear-gradient(to right, #1e1e1e, #2c2c2c);
         color: #f5f5f5 !important;
-    }
 
     /* Tabs */
     .stTabs [data-baseweb="tab"] {
