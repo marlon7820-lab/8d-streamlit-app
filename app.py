@@ -120,8 +120,8 @@ if st.session_state.get("_reset_8d_session", False):
     default_template = {
         "answer": "",
         "uploaded_files": [],
-        "location": [],  # <-- change to empty list
-        "status": [],    # <-- change to empty list
+        "location": [],  # must be a list
+        "status": [],    # must be a list
         "occ_answer": "",
         "det_answer": "",
         "sys_answer": ""
@@ -964,23 +964,36 @@ line-height:1.5;
 
         
         if step == "D4":
-            # ✅ Multi-selection for Location and Status (bilingual support)
+            # --- Options for bilingual multi-select ---
+            if lang_key == "en":
+                loc_options = ["During Process / Manufacture?", "After manufacture (e.g. Final Inspection)", "Prior dispatch"]
+                status_options = ["Pending", "In Progress", "Completed", "Other"]
+            else:  # Spanish
+                loc_options = ["Durante el proceso / Fabricación", "Después de fabricación (p. ej., Inspección Final)", "Previo al despacho"]
+                status_options = ["Pendiente", "En Progreso", "Completado", "Otro"]
+
+            # --- Ensure defaults only contain valid options ---
+            default_loc = [x for x in st.session_state[step]["location"] if x in loc_options]
+            default_status = [x for x in st.session_state[step]["status"] if x in status_options]
+
+            # --- Multi-select dropdowns ---
             st.session_state[step]["location"] = st.multiselect(
                 "Location of Material / Ubicación del Material",
-                ["Work in Progress", "Stores Stock", "Warehouse Stock", "Service Parts", "Other"],
-                default=st.session_state[step].get("location", []),  # use empty list if not set
+                options=loc_options,
+                default=default_loc,
                 key="d4_location"
             )
 
             st.session_state[step]["status"] = st.multiselect(
                 "Status of Activities / Estado de Actividades",
-                ["Pending", "In Progress", "Completed", "Other"],
-                default=st.session_state[step].get("status", []),
+                options=status_options,
+                default=default_status,
                 key="d4_status"
             )
 
+            # --- Containment / Notes ---
             st.session_state[step]["answer"] = st.text_area(
-                "Containment Actions / Notes / Acciones de Contención / Notas",
+                "Containment Actions / Notes / Acciones de Contención y Notas",
                 value=st.session_state[step]["answer"],
                 key=f"ans_{step}"
             )
