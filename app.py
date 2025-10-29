@@ -9,11 +9,6 @@ from openpyxl.drawing.image import Image as XLImage
 from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
 from openpyxl.utils import get_column_letter
 
-# Ensure textblob is installed in your environment
-# pip install textblob
-from textblob import TextBlob
-# pip install googletrans==4.0.0-rc1
-from googletrans import Translator
 # ---------------------------
 # Safe imports for optional packages
 # ---------------------------
@@ -493,16 +488,13 @@ for step, note_dict, example_dict in npqp_steps:
         if step in ["D1","D3","D4","D7"]:
             st.session_state[step]["uploaded_files"] = []
 
-translator = Translator()
-
 if TEXTBLOB_AVAILABLE and TRANSLATOR_AVAILABLE:
     translator = Translator()
-    
+
     def correct_text_bilingual(text):
         try:
             lang = translator.detect(text).lang
             if lang == "es":
-                # Translate to English, correct, then back to Spanish
                 translated = translator.translate(text, src="es", dest="en").text
                 corrected = str(TextBlob(translated).correct())
                 return translator.translate(corrected, src="en", dest="es").text
@@ -513,10 +505,11 @@ if TEXTBLOB_AVAILABLE and TRANSLATOR_AVAILABLE:
 
     st.markdown("### ✍️ Spelling & Grammar Correction (English/Spanish)")
     if st.button("Correct D6 Text (All Fields)"):
-        for key in ["occ_answer", "det_answer", "sys_answer"]:
-            txt = st.session_state[step][key]
-            if txt.strip():
-                st.session_state[step][key] = correct_text_bilingual(txt)
+        for step in ["D6"]:
+            for key in ["occ_answer", "det_answer", "sys_answer"]:
+                txt = st.session_state[step][key]
+                if txt.strip():
+                    st.session_state[step][key] = correct_text_bilingual(txt)
         st.success("✅ D6 text corrected for spelling and grammar (both languages).")
         st.experimental_rerun()
 else:
