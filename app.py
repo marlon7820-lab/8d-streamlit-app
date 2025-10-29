@@ -9,20 +9,14 @@ import os
 from PIL import Image as PILImage
 from io import BytesIO
 
-# 🔹 Optional TextBlob import for autocorrect
-try:
-    from textblob import TextBlob
-    textblob_available = True
-except ImportError:
-    st.warning("⚠️ TextBlob is not installed. Autocorrect features will be disabled.")
-    TextBlob = None
-    textblob_available = False
-
-# ✅ Optional: Check if corpora is available
-if textblob_available:
-    punkt_path = os.path.expanduser("~/.local/share/nltk_data/tokenizers/punkt")
-    if not os.path.exists(punkt_path):
-        st.info("ℹ️ TextBlob corpora not found. Autocorrect may not work until corpora are installed.")
+# ---------------------------
+# Page config
+# ---------------------------
+st.set_page_config(
+    page_title="8D Report Assistant",
+    page_icon="logo.png",
+    layout="wide"
+)
 
 # ---------------------------
 # Page config
