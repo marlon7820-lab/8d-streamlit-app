@@ -68,14 +68,20 @@ div.stSelectbox:hover, div.stTextInput:hover, div.stTextArea:hover {
     opacity: 1 !important;            /* remove fade */
 }
 
-/* Enable native browser spellcheck & autocorrect */
-textarea, input[type="text"] {
-    spellcheck: true !important;
-    autocorrect: on !important;
-    autocapitalize: on !important;
-}
-</style>
-""", unsafe_allow_html=True)
+# Enable native browser spellcheck for all text areas and text inputs
+st.markdown(
+    """
+    <style>
+    /* Enable native browser spellcheck & autocorrect */
+    textarea, input[type="text"] {
+        spellcheck: true !important;
+        autocorrect: on !important;
+        autocapitalize: on !important;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 # ---------------------------
 # Reset Session check
 # ---------------------------
