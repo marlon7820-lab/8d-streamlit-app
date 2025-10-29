@@ -17,7 +17,8 @@ except ImportError:
     TextBlob = None
 else:
     # ✅ Run corpora download only once per environment
-    if not os.path.exists(os.path.expanduser("~/.local/share/nltk_data/tokenizers/punkt")):
+    punkt_path = os.path.expanduser("~/.local/share/nltk_data/tokenizers/punkt")
+    if not os.path.exists(punkt_path):
         try:
             import subprocess
             subprocess.run(["python", "-m", "textblob.download_corpora"], check=True)
@@ -33,7 +34,6 @@ st.set_page_config(
     page_icon="logo.png",
     layout="wide"
 )
-
 # ---------------------------
 # App styles - updated for desktop selectbox outline + thumbnails + Root Cause textarea
 # ---------------------------
@@ -104,6 +104,25 @@ if st.session_state.get("_reset_8d_session", False):
     for k, v in preserved.items():
         st.session_state[k] = v
     st.session_state["_reset_8d_session"] = False
+
+    # ✅ Re-initialize 8D structure cleanly to avoid KeyErrors
+    default_template = {
+        "answer": "",
+        "uploaded_files": [],
+        "location": "",
+        "status": "",
+        "occ_answer": "",
+        "det_answer": "",
+        "sys_answer": ""
+    }
+
+    for step in ["D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8"]:
+        st.session_state[step] = default_template.copy()
+
+    # ✅ Recreate WHY lists for D5
+    st.session_state["d5_occ_whys"] = []
+    st.session_state["d5_det_whys"] = []
+    st.session_state["d5_sys_whys"] = []
     st.rerun()
 
 # ---------------------------
@@ -348,9 +367,10 @@ guidance_content = {
 # ---------------------------
 st.sidebar.markdown("---")
 st.sidebar.header("⚙️ App Controls")
-if st.sidebar.button("🔄 Reset 8D Session"):
-    preserve_keys = ["lang", "lang_key", "current_tab"]
-    preserved = {k: st.session_state[k] for k in preserve_keys if k in st.session_state}
+
+if st.sidebar.button("🔄 Reset 8D Session", type="primary"):
+    preserve_keys = ["lang", "lang_key", "current_tab", "report_date", "prepared_by"]
+    preserved = {k: st.session_state.get(k) for k in preserve_keys if k in st.session_state}
     for key in list(st.session_state.keys()):
         if key not in preserve_keys:
             del st.session_state[key]
