@@ -120,8 +120,8 @@ if st.session_state.get("_reset_8d_session", False):
     default_template = {
         "answer": "",
         "uploaded_files": [],
-        "location": "",
-        "status": "",
+        "location": [],  # <-- change to empty list
+        "status": [],    # <-- change to empty list
         "occ_answer": "",
         "det_answer": "",
         "sys_answer": ""
@@ -938,10 +938,6 @@ line-height:1.5;
         # ---------------------------
         # Step-specific inputs
         # ---------------------------
-        
-        # ---------------------------
-        # Step-specific inputs
-        # ---------------------------
 
        # ✅ NEW — D3 inspection stage multiselect (bilingual)
         if step == "D3":
@@ -972,12 +968,12 @@ line-height:1.5;
             st.session_state[step]["location"] = st.multiselect(
                 "Location of Material / Ubicación del Material",
                 ["Work in Progress", "Stores Stock", "Warehouse Stock", "Service Parts", "Other"],
-                default=st.session_state[step].get("location", []),
+                default=st.session_state[step].get("location", []),  # use empty list if not set
                 key="d4_location"
             )
 
             st.session_state[step]["status"] = st.multiselect(
-                "Status of Activities / Estado de las Actividades",
+                "Status of Activities / Estado de Actividades",
                 ["Pending", "In Progress", "Completed", "Other"],
                 default=st.session_state[step].get("status", []),
                 key="d4_status"
