@@ -985,13 +985,13 @@ line-height:1.5;
             st.session_state[step]["location"] = st.multiselect(
                 t[lang_key]["Location"],
                 options=loc_options,
-                key="d4_location"
+                default=st.session_state[step]["location"]
             )
 
             st.session_state[step]["status"] = st.multiselect(
                 t[lang_key]["Status"],
                 options=status_options,
-                key="d4_status"
+                default=st.session_state[step]["status"]
             )
 
             # Containment Actions / Notes
