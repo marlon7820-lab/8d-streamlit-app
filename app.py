@@ -144,8 +144,8 @@ st.markdown("<h1 style='text-align: center; color: #1E90FF;'>📋 8D Report Assi
 # ---------------------------
 # Version info
 # ---------------------------
-version_number = "v1.3.0"
-last_updated = "October 21, 2025"
+version_number = "v1.4.0"
+last_updated = "October 29, 2025"
 st.markdown(f"""
 <hr style='border:1px solid #1E90FF; margin-top:10px; margin-bottom:5px;'>
 <p style='font-size:12px; font-style:italic; text-align:center; color:#555555;'>
@@ -938,6 +938,35 @@ line-height:1.5;
         # ---------------------------
         # Step-specific inputs
         # ---------------------------
+        
+        # ---------------------------
+        # Step-specific inputs
+        # ---------------------------
+
+        # ✅ NEW — D3 inspection stage multiselect (bilingual)
+        if step == "D3":
+            if lang_key == "en":
+                st.session_state[step]["inspection_stage"] = st.multiselect(
+                    "Inspection Stage",
+                    [
+                        "During Process / Manufacture?",
+                        "After manufacture (e.g. Final Inspection)",
+                        "Prior dispatch"
+                    ],
+                    default=st.session_state[step].get("inspection_stage", [])
+                )
+            else:
+                st.session_state[step]["inspection_stage"] = st.multiselect(
+                    "Etapa de Inspección",
+                    [
+                        "Durante el proceso / fabricación",
+                        "Después de la fabricación (por ejemplo, inspección final)",
+                        "Antes del envío"
+                    ],
+                    default=st.session_state[step].get("inspection_stage", [])
+                )
+
+        
         if step == "D4":
             st.session_state[step]["location"] = st.selectbox(
                 "Location of Material",
