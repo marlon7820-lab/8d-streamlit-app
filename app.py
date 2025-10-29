@@ -964,7 +964,13 @@ line-height:1.5;
 
         
         if step == "D4":
-            # --- Options for bilingual multi-select ---
+            # --- Ensure keys exist ---
+            if "location" not in st.session_state[step]:
+                st.session_state[step]["location"] = []
+            if "status" not in st.session_state[step]:
+                st.session_state[step]["status"] = []
+
+            # --- Options for bilingual support ---
             if lang_key == "en":
                 loc_options = ["During Process / Manufacture?", "After manufacture (e.g. Final Inspection)", "Prior dispatch"]
                 status_options = ["Pending", "In Progress", "Completed", "Other"]
@@ -997,7 +1003,6 @@ line-height:1.5;
                 value=st.session_state[step]["answer"],
                 key=f"ans_{step}"
             )
-
         elif step == "D5":
             # ---------------------------
             # 🧩 Show D1 concern safely at the top
