@@ -252,7 +252,7 @@ guidance_content = {
   - Usa 5W2H (Quién, Qué, Dónde, Cuándo, Por qué, Cómo, Cuántos).
   - Ejemplo: *El cliente reporta que el radio no enciende después de 2 horas de uso en condiciones de calor*.
 """
-    }
+         }
     },
     "D2": {
         "en": {"title": "Similar Parts That Could Be Affected","tips": """
