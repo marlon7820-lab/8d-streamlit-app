@@ -9,19 +9,31 @@ import os
 from PIL import Image as PILImage
 from io import BytesIO
 
-# 🔹 Try importing TextBlob safely
+# 🔹 Ensure TextBlob is installed and import safely
 try:
     from textblob import TextBlob
 except ImportError:
-    st.warning("⚠️ TextBlob is not installed. Run 'pip install textblob' and 'python -m textblob.download_corpora' to enable autocorrection.")
-    TextBlob = None
+    import subprocess
+    import sys
+    try:
+        st.info("⚠️ TextBlob not found. Installing automatically...")
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "textblob"])
+        from textblob import TextBlob
+        st.success("✅ TextBlob installed successfully!")
+    except Exception as e:
+        st.error(f"⚠️ Automatic installation failed: {e}")
+        TextBlob = None
 else:
-    # ✅ Run corpora download only once per environment
+    TextBlob = TextBlob  # for clarity
+
+# 🔹 Download corpora if missing
+if TextBlob:
+    import os
     punkt_path = os.path.expanduser("~/.local/share/nltk_data/tokenizers/punkt")
     if not os.path.exists(punkt_path):
         try:
             import subprocess
-            subprocess.run(["python", "-m", "textblob.download_corpora"], check=True)
+            subprocess.run([sys.executable, "-m", "textblob.download_corpora"], check=True)
             st.info("✅ TextBlob corpora downloaded successfully.")
         except Exception as e:
             st.warning(f"⚠️ Could not download TextBlob corpora automatically: {e}")
