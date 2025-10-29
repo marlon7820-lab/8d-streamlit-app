@@ -968,20 +968,23 @@ line-height:1.5;
 
         
         if step == "D4":
+            # ✅ Multi-selection for Location and Status (bilingual support)
             st.session_state[step]["location"] = st.multiselect(
-                "Location of Material",
-                ["", "Work in Progress", "Stores Stock", "Warehouse Stock", "Service Parts", "Other"],
-                index=0,
+                "Location of Material / Ubicación del Material",
+                ["Work in Progress", "Stores Stock", "Warehouse Stock", "Service Parts", "Other"],
+                default=st.session_state[step].get("location", []),
                 key="d4_location"
             )
+
             st.session_state[step]["status"] = st.multiselect(
-                "Status of Activities",
-                ["", "Pending", "In Progress", "Completed", "Other"],
-                index=0,
+                "Status of Activities / Estado de las Actividades",
+                ["Pending", "In Progress", "Completed", "Other"],
+                default=st.session_state[step].get("status", []),
                 key="d4_status"
             )
+
             st.session_state[step]["answer"] = st.text_area(
-                "Containment Actions / Notes",
+                "Containment Actions / Notes / Acciones de Contención / Notas",
                 value=st.session_state[step]["answer"],
                 key=f"ans_{step}"
             )
