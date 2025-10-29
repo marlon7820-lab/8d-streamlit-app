@@ -990,14 +990,14 @@ line-height:1.5;
             # --- Multi-select dropdowns ---
             st.session_state[step]["location"] = st.multiselect(
                 "Location of Material / Ubicación del Material",
-                options=loc_options,
+                options=list(loc_options),  # ✅ make sure this is a list
                 default=default_loc,
                 key="d4_location"
             )
 
             st.session_state[step]["status"] = st.multiselect(
                 "Status of Activities / Estado de Actividades",
-                options=status_options,
+                options=list(status_options),  # ✅ make sure this is a list
                 default=default_status,
                 key="d4_status"
             )
