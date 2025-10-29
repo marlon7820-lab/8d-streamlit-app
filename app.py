@@ -969,12 +969,12 @@ line-height:1.5;
 
         
         if step == "D4":
-            # --- Ensure keys exist and are lists ---
+            # Ensure keys exist
             st.session_state[step].setdefault("location", [])
             st.session_state[step].setdefault("status", [])
             st.session_state[step].setdefault("answer", "")
 
-            # --- Options for bilingual support ---
+            # Options for bilingual support
             if lang_key == "en":
                 loc_options = ["During Process / Manufacture?", "After manufacture (e.g. Final Inspection)", "Prior dispatch"]
                 status_options = ["Pending", "In Progress", "Completed", "Other"]
@@ -982,30 +982,24 @@ line-height:1.5;
                 loc_options = ["Durante el proceso / Fabricación", "Después de fabricación (p. ej., Inspección Final)", "Previo al despacho"]
                 status_options = ["Pendiente", "En Progreso", "Completado", "Otro"]
 
-            # --- Force defaults to always be lists ---
-            default_loc = list(st.session_state[step]["location"]) if isinstance(st.session_state[step]["location"], (list, tuple)) else []
-            default_status = list(st.session_state[step]["status"]) if isinstance(st.session_state[step]["status"], (list, tuple)) else []
-
-            # --- Multi-select dropdowns ---
+            # Multi-select dropdowns
             st.session_state[step]["location"] = st.multiselect(
-                "Location of Material / Ubicación del Material",
+                t[lang_key]["Location"],
                 options=loc_options,
-                default=[x for x in default_loc if x in loc_options],
-                key="d4_location"
+                default=st.session_state[step]["location"]
             )
 
             st.session_state[step]["status"] = st.multiselect(
-                "Status of Activities / Estado de Actividades",
+                t[lang_key]["Status"],
                 options=status_options,
-                default=[x for x in default_status if x in status_options],
-                key="d4_status"
+                default=st.session_state[step]["status"]
             )
 
-            # --- Containment / Notes ---
+            #  Containment Actions / Notes
             st.session_state[step]["answer"] = st.text_area(
-                "Containment Actions / Notes / Acciones de Contención y Notas",
+                t[lang_key]["Containment_Actions"],
                 value=st.session_state[step]["answer"],
-                key=f"ans_{step}"
+                height=150
             )
         elif step == "D5":
             # ---------------------------
