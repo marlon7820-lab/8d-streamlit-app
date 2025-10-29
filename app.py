@@ -239,7 +239,7 @@ guidance_content = {
   - Use 5W2H (Who, What, Where, When, Why, How, How Many).
   - Example: *Customer reports radio does not power on after 2 hours of use in hot conditions*.
 """
-    },
+    }
         "es": {"title": "Definir el Equipo y Describir el Problema","tips": """
 - **Definir el Equipo**:
   - Identifica a todos los miembros del equipo involucrados.
