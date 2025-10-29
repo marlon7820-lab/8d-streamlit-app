@@ -943,7 +943,7 @@ line-height:1.5;
         # Step-specific inputs
         # ---------------------------
 
-        # ✅ NEW — D3 inspection stage multiselect (bilingual)
+       # ✅ NEW — D3 inspection stage multiselect (bilingual)
         if step == "D3":
             if lang_key == "en":
                 st.session_state[step]["inspection_stage"] = st.multiselect(
@@ -1380,6 +1380,15 @@ for step, _, _ in npqp_steps:
         data_rows.append(("D5 - Root Cause (Occurrence)", st.session_state["D5"].get("occ_root_cause", ""), " | ".join(occ_whys)))
         data_rows.append(("D5 - Root Cause (Detection)", st.session_state["D5"].get("det_root_cause", ""), " | ".join(det_whys)))
         data_rows.append(("D5 - Root Cause (Systemic)", st.session_state["D5"].get("sys_root_cause", ""), " | ".join(sys_whys)))
+    elif step == "D3":
+        # ✅ Include D3 inspection stage selections in Excel export
+        answer = st.session_state[step].get("answer", "")
+        stages = st.session_state[step].get("inspection_stage", [])
+        extra = ""
+        if stages:
+            label = "Inspection Stage(s)" if lang_key == "en" else "Etapa(s) de Inspección"
+            extra = f"{label}: {', '.join(stages)}"
+        data_rows.append((step, answer, extra))    
     elif step == "D4":
         loc = st.session_state[step].get("location", "")
         status = st.session_state[step].get("status", "")
