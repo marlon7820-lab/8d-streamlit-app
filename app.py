@@ -472,10 +472,11 @@ for step, note_dict, example_dict in npqp_steps:
 
 if TEXTBLOB_AVAILABLE and TRANSLATOR_AVAILABLE:
     translator = Translator()
+
     def correct_text_bilingual(text):
         try:
-            lang_detected = translator.detect(text).lang
-            if lang_detected == "es":
+            lang = translator.detect(text).lang
+            if lang == "es":
                 translated = translator.translate(text, src="es", dest="en").text
                 corrected = str(TextBlob(translated).correct())
                 return translator.translate(corrected, src="en", dest="es").text
@@ -486,14 +487,12 @@ if TEXTBLOB_AVAILABLE and TRANSLATOR_AVAILABLE:
 
     st.markdown("### ✍️ Spelling & Grammar Correction (English/Spanish)")
     if st.button("Correct D6 Text (All Fields)"):
-        for key in ["occ_answer","det_answer","sys_answer"]:
-            txt = st.session_state["D6"][key]
-            if txt.strip():
-                st.session_state["D6"][key] = correct_text_bilingual(txt)
-        st.success("✅ D6 text corrected.")
-        st.experimental_rerun()
-else:
-    st.warning("⚠️ Spell correction unavailable. Install `textblob` and `googletrans`.")
+        for step in ["D6"]:
+            for key in ["occ_answer", "det_answer", "sys_answer"]:
+                txt = st.session_state[step][key]
+                if txt.strip():
+                    st.session_state[step][key] = correct_text_bilingual(txt)
+        st.success("✅ D6 text corrected for spelling and grammar (both languages).")
 # ---------------------------
 # Cleaned & Standardized D5 categories
 # ---------------------------
