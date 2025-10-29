@@ -24,6 +24,7 @@ else:
             st.info("✅ TextBlob corpora downloaded successfully.")
         except Exception as e:
             st.warning(f"⚠️ Could not download TextBlob corpora automatically: {e}")
+
 # ---------------------------
 # Page config
 # ---------------------------
