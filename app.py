@@ -1,13 +1,19 @@
-import streamlit as st
-from openpyxl import Workbook
-from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
-from openpyxl.utils import get_column_letter
-from openpyxl.drawing.image import Image as XLImage
-import datetime
-import io
 import os
+import io
+from tempfile import NamedTemporaryFile
 from PIL import Image as PILImage
 from io import BytesIO
+import streamlit as st
+from openpyxl import Workbook
+from openpyxl.drawing.image import Image as XLImage
+from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
+from openpyxl.utils import get_column_letter
+
+# Ensure textblob is installed in your environment
+# pip install textblob
+from textblob import TextBlob
+# pip install googletrans==4.0.0-rc1
+from googletrans import Translator
 
 # ---------------------------
 # Page config
@@ -473,6 +479,20 @@ for step, note_dict, example_dict in npqp_steps:
         if step in ["D1","D3","D4","D7"]:
             st.session_state[step]["uploaded_files"] = []
 
+translator = Translator()
+
+def correct_text_bilingual(text):
+    try:
+        lang = translator.detect(text).lang
+        if lang == "es":
+            translated = translator.translate(text, src="es", dest="en").text
+            corrected = str(TextBlob(translated).correct())
+            return translator.translate(corrected, src="en", dest="es").text
+        else:
+            return str(TextBlob(text).correct())
+    except Exception:
+        return text
+
 # ---------------------------
 # Cleaned & Standardized D5 categories
 # ---------------------------
@@ -893,23 +913,26 @@ line-height:1.5;
         # File uploads for D1, D3, D4, D7
         if step in ["D1","D3","D4","D7"]:
             uploaded_files = st.file_uploader(
-                f"Upload files/photos for {step}",
-                type=["png", "jpg", "jpeg", "pdf", "xlsx", "txt"],
+                f"{'Subir archivos/fotos para' if lang_key=='es' else 'Upload files/photos for'} {step}",
+                type=["png","jpg","jpeg","pdf","xlsx","txt"],
                 accept_multiple_files=True,
                 key=f"upload_{step}"
             )
+
             if uploaded_files:
                 for file in uploaded_files:
-                    if file not in st.session_state[step]["uploaded_files"]:
+                    # Deduplicate by filename
+                    uploaded_names = [f.name for f in st.session_state[step]["uploaded_files"]]
+                    if file.name not in uploaded_names:
                         st.session_state[step]["uploaded_files"].append(file)
 
-        # Display uploaded files (aligned with file upload)
-        if step in ["D1","D3","D4","D7"] and st.session_state[step].get("uploaded_files"):
-            st.markdown("**Uploaded Files / Photos:**")
-            for f in st.session_state[step]["uploaded_files"]:
-                st.write(f"{f.name}")
-                if f.type.startswith("image/"):
-                    st.image(f, width=192)
+            # Display uploaded files
+            if st.session_state[step].get("uploaded_files"):
+                st.markdown(f"**{'Archivos / Fotos subidas' if lang_key=='es' else 'Uploaded Files / Photos'}:**")
+                for f in st.session_state[step]["uploaded_files"]:
+                    st.write(f"{f.name}")
+                    if f.type.startswith("image/"):
+                        st.image(f, width=192)
 
         # ---------------------------
         # Step-specific inputs
@@ -1344,14 +1367,12 @@ for step, _, _ in npqp_steps:
 def generate_excel():
     wb = Workbook()
     ws = wb.active
-
-    # Bilingual worksheet title
-    ws.title = "Informe 8D NPQP" if lang_key == "es" else "NPQP 8D Report"
+    ws.title = "Informe 8D NPQP" if lang_key=="es" else "NPQP 8D Report"
 
     thin = Side(border_style="thin", color="000000")
     border = Border(left=thin, right=thin, top=thin, bottom=thin)
 
-    # Add logo if exists
+    # Add logo
     if os.path.exists("logo.png"):
         try:
             img = XLImage("logo.png")
@@ -1419,36 +1440,35 @@ def generate_excel():
     from io import BytesIO
 
     last_row = ws.max_row + 2
-    for step in ["D1", "D3", "D4", "D7"]:
-        uploaded_files = st.session_state[step].get("uploaded_files", [])
+    for step in ["D1","D3","D4","D7"]:
+        uploaded_files = st.session_state.get(step, {}).get("uploaded_files", [])
         if uploaded_files:
-            title = f"{step} Archivos / Fotos Adjuntas" if lang_key == "es" else f"{step} Uploaded Files / Photos"
+            title = f"{step} Archivos / Fotos Adjuntas" if lang_key=="es" else f"{step} Uploaded Files / Photos"
             ws.cell(row=last_row, column=1, value=title).font = Font(bold=True)
             last_row += 1
+
             for f in uploaded_files:
                 if f.type.startswith("image/"):
                     try:
                         img = PILImage.open(BytesIO(f.getvalue()))
                         max_width = 300
                         ratio = max_width / img.width
-                        img = img.resize((int(img.width * ratio), int(img.height * ratio)))
-                        temp_path = f"/tmp/{f.name}"
-                        img.save(temp_path)
-                        excel_img = XLImage(temp_path)
-                        ws.add_image(excel_img, f"A{last_row}")
-                        last_row += int(img.height / 15) + 2
+                        img = img.resize((int(img.width*ratio), int(img.height*ratio)))
+                        with NamedTemporaryFile(delete=True, suffix=".png") as tmp:
+                            img.save(tmp.name)
+                            excel_img = XLImage(tmp.name)
+                            ws.add_image(excel_img, f"A{last_row}")
+                            last_row += int(img.height / 15) + 2
                     except Exception as e:
-                        ws.cell(row=last_row, column=1, value=f"No se pudo agregar la imagen {f.name}: {e}" if lang_key == "es" else f"Could not add image {f.name}: {e}")
+                        ws.cell(row=last_row, column=1, value=(f"No se pudo agregar la imagen {f.name}: {e}" if lang_key=="es" else f"Could not add image {f.name}: {e}"))
                         last_row += 1
                 else:
                     ws.cell(row=last_row, column=1, value=f.name)
                     last_row += 1
 
-    # Set column widths
     for col in range(1, 4):
         ws.column_dimensions[get_column_letter(col)].width = 60
 
-    # ✅ Return as bytes
     output = io.BytesIO()
     wb.save(output)
     return output.getvalue()
