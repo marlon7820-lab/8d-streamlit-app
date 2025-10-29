@@ -116,19 +116,21 @@ if st.session_state.get("_reset_8d_session", False):
         st.session_state[k] = v
     st.session_state["_reset_8d_session"] = False
 
+    # ---------------------------
     # ✅ Re-initialize 8D structure cleanly to avoid KeyErrors
+    # ---------------------------
     default_template = {
         "answer": "",
         "uploaded_files": [],
-        "location": [],  # <-- empty list, not empty string
-        "status": [],    # <-- empty list, not empty string
+        "location": [],  # empty list for multiselect
+        "status": [],    # empty list for multiselect
         "occ_answer": "",
         "det_answer": "",
         "sys_answer": ""
     }
 
-for step in ["D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8"]:
-    st.session_state[step] = default_template.copy()
+    for step in ["D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8"]:
+        st.session_state[step] = default_template.copy()
 
     # ✅ Recreate WHY lists for D5
     st.session_state["d5_occ_whys"] = []
