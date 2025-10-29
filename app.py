@@ -841,13 +841,16 @@ def suggest_root_cause(whys, lang_key="en"):
     else:
         return rc_texts[lang_key]["triple"].format(top_cats[0], top_cats[1])
 
-def render_whys_no_repeat_with_other(why_list, categories, label_prefix):
+def render_whys_no_repeat_with_other(why_list, categories, label_prefix, lang_key="en"):
     for idx in range(len(why_list)):
         # Build options for this selectbox
         selected_so_far = [w for i, w in enumerate(why_list) if w.strip() and i != idx]
-        options = [""] + [f"{cat}: {item}" for cat, items in categories.items() 
-                          for item in items 
-                          if f"{cat}: {item}" not in selected_so_far] + ["Other"]
+        options = [""] + [
+            f"{cat}: {item}" 
+            for cat, items in categories.items() 
+            for item in items 
+            if f"{cat}: {item}" not in selected_so_far
+        ] + ["Other"]
 
         current_val = why_list[idx] if why_list[idx] in options else ""
         selection = st.selectbox(
