@@ -120,8 +120,8 @@ if st.session_state.get("_reset_8d_session", False):
     default_template = {
         "answer": "",
         "uploaded_files": [],
-        "location": [],  # must be a list
-        "status": [],    # must be a list
+        "location": [],  # <-- empty list, not empty string
+        "status": [],    # <-- empty list, not empty string
         "occ_answer": "",
         "det_answer": "",
         "sys_answer": ""
