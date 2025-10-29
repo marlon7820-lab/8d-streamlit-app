@@ -944,63 +944,62 @@ line-height:1.5;
         # Step-specific inputs
         # ---------------------------
 
-       # ✅ NEW — D3 inspection stage multiselect (bilingual)
+        # ✅ D3 inspection stage multiselect (bilingual)
         if step == "D3":
             if lang_key == "en":
-                st.session_state[step]["inspection_stage"] = st.multiselect(
-                    "Inspection Stage",
-                    [
-                        "During Process / Manufacture?",
-                        "After manufacture (e.g. Final Inspection)",
-                        "Prior dispatch"
-                    ],
-                    default=st.session_state[step].get("inspection_stage", [])
-                )
-            else:
-                st.session_state[step]["inspection_stage"] = st.multiselect(
-                    "Etapa de Inspección",
-                    [
-                        "Durante el proceso / fabricación",
-                        "Después de la fabricación (por ejemplo, inspección final)",
-                        "Antes del envío"
-                    ],
-                    default=st.session_state[step].get("inspection_stage", [])
-                )
-
+            st.session_state[step]["inspection_stage"] = st.multiselect(
+                "Inspection Stage",
+                [
+                    "During Process / Manufacture?",
+                    "After manufacture (e.g. Final Inspection)",
+                    "Prior dispatch"
+                ],
+                key="d3_inspection_stage"
+            )
+        else:
+            st.session_state[step]["inspection_stage"] = st.multiselect(
+                "Etapa de Inspección",
+                [
+                    "Durante el proceso / fabricación",
+                    "Después de la fabricación (por ejemplo, inspección final)",
+                    "Antes del envío"
+                ],
+                key="d3_inspection_stage"
+            )
         
         if step == "D4":
-            # Ensure keys exist
-            st.session_state[step].setdefault("location", [])
-            st.session_state[step].setdefault("status", [])
-            st.session_state[step].setdefault("answer", "")
+        # Ensure keys exist
+        st.session_state[step].setdefault("location", [])
+        st.session_state[step].setdefault("status", [])
+        st.session_state[step].setdefault("answer", "")
 
-            # Options for bilingual support
-            if lang_key == "en":
-                loc_options = ["During Process / Manufacture?", "After manufacture (e.g. Final Inspection)", "Prior dispatch"]
-                status_options = ["Pending", "In Progress", "Completed", "Other"]
-            else:
-                loc_options = ["Durante el proceso / Fabricación", "Después de fabricación (p. ej., Inspección Final)", "Previo al despacho"]
-                status_options = ["Pendiente", "En Progreso", "Completado", "Otro"]
+        # Options for bilingual support
+        if lang_key == "en":
+            loc_options = ["During Process / Manufacture?", "After manufacture (e.g. Final Inspection)", "Prior dispatch"]
+            status_options = ["Pending", "In Progress", "Completed", "Other"]
+        else:
+            loc_options = ["Durante el proceso / Fabricación", "Después de fabricación (p. ej., Inspección Final)", "Previo al despacho"]
+            status_options = ["Pendiente", "En Progreso", "Completado", "Otro"]
 
-            # Multi-select dropdowns
-            st.session_state[step]["location"] = st.multiselect(
-                t[lang_key]["Location"],
-                options=loc_options,
-                default=st.session_state[step]["location"]
-            )
+        # Multi-select dropdowns (no default, use key to preserve selections)
+        st.session_state[step]["location"] = st.multiselect(
+            t[lang_key]["Location"],
+            options=loc_options,
+            key="d4_location"
+        )
 
-            st.session_state[step]["status"] = st.multiselect(
-                t[lang_key]["Status"],
-                options=status_options,
-                default=st.session_state[step]["status"]
-            )
+        st.session_state[step]["status"] = st.multiselect(
+            t[lang_key]["Status"],
+            options=status_options,
+            key="d4_status"
+        )
 
-            #  Containment Actions / Notes
-            st.session_state[step]["answer"] = st.text_area(
-                t[lang_key]["Containment_Actions"],
-                value=st.session_state[step]["answer"],
-                height=150
-            )
+        # Containment Actions / Notes
+        st.session_state[step]["answer"] = st.text_area(
+            t[lang_key]["Containment_Actions"],
+            value=st.session_state[step]["answer"],
+            height=150
+        )
         elif step == "D5":
             # ---------------------------
             # 🧩 Show D1 concern safely at the top
