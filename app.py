@@ -6,17 +6,24 @@ from openpyxl.drawing.image import Image as XLImage
 import datetime
 import io
 import os
-os.system("python -m textblob.download_corpora")
 from PIL import Image as PILImage
 from io import BytesIO
 
-# 🔹 Add this new import for autocorrection
+# 🔹 Try importing TextBlob safely
 try:
     from textblob import TextBlob
 except ImportError:
     st.warning("⚠️ TextBlob is not installed. Run 'pip install textblob' and 'python -m textblob.download_corpora' to enable autocorrection.")
     TextBlob = None
-
+else:
+    # ✅ Run corpora download only once per environment
+    if not os.path.exists(os.path.expanduser("~/.local/share/nltk_data/tokenizers/punkt")):
+        try:
+            import subprocess
+            subprocess.run(["python", "-m", "textblob.download_corpora"], check=True)
+            st.info("✅ TextBlob corpora downloaded successfully.")
+        except Exception as e:
+            st.warning(f"⚠️ Could not download TextBlob corpora automatically: {e}")
 # ---------------------------
 # Page config
 # ---------------------------
