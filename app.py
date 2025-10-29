@@ -69,19 +69,17 @@ div.stSelectbox:hover, div.stTextInput:hover, div.stTextArea:hover {
 }
 
 # Enable native browser spellcheck for all text areas and text inputs
-st.markdown(
-    """
-    <style>
-    /* Enable native browser spellcheck & autocorrect */
-    textarea, input[type="text"] {
-        spellcheck: true !important;
-        autocorrect: on !important;
-        autocapitalize: on !important;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
+st.markdown("""
+<style>
+/* Enable browser spellcheck and autocorrect for both English and Spanish */
+textarea, input[type="text"] {
+    spellcheck: true !important;
+    autocorrect: on !important;
+    autocapitalize: on !important;
+    lang: es !important; /* Support for Spanish */
+}
+</style>
+""", unsafe_allow_html=True)
 # ---------------------------
 # Reset Session check
 # ---------------------------
