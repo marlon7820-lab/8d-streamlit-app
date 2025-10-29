@@ -24,22 +24,44 @@ st.set_page_config(
 st.markdown("""
 <style>
 /* Main app background and text */
-.stApp {background: linear-gradient(to right, #f0f8ff, #e6f2ff); color: #000000 !important;}
+.stApp {
+    background: linear-gradient(to right, #f0f8ff, #e6f2ff);
+    color: #000000 !important;
+}
 
 /* Tabs */
-.stTabs [data-baseweb="tab"] {font-weight: bold; color: #000000 !important;}
+.stTabs [data-baseweb="tab"] {
+    font-weight: bold;
+    color: #000000 !important;
+}
 
 /* All textareas */
-textarea {background-color: #ffffff !important; border: 1px solid #1E90FF !important; border-radius: 5px; color: #000000 !important;}
+textarea {
+    background-color: #ffffff !important;
+    border: 1px solid #1E90FF !important;
+    border-radius: 5px;
+    color: #000000 !important;
+}
 
 /* Info boxes */
-.stInfo {background-color: #e6f7ff !important; border-left: 5px solid #1E90FF !important; color: #000000 !important;}
+.stInfo {
+    background-color: #e6f7ff !important;
+    border-left: 5px solid #1E90FF !important;
+    color: #000000 !important;
+}
 
 /* Labels */
-.css-1d391kg {color: #1E90FF !important; font-weight: bold !important;}
+.css-1d391kg {
+    color: #1E90FF !important;
+    font-weight: bold !important;
+}
 
 /* Buttons */
-button[kind="primary"] {background-color: #87AFC7 !important; color: white !important; font-weight: bold;}
+button[kind="primary"] {
+    background-color: #87AFC7 !important;
+    color: white !important;
+    font-weight: bold;
+}
 
 /* Inputs, Textareas, Selectboxes styling */
 div.stSelectbox, div.stTextInput, div.stTextArea {
@@ -55,21 +77,23 @@ div.stSelectbox:hover, div.stTextInput:hover, div.stTextArea:hover {
 }
 
 /* Thumbnails */
-.image-thumbnail {width: 120px; height: 80px; object-fit: cover; margin:5px; border:1px solid #1E90FF; border-radius:4px;}
-
-/* ---------------------------
-   Suggesting Root Cause textarea
-   Make text darker / bold when disabled
-   --------------------------- */
-.root-cause-box textarea[disabled] {
-    color: #000000 !important;        /* black text */
-    background-color: #ffffff !important; /* white background */
-    font-weight: bold !important;     /* bold */
-    opacity: 1 !important;            /* remove fade */
+.image-thumbnail {
+    width: 120px;
+    height: 80px;
+    object-fit: cover;
+    margin: 5px;
+    border: 1px solid #1E90FF;
+    border-radius: 4px;
 }
 
-st.markdown("""
-<style>
+/* Suggesting Root Cause textarea */
+.root-cause-box textarea[disabled] {
+    color: #000000 !important;
+    background-color: #ffffff !important;
+    font-weight: bold !important;
+    opacity: 1 !important;
+}
+
 /* Enable browser spellcheck and autocorrect for both English and Spanish */
 textarea, input[type="text"] {
     spellcheck: true !important;
