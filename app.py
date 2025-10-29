@@ -350,7 +350,6 @@ guidance_content = {
 """
         }
     }
-}  # <-- final closing brace
 
 # ---------------------------
 # Sidebar: App Controls
