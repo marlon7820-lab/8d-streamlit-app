@@ -1014,61 +1014,40 @@ line-height:1.5;
                 st.warning("No Customer Concern defined yet in D1. Please complete D1 before proceeding with D5.")
 
             # ---------------------------
-            # Occurrence Analysis
+            # Define sections for D5
             # ---------------------------
-            if lang_key == "es":
-                st.session_state.d5_occ_whys = render_whys_no_repeat_with_other(
-                    st.session_state.d5_occ_whys,
-                    occurrence_categories_es,
-                    t[lang_key]['Occurrence_Why']
-                )
-            else:
-                st.session_state.d5_occ_whys = render_whys_no_repeat_with_other(
-                    st.session_state.d5_occ_whys,
-                    occurrence_categories,
-                    t[lang_key]['Occurrence_Why']
-                )
+            d5_sections = [
+                ("Occurrence", "d5_occ_whys", occurrence_categories, occurrence_categories_es, "Occurrence_Why"),
+                ("Detection", "d5_det_whys", detection_categories, detection_categories_es, "Detection_Why"),
+                ("Systemic", "d5_sys_whys", systemic_categories, systemic_categories_es, "Systemic_Why")
+            ]
 
-            if st.button("➕ Add another Occurrence Why", key=f"add_occ_{i}"):
-                st.session_state.d5_occ_whys.append("")
 
             # ---------------------------
-            # Detection Analysis
+            # Render Why Analysis
             # ---------------------------
-            if lang_key == "es":
-                st.session_state.d5_det_whys = render_whys_no_repeat_with_other(
-                    st.session_state.d5_det_whys,
-                    detection_categories_es,
-                    t[lang_key]['Detection_Why']
-                )
-            else:
-                st.session_state.d5_det_whys = render_whys_no_repeat_with_other(
-                    st.session_state.d5_det_whys,
-                    detection_categories,
-                    t[lang_key]['Detection_Why']
+            for name, key, en_cats, es_cats, label in d5_sections:
+                if key not in st.session_state:
+                    st.session_state[key] = [""]
+
+                cats = es_cats if lang_key == "es" else en_cats
+                st.session_state[key] = render_whys_no_repeat_with_other(
+                    st.session_state[key], cats, t[lang_key][label]
                 )
 
-            if st.button("➕ Add another Detection Why", key=f"add_det_{i}"):
-                st.session_state.d5_det_whys.append("")
+            if len(st.session_state.d5_occ_whys) < 12:
+                if st.button("➕ Add another Occurrence Why", key=f"add_occ_{i}"):
+                    st.session_state.d5_occ_whys.append("")
 
-            # ---------------------------
-            # Systemic Analysis
-            # ---------------------------
-            if lang_key == "es":
-                st.session_state.d5_sys_whys = render_whys_no_repeat_with_other(
-                    st.session_state.d5_sys_whys,
-                    systemic_categories_es,
-                    t[lang_key]['Systemic_Why']
-                )
-            else:
-                st.session_state.d5_sys_whys = render_whys_no_repeat_with_other(
-                    st.session_state.d5_sys_whys,
-                    systemic_categories,
-                    t[lang_key]['Systemic_Why']
-                )
+            
+            if len(st.session_state.d5_det_whys) < 12:
+                if st.button("➕ Add another Detection Why", key=f"add_det_{i}"):
+                    st.session_state.d5_det_whys.append("")
 
-            if st.button("➕ Add another Systemic Why", key=f"add_sys_{i}"):
-                st.session_state.d5_sys_whys.append("")
+        
+            if len(st.session_state.d5_sys_whys) < 12:
+                if st.button("➕ Add another Systemic Why", key=f"add_sys_{i}"):
+                    st.session_state.d5_sys_whys.append("")
 
             
             # ---------------------------
@@ -1085,7 +1064,6 @@ line-height:1.5;
             duplicates = [w for w in set(all_whys) if all_whys.count(w) > 1 and w.strip()]
             if duplicates:
                 st.warning(f"⚠️ Duplicate entries detected across Occurrence/Detection/Systemic: {', '.join(duplicates)}")
-
 
             # --- Keywords for 4M analysis ---
             patterns_en = {
@@ -1111,12 +1089,21 @@ line-height:1.5;
                         return m
                 return "Other"
 
+
             # ---------------------------
             # Smart Root Cause Suggestion
             # ---------------------------
             def smart_root_cause_suggestion(d1_concern, occ_list, det_list, sys_list, lang="en"):
                 if not any([occ_list, det_list, sys_list]):
-                    return ("⚠️ No Why analysis provided yet.", "", "") if lang == "en" else ("⚠️ No se ha proporcionado análisis de causas.", "", "")
+                    return (
+                        "⚠️ No Why analysis provided yet.",
+                        "",
+                        ""
+                    ) if lang == "en" else (
+                        "⚠️ No se ha proporcionado análisis de causas.",
+                        "",
+                        ""
+                    )
 
                 suggestions = {
                     "Method": {
@@ -1250,19 +1237,18 @@ line-height:1.5;
 
                 # --- Analyze Occurrence Whys (4M) ---
                 occ_categories_detected = set(classify_4m(w) for w in occ_list)
-
                 occ_suggestions, det_suggestions, sys_suggestions = [], [], []
+
 
                 # Occurrence 4M suggestions
                 for cat in occ_categories_detected:
                     if cat in suggestions:
                         occ_suggestions.extend(suggestions[cat][lang])
                     else:
-                       occ_suggestions.extend(suggestions["Other"][lang])
+                        occ_suggestions.extend(suggestions["Other"][lang])
 
                 if det_list:
                     det_suggestions.extend(suggestions["Detection"][lang])
-                    
                 if sys_list:
                     sys_suggestions.extend(suggestions["Systemic"][lang])
 
