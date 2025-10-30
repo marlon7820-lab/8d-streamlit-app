@@ -8,40 +8,6 @@ import io
 import os
 from PIL import Image as PILImage
 from io import BytesIO
-import streamlit as st
-import gc
-
-# ---------------------------
-# ✅ Light-weight session initialization
-# ---------------------------
-if "initialized" not in st.session_state:
-    st.session_state.initialized = True
-
-    # Initialize only once, not every rerun
-    steps = ["D1","D2","D3","D4","D5","D6","D7","D8"]
-    for step in steps:
-        st.session_state.setdefault(step, {
-            "answer": "",
-            "uploaded_files": [],
-            "location": [],
-            "status": [],
-            "occ_answer": "",
-            "det_answer": "",
-            "sys_answer": ""
-        })
-
-    # D5 lists only created once
-    st.session_state.setdefault("d5_occ_whys", [])
-    st.session_state.setdefault("d5_det_whys", [])
-    st.session_state.setdefault("d5_sys_whys", [])
-
-# 🧹 Memory cleanup per run
-for step in ["D1","D2","D3","D4","D5","D6","D7","D8"]:
-    data = st.session_state.get(step, {})
-    if isinstance(data, dict):
-        # keep only lightweight data
-        data["uploaded_files"] = data.get("uploaded_files", [])[-5:]
-gc.collect()
 
 # ---------------------------
 # Page config
@@ -532,14 +498,7 @@ for step, note_dict, example_dict in npqp_steps:
         st.session_state[step] = {"answer": "", "extra": ""}
         if step in ["D1","D3","D4","D7"]:
             st.session_state[step]["uploaded_files"] = []
-# ---------------------------
-# Preserve current step between reruns
-# ---------------------------
-if "current_step" not in st.session_state:
-    st.session_state.current_step = "D1"  # default start step
-else:
-    # Keep the same step on rerun unless user explicitly changes it
-    st.session_state.current_step = st.session_state.get("current_step", "D1")
+
 # ---------------------------
 # Cleaned & Standardized D5 categories
 # ---------------------------
@@ -923,33 +882,22 @@ for step in ["D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8"]:
 
 st.progress(progress / total_steps)
 st.write(f"Completed {progress} of {total_steps} steps")
-
 # ---------------------------
-# Render Tabs with Uploads (Safe D5)
+# Render Tabs with Uploads
 # ---------------------------
-if "current_step" not in st.session_state:
-    st.session_state.current_step = "D1"  # default starting tab
-
-# Build tab labels with progress indicators
 tab_labels = [
     f"🟢 {t[lang_key][step]}" if st.session_state[step]["answer"].strip() else f"🔴 {t[lang_key][step]}"
     for step, _, _ in npqp_steps
 ]
-
-# Create tabs
 tabs = st.tabs(tab_labels)
-
-# Determine current tab index based on preserved step
-current_index = [s for s, _, _ in npqp_steps].index(st.session_state.current_step)
 
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     with tabs[i]:
-        st.session_state.current_step = step  # preserve current tab without rerun
-
-        # --- Step header ---
         st.markdown(f"### {t[lang_key][step]}")
 
-        # --- Training & Example box ---
+        # Training Guidance & Example box
+        note_text = note_dict[lang_key]
+        example_text = example_dict[lang_key]
         st.markdown(f"""
 <div style="
 background-color:#b3e0ff;
@@ -961,12 +909,12 @@ width:100%;
 font-size:14px;
 line-height:1.5;
 ">
-<b>{t[lang_key]['Training_Guidance']}:</b> {note_dict[lang_key]}<br><br>
-💡 <b>{t[lang_key]['Example']}:</b> {example_dict[lang_key]}
+<b>{t[lang_key]['Training_Guidance']}:</b> {note_text}<br><br>
+💡 <b>{t[lang_key]['Example']}:</b> {example_text}
 </div>
 """, unsafe_allow_html=True)
 
-        # Step-specific guidance expander
+        # Step-specific guidance expander from guidance_content
         gc = guidance_content[step][lang_key]
         with st.expander(f"📘 {gc['title']}"):
             st.markdown(gc["tips"])
@@ -984,6 +932,7 @@ line-height:1.5;
                     if file not in st.session_state[step]["uploaded_files"]:
                         st.session_state[step]["uploaded_files"].append(file)
 
+        # Display uploaded files (aligned with file upload)
         if step in ["D1","D3","D4","D7"] and st.session_state[step].get("uploaded_files"):
             st.markdown("**Uploaded Files / Photos:**")
             for f in st.session_state[step]["uploaded_files"]:
@@ -995,116 +944,66 @@ line-height:1.5;
         # Step-specific inputs
         # ---------------------------
 
+       # ✅ NEW — D3 inspection stage multiselect (bilingual)
         if step == "D3":
-            import gc
+            if lang_key == "en":
+                st.session_state[step]["inspection_stage"] = st.multiselect(
+                    "Inspection Stage",
+                    [
+                        "During Process / Manufacture?",
+                        "After manufacture (e.g. Final Inspection)",
+                        "Prior dispatch"
+                    ],
+                    default=st.session_state[step].get("inspection_stage", [])
+                )
+            else:
+                st.session_state[step]["inspection_stage"] = st.multiselect(
+                    "Etapa de Inspección",
+                    [
+                        "Durante el proceso / fabricación",
+                        "Después de la fabricación (por ejemplo, inspección final)",
+                        "Antes del envío"
+                    ],
+                    default=st.session_state[step].get("inspection_stage", [])
+                )
 
-            # Initialize memory-safe defaults
-            if "D3" not in st.session_state:
-                st.session_state.setdefault("D3", {"inspection_stage": [], "uploaded_files": []})
+        
+        if step == "D4":
+            # Ensure keys exist
+            st.session_state[step].setdefault("location", [])
+            st.session_state[step].setdefault("status", [])
+            st.session_state[step].setdefault("answer", "")
 
-            # Clean up empty session entries
-            st.session_state["D3"]["inspection_stage"] = [
-                s for s in st.session_state["D3"].get("inspection_stage", []) if s.strip()
-            ]
+            # Options for bilingual support
+            if lang_key == "en":
+                loc_options = ["During Process / Manufacture?", "After manufacture (e.g. Final Inspection)", "Prior dispatch"]
+                status_options = ["Pending", "In Progress", "Completed", "Other"]
+            else:
+                loc_options = ["Durante el proceso / Fabricación", "Después de fabricación (p. ej., Inspección Final)", "Previo al despacho"]
+                status_options = ["Pendiente", "En Progreso", "Completado", "Otro"]
 
-            # Multiselect with previous state restored
-            st.session_state["D3"]["inspection_stage"] = st.multiselect(
-                "Inspection Stage" if lang_key == "en" else "Etapa de Inspección",
-                [
-                    "During Process / Manufacture?" if lang_key == "en" else "Durante el proceso / fabricación",
-                    "After manufacture (e.g. Final Inspection)" if lang_key == "en" else "Después de la fabricación (por ejemplo, inspección final)",
-                    "Prior dispatch" if lang_key == "en" else "Antes del envío",
-                ],
-                default=st.session_state["D3"]["inspection_stage"],
-                key="d3_inspection_stage",
-            )
-
-            # Optional file uploader (if you use one elsewhere)
-            uploaded_files = st.file_uploader(
-                "Upload D3 Files" if lang_key == "en" else "Subir archivos D3",
-                type=["png", "jpg", "jpeg", "pdf", "xlsx", "txt"],
-                accept_multiple_files=True,
-                key="upload_d3",
-            )
-
-            if uploaded_files:
-                st.session_state["D3"]["uploaded_files"] = (
-                    st.session_state["D3"]["uploaded_files"] + uploaded_files
-                )[-10:]  # keep only last 10 files to save memory
-
-            # 🧹 Memory cleanup
-            gc.collect()
-
-        elif step == "D4":
-            import gc
-
-            # Ensure all D4 keys exist
-            st.session_state.setdefault("D4", {})
-            st.session_state["D4"].setdefault("location", [])
-            st.session_state["D4"].setdefault("status", [])
-            st.session_state["D4"].setdefault("answer", "")
-            st.session_state["D4"].setdefault("uploaded_files", [])
-            
-            # Remove empty entries from memory
-            st.session_state["D4"]["location"] = [
-                loc for loc in st.session_state["D4"]["location"] if loc.strip()
-            ]
-            st.session_state["D4"]["status"] = [
-                s for s in st.session_state["D4"]["status"] if s.strip()
-            ]
-
-            loc_options = [
-                "During Process / Manufacture?" if lang_key == "en" else "Durante el proceso / Fabricación",
-                "After manufacture (e.g. Final Inspection)" if lang_key == "en" else "Después de fabricación (p. ej., Inspección Final)",
-                "Prior dispatch" if lang_key == "en" else "Previo al despacho",
-            ]
-            status_options = [
-                "Pending" if lang_key == "en" else "Pendiente",
-                "In Progress" if lang_key == "en" else "En Progreso",
-                "Completed" if lang_key == "en" else "Completado",
-                "Other" if lang_key == "en" else "Otro",
-            ]
-
-            # Multiselects (restoring prior selections)
-            st.session_state["D4"]["location"] = st.multiselect(
+            # Multi-select dropdowns
+            st.session_state[step]["location"] = st.multiselect(
                 t[lang_key]["Location"],
                 options=loc_options,
-                default=st.session_state["D4"]["location"],
+                default=st.session_state[step]["location"]
             )
-            st.session_state["D4"]["status"] = st.multiselect(
+
+            st.session_state[step]["status"] = st.multiselect(
                 t[lang_key]["Status"],
                 options=status_options,
-                default=st.session_state["D4"]["status"],
+                default=st.session_state[step]["status"]
             )
 
-            # Text area
-            st.session_state["D4"]["answer"] = st.text_area(
+            #  Containment Actions / Notes
+            st.session_state[step]["answer"] = st.text_area(
                 t[lang_key]["Containment_Actions"],
-                value=st.session_state["D4"]["answer"],
-                height=150,
+                value=st.session_state[step]["answer"],
+                height=150
             )
-
-            # Optional file uploader
-            uploaded_files = st.file_uploader(
-                "Upload D4 Files" if lang_key == "en" else "Subir archivos D4",
-                type=["png", "jpg", "jpeg", "pdf", "xlsx", "txt"],
-                accept_multiple_files=True,
-                key="upload_d4",
-            )
-
-            if uploaded_files:
-                st.session_state["D4"]["uploaded_files"] = (
-                    st.session_state["D4"]["uploaded_files"] + uploaded_files
-                )[-10:]  # keep last 10 files
-
-            # 🧹 Memory cleanup
-            gc.collect()
-            
         elif step == "D5":
-            import gc
-
             # ---------------------------
-            # 🧩 Show D1 concern
+            # 🧩 Show D1 concern safely at the top
             # ---------------------------
             d1_concern = st.session_state.get("D1", {}).get("answer", "").strip()
             if d1_concern:
@@ -1114,31 +1013,63 @@ line-height:1.5;
                 st.warning("No Customer Concern defined yet in D1. Please complete D1 before proceeding with D5.")
 
             # ---------------------------
-            # Render Why Analysis
+            # Occurrence Analysis
             # ---------------------------
-            for name, key, en_cats, es_cats, label in d5_sections:
-                if key not in st.session_state:
-                    st.session_state[key] = [""]
+            if lang_key == "es":
+                st.session_state.d5_occ_whys = render_whys_no_repeat_with_other(
+                    st.session_state.d5_occ_whys,
+                    occurrence_categories_es,
+                    t[lang_key]['Occurrence_Why']
+                )
+            else:
+                st.session_state.d5_occ_whys = render_whys_no_repeat_with_other(
+                    st.session_state.d5_occ_whys,
+                    occurrence_categories,
+                    t[lang_key]['Occurrence_Why']
+                )
 
-            # Clean empty entries early to reduce memory footprint
-            st.session_state[key] = [w for w in st.session_state[key] if w.strip() or w == ""]
+            if st.button("➕ Add another Occurrence Why", key=f"add_occ_{i}"):
+                st.session_state.d5_occ_whys.append("")
 
-            cats = es_cats if lang_key == "es" else en_cats
-            st.session_state[key] = render_whys_no_repeat_with_other(st.session_state[key], cats, t[lang_key][label])
+            # ---------------------------
+            # Detection Analysis
+            # ---------------------------
+            if lang_key == "es":
+                st.session_state.d5_det_whys = render_whys_no_repeat_with_other(
+                    st.session_state.d5_det_whys,
+                    detection_categories_es,
+                    t[lang_key]['Detection_Why']
+                )
+            else:
+                st.session_state.d5_det_whys = render_whys_no_repeat_with_other(
+                    st.session_state.d5_det_whys,
+                    detection_categories,
+                    t[lang_key]['Detection_Why']
+                )
 
-            # Limit how many WHYs can be added (prevents runaway memory usage)
-            if len(st.session_state.d5_occ_whys) < 12:
-                if st.button("➕ Add another Occurrence Why", key=f"add_occ_{i}"):
-                    st.session_state.d5_occ_whys.append("")
+            if st.button("➕ Add another Detection Why", key=f"add_det_{i}"):
+                st.session_state.d5_det_whys.append("")
 
-            if len(st.session_state.d5_det_whys) < 12:
-                if st.button("➕ Add another Detection Why", key=f"add_det_{i}"):
-                    st.session_state.d5_det_whys.append("")
+            # ---------------------------
+            # Systemic Analysis
+            # ---------------------------
+            if lang_key == "es":
+                st.session_state.d5_sys_whys = render_whys_no_repeat_with_other(
+                    st.session_state.d5_sys_whys,
+                    systemic_categories_es,
+                    t[lang_key]['Systemic_Why']
+                )
+            else:
+                st.session_state.d5_sys_whys = render_whys_no_repeat_with_other(
+                    st.session_state.d5_sys_whys,
+                    systemic_categories,
+                    t[lang_key]['Systemic_Why']
+                )
 
-            if len(st.session_state.d5_sys_whys) < 12:
-                if st.button("➕ Add another Systemic Why", key=f"add_sys_{i}"):
-                    st.session_state.d5_sys_whys.append("")
+            if st.button("➕ Add another Systemic Why", key=f"add_sys_{i}"):
+                st.session_state.d5_sys_whys.append("")
 
+            
             # ---------------------------
             # Root Cause Suggestions
             # ---------------------------
@@ -1153,6 +1084,7 @@ line-height:1.5;
             duplicates = [w for w in set(all_whys) if all_whys.count(w) > 1 and w.strip()]
             if duplicates:
                 st.warning(f"⚠️ Duplicate entries detected across Occurrence/Detection/Systemic: {', '.join(duplicates)}")
+
 
             # --- Keywords for 4M analysis ---
             patterns_en = {
@@ -1262,7 +1194,7 @@ line-height:1.5;
                             "Missing or incomplete measurement data",
                             "Undefined or poorly communicated tolerance limits",
                             "Measurement method not appropriate for detecting nonconformance"
-                         ],
+                        ],
                         "es": [
                             "Inspección o control de medidores insuficiente",
                             "Dispositivos de medición inexactos o no calibrados",
@@ -1309,7 +1241,7 @@ line-height:1.5;
                       "en": ["Perform deeper investigation", "Escalate to cross-functional review"],
                       "es": ["Realizar investigación más profunda", "Escalar a revisión interfuncional"]
                     }
-                }
+                }  # <--- This closing brace was missing or misplaced
 
                 insights = []
                 if d1_concern:
@@ -1327,9 +1259,11 @@ line-height:1.5;
                     else:
                         occ_suggestions.extend(suggestions["Other"][lang])
 
+                # Detection
                 if det_list:
                     det_suggestions.extend(suggestions["Detection"][lang])
 
+                # Systemic
                 if sys_list:
                     sys_suggestions.extend(suggestions["Systemic"][lang])
 
@@ -1338,22 +1272,22 @@ line-height:1.5;
                 det_suggestions = list(dict.fromkeys(det_suggestions))
                 sys_suggestions = list(dict.fromkeys(sys_suggestions))
 
+                # Format results
                 occ_result = f"💡 **Possible Occurrence Root Cause Suggestion:** {', '.join(occ_suggestions)}." if occ_suggestions else ("No Occurrence root cause detected yet." if lang=="en" else "No se detectó causa raíz de ocurrencia aún.")
                 det_result = f"💡 **Possible Detection Root Cause Suggestion:** {', '.join(det_suggestions)}." if det_suggestions else ("No Detection root cause detected yet." if lang=="en" else "No se detectó causa raíz de detección aún.")
                 sys_result = f"💡 **Possible Systemic Root Cause Suggestion:** {', '.join(sys_suggestions)}." if sys_suggestions else ("No Systemic root cause detected yet." if lang=="en" else "No se detectó causa raíz sistémica aún.")
 
                 return occ_result, det_result, sys_result
 
-            # --- Call function once ---
+
+            # --- Call function once and unpack ---
             occ_text, det_text, sys_text = smart_root_cause_suggestion(d1_concern, occ_whys, det_whys, sys_whys, lang_key)
 
-            # --- Display smart root cause text areas ---
+            # --- Display the smart root cause text areas ---
             st.text_area(f"{t[lang_key]['Root_Cause_Occ']}", value=occ_text, height=120, disabled=True)
             st.text_area(f"{t[lang_key]['Root_Cause_Det']}", value=det_text, height=120, disabled=True)
             st.text_area(f"{t[lang_key]['Root_Cause_Sys']}", value=sys_text, height=120, disabled=True)
 
-            # 🧹 Final memory cleanup step (reduces Streamlit rerun memory growth)
-            gc.collect()
 
         elif step == "D6":
             st.session_state[step].setdefault("occ_answer", st.session_state["D6"].get("occ_answer", ""))
