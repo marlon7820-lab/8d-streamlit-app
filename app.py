@@ -962,10 +962,10 @@ line-height:1.5;
             st.session_state[step]["answer"] = st.text_area(
                 label=t[lang_key]["Concern_Details"],
                 value=st.session_state[step]["answer"],
-                key="d1_answer"   # UNIQUE key
+                key="d1_answer"
             )
 
-        if step == "D2":
+        elif step == "D2":
             st.session_state[step].setdefault("answer", "")
             st.session_state[step]["answer"] = st.text_area(
                 label=t[lang_key]["Similar_Part_Considerations"],
