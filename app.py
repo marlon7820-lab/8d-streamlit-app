@@ -891,7 +891,7 @@ tab_labels = [
 ]
 tabs = st.tabs(tab_labels)
 
-for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
+for step, note_dict, example_dict in npqp_steps:
     with tabs[i]:
         st.markdown(f"### {t[lang_key][step]}")
 
@@ -943,7 +943,19 @@ line-height:1.5;
         # ---------------------------
         # Step-specific inputs
         # ---------------------------
+        if step == "D1":
+            st.session_state[step]["answer"] = st.text_area(
+                t[lang_key]["Concern_Details"],
+                value=st.session_state[step]["answer"],
+                key=f"ans_{step}"
+            )
 
+        elif step == "D2":
+            st.session_state[step]["answer"] = st.text_area(
+                t[lang_key]["Similar_Part_Considerations"],
+                value=st.session_state[step]["answer"],
+                key=f"ans_{step}"
+            )
        # ✅ NEW — D3 inspection stage multiselect (bilingual)
         if step == "D3":
             if lang_key == "en":
@@ -1341,18 +1353,17 @@ line-height:1.5;
 
         elif step == "D8":
             st.session_state[step]["answer"] = st.text_area(
-                "Your Answer",
+                t[lang_key]["Follow_up_Activities"],
                 value=st.session_state[step]["answer"],
                 key=f"ans_{step}"
             )
 
         else:
-            if step not in ["D4", "D5", "D6", "D7", "D8"]:
-                st.session_state[step]["answer"] = st.text_area(
-                    "Your Answer",
-                    value=st.session_state[step]["answer"],
-                    key=f"ans_{step}"
-                )
+            st.session_state[step]["answer"] = st.text_area(
+                "Your Answer",
+                value=st.session_state[step]["answer"],
+                key=f"ans_{step}"
+            )
    
 
 # ---------------------------
