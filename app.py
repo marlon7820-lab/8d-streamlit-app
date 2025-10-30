@@ -889,10 +889,10 @@ for step in ["D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8"]:
 
 st.progress(progress / total_steps)
 st.write(f"Completed {progress} of {total_steps} steps")
+
 # ---------------------------
-# Render Tabs with Uploads
+# Render Tabs with Uploads (Safe D5)
 # ---------------------------
-# Preserve current step between reruns
 if "current_step" not in st.session_state:
     st.session_state.current_step = "D1"  # default starting tab
 
@@ -902,7 +902,7 @@ tab_labels = [
     for step, _, _ in npqp_steps
 ]
 
-# Create tabs and maintain active one
+# Create tabs
 tabs = st.tabs(tab_labels)
 
 # Determine current tab index based on preserved step
@@ -910,10 +910,8 @@ current_index = [s for s, _, _ in npqp_steps].index(st.session_state.current_ste
 
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     with tabs[i]:
-        # When user clicks a different tab, record it
-        if step != st.session_state.current_step and st.session_state.current_step != step:
-            st.session_state.current_step = step
-            st.rerun()
+        st.session_state.current_step = step  # preserve current tab without rerun
+
         # --- Step header ---
         st.markdown(f"### {t[lang_key][step]}")
 
@@ -933,7 +931,8 @@ line-height:1.5;
 💡 <b>{t[lang_key]['Example']}:</b> {example_dict[lang_key]}
 </div>
 """, unsafe_allow_html=True)
-        # Step-specific guidance expander from guidance_content
+
+        # Step-specific guidance expander
         gc = guidance_content[step][lang_key]
         with st.expander(f"📘 {gc['title']}"):
             st.markdown(gc["tips"])
@@ -951,7 +950,6 @@ line-height:1.5;
                     if file not in st.session_state[step]["uploaded_files"]:
                         st.session_state[step]["uploaded_files"].append(file)
 
-        # Display uploaded files (aligned with file upload)
         if step in ["D1","D3","D4","D7"] and st.session_state[step].get("uploaded_files"):
             st.markdown("**Uploaded Files / Photos:**")
             for f in st.session_state[step]["uploaded_files"]:
@@ -963,57 +961,42 @@ line-height:1.5;
         # Step-specific inputs
         # ---------------------------
 
-        # ✅ D3 inspection stage multiselect (bilingual)
         if step == "D3":
-            if lang_key == "en":
-                st.session_state[step]["inspection_stage"] = st.multiselect(
-                    "Inspection Stage",
-                    [
-                        "During Process / Manufacture?",
-                        "After manufacture (e.g. Final Inspection)",
-                        "Prior dispatch"
-                    ],
-                    key="d3_inspection_stage"
-                )
-            else:
-                st.session_state[step]["inspection_stage"] = st.multiselect(
-                    "Etapa de Inspección",
-                    [
-                        "Durante el proceso / fabricación",
-                        "Después de la fabricación (por ejemplo, inspección final)",
-                        "Antes del envío"
-                    ],
-                    key="d3_inspection_stage"
-                )
-        
-        if step == "D4":
-            # Ensure keys exist
+            st.session_state[step]["inspection_stage"] = st.multiselect(
+                "Inspection Stage" if lang_key=="en" else "Etapa de Inspección",
+                [
+                    "During Process / Manufacture?" if lang_key=="en" else "Durante el proceso / fabricación",
+                    "After manufacture (e.g. Final Inspection)" if lang_key=="en" else "Después de la fabricación (por ejemplo, inspección final)",
+                    "Prior dispatch" if lang_key=="en" else "Antes del envío"
+                ],
+                default=st.session_state[step].get("inspection_stage", []),
+                key="d3_inspection_stage"
+            )
+
+        elif step == "D4":
             st.session_state[step].setdefault("location", [])
             st.session_state[step].setdefault("status", [])
             st.session_state[step].setdefault("answer", "")
 
-            # Options for bilingual support
-            if lang_key == "en":
-                loc_options = ["During Process / Manufacture?", "After manufacture (e.g. Final Inspection)", "Prior dispatch"]
-                status_options = ["Pending", "In Progress", "Completed", "Other"]
-            else:
-                loc_options = ["Durante el proceso / Fabricación", "Después de fabricación (p. ej., Inspección Final)", "Previo al despacho"]
-                status_options = ["Pendiente", "En Progreso", "Completado", "Otro"]
+            loc_options = [
+                "During Process / Manufacture?" if lang_key=="en" else "Durante el proceso / Fabricación",
+                "After manufacture (e.g. Final Inspection)" if lang_key=="en" else "Después de fabricación (p. ej., Inspección Final)",
+                "Prior dispatch" if lang_key=="en" else "Previo al despacho"
+            ]
+            status_options = [
+                "Pending" if lang_key=="en" else "Pendiente",
+                "In Progress" if lang_key=="en" else "En Progreso",
+                "Completed" if lang_key=="en" else "Completado",
+                "Other" if lang_key=="en" else "Otro"
+            ]
 
-            # Multi-select dropdowns (no default, use key to preserve selections)
             st.session_state[step]["location"] = st.multiselect(
-                t[lang_key]["Location"],
-                options=loc_options,
-                default=st.session_state[step]["location"]
+                t[lang_key]["Location"], options=loc_options, default=st.session_state[step]["location"]
             )
-
             st.session_state[step]["status"] = st.multiselect(
-                t[lang_key]["Status"],
-                options=status_options,
-                default=st.session_state[step]["status"]
+                t[lang_key]["Status"], options=status_options, default=st.session_state[step]["status"]
             )
 
-            # Containment Actions / Notes
             st.session_state[step]["answer"] = st.text_area(
                 t[lang_key]["Containment_Actions"],
                 value=st.session_state[step]["answer"],
@@ -1021,7 +1004,7 @@ line-height:1.5;
             )
         elif step == "D5":
             # ---------------------------
-            # 🧩 Show D1 concern safely at the top
+            # 🧩 Show D1 concern
             # ---------------------------
             d1_concern = st.session_state.get("D1", {}).get("answer", "").strip()
             if d1_concern:
@@ -1275,13 +1258,11 @@ line-height:1.5;
                     if cat in suggestions:
                         occ_suggestions.extend(suggestions[cat][lang])
                     else:
-                        occ_suggestions.extend(suggestions["Other"][lang])
+                       occ_suggestions.extend(suggestions["Other"][lang])
 
-                # Detection
                 if det_list:
                     det_suggestions.extend(suggestions["Detection"][lang])
-
-                # Systemic
+                    
                 if sys_list:
                     sys_suggestions.extend(suggestions["Systemic"][lang])
 
@@ -1290,22 +1271,19 @@ line-height:1.5;
                 det_suggestions = list(dict.fromkeys(det_suggestions))
                 sys_suggestions = list(dict.fromkeys(sys_suggestions))
 
-                # Format results
                 occ_result = f"💡 **Possible Occurrence Root Cause Suggestion:** {', '.join(occ_suggestions)}." if occ_suggestions else ("No Occurrence root cause detected yet." if lang=="en" else "No se detectó causa raíz de ocurrencia aún.")
                 det_result = f"💡 **Possible Detection Root Cause Suggestion:** {', '.join(det_suggestions)}." if det_suggestions else ("No Detection root cause detected yet." if lang=="en" else "No se detectó causa raíz de detección aún.")
                 sys_result = f"💡 **Possible Systemic Root Cause Suggestion:** {', '.join(sys_suggestions)}." if sys_suggestions else ("No Systemic root cause detected yet." if lang=="en" else "No se detectó causa raíz sistémica aún.")
 
                 return occ_result, det_result, sys_result
 
-
-            # --- Call function once and unpack ---
+            # --- Call function once ---
             occ_text, det_text, sys_text = smart_root_cause_suggestion(d1_concern, occ_whys, det_whys, sys_whys, lang_key)
 
             # --- Display the smart root cause text areas ---
             st.text_area(f"{t[lang_key]['Root_Cause_Occ']}", value=occ_text, height=120, disabled=True)
             st.text_area(f"{t[lang_key]['Root_Cause_Det']}", value=det_text, height=120, disabled=True)
             st.text_area(f"{t[lang_key]['Root_Cause_Sys']}", value=sys_text, height=120, disabled=True)
-
 
         elif step == "D6":
             st.session_state[step].setdefault("occ_answer", st.session_state["D6"].get("occ_answer", ""))
