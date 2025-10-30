@@ -928,7 +928,7 @@ line-height:1.5;
 </div>
 """, unsafe_allow_html=True)
 
-        # Step-specific guidance expander from guidance_content
+        # Step-specific guidance expander
         gc = guidance_content[step][lang_key]
         with st.expander(f"📘 {gc['title']}"):
             st.markdown(gc["tips"])
@@ -937,7 +937,7 @@ line-height:1.5;
         if step in ["D1","D3","D4","D7"]:
             uploaded_files = st.file_uploader(
                 f"Upload files/photos for {step}",
-                type=["png", "jpg", "jpeg", "pdf", "xlsx", "txt"],
+                type=["png","jpg","jpeg","pdf","xlsx","txt"],
                 accept_multiple_files=True,
                 key=f"upload_{step}"
             )
@@ -946,7 +946,7 @@ line-height:1.5;
                     if file not in st.session_state[step]["uploaded_files"]:
                         st.session_state[step]["uploaded_files"].append(file)
 
-        # Display uploaded files (aligned with file upload)
+        # Display uploaded files
         if step in ["D1","D3","D4","D7"] and st.session_state[step].get("uploaded_files"):
             st.markdown("**Uploaded Files / Photos:**")
             for f in st.session_state[step]["uploaded_files"]:
@@ -955,36 +955,27 @@ line-height:1.5;
                     st.image(f, width=192)
 
         # ---------------------------
-        # Step-specific inputs
+        # Single text area per step
         # ---------------------------
         if step == "D1":
             st.session_state[step]["answer"] = st.text_area(
-                t[lang_key]["Concern_Details"],
+                label=t[lang_key]["Concern_Details"],
                 value=st.session_state[step]["answer"],
-                key=f"{step}_answer_txt1"
+                key=f"{step}_answer"
             )
-
-        else:
+        elif step == "D2":
             st.session_state[step]["answer"] = st.text_area(
-                "Your Answer",
+                label=t[lang_key]["Similar_Part_Considerations"],
                 value=st.session_state[step]["answer"],
-                key=f"ans_{step}_1"
+                key=f"{step}_answer"
             )
-            
-        if step == "D2":
+        elif step == "D3":
             st.session_state[step]["answer"] = st.text_area(
-                t[lang_key]["Similar_Part_Considerations"],
+                label=t[lang_key]["Initial_Analysis"],
                 value=st.session_state[step]["answer"],
-                key=f"{step}_answer_txt2"
+                key=f"{step}_answer"
             )
-        else:
-            st.session_state[step]["answer"] = st.text_area(
-                "Your Answer",
-                value=st.session_state[step]["answer"],
-                key=f"ans_{step}_2"
-            )
-       # ✅ NEW — D3 inspection stage multiselect (bilingual)
-        if step == "D3":
+            # Optional bilingual multiselect for D3 inspection stage
             if lang_key == "en":
                 st.session_state[step]["inspection_stage"] = st.multiselect(
                     "Inspection Stage",
