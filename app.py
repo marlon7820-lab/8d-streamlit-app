@@ -889,9 +889,9 @@ tab_labels = [
     f"🟢 {t[lang_key][step]}" if st.session_state[step]["answer"].strip() else f"🔴 {t[lang_key][step]}"
     for step, _, _ in npqp_steps
 ]
-tabs = st.tabs(tab_labels)
+tabs = st.tabs([t[lang_key][s] for s, _, _ in npqp_steps])
 
-for step, note_dict, example_dict in npqp_steps:
+for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     with tabs[i]:
         st.markdown(f"### {t[lang_key][step]}")
 
