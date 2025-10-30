@@ -977,7 +977,7 @@ line-height:1.5;
                 value=st.session_state[step]["answer"],
                 key=f"{step}_answer_txt2"
             )
-            else:
+        else:
             st.session_state[step]["answer"] = st.text_area(
                 "Your Answer",
                 value=st.session_state[step]["answer"],
