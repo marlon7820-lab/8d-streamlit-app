@@ -961,14 +961,14 @@ line-height:1.5;
             st.session_state[step]["answer"] = st.text_area(
                 t[lang_key]["Concern_Details"],
                 value=st.session_state[step]["answer"],
-                key=f"ans_{step}"
+                key=f"{step}_answer_txt"
             )
 
         elif step == "D2":
             st.session_state[step]["answer"] = st.text_area(
                 t[lang_key]["Similar_Part_Considerations"],
                 value=st.session_state[step]["answer"],
-                key=f"ans_{step}"
+                key=f"{step}_answer_txt2"
             )
        # ✅ NEW — D3 inspection stage multiselect (bilingual)
         if step == "D3":
@@ -1369,7 +1369,7 @@ line-height:1.5;
             st.session_state[step]["answer"] = st.text_area(
                 t[lang_key]["Follow_up_Activities"],
                 value=st.session_state[step]["answer"],
-                key=f"ans_{step}"
+                key=f"{step}_answer_txt3"
             )
 
         else:
