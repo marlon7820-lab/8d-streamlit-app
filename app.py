@@ -891,13 +891,19 @@ def render_whys_no_repeat_with_other(why_list, categories, label_prefix, lang_ke
 # Progress tracker (NEW)
 # ---------------------------
 st.markdown("### 🧭 8D Completion Progress")
+
 progress = 0
-total_steps = len(npqp_steps)
-for step, _, _ in npqp_steps:
+total_steps = len(["D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8"])
+
+# Count how many steps have any filled text
+for step in ["D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8"]:
+    # Adjust field name if your data is stored differently (e.g., "description" instead of "answer")
     if st.session_state.get(step, {}).get("answer", "").strip():
         progress += 1
+
 st.progress(progress / total_steps)
 st.write(f"Completed {progress} of {total_steps} steps")
+
 
 # ---------------------------
 # Render Tabs with Uploads
