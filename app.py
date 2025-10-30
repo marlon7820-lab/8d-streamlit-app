@@ -960,9 +960,9 @@ line-height:1.5;
         if step == "D1":
             st.session_state[step].setdefault("answer", "")
             st.session_state[step]["answer"] = st.text_area(
-                label=t[lang_key]["Concern_Details"],  # New label
+                label=t[lang_key]["Concern_Details"],
                 value=st.session_state[step]["answer"],
-                key=f"ans_D1"  # Keep key unique per step
+                key="d1_answer"   # UNIQUE key
             )
 
         if step == "D2":
@@ -970,7 +970,7 @@ line-height:1.5;
             st.session_state[step]["answer"] = st.text_area(
                 label=t[lang_key]["Similar_Part_Considerations"],
                 value=st.session_state[step]["answer"],
-                key="ans_D2"
+                key="d2_answer"
             )
        # ✅ NEW — D3 inspection stage multiselect (bilingual)
         if step == "D3":
