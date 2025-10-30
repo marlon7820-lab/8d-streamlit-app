@@ -959,11 +959,11 @@ line-height:1.5;
                 "D1": "Concern_Details",
                 "D2": "Similar_Part_Considerations",
                 "D3": "Initial_Analysis",
-                "D4": "Implement_Containment",
-                "D5": "Final_Analysis",
-                "D6": "Permanent_Corrective_Actions",
-                "D7": "Countermeasure_Confirmation",
-                "D8": "Follow_up_Activities"
+                "D4": "D4",  # Use the existing D4 key from t[lang_key]
+                "D5": "D5",  # Use the existing D5 key from t[lang_key]
+                "D6": "D6",  # Use the existing D6 key from t[lang_key]
+                "D7": "D7",  # Use the existing D7 key from t[lang_key]
+                "D8": "Follow_up_Activities"  # This one is in t[lang_key]
             }
             st.session_state[step]["answer"] = st.text_area(
                 label=t[lang_key][label_map[step]],
