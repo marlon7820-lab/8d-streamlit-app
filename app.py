@@ -8,6 +8,40 @@ import io
 import os
 from PIL import Image as PILImage
 from io import BytesIO
+import streamlit as st
+import gc
+
+# ---------------------------
+# ✅ Light-weight session initialization
+# ---------------------------
+if "initialized" not in st.session_state:
+    st.session_state.initialized = True
+
+    # Initialize only once, not every rerun
+    steps = ["D1","D2","D3","D4","D5","D6","D7","D8"]
+    for step in steps:
+        st.session_state.setdefault(step, {
+            "answer": "",
+            "uploaded_files": [],
+            "location": [],
+            "status": [],
+            "occ_answer": "",
+            "det_answer": "",
+            "sys_answer": ""
+        })
+
+    # D5 lists only created once
+    st.session_state.setdefault("d5_occ_whys", [])
+    st.session_state.setdefault("d5_det_whys", [])
+    st.session_state.setdefault("d5_sys_whys", [])
+
+# 🧹 Memory cleanup per run
+for step in ["D1","D2","D3","D4","D5","D6","D7","D8"]:
+    data = st.session_state.get(step, {})
+    if isinstance(data, dict):
+        # keep only lightweight data
+        data["uploaded_files"] = data.get("uploaded_files", [])[-5:]
+gc.collect()
 
 # ---------------------------
 # Page config
