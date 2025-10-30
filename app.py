@@ -972,7 +972,6 @@ line-height:1.5;
                 value=st.session_state[step]["answer"],
                 key="ans_D2"
             )
-            )
        # ✅ NEW — D3 inspection stage multiselect (bilingual)
         if step == "D3":
             if lang_key == "en":
