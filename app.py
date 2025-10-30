@@ -958,11 +958,11 @@ line-height:1.5;
         # Step-specific inputs
         # ---------------------------
         if step == "D1":
-            st.session_state[step].setdefault("answer", st.session_state[step].get("answer", ""))
+            st.session_state[step].setdefault("answer", "")
             st.session_state[step]["answer"] = st.text_area(
-                t[lang_key]["Concern_Details"],  # new label
+                label=t[lang_key]["Concern_Details"],  # New label
                 value=st.session_state[step]["answer"],
-                key=f"{step}_text_area"          # unique key
+                key=f"ans_{step}"  # Keep key unique per step
             )
 
         elif step == "D2":
