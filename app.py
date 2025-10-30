@@ -971,12 +971,17 @@ line-height:1.5;
                 key=f"ans_{step}"
             )
             
-        elif step == "D2":
-            st.session_state[step].setdefault("answer", "")
+        if step == "D2":
             st.session_state[step]["answer"] = st.text_area(
-                label=t[lang_key]["Similar_Part_Considerations"],
+                t[lang_key]["Similar_Part_Considerations"],
                 value=st.session_state[step]["answer"],
-                key="d2_answer"
+                key=f"{step}_answer_txt2"
+            )
+            else:
+            st.session_state[step]["answer"] = st.text_area(
+                "Your Answer",
+                value=st.session_state[step]["answer"],
+                key=f"ans_{step}"
             )
        # ✅ NEW — D3 inspection stage multiselect (bilingual)
         if step == "D3":
