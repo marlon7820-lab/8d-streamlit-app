@@ -908,7 +908,7 @@ tabs = st.tabs([t[lang_key][s] for s, _, _ in npqp_steps])
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     with tabs[i]:
         st.markdown(f"### {t[lang_key][step]}")
-
+        
         # Training Guidance & Example box
         note_text = note_dict[lang_key]
         example_text = example_dict[lang_key]
@@ -955,48 +955,45 @@ line-height:1.5;
                     st.image(f, width=192)
 
         # ---------------------------
-        # Single text area per step
+        # Single text area per step (custom labels for D1,D2,D3,D8)
         # ---------------------------
-        if step == "D1":
-            st.session_state[step]["answer"] = st.text_area(
-                label=t[lang_key]["Concern_Details"],
-                value=st.session_state[step]["answer"],
-                key=f"{step}_answer"
-            )
-        elif step == "D2":
-            st.session_state[step]["answer"] = st.text_area(
-                label=t[lang_key]["Similar_Part_Considerations"],
-                value=st.session_state[step]["answer"],
-                key=f"{step}_answer"
-            )
-        elif step == "D3":
-            st.session_state[step]["answer"] = st.text_area(
-                label=t[lang_key]["Initial_Analysis"],
-                value=st.session_state[step]["answer"],
-                key=f"{step}_answer"
-            )
-            # Optional D3 inspection stage multiselect
-            if lang_key == "en":
-                st.session_state[step]["inspection_stage"] = st.multiselect(
-                    "Inspection Stage",
-                    [
-                        "During Process / Manufacture?",
-                        "After manufacture (e.g. Final Inspection)",
-                        "Prior dispatch"
-                    ],
-                    default=st.session_state[step].get("inspection_stage", [])
-                )
-            else:
-                st.session_state[step]["inspection_stage"] = st.multiselect(
-                    "Etapa de Inspección",
-                    [
-                        "Durante el proceso / fabricación",
-                        "Después de la fabricación (por ejemplo, inspección final)",
-                        "Antes del envío"
-                    ],
-                    default=st.session_state[step].get("inspection_stage", [])
-                )
+        label_map = {
+            "D1": "Concern_Details",
+            "D2": "Similar_Part_Considerations",
+            "D3": "Initial_Analysis",
+            "D8": "Follow_up_Activities"
+        }
 
+        if step in label_map:
+            st.session_state[step]["answer"] = st.text_area(
+                label=t[lang_key][label_map[step]],
+                value=st.session_state[step]["answer"],
+                key=f"{step}_answer"
+            )
+        else:
+            st.session_state[step]["answer"] = st.text_area(
+                label="Your Answer",
+                value=st.session_state[step]["answer"],
+                key=f"{step}_answer"
+            )
+
+        # Optional: D3 inspection stage multiselect
+        if step == "D3":
+            stages_en = [
+                "During Process / Manufacture?",
+                "After manufacture (e.g. Final Inspection)",
+                "Prior dispatch"
+            ]
+            stages_es = [
+                "Durante el proceso / fabricación",
+                "Después de la fabricación (por ejemplo, inspección final)",
+                "Antes del envío"
+            ]
+            st.session_state[step]["inspection_stage"] = st.multiselect(
+                "Inspection Stage" if lang_key=="en" else "Etapa de Inspección",
+                stages_en if lang_key=="en" else stages_es,
+                default=st.session_state[step].get("inspection_stage", [])
+            )
         
         if step == "D4":
             # Ensure keys exist
