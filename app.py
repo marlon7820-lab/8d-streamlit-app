@@ -955,16 +955,22 @@ line-height:1.5;
         # Step-specific text area (ONLY the steps that need one)
         # ---------------------------
         if step in ["D1","D2","D3","D4","D5","D6","D7","D8"]:
-            label_map = {
+            step_labels = {
                 "D1": "Concern_Details",
                 "D2": "Similar_Part_Considerations",
                 "D3": "Initial_Analysis",
+                "D4": "D4",
+                "D5": "D5",
+                "D6": "D6",
+                "D7": "D7",
+                "D8": "Follow_up_Activities"
             }
-            st.session_state[step]["answer"] = st.text_area(
-                label=t[lang_key][label_map[step]],
-                value=st.session_state[step]["answer"],
-                key=f"{step}_answer"
-            )
+
+st.session_state[step]["answer"] = st.text_area(
+    label=t[lang_key][step_labels[step]],
+    value=st.session_state[step]["answer"],
+    key=f"{step}_answer"
+)
 
             # Optional D3 inspection stage multiselect
             if step == "D3":
