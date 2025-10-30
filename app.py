@@ -498,7 +498,14 @@ for step, note_dict, example_dict in npqp_steps:
         st.session_state[step] = {"answer": "", "extra": ""}
         if step in ["D1","D3","D4","D7"]:
             st.session_state[step]["uploaded_files"] = []
-
+# ---------------------------
+# Preserve current step between reruns
+# ---------------------------
+if "current_step" not in st.session_state:
+    st.session_state.current_step = "D1"  # default start step
+else:
+    # Keep the same step on rerun unless user explicitly changes it
+    st.session_state.current_step = st.session_state.get("current_step", "D1")
 # ---------------------------
 # Cleaned & Standardized D5 categories
 # ---------------------------
@@ -885,19 +892,32 @@ st.write(f"Completed {progress} of {total_steps} steps")
 # ---------------------------
 # Render Tabs with Uploads
 # ---------------------------
+# Preserve current step between reruns
+if "current_step" not in st.session_state:
+    st.session_state.current_step = "D1"  # default starting tab
+
+# Build tab labels with progress indicators
 tab_labels = [
     f"🟢 {t[lang_key][step]}" if st.session_state[step]["answer"].strip() else f"🔴 {t[lang_key][step]}"
     for step, _, _ in npqp_steps
 ]
+
+# Create tabs and maintain active one
 tabs = st.tabs(tab_labels)
+
+# Determine current tab index based on preserved step
+current_index = [s for s, _, _ in npqp_steps].index(st.session_state.current_step)
 
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     with tabs[i]:
+        # When user clicks a different tab, record it
+        if step != st.session_state.current_step and st.session_state.current_step != step:
+            st.session_state.current_step = step
+            st.rerun()
+        # --- Step header ---
         st.markdown(f"### {t[lang_key][step]}")
 
-        # Training Guidance & Example box
-        note_text = note_dict[lang_key]
-        example_text = example_dict[lang_key]
+        # --- Training & Example box ---
         st.markdown(f"""
 <div style="
 background-color:#b3e0ff;
@@ -909,11 +929,10 @@ width:100%;
 font-size:14px;
 line-height:1.5;
 ">
-<b>{t[lang_key]['Training_Guidance']}:</b> {note_text}<br><br>
-💡 <b>{t[lang_key]['Example']}:</b> {example_text}
+<b>{t[lang_key]['Training_Guidance']}:</b> {note_dict[lang_key]}<br><br>
+💡 <b>{t[lang_key]['Example']}:</b> {example_dict[lang_key]}
 </div>
 """, unsafe_allow_html=True)
-
         # Step-specific guidance expander from guidance_content
         gc = guidance_content[step][lang_key]
         with st.expander(f"📘 {gc['title']}"):
