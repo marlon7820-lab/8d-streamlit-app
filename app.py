@@ -975,7 +975,7 @@ line-height:1.5;
                 value=st.session_state[step]["answer"],
                 key=f"{step}_answer"
             )
-            # Optional bilingual multiselect for D3 inspection stage
+            # Optional D3 inspection stage multiselect
             if lang_key == "en":
                 st.session_state[step]["inspection_stage"] = st.multiselect(
                     "Inspection Stage",
