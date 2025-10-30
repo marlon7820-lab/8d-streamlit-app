@@ -486,18 +486,16 @@ npqp_steps = [
 # ---------------------------
 # Initialize session state
 # ---------------------------
-default_step_template = {
-    "answer": "",
-    "uploaded_files": [],
-    "inspection_stage": [],  # only used for D3
-    "occ_answer": "",        # for D6/D7
-    "det_answer": "",
-    "sys_answer": ""
-}
-
 for step, _, _ in npqp_steps:
     if step not in st.session_state:
-        st.session_state[step] = default_step_template.copy()
+        st.session_state[step] = {
+            "answer": "",
+            "uploaded_files": [],
+            "inspection_stage": [],
+            "occ_answer": "",
+            "det_answer": "",
+            "sys_answer": ""
+        }
 
 st.session_state.setdefault("report_date", datetime.datetime.today().strftime("%B %d, %Y"))
 st.session_state.setdefault("prepared_by", "")
@@ -931,7 +929,6 @@ tabs = st.tabs([t[lang_key][step] for step,_,_ in npqp_steps])
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     with tabs[i]:
         st.markdown(f"### {t[lang_key][step]}")
-
         # Training guidance & example
         st.markdown(f"""
 <div style="
