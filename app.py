@@ -1000,22 +1000,22 @@ line-height:1.5;
 
             # Initialize memory-safe defaults
             if "D3" not in st.session_state:
-                st.session_state["D3"] = {"inspection_stage": [], "uploaded_files": []}
+                st.session_state.setdefault("D3", {"inspection_stage": [], "uploaded_files": []})
 
             # Clean up empty session entries
             st.session_state["D3"]["inspection_stage"] = [
-                s for s in st.session_state["D3"]["inspection_stage"] if s.strip()
+                s for s in st.session_state["D3"].get("inspection_stage", []) if s.strip()
             ]
 
             # Multiselect with previous state restored
-            st.session_state[step]["inspection_stage"] = st.multiselect(
+            st.session_state["D3"]["inspection_stage"] = st.multiselect(
                 "Inspection Stage" if lang_key == "en" else "Etapa de Inspección",
                 [
                     "During Process / Manufacture?" if lang_key == "en" else "Durante el proceso / fabricación",
                     "After manufacture (e.g. Final Inspection)" if lang_key == "en" else "Después de la fabricación (por ejemplo, inspección final)",
                     "Prior dispatch" if lang_key == "en" else "Antes del envío",
                 ],
-                default=st.session_state[step].get("inspection_stage", []),
+                default=st.session_state["D3"]["inspection_stage"],
                 key="d3_inspection_stage",
             )
 
@@ -1039,17 +1039,18 @@ line-height:1.5;
             import gc
 
             # Ensure all D4 keys exist
-            st.session_state[step].setdefault("location", [])
-            st.session_state[step].setdefault("status", [])
-            st.session_state[step].setdefault("answer", "")
-            st.session_state[step].setdefault("uploaded_files", [])
-
+            st.session_state.setdefault("D4", {})
+            st.session_state["D4"].setdefault("location", [])
+            st.session_state["D4"].setdefault("status", [])
+            st.session_state["D4"].setdefault("answer", "")
+            st.session_state["D4"].setdefault("uploaded_files", [])
+            
             # Remove empty entries from memory
-            st.session_state[step]["location"] = [
-                loc for loc in st.session_state[step]["location"] if loc.strip()
+            st.session_state["D4"]["location"] = [
+                loc for loc in st.session_state["D4"]["location"] if loc.strip()
             ]
-            st.session_state[step]["status"] = [
-                s for s in st.session_state[step]["status"] if s.strip()
+            st.session_state["D4"]["status"] = [
+                s for s in st.session_state["D4"]["status"] if s.strip()
             ]
 
             loc_options = [
@@ -1065,21 +1066,21 @@ line-height:1.5;
             ]
 
             # Multiselects (restoring prior selections)
-            st.session_state[step]["location"] = st.multiselect(
+            st.session_state["D4"]["location"] = st.multiselect(
                 t[lang_key]["Location"],
                 options=loc_options,
-                default=st.session_state[step]["location"],
+                default=st.session_state["D4"]["location"],
             )
-            st.session_state[step]["status"] = st.multiselect(
+            st.session_state["D4"]["status"] = st.multiselect(
                 t[lang_key]["Status"],
                 options=status_options,
-                default=st.session_state[step]["status"],
+                default=st.session_state["D4"]["status"],
             )
 
             # Text area
-            st.session_state[step]["answer"] = st.text_area(
+            st.session_state["D4"]["answer"] = st.text_area(
                 t[lang_key]["Containment_Actions"],
-                value=st.session_state[step]["answer"],
+                value=st.session_state["D4"]["answer"],
                 height=150,
             )
 
@@ -1092,12 +1093,13 @@ line-height:1.5;
             )
 
             if uploaded_files:
-                st.session_state[step]["uploaded_files"] = (
-                    st.session_state[step]["uploaded_files"] + uploaded_files
+                st.session_state["D4"]["uploaded_files"] = (
+                    st.session_state["D4"]["uploaded_files"] + uploaded_files
                 )[-10:]  # keep last 10 files
 
             # 🧹 Memory cleanup
             gc.collect()
+            
         elif step == "D5":
             import gc
 
