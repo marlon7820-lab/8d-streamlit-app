@@ -968,7 +968,7 @@ line-height:1.5;
             st.session_state[step]["answer"] = st.text_area(
                 "Your Answer",
                 value=st.session_state[step]["answer"],
-                key=f"ans_{step}"
+                key=f"ans_{step}_1"
             )
             
         if step == "D2":
@@ -981,7 +981,7 @@ line-height:1.5;
             st.session_state[step]["answer"] = st.text_area(
                 "Your Answer",
                 value=st.session_state[step]["answer"],
-                key=f"ans_{step}"
+                key=f"ans_{step}_2"
             )
        # ✅ NEW — D3 inspection stage multiselect (bilingual)
         if step == "D3":
