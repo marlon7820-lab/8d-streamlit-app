@@ -1035,7 +1035,7 @@ line-height:1.5;
             # 🧹 Memory cleanup
             gc.collect()
 
-       elif step == "D4":
+        elif step == "D4":
             import gc
 
             # Ensure all D4 keys exist
