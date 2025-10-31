@@ -1026,6 +1026,13 @@ line-height:1.5;
             )
         elif step == "D5":
             # ---------------------------
+            # Initialize session state safely
+            # ---------------------------
+            st.session_state.setdefault("d5_occ_whys", [""])
+            st.session_state.setdefault("d5_det_whys", [""])
+            st.session_state.setdefault("d5_sys_whys", [""])
+
+            # ---------------------------
             # 🧩 Show D1 concern safely at the top
             # ---------------------------
             d1_concern = st.session_state.get("D1", {}).get("answer", "").strip()
@@ -1043,41 +1050,36 @@ line-height:1.5;
                     st.session_state.d5_occ_whys,
                     occurrence_categories_es,
                     t[lang_key]['Occurrence_Why']
-                    on_change=update_progress
                 )
             else:
                 st.session_state.d5_occ_whys = render_whys_no_repeat_with_other(
                     st.session_state.d5_occ_whys,
                     occurrence_categories,
                     t[lang_key]['Occurrence_Why']
-                    on_change=update_progress
                 )
 
             if st.button("➕ Add another Occurrence Why", key=f"add_occ_{i}"):
                 st.session_state.d5_occ_whys.append("")
-                update_progress()
 
             # ---------------------------
             # Detection Analysis
             # ---------------------------
-            if lang_key == "es":
+           if lang_key == "es":
                 st.session_state.d5_det_whys = render_whys_no_repeat_with_other(
                     st.session_state.d5_det_whys,
                     detection_categories_es,
                     t[lang_key]['Detection_Why']
-                    on_change=update_progress
                 )
             else:
                 st.session_state.d5_det_whys = render_whys_no_repeat_with_other(
                     st.session_state.d5_det_whys,
                     detection_categories,
                     t[lang_key]['Detection_Why']
-                    on_change=update_progress
                 )
 
             if st.button("➕ Add another Detection Why", key=f"add_det_{i}"):
                 st.session_state.d5_det_whys.append("")
-                update_progress()
+
             # ---------------------------
             # Systemic Analysis
             # ---------------------------
@@ -1086,19 +1088,16 @@ line-height:1.5;
                     st.session_state.d5_sys_whys,
                     systemic_categories_es,
                     t[lang_key]['Systemic_Why']
-                    on_change=update_progress
                 )
             else:
                 st.session_state.d5_sys_whys = render_whys_no_repeat_with_other(
                     st.session_state.d5_sys_whys,
                     systemic_categories,
                     t[lang_key]['Systemic_Why']
-                    on_change=update_progress
                 )
 
             if st.button("➕ Add another Systemic Why", key=f"add_sys_{i}"):
                 st.session_state.d5_sys_whys.append("")
-                update_progress()
             
             # ---------------------------
             # Root Cause Suggestions
