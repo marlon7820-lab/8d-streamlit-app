@@ -116,7 +116,6 @@ if st.session_state.get("_reset_8d_session", False):
         st.session_state[k] = v
     st.session_state["_reset_8d_session"] = False
 
-    
     # ---------------------------
     # ✅ Re-initialize 8D structure cleanly to avoid KeyErrors
     # ---------------------------
@@ -138,86 +137,7 @@ if st.session_state.get("_reset_8d_session", False):
     st.session_state["d5_det_whys"] = []
     st.session_state["d5_sys_whys"] = []
     st.rerun()
-# ---------------------------
-# Language selection
-# ---------------------------
-lang_key = st.sidebar.selectbox("Language / Idioma", ["en", "es"], index=0)
 
-# ---------------------------
-# Define your steps, translation dict, and npqp_steps
-# ---------------------------
-npqp_steps = [
-    ("D1", {}, {}), ("D2", {}, {}), ("D3", {}, {}),
-    ("D4", {}, {}), ("D5", {}, {}), ("D6", {}, {}),
-    ("D7", {}, {}), ("D8", {}, {})
-]
-
-t = {
-    "en": {
-        "D1": "Concern Details",
-        "D2": "Similar Part Considerations",
-        "D3": "Initial Analysis",
-        "D4": "Containment Actions / Status",
-        "D5": "Root Cause Analysis",
-        "D6": "Corrective Actions",
-        "D7": "Countermeasure Verification",
-        "D8": "Follow-up Activities",
-        "Report_Date": "Report Date",
-        "Prepared_By": "Prepared By",
-        "Download": "Download",
-        "Location": "Location",
-        "Status": "Status",
-        "Containment_Actions": "Containment Actions",
-        "Occurrence_Why": "Occurrence Why",
-        "Detection_Why": "Detection Why",
-        "Systemic_Why": "Systemic Why",
-        "Root_Cause_Occ": "Root Cause - Occurrence",
-        "Root_Cause_Det": "Root Cause - Detection",
-        "Root_Cause_Sys": "Root Cause - Systemic"
-    },
-    "es": {
-        "D1": "Detalles de la Preocupación",
-        "D2": "Consideraciones de Partes Similares",
-        "D3": "Análisis Inicial",
-        "D4": "Acciones / Estado de Contención",
-        "D5": "Análisis de Causa Raíz",
-        "D6": "Acciones Correctivas",
-        "D7": "Verificación de Contramedidas",
-        "D8": "Actividades de Seguimiento",
-        "Report_Date": "Fecha del Informe",
-        "Prepared_By": "Preparado Por",
-        "Download": "Descargar",
-        "Location": "Ubicación",
-        "Status": "Estado",
-        "Containment_Actions": "Acciones de Contención",
-        "Occurrence_Why": "Por qué de Ocurrencia",
-        "Detection_Why": "Por qué de Detección",
-        "Systemic_Why": "Por qué Sistémico",
-        "Root_Cause_Occ": "Causa Raíz - Ocurrencia",
-        "Root_Cause_Det": "Causa Raíz - Detección",
-        "Root_Cause_Sys": "Causa Raíz - Sistémica"
-    }
-}
-step, _, _ = npqp_steps[st.session_state.current_step_idx]
-
-# --- Step header ---
-st.header(f"Step {st.session_state.current_step_idx + 1}: {t[lang_key][step]}")
-
-# --- Step content placeholder ---
-st.text_area("Answer", value=st.session_state[step].get("answer", ""), height=150)
-
-# --- Bottom navigation buttons ---
-col1, col2 = st.columns(2)
-with col1:
-    if st.button("⬅️ Previous Step"):
-        if st.session_state.current_step_idx > 0:
-            st.session_state.current_step_idx -= 1
-            st.experimental_rerun()
-with col2:
-    if st.button("Next Step ➡️"):
-        if st.session_state.current_step_idx < len(npqp_steps) - 1:
-            st.session_state.current_step_idx += 1
-            st.experimental_rerun()
 # ---------------------------
 # Main title
 # ---------------------------
@@ -234,7 +154,6 @@ st.markdown(f"""
 Version {version_number} | Last updated: {last_updated}
 </p>
 """, unsafe_allow_html=True)
-
 
 # ---------------------------
 # Sidebar: Language & Dark Mode
