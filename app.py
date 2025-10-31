@@ -964,7 +964,7 @@ line-height:1.5;
                 st.session_state[step]["inspection_stage"] = st.multiselect(
                     "Inspection Stage",
                     [
-                        "During Process / Manufacture?",
+                        "During Process / Manufacture",
                         "After manufacture (e.g. Final Inspection)",
                         "Prior dispatch"
                     ],
