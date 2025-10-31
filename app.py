@@ -927,18 +927,24 @@ st.write(f"Completed {progress} of {total_steps} steps")
 # ---------------------------
 tab_labels = []
 for step, _, _ in npqp_steps:
-    if step == "D5":
-        filled = d5_filled
+    filled = False
+    # Basic text answers
+    if st.session_state.get(step, {}).get("answer", "").strip():
+        filled = True
+    # Special handling for D5–D7
+    elif step == "D5":
+        filled = any([
+            any(w.strip() for w in st.session_state.get("d5_occ_whys", [])),
+            any(w.strip() for w in st.session_state.get("d5_det_whys", [])),
+            any(w.strip() for w in st.session_state.get("d5_sys_whys", []))
+        ])
     elif step == "D6":
-        filled = d6_filled
+        filled = any(st.session_state.get("D6", {}).get(k, "").strip() for k in ["occ_answer", "det_answer", "sys_answer"])
     elif step == "D7":
-        filled = d7_filled
-    else:
-        filled = st.session_state.get(step, {}).get("answer", "").strip() != ""
-    
-    tab_labels.append(
-        f"🟢 {t[lang_key][step]}" if filled else f"🔴 {t[lang_key][step]}"
-    )
+        filled = any(st.session_state.get("D7", {}).get(k, "").strip() for k in ["occ_answer", "det_answer", "sys_answer"])
+
+    # Generate tab label
+    tab_labels.append(f"🟢 {t[lang_key][step]}" if filled else f"🔴 {t[lang_key][step]}")
 
 tabs = st.tabs(tab_labels)
 
