@@ -117,8 +117,11 @@ if st.session_state.get("_reset_8d_session", False):
     st.session_state["_reset_8d_session"] = False
 
     # ---------------------------
-    # ✅ Re-initialize 8D structure cleanly to avoid KeyErrors
+    # Initialize session state
     # ---------------------------
+    if "current_step_idx" not in st.session_state:
+        st.session_state.current_step_idx = 0
+        
     default_template = {
         "answer": "",
         "uploaded_files": [],
@@ -129,10 +132,9 @@ if st.session_state.get("_reset_8d_session", False):
         "sys_answer": ""
     }
 
-    for step in ["D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8"]:
+    for step in ["D1","D2","D3","D4","D5","D6","D7","D8"]:
         st.session_state[step] = default_template.copy()
 
-    # ✅ Recreate WHY lists for D5
     st.session_state["d5_occ_whys"] = []
     st.session_state["d5_det_whys"] = []
     st.session_state["d5_sys_whys"] = []
@@ -379,6 +381,14 @@ guidance_content = {
         }
     }
 }
+# ---------------------------
+# Current step
+# ---------------------------
+if "current_step_idx" not in st.session_state:
+    st.session_state.current_step_idx = 0
+
+current_step = npqp_steps[st.session_state.current_step_idx]
+st.header(f"Step {st.session_state.current_step_idx+1}: {t[lang_key][current_step]}")
 
 # ---------------------------
 # Sidebar: App Controls
@@ -1426,7 +1436,21 @@ line-height:1.5;
                     key=f"ans_{step}"
                 )
    
-
+# ---------------------------
+# Bottom navigation buttons
+# ---------------------------
+st.markdown("---")
+col1,col2 = st.columns(2)
+with col1:
+    if st.button("⬅️ Previous Step"):
+        if st.session_state.current_step_idx>0:
+            st.session_state.current_step_idx-=1
+            st.experimental_rerun()
+with col2:
+    if st.button("Next Step ➡️"):
+        if st.session_state.current_step_idx<len(npqp_steps)-1:
+            st.session_state.current_step_idx+=1
+            st.experimental_rerun()
 # ---------------------------
 # Collect all answers for Excel export
 # ---------------------------
