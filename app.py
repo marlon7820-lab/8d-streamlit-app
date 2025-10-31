@@ -116,6 +116,7 @@ if st.session_state.get("_reset_8d_session", False):
         st.session_state[k] = v
     st.session_state["_reset_8d_session"] = False
 
+    
     # ---------------------------
     # ✅ Re-initialize 8D structure cleanly to avoid KeyErrors
     # ---------------------------
@@ -137,7 +138,43 @@ if st.session_state.get("_reset_8d_session", False):
     st.session_state["d5_det_whys"] = []
     st.session_state["d5_sys_whys"] = []
     st.rerun()
+# ---------------------------
+# Language selection
+# ---------------------------
+lang_key = st.sidebar.selectbox("Language / Idioma", ["en", "es"], index=0)
 
+# ---------------------------
+# Define your steps, translation dict, and npqp_steps
+# ---------------------------
+npqp_steps = [
+    ("D1", {}, {}), ("D2", {}, {}), ("D3", {}, {}),
+    ("D4", {}, {}), ("D5", {}, {}), ("D6", {}, {}),
+    ("D7", {}, {}), ("D8", {}, {})
+]
+
+t = {
+    "en": {...},  # same as provided translation dict
+    "es": {...}
+}
+
+# ---------------------------
+# Navigation: Next / Previous
+# ---------------------------
+if "current_step_idx" not in st.session_state:
+    st.session_state.current_step_idx = 0
+
+col1, col2 = st.columns(2)
+with col1:
+    if st.button("⬅️ Previous Step"):
+        if st.session_state.current_step_idx > 0:
+            st.session_state.current_step_idx -= 1
+with col2:
+    if st.button("Next Step ➡️"):
+        if st.session_state.current_step_idx < len(npqp_steps) - 1:
+            st.session_state.current_step_idx += 1
+
+step, _, _ = npqp_steps[st.session_state.current_step_idx]
+st.header(f"Step {st.session_state.current_step_idx + 1}: {t[lang_key][step]}")
 # ---------------------------
 # Main title
 # ---------------------------
@@ -154,6 +191,7 @@ st.markdown(f"""
 Version {version_number} | Last updated: {last_updated}
 </p>
 """, unsafe_allow_html=True)
+
 
 # ---------------------------
 # Sidebar: Language & Dark Mode
