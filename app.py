@@ -1362,12 +1362,20 @@ line-height:1.5;
 
         else:
             if step not in ["D4", "D5", "D6", "D7", "D8"]:
-                # Custom labels for D1–D3
-                label_map = {
-                    "D1": "Concern Details",
-                    "D2": "Similar Part Considerations",
-                    "D3": "Initial Analysis"
-                }
+                # Bilingual labels for D1–D3
+                if lang_key == "es":
+                    label_map = {
+                        "D1": "Detalles de la Preocupación",
+                        "D2": "Consideraciones de Partes Similares",
+                        "D3": "Análisis Inicial"
+                    }
+                else:  # default English
+                    label_map = {
+                        "D1": "Concern Details",
+                        "D2": "Similar Part Considerations",
+                        "D3": "Initial Analysis"
+                    }
+
                 # Fallback for any others (if added later)
                 label = label_map.get(step, f"{step} – Your Answer")
 
