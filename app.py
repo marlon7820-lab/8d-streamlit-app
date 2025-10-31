@@ -988,14 +988,14 @@ line-height:1.5;
         # Step-specific inputs
         # ---------------------------
         if step == "D3":
-            options = ["During Process / Manufacture", "After manufacture (e.g. Final Inspection)", "Prior dispatch"] if lang_key=="en" else ["Durante el proceso / fabricación", "Después de la fabricación (por ejemplo, inspección final)", "Antes del envío"]
+            st.session_state[step].setdefault("inspection_stage", [])
             st.session_state[step]["inspection_stage"] = st.multiselect(
-                "Inspection Stage" if lang_key=="en" else "Etapa de Inspección",
-                options=options,
-                default=st.session_state[step].get("inspection_stage", []),
-                key=f"d3_stage_{i}",
-                on_change=update_progress
+                t[lang_key]["Inspection_Stage"],
+                ["During Process / Manufacture", "After manufacture", "Prior dispatch"] if lang_key=="en" else ["Durante el proceso / fabricación","Después de la fabricación","Antes del envío"],
+                default=st.session_state[step]["inspection_stage"]
             )
+            st.session_state[step].setdefault("answer", "")
+            st.session_state[step]["answer"] = st.text_area("D3 Notes", st.session_state[step]["answer"], height=120)
 
         elif step == "D4":
             st.session_state[step].setdefault("location", [])
