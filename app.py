@@ -207,15 +207,15 @@ if "current_step_idx" not in st.session_state:
 bottom_buttons = st.empty()
 
 with bottom_buttons.container():
-col1, col2 = st.columns(2)
-with col1:
-    if st.button("⬅️ Previous Step"):
-        if st.session_state.current_step_idx > 0:
-            st.session_state.current_step_idx -= 1
-with col2:
-    if st.button("Next Step ➡️"):
-        if st.session_state.current_step_idx < len(npqp_steps) - 1:
-            st.session_state.current_step_idx += 1
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("⬅️ Previous Step"):
+            if st.session_state.current_step_idx > 0:
+                st.session_state.current_step_idx -= 1
+    with col2:
+        if st.button("Next Step ➡️"):
+            if st.session_state.current_step_idx < len(npqp_steps) - 1:
+                st.session_state.current_step_idx += 1
 
 step, _, _ = npqp_steps[st.session_state.current_step_idx]
 st.header(f"Step {st.session_state.current_step_idx + 1}: {t[lang_key][step]}")
