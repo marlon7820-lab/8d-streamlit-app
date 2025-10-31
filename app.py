@@ -454,7 +454,21 @@ t = {
         "Containment_Actions": "Acciones de contención"
     }
 }
+# English
+t["en"].update({
+    "Concern_Details": "Concern Details",
+    "Similar_Part_Considerations": "Similar Part Considerations",
+    "Initial_Analysis": "Initial Analysis",
+    "Follow_up_Activities": "Follow-up Activities"
+})
 
+# Spanish
+t["es"].update({
+    "Concern_Details": "Detalles de la Preocupación",
+    "Similar_Part_Considerations": "Consideraciones de Piezas Similares",
+    "Initial_Analysis": "Análisis Inicial",
+    "Follow_up_Activities": "Actividades de Seguimiento"
+})
 # ---------------------------
 # NPQP 8D steps with examples
 # ---------------------------
