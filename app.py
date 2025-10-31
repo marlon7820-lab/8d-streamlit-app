@@ -888,62 +888,67 @@ st.markdown("### 🧭 8D Completion Progress")
 progress = 0
 total_steps = len(["D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8"])
 
-# Count how many steps have any filled content
+# Helper function to check if D5 is filled
+d5_filled = (
+    any(w.strip() for w in st.session_state.get("d5_occ_whys", [])) or
+    any(w.strip() for w in st.session_state.get("d5_det_whys", [])) or
+    any(w.strip() for w in st.session_state.get("d5_sys_whys", []))
+)
+
+# Helper function to check if D6 is filled
+d6_filled = any(
+    st.session_state.get("D6", {}).get(k, "").strip() 
+    for k in ["occ_answer", "det_answer", "sys_answer"]
+)
+
+# Helper function to check if D7 is filled
+d7_filled = any(
+    st.session_state.get("D7", {}).get(k, "").strip() 
+    for k in ["occ_answer", "det_answer", "sys_answer"]
+)
+
+# Count completed steps
 for step in ["D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8"]:
-    filled = False
-
-    if step in ["D1", "D2", "D3", "D4", "D8"]:
-        filled = bool(st.session_state.get(step, {}).get("answer", "").strip())
-
-    elif step == "D5":
-        # Check if any Why list has content
-        filled = (
-            any(w.strip() for w in st.session_state.d5_occ_whys) or
-            any(w.strip() for w in st.session_state.d5_det_whys) or
-            any(w.strip() for w in st.session_state.d5_sys_whys)
-        )
-
-    elif step in ["D6", "D7"]:
-        filled = any(
-            st.session_state.get(step, {}).get(key, "").strip()
-            for key in ["occ_answer", "det_answer", "sys_answer"]
-        )
-
-    if filled:
+    if step == "D5" and d5_filled:
         progress += 1
+    elif step == "D6" and d6_filled:
+        progress += 1
+    elif step == "D7" and d7_filled:
+        progress += 1
+    else:
+        if st.session_state.get(step, {}).get("answer", "").strip():
+            progress += 1
 
 st.progress(progress / total_steps)
 st.write(f"Completed {progress} of {total_steps} steps")
 
 # ---------------------------
-# Render Tabs with Uploads (UPDATED LABELS)
+# Render Tabs with Uploads
 # ---------------------------
 tab_labels = []
 for step, _, _ in npqp_steps:
-    filled = False
-
-    if step in ["D1", "D2", "D3", "D4", "D8"]:
-        filled = bool(st.session_state.get(step, {}).get("answer", "").strip())
-    elif step == "D5":
-        filled = any(
-            any(w.strip() for w in st.session_state.d5_occ_whys) or
-            any(w.strip() for w in st.session_state.d5_det_whys) or
-            any(w.strip() for w in st.session_state.d5_sys_whys)
-        )
-    elif step in ["D6", "D7"]:
-        filled = any(
-            st.session_state.get(step, {}).get(key, "").strip()
-            for key in ["occ_answer", "det_answer", "sys_answer"]
-        )
-
-    label = f"🟢 {t[lang_key][step]}" if filled else f"🔴 {t[lang_key][step]}"
-    tab_labels.append(label)
+    if step == "D5":
+        filled = d5_filled
+    elif step == "D6":
+        filled = d6_filled
+    elif step == "D7":
+        filled = d7_filled
+    else:
+        filled = st.session_state.get(step, {}).get("answer", "").strip() != ""
+    
+    tab_labels.append(
+        f"🟢 {t[lang_key][step]}" if filled else f"🔴 {t[lang_key][step]}"
+    )
 
 tabs = st.tabs(tab_labels)
 
+# ---------------------------
+# Rest of your tab rendering code remains unchanged
+# ---------------------------
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     with tabs[i]:
         st.markdown(f"### {t[lang_key][step]}")
+        # ... (keep your existing rendering code here)
 
         # Training Guidance & Example box
         note_text = note_dict[lang_key]
