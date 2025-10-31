@@ -886,64 +886,39 @@ def render_whys_no_repeat_with_other(why_list, categories, label_prefix, lang_ke
 st.markdown("### 🧭 8D Completion Progress")
 
 progress = 0
-total_steps = len(["D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8"])
+steps = ["D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8"]
+total_steps = len(steps)
 
-# Helper function to check if D5 is filled
-d5_filled = (
-    any(w.strip() for w in st.session_state.get("d5_occ_whys", [])) or
-    any(w.strip() for w in st.session_state.get("d5_det_whys", [])) or
-    any(w.strip() for w in st.session_state.get("d5_sys_whys", []))
-)
+# Check if each step is filled
+def is_step_filled(step):
+    if st.session_state.get(step, {}).get("answer", "").strip():
+        return True
+    if step == "D5":
+        return any([
+            any(w.strip() for w in st.session_state.get("d5_occ_whys", [])),
+            any(w.strip() for w in st.session_state.get("d5_det_whys", [])),
+            any(w.strip() for w in st.session_state.get("d5_sys_whys", []))
+        ])
+    if step == "D6":
+        return any(st.session_state.get("D6", {}).get(k, "").strip() for k in ["occ_answer", "det_answer", "sys_answer"])
+    if step == "D7":
+        return any(st.session_state.get("D7", {}).get(k, "").strip() for k in ["occ_answer", "det_answer", "sys_answer"])
+    return False
 
-# Helper function to check if D6 is filled
-d6_filled = any(
-    st.session_state.get("D6", {}).get(k, "").strip() 
-    for k in ["occ_answer", "det_answer", "sys_answer"]
-)
-
-# Helper function to check if D7 is filled
-d7_filled = any(
-    st.session_state.get("D7", {}).get(k, "").strip() 
-    for k in ["occ_answer", "det_answer", "sys_answer"]
-)
-
-# Count completed steps
-for step in ["D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8"]:
-    if step == "D5" and d5_filled:
+# Compute progress dynamically
+for step in steps:
+    if is_step_filled(step):
         progress += 1
-    elif step == "D6" and d6_filled:
-        progress += 1
-    elif step == "D7" and d7_filled:
-        progress += 1
-    else:
-        if st.session_state.get(step, {}).get("answer", "").strip():
-            progress += 1
 
 st.progress(progress / total_steps)
 st.write(f"Completed {progress} of {total_steps} steps")
 
 # ---------------------------
-# Render Tabs with Uploads
+# Render Tabs with live status
 # ---------------------------
 tab_labels = []
 for step, _, _ in npqp_steps:
-    filled = False
-    # Basic text answers
-    if st.session_state.get(step, {}).get("answer", "").strip():
-        filled = True
-    # Special handling for D5–D7
-    elif step == "D5":
-        filled = any([
-            any(w.strip() for w in st.session_state.get("d5_occ_whys", [])),
-            any(w.strip() for w in st.session_state.get("d5_det_whys", [])),
-            any(w.strip() for w in st.session_state.get("d5_sys_whys", []))
-        ])
-    elif step == "D6":
-        filled = any(st.session_state.get("D6", {}).get(k, "").strip() for k in ["occ_answer", "det_answer", "sys_answer"])
-    elif step == "D7":
-        filled = any(st.session_state.get("D7", {}).get(k, "").strip() for k in ["occ_answer", "det_answer", "sys_answer"])
-
-    # Generate tab label
+    filled = is_step_filled(step)
     tab_labels.append(f"🟢 {t[lang_key][step]}" if filled else f"🔴 {t[lang_key][step]}")
 
 tabs = st.tabs(tab_labels)
