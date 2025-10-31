@@ -1414,6 +1414,16 @@ st.session_state["D5"]["det_root_cause"] = det_text
 st.session_state["D5"]["sys_root_cause"] = sys_text
 
 for step, _, _ in npqp_steps:
+    if step == "D1":
+        # D1 text area
+        answer = st.session_state[step].get("answer", "").strip()
+        extra = ""  # No dropdowns in D1
+        data_rows.append((step, answer, extra))
+    elif step == "D2":
+        # D2 text area
+        answer = st.session_state[step].get("answer", "").strip()
+        extra = ""  # No dropdowns
+        data_rows.append((step, answer, extra))
     if step == "D6":
         data_rows.append(("D6 - Occurrence Countermeasure", st.session_state.get("D6", {}).get("occ_answer", ""), ""))
         data_rows.append(("D6 - Detection Countermeasure", st.session_state.get("D6", {}).get("det_answer", ""), ""))
