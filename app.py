@@ -897,7 +897,7 @@ for step in ["D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8"]:
 
     elif step == "D5":
         # Check if any Why list has content
-        filled = any(
+        filled = (
             any(w.strip() for w in st.session_state.d5_occ_whys) or
             any(w.strip() for w in st.session_state.d5_det_whys) or
             any(w.strip() for w in st.session_state.d5_sys_whys)
