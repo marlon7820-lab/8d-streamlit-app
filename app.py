@@ -198,27 +198,26 @@ t = {
         "Root_Cause_Sys": "Causa Raíz - Sistémica"
     }
 }
-# ---------------------------
-# Navigation: Next / Previous
-# ---------------------------
-if "current_step_idx" not in st.session_state:
-    st.session_state.current_step_idx = 0
-# Placeholder at the bottom
-bottom_buttons = st.empty()
-
-with bottom_buttons.container():
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("⬅️ Previous Step"):
-            if st.session_state.current_step_idx > 0:
-                st.session_state.current_step_idx -= 1
-    with col2:
-        if st.button("Next Step ➡️"):
-            if st.session_state.current_step_idx < len(npqp_steps) - 1:
-                st.session_state.current_step_idx += 1
-
 step, _, _ = npqp_steps[st.session_state.current_step_idx]
+
+# --- Step header ---
 st.header(f"Step {st.session_state.current_step_idx + 1}: {t[lang_key][step]}")
+
+# --- Step content placeholder ---
+st.text_area("Answer", value=st.session_state[step].get("answer", ""), height=150)
+
+# --- Bottom navigation buttons ---
+col1, col2 = st.columns(2)
+with col1:
+    if st.button("⬅️ Previous Step"):
+        if st.session_state.current_step_idx > 0:
+            st.session_state.current_step_idx -= 1
+            st.experimental_rerun()
+with col2:
+    if st.button("Next Step ➡️"):
+        if st.session_state.current_step_idx < len(npqp_steps) - 1:
+            st.session_state.current_step_idx += 1
+            st.experimental_rerun()
 # ---------------------------
 # Main title
 # ---------------------------
