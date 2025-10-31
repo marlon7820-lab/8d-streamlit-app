@@ -211,6 +211,7 @@ st.text_area("Your Answer:", key=f"{current_step}_answer", height=150)
 # ---------------------------
 # Next / Previous buttons
 # ---------------------------
+st.markdown("<hr>", unsafe_allow_html=True)
 col1, col2 = st.columns([1,1])
 with col1:
     if st.button("⬅ Previous"):
