@@ -1341,7 +1341,7 @@ line-height:1.5;
 
         elif step == "D8":
             st.session_state[step]["answer"] = st.text_area(
-                "Your Answer",
+                t[lang_key]["Follow_up_Activities"],  # bilingual label
                 value=st.session_state[step]["answer"],
                 key=f"ans_{step}"
             )
