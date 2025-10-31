@@ -1350,9 +1350,9 @@ line-height:1.5;
             if step not in ["D4", "D5", "D6", "D7", "D8"]:
                 # Custom labels for D1–D3
                 label_map = {
-                    "D1": "D1 – Concern Details",
-                    "D2": "D2 – Similar Part Considerations",
-                    "D3": "D3 – Initial Analysis"
+                    "D1": "Concern Details",
+                    "D2": "Similar Part Considerations",
+                    "D3": "Initial Analysis"
                 }
                 # Fallback for any others (if added later)
                 label = label_map.get(step, f"{step} – Your Answer")
