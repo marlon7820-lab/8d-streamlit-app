@@ -19,38 +19,51 @@ st.set_page_config(
 )
 
 # ---------------------------
-# App styles
+# App styles - updated for desktop selectbox outline + thumbnails + Root Cause textarea
 # ---------------------------
 st.markdown("""
 <style>
+/* Main app background and text */
 .stApp {
     background: linear-gradient(to right, #f0f8ff, #e6f2ff);
     color: #000000 !important;
 }
+
+/* Tabs */
 .stTabs [data-baseweb="tab"] {
     font-weight: bold;
     color: #000000 !important;
 }
+
+/* All textareas */
 textarea {
     background-color: #ffffff !important;
     border: 1px solid #1E90FF !important;
     border-radius: 5px;
     color: #000000 !important;
 }
+
+/* Info boxes */
 .stInfo {
     background-color: #e6f7ff !important;
     border-left: 5px solid #1E90FF !important;
     color: #000000 !important;
 }
+
+/* Labels */
 .css-1d391kg {
     color: #1E90FF !important;
     font-weight: bold !important;
 }
+
+/* Buttons */
 button[kind="primary"] {
     background-color: #87AFC7 !important;
     color: white !important;
     font-weight: bold;
 }
+
+/* Inputs, Textareas, Selectboxes styling */
 div.stSelectbox, div.stTextInput, div.stTextArea {
     border: 2px solid #1E90FF !important;
     border-radius: 5px !important;
@@ -62,6 +75,8 @@ div.stSelectbox:hover, div.stTextInput:hover, div.stTextArea:hover {
     border: 2px solid #104E8B !important;
     box-shadow: 0 0 5px #1E90FF;
 }
+
+/* Thumbnails */
 .image-thumbnail {
     width: 120px;
     height: 80px;
@@ -70,60 +85,69 @@ div.stSelectbox:hover, div.stTextInput:hover, div.stTextArea:hover {
     border: 1px solid #1E90FF;
     border-radius: 4px;
 }
+
+/* Suggesting Root Cause textarea */
 .root-cause-box textarea[disabled] {
     color: #000000 !important;
     background-color: #ffffff !important;
     font-weight: bold !important;
     opacity: 1 !important;
 }
+
+/* Enable browser spellcheck and autocorrect for both English and Spanish */
 textarea, input[type="text"] {
     spellcheck: true !important;
     autocorrect: on !important;
     autocapitalize: on !important;
-    lang: es !important;
+    lang: es !important; /* Support for Spanish */
 }
 </style>
 """, unsafe_allow_html=True)
-
 # ---------------------------
-# Reset Session cleanly
+# Reset Session check
 # ---------------------------
 if st.session_state.get("_reset_8d_session", False):
     preserve_keys = ["lang", "lang_key", "current_tab"]
     preserved = {k: st.session_state[k] for k in preserve_keys if k in st.session_state}
-    st.session_state.clear()
-    st.session_state.update(preserved)
+    for key in list(st.session_state.keys()):
+        if key not in preserve_keys and key != "_reset_8d_session":
+            del st.session_state[key]
+    for k, v in preserved.items():
+        st.session_state[k] = v
     st.session_state["_reset_8d_session"] = False
 
-# ---------------------------
-# Initialize 8D structure (no duplicates)
-# ---------------------------
-default_template = {
-    "answer": "",
-    "uploaded_files": [],
-    "location": [],
-    "status": [],
-    "occ_answer": "",
-    "det_answer": "",
-    "sys_answer": ""
-}
+    # ---------------------------
+    # ✅ Re-initialize 8D structure cleanly to avoid KeyErrors
+    # ---------------------------
+    default_template = {
+        "answer": "",
+        "uploaded_files": [],
+        "location": [],  # empty list for multiselect
+        "status": [],    # empty list for multiselect
+        "occ_answer": "",
+        "det_answer": "",
+        "sys_answer": ""
+    }
 
-for step in ["D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8"]:
-    if step not in st.session_state:
+    for step in ["D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8"]:
         st.session_state[step] = default_template.copy()
 
-st.session_state.setdefault("d5_occ_whys", [])
-st.session_state.setdefault("d5_det_whys", [])
-st.session_state.setdefault("d5_sys_whys", [])
+    # ✅ Recreate WHY lists for D5
+    st.session_state["d5_occ_whys"] = []
+    st.session_state["d5_det_whys"] = []
+    st.session_state["d5_sys_whys"] = []
+    st.rerun()
 
 # ---------------------------
-# Main Title
+# Main title
 # ---------------------------
 st.markdown("<h1 style='text-align: center; color: #1E90FF;'>📋 8D Report Assistant</h1>", unsafe_allow_html=True)
 
+# ---------------------------
+# Version info
+# ---------------------------
 version_number = "v1.4.0"
-last_updated = "October 31, 2025"
-
+last_updated = "October 29, 2025"
 st.markdown(f"""
 <hr style='border:1px solid #1E90FF; margin-top:10px; margin-bottom:5px;'>
 <p style='font-size:12px; font-style:italic; text-align:center; color:#555555;'>
@@ -132,7 +156,7 @@ Version {version_number} | Last updated: {last_updated}
 """, unsafe_allow_html=True)
 
 # ---------------------------
-# Sidebar: Language & Settings
+# Sidebar: Language & Dark Mode
 # ---------------------------
 st.sidebar.title("8D Report Assistant")
 st.sidebar.markdown("---")
@@ -140,38 +164,89 @@ st.sidebar.header("Settings")
 
 lang = st.sidebar.selectbox("Select Language / Seleccionar Idioma", ["English", "Español"])
 lang_key = "en" if lang == "English" else "es"
-st.session_state["lang"] = lang
-st.session_state["lang_key"] = lang_key
-
-# Dark Mode toggle
+# ---------------------------
+# Dynamic spellcheck language (English ↔ Spanish)
+# ---------------------------
+if lang == "English":
+    spell_lang = "en"
+else:
+    spell_lang = "es"
 dark_mode = st.sidebar.checkbox("🌙 Dark Mode")
-
 if dark_mode:
     st.markdown("""
     <style>
-    .stApp { background: linear-gradient(to right, #1e1e1e, #2c2c2c); color: #f5f5f5 !important; }
-    .stTabs [data-baseweb="tab"] { color: #f5f5f5 !important; font-weight: bold; }
-    div.stTextInput, div.stTextArea, div.stSelectbox {
-        border: 2px solid #87AFC7 !important;
-        background-color: #2c2c2c !important;
+    /* Main app background & text */
+    .stApp {
+        background: linear-gradient(to right, #1e1e1e, #2c2c2c);
+        color: #f5f5f5 !important;
+
+    /* Tabs */
+    .stTabs [data-baseweb="tab"] {
+        font-weight: bold; 
         color: #f5f5f5 !important;
     }
-    .stSidebar { background-color: #1e1e1e !important; color: #f5f5f5 !important; }
+    .stTabs [data-baseweb="tab"]:hover {
+        color: #87AFC7 !important;
+    }
+
+    /* Text inputs, textareas, selectboxes */
+    div.stTextInput, div.stTextArea, div.stSelectbox {
+        border: 2px solid #87AFC7 !important;
+        border-radius: 5px !important;
+        background-color: #2c2c2c !important;
+        color: #f5f5f5 !important;
+        padding: 5px !important;
+        transition: border 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+    div.stTextInput:hover, div.stTextArea:hover, div.stSelectbox:hover {
+        border: 2px solid #1E90FF !important;
+        box-shadow: 0 0 5px #1E90FF;
+    }
+
+    /* Labels above inputs */
+    div.stTextInput label,
+    div.stTextArea label,
+    div.stSelectbox label {
+        color: #f5f5f5 !important;
+        font-weight: bold;
+    }
+
+    /* Info boxes */
+    .stInfo {
+        background-color: #3a3a3a !important; 
+        border-left: 5px solid #87AFC7 !important; 
+        color: #f5f5f5 !important;
+    }
+
+    /* Sidebar background & text (kept separate) */
+    .css-1d391kg {color: #87AFC7 !important; font-weight: bold !important;}
+    .stSidebar {
+        background-color: #1e1e1e !important;
+        color: #f5f5f5 !important;
+    }
     </style>
     """, unsafe_allow_html=True)
 
-# Sidebar button styles
+# ---------------------------
+# Sidebar buttons - consistent colors in light & dark mode
+# ---------------------------
 st.markdown("""
 <style>
-.stSidebar button, .stSidebar .stDownloadButton button {
-    background-color: #87AFC7 !important;
-    color: #000000 !important;
+/* All sidebar buttons, including Reset 8D Session & Download XLSX */
+.stSidebar button,
+.stSidebar .stDownloadButton button {
+    background-color: #87AFC7 !important;  /* main blue */
+    color: #000000 !important;             /* black text */
     font-weight: bold;
     border-radius: 5px;
+    transition: background-color 0.2s ease, color 0.2s ease;
 }
-.stSidebar button:hover, .stSidebar .stDownloadButton button:hover {
-    background-color: #1E90FF !important;
-    color: #ffffff !important;
+
+/* Hover effect */
+.stSidebar button:hover,
+.stSidebar .stDownloadButton button:hover {
+    background-color: #1E90FF !important;  /* darker blue */
+    color: #ffffff !important;             /* white text */
 }
 </style>
 """, unsafe_allow_html=True)
@@ -379,21 +454,7 @@ t = {
         "Containment_Actions": "Acciones de contención"
     }
 }
-# English
-t["en"].update({
-    "Concern_Details": "Concern Details",
-    "Similar_Part_Considerations": "Similar Part Considerations",
-    "Initial_Analysis": "Initial Analysis",
-    "Follow_up_Activities": "Follow-up Activities"
-})
 
-# Spanish
-t["es"].update({
-    "Concern_Details": "Detalles de la Preocupación",
-    "Similar_Part_Considerations": "Consideraciones de Piezas Similares",
-    "Initial_Analysis": "Análisis Inicial",
-    "Follow_up_Activities": "Actividades de Seguimiento"
-})
 # ---------------------------
 # NPQP 8D steps with examples
 # ---------------------------
@@ -413,14 +474,9 @@ npqp_steps = [
 # ---------------------------
 for step, _, _ in npqp_steps:
     if step not in st.session_state:
-        st.session_state[step] = {
-            "answer": "",
-            "uploaded_files": [],
-            "inspection_stage": [],
-            "occ_answer": "",
-            "det_answer": "",
-            "sys_answer": ""
-        }
+        st.session_state[step] = {"answer": "", "extra": ""}
+        if step in ["D1","D3","D4","D7"]:
+            st.session_state[step]["uploaded_files"] = []
 
 st.session_state.setdefault("report_date", datetime.datetime.today().strftime("%B %d, %Y"))
 st.session_state.setdefault("prepared_by", "")
@@ -826,8 +882,6 @@ for step in ["D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8"]:
 
 st.progress(progress / total_steps)
 st.write(f"Completed {progress} of {total_steps} steps")
-
-
 # ---------------------------
 # Render Tabs with Uploads
 # ---------------------------
@@ -835,26 +889,15 @@ tab_labels = [
     f"🟢 {t[lang_key][step]}" if st.session_state[step]["answer"].strip() else f"🔴 {t[lang_key][step]}"
     for step, _, _ in npqp_steps
 ]
-tabs = st.tabs([t[lang_key][s] for s, _, _ in npqp_steps])
-
-# Mapping steps to labels
-step_labels = {
-    "D1": "Concern_Details",
-    "D2": "Similar_Part_Considerations",
-    "D3": "Initial_Analysis",
-    "D4": "D4",
-    "D5": "D5",
-    "D6": "D6",
-    "D7": "D7",
-    "D8": "Follow_up_Activities"
-}
-
-tabs = st.tabs([t[lang_key][step] for step,_,_ in npqp_steps])
+tabs = st.tabs(tab_labels)
 
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     with tabs[i]:
         st.markdown(f"### {t[lang_key][step]}")
-        # Training guidance & example
+
+        # Training Guidance & Example box
+        note_text = note_dict[lang_key]
+        example_text = example_dict[lang_key]
         st.markdown(f"""
 <div style="
 background-color:#b3e0ff;
@@ -866,21 +909,21 @@ width:100%;
 font-size:14px;
 line-height:1.5;
 ">
-<b>{t[lang_key]['Training_Guidance']}:</b> {note_dict[lang_key]}<br><br>
-💡 <b>{t[lang_key]['Example']}:</b> {example_dict[lang_key]}
+<b>{t[lang_key]['Training_Guidance']}:</b> {note_text}<br><br>
+💡 <b>{t[lang_key]['Example']}:</b> {example_text}
 </div>
 """, unsafe_allow_html=True)
 
-        # Step-specific guidance expander
+        # Step-specific guidance expander from guidance_content
         gc = guidance_content[step][lang_key]
         with st.expander(f"📘 {gc['title']}"):
             st.markdown(gc["tips"])
 
-        # File uploader for D1, D3, D4, D7
+        # File uploads for D1, D3, D4, D7
         if step in ["D1","D3","D4","D7"]:
             uploaded_files = st.file_uploader(
                 f"Upload files/photos for {step}",
-                type=["png","jpg","jpeg","pdf","xlsx","txt"],
+                type=["png", "jpg", "jpeg", "pdf", "xlsx", "txt"],
                 accept_multiple_files=True,
                 key=f"upload_{step}"
             )
@@ -889,48 +932,40 @@ line-height:1.5;
                     if file not in st.session_state[step]["uploaded_files"]:
                         st.session_state[step]["uploaded_files"].append(file)
 
-        # Display uploaded files
-        if step in ["D1","D3","D4","D7"] and st.session_state[step]["uploaded_files"]:
+        # Display uploaded files (aligned with file upload)
+        if step in ["D1","D3","D4","D7"] and st.session_state[step].get("uploaded_files"):
             st.markdown("**Uploaded Files / Photos:**")
             for f in st.session_state[step]["uploaded_files"]:
                 st.write(f"{f.name}")
                 if f.type.startswith("image/"):
                     st.image(f, width=192)
 
-        # Text area
-        step_labels = {
-            "D1": "Concern_Details",
-            "D2": "Similar_Part_Considerations",
-            "D3": "Initial_Analysis",
-            "D4": "Containment_Actions",
-            "D5": "Final_Analysis",
-            "D6": "Permanent_Corrective_Actions",
-            "D7": "Countermeasure_Confirmation",
-            "D8": "Follow_up_Activities"
-        }
+        # ---------------------------
+        # Step-specific inputs
+        # ---------------------------
 
-        st.session_state[step]["answer"] = st.text_area(
-            label=t[lang_key].get(step_labels.get(step, "D1"), "Answer"),
-            value=st.session_state[step]["answer"],
-            key=f"{step}_answer"
-        )
-
-        # D3 inspection stage multiselect
+       # ✅ NEW — D3 inspection stage multiselect (bilingual)
         if step == "D3":
-            options = [
-                "During Process / Manufacture?",
-                "After manufacture (e.g. Final Inspection)",
-                "Prior dispatch"
-            ] if lang_key == "en" else [
-                "Durante el proceso / fabricación",
-                "Después de la fabricación (por ejemplo, inspección final)",
-                "Antes del envío"
-            ]
-            st.session_state[step]["inspection_stage"] = st.multiselect(
-                "Inspection Stage" if lang_key=="en" else "Etapa de Inspección",
-                options,
-                default=st.session_state[step].get("inspection_stage", [])
-            )
+            if lang_key == "en":
+                st.session_state[step]["inspection_stage"] = st.multiselect(
+                    "Inspection Stage",
+                    [
+                        "During Process / Manufacture?",
+                        "After manufacture (e.g. Final Inspection)",
+                        "Prior dispatch"
+                    ],
+                    default=st.session_state[step].get("inspection_stage", [])
+                )
+            else:
+                st.session_state[step]["inspection_stage"] = st.multiselect(
+                    "Etapa de Inspección",
+                    [
+                        "Durante el proceso / fabricación",
+                        "Después de la fabricación (por ejemplo, inspección final)",
+                        "Antes del envío"
+                    ],
+                    default=st.session_state[step].get("inspection_stage", [])
+                )
 
         
         if step == "D4":
@@ -1306,17 +1341,18 @@ line-height:1.5;
 
         elif step == "D8":
             st.session_state[step]["answer"] = st.text_area(
-                t[lang_key]["Follow_up_Activities"],
-                value=st.session_state[step]["answer"],
-                key=f"{step}_answer_txt3"
-            )
-
-        else:
-            st.session_state[step]["answer"] = st.text_area(
                 "Your Answer",
                 value=st.session_state[step]["answer"],
                 key=f"ans_{step}"
             )
+
+        else:
+            if step not in ["D4", "D5", "D6", "D7", "D8"]:
+                st.session_state[step]["answer"] = st.text_area(
+                    "Your Answer",
+                    value=st.session_state[step]["answer"],
+                    key=f"ans_{step}"
+                )
    
 
 # ---------------------------
