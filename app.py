@@ -1064,7 +1064,7 @@ line-height:1.5;
             # ---------------------------
             # Detection Analysis
             # ---------------------------
-           if lang_key == "es":
+            if lang_key == "es":
                 st.session_state.d5_det_whys = render_whys_no_repeat_with_other(
                     st.session_state.d5_det_whys,
                     detection_categories_es,
