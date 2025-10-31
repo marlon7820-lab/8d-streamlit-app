@@ -203,7 +203,10 @@ t = {
 # ---------------------------
 if "current_step_idx" not in st.session_state:
     st.session_state.current_step_idx = 0
+# Placeholder at the bottom
+bottom_buttons = st.empty()
 
+with bottom_buttons.container():
 col1, col2 = st.columns(2)
 with col1:
     if st.button("⬅️ Previous Step"):
