@@ -990,11 +990,11 @@ line-height:1.5;
 
             # Options for bilingual support
             if lang_key == "en":
-                loc_options = ["During Process / Manufacture?", "After manufacture (e.g. Final Inspection)", "Prior dispatch"]
-                status_options = ["Pending", "In Progress", "Completed", "Other"]
+                loc_options = ["Work in progress", "Stores stock", "Warehouse stock", "Service parts"]
+                status_options = ["Pending", "In Progress", "Completed"]
             else:
-                loc_options = ["Durante el proceso / Fabricación", "Después de fabricación (p. ej., Inspección Final)", "Previo al despacho"]
-                status_options = ["Pendiente", "En Progreso", "Completado", "Otro"]
+                loc_options = ["En proceso", "Stock de almacén", "Stock de bodega", "Piezas de servicio"]
+                status_options = ["Pendiente", "En Progreso", "Completado"]
 
             # Multi-select dropdowns
             st.session_state[step]["location"] = st.multiselect(
