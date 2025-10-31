@@ -153,10 +153,51 @@ npqp_steps = [
 ]
 
 t = {
-    "en": {...},  # same as provided translation dict
-    "es": {...}
+    "en": {
+        "D1": "Concern Details",
+        "D2": "Similar Part Considerations",
+        "D3": "Initial Analysis",
+        "D4": "Containment Actions / Status",
+        "D5": "Root Cause Analysis",
+        "D6": "Corrective Actions",
+        "D7": "Countermeasure Verification",
+        "D8": "Follow-up Activities",
+        "Report_Date": "Report Date",
+        "Prepared_By": "Prepared By",
+        "Download": "Download",
+        "Location": "Location",
+        "Status": "Status",
+        "Containment_Actions": "Containment Actions",
+        "Occurrence_Why": "Occurrence Why",
+        "Detection_Why": "Detection Why",
+        "Systemic_Why": "Systemic Why",
+        "Root_Cause_Occ": "Root Cause - Occurrence",
+        "Root_Cause_Det": "Root Cause - Detection",
+        "Root_Cause_Sys": "Root Cause - Systemic"
+    },
+    "es": {
+        "D1": "Detalles de la Preocupación",
+        "D2": "Consideraciones de Partes Similares",
+        "D3": "Análisis Inicial",
+        "D4": "Acciones / Estado de Contención",
+        "D5": "Análisis de Causa Raíz",
+        "D6": "Acciones Correctivas",
+        "D7": "Verificación de Contramedidas",
+        "D8": "Actividades de Seguimiento",
+        "Report_Date": "Fecha del Informe",
+        "Prepared_By": "Preparado Por",
+        "Download": "Descargar",
+        "Location": "Ubicación",
+        "Status": "Estado",
+        "Containment_Actions": "Acciones de Contención",
+        "Occurrence_Why": "Por qué de Ocurrencia",
+        "Detection_Why": "Por qué de Detección",
+        "Systemic_Why": "Por qué Sistémico",
+        "Root_Cause_Occ": "Causa Raíz - Ocurrencia",
+        "Root_Cause_Det": "Causa Raíz - Detección",
+        "Root_Cause_Sys": "Causa Raíz - Sistémica"
+    }
 }
-
 # ---------------------------
 # Navigation: Next / Previous
 # ---------------------------
