@@ -888,21 +888,57 @@ st.markdown("### 🧭 8D Completion Progress")
 progress = 0
 total_steps = len(["D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8"])
 
-# Count how many steps have any filled text
+# Count how many steps have any filled content
 for step in ["D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8"]:
-    # Adjust field name if your data is stored differently (e.g., "description" instead of "answer")
-    if st.session_state.get(step, {}).get("answer", "").strip():
+    filled = False
+
+    if step in ["D1", "D2", "D3", "D4", "D8"]:
+        filled = bool(st.session_state.get(step, {}).get("answer", "").strip())
+
+    elif step == "D5":
+        # Check if any Why list has content
+        filled = any(
+            any(w.strip() for w in st.session_state.d5_occ_whys) or
+            any(w.strip() for w in st.session_state.d5_det_whys) or
+            any(w.strip() for w in st.session_state.d5_sys_whys)
+        )
+
+    elif step in ["D6", "D7"]:
+        filled = any(
+            st.session_state.get(step, {}).get(key, "").strip()
+            for key in ["occ_answer", "det_answer", "sys_answer"]
+        )
+
+    if filled:
         progress += 1
 
 st.progress(progress / total_steps)
 st.write(f"Completed {progress} of {total_steps} steps")
+
 # ---------------------------
-# Render Tabs with Uploads
+# Render Tabs with Uploads (UPDATED LABELS)
 # ---------------------------
-tab_labels = [
-    f"🟢 {t[lang_key][step]}" if st.session_state[step]["answer"].strip() else f"🔴 {t[lang_key][step]}"
-    for step, _, _ in npqp_steps
-]
+tab_labels = []
+for step, _, _ in npqp_steps:
+    filled = False
+
+    if step in ["D1", "D2", "D3", "D4", "D8"]:
+        filled = bool(st.session_state.get(step, {}).get("answer", "").strip())
+    elif step == "D5":
+        filled = any(
+            any(w.strip() for w in st.session_state.d5_occ_whys) or
+            any(w.strip() for w in st.session_state.d5_det_whys) or
+            any(w.strip() for w in st.session_state.d5_sys_whys)
+        )
+    elif step in ["D6", "D7"]:
+        filled = any(
+            st.session_state.get(step, {}).get(key, "").strip()
+            for key in ["occ_answer", "det_answer", "sys_answer"]
+        )
+
+    label = f"🟢 {t[lang_key][step]}" if filled else f"🔴 {t[lang_key][step]}"
+    tab_labels.append(label)
+
 tabs = st.tabs(tab_labels)
 
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
