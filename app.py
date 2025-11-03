@@ -972,11 +972,10 @@ for step, _, _ in npqp_steps:
     if step in ["D1", "D3", "D4", "D7"]:
         st.session_state[step].setdefault("uploaded_files", [])
 
-# Get current step
-current_step_idx = st.session_state.current_step_idx
-current_step = npqp_steps[current_step_idx][0]
+# Determine current step
+current_step = npqp_steps[st.session_state.current_step_idx][0]
 
-# Render tabs with upload indicators
+# Build tab labels with completion status
 tab_labels = []
 for step, _, _ in npqp_steps:
     if step == "D5":
@@ -994,16 +993,11 @@ for step, _, _ in npqp_steps:
 
 tabs = st.tabs(tab_labels)
 
-# Loop through tabs
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     with tabs[i]:
         st.markdown(f"### {t[lang_key][step]}")
 
-        # ---------------------------
         # Training Guidance & Example
-        # ---------------------------
-        note_text = note_dict[lang_key]
-        example_text = example_dict[lang_key]
         st.markdown(f"""
 <div style="
 background-color:#b3e0ff;
@@ -1015,20 +1009,18 @@ width:100%;
 font-size:14px;
 line-height:1.5;
 ">
-<b>{t[lang_key]['Training_Guidance']}:</b> {note_text}<br><br>
-💡 <b>{t[lang_key]['Example']}:</b> {example_text}
+<b>{t[lang_key]['Training_Guidance']}:</b> {note_dict[lang_key]}<br><br>
+💡 <b>{t[lang_key]['Example']}:</b> {example_dict[lang_key]}
 </div>
 """, unsafe_allow_html=True)
 
-        # Step-specific guidance expander
+        # Step-specific guidance
         gc = guidance_content[step][lang_key]
         with st.expander(f"📘 {gc['title']}"):
             st.markdown(gc["tips"])
 
-        # ---------------------------
         # File uploads for D1, D3, D4, D7
-        # ---------------------------
-        if step in ["D1","D3","D4","D7"]:
+        if step in ["D1", "D3", "D4", "D7"]:
             uploaded_files = st.file_uploader(
                 f"Upload files/photos for {step}",
                 type=["png", "jpg", "jpeg", "pdf", "xlsx", "txt"],
@@ -1036,29 +1028,44 @@ line-height:1.5;
                 key=f"upload_{step}"
             )
             if uploaded_files:
-                for file in uploaded_files:
-                    if file not in st.session_state[step]["uploaded_files"]:
-                        st.session_state[step]["uploaded_files"].append(file)
+                for f in uploaded_files:
+                    if f not in st.session_state[step]["uploaded_files"]:
+                        st.session_state[step]["uploaded_files"].append(f)
 
-            if st.session_state[step].get("uploaded_files"):
+            # Show uploaded files
+            if st.session_state[step]["uploaded_files"]:
                 st.markdown("**Uploaded Files / Photos:**")
                 for f in st.session_state[step]["uploaded_files"]:
-                    st.write(f"{f.name}")
+                    st.write(f.name)
                     if f.type.startswith("image/"):
                         st.image(f, width=192)
 
-        # ---------------------------
-        # Step-specific inputs
-        # ---------------------------
-        if step == "D3":
-            options = ["During Process / Manufacture", "After manufacture (e.g. Final Inspection)", "Prior dispatch"]
-            options_es = ["Durante el proceso / fabricación", "Después de la fabricación (por ejemplo, inspección final)", "Antes del envío"]
-            st.session_state[step]["inspection_stage"] = st.multiselect(
-                "Inspection Stage" if lang_key=="en" else "Etapa de Inspección",
-                options if lang_key=="en" else options_es,
-                default=st.session_state[step].get("inspection_stage", [])
-            )
+        # --- ONLY RENDER STEP INPUTS AND NAV BUTTONS FOR CURRENT STEP ---
+        if step == current_step:
+            col1, col2 = st.columns([1,1])
+            with col1:
+                if st.session_state.current_step_idx > 0:
+                    if st.button("⬅️ Previous", key=f"prev_step_{step}"):
+                        st.session_state.current_step_idx -= 1
+                        st.experimental_rerun()
+            with col2:
+                if st.session_state.current_step_idx < len(npqp_steps)-1:
+                    if st.button("Next ➡️", key=f"next_step_{step}"):
+                        st.session_state.current_step_idx += 1
+                        st.experimental_rerun()
 
+            # Step-specific inputs
+            if step == "D3":
+                stages = (
+                    ["During Process / Manufacture", "After manufacture (e.g. Final Inspection)", "Prior dispatch"]
+                    if lang_key=="en" else
+                    ["Durante el proceso / fabricación", "Después de la fabricación (por ejemplo, inspección final)", "Antes del envío"]
+                )
+                st.session_state[step]["inspection_stage"] = st.multiselect(
+                    "Inspection Stage" if lang_key=="en" else "Etapa de Inspección",
+                    stages,
+                    default=st.session_state[step].get("inspection_stage", [])
+                )
 
         # D4 multi-selects and text area
         if step == "D4":
