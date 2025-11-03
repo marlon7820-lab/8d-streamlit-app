@@ -1087,19 +1087,19 @@ line-height:1.5;
 # ✅ Navigation Buttons (work perfectly on all Streamlit versions)
 # ==========================================================
 st.markdown("---")
-    col1, col2 = st.columns([1, 1])
+col1, col2 = st.columns([1, 1])
 
-    with col1:
-        if current_step_idx > 0:
-            if st.button("⬅️ Previous", key=f"prev_{step}"):
-                st.session_state.current_step_idx = current_step_idx - 1
-                st.rerun()
+with col1:
+    if current_step_idx > 0:
+        if st.button("⬅️ Previous", key=f"prev_{step}"):
+            st.session_state.current_step_idx = current_step_idx - 1
+            st.rerun()
 
-    with col2:
-        if current_step_idx < len(npqp_steps) - 1:
-            if st.button("Next ➡️", key=f"next_{step}"):
-                st.session_state.current_step_idx = current_step_idx + 1
-                st.rerun()
+with col2:
+     if current_step_idx < len(npqp_steps) - 1:
+         if st.button("Next ➡️", key=f"next_{step}"):
+             st.session_state.current_step_idx = current_step_idx + 1
+             st.rerun()
 
 
             # ---------------------------
