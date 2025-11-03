@@ -9,9 +9,16 @@ import os
 from PIL import Image as PILImage
 from io import BytesIO
 
-# Ensure current_step_idx exists
+# Ensure navigation index exists
 if "current_step_idx" not in st.session_state:
     st.session_state.current_step_idx = 0
+
+# Optionally, initialize uploaded_files for each step
+for step, _, _ in npqp_steps:
+    if step not in st.session_state:
+        st.session_state[step] = {}
+    if step in ["D1","D3","D4","D7"]:
+        st.session_state[step].setdefault("uploaded_files", [])
 
 # ---------------------------
 # Page config
