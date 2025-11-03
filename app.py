@@ -1056,7 +1056,7 @@ line-height:1.5;
         # ---------------------------
         # Step-specific guidance expander
         # ---------------------------
-         gc = guidance_content[step][lang_key]
+        gc = guidance_content[step][lang_key]
         with st.expander(f"📘 {gc['title']}"):
             st.markdown(gc["tips"])
 
