@@ -984,7 +984,7 @@ for step, _, _ in npqp_steps:
     elif step == "D7":
         filled = d7_filled
     else:
-        filled = st.session_state[step]["answer"].strip() != ""
+        filled = st.session_state.get(step, {}).get("answer", "").strip() != ""
     
     tab_labels.append(
         f"🟢 {t[lang_key][step]}" if filled else f"🔴 {t[lang_key][step]}"
@@ -992,9 +992,8 @@ for step, _, _ in npqp_steps:
 
 tabs = st.tabs(tab_labels)
 
-# ---------------------------
-# Tab rendering loop
-# ---------------------------
+current_step = npqp_steps[st.session_state.current_step_idx][0]
+
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     with tabs[i]:
         st.markdown(f"### {t[lang_key][step]}")
@@ -1042,35 +1041,18 @@ line-height:1.5;
                     if file not in st.session_state[step]["uploaded_files"]:
                         st.session_state[step]["uploaded_files"].append(file)
 
-        # Display uploaded files
-        if step in ["D1","D3","D4","D7"] and st.session_state[step].get("uploaded_files"):
-            st.markdown("**Uploaded Files / Photos:**")
-            for f in st.session_state[step]["uploaded_files"]:
-                st.write(f"{f.name}")
-                if f.type.startswith("image/"):
-                    st.image(f, width=192)
-
-        # ---------------------------
-        # NAVIGATION BUTTONS
-        # ---------------------------
-        col1, col2 = st.columns([1,1])
-        with col1:
-            if st.session_state.current_step_idx > 0:
-                if st.button("⬅️ Previous", key=f"prev_step_{i}"):
-                    st.session_state.current_step_idx -= 1
-                    st.experimental_rerun()
-
-        with col2:
-            if st.session_state.current_step_idx < len(npqp_steps) - 1:
-                if st.button("Next ➡️", key=f"next_step_{i}"):
-                    st.session_state.current_step_idx += 1
-                    st.experimental_rerun()
+            # Display uploaded files
+            if st.session_state[step].get("uploaded_files"):
+                st.markdown("**Uploaded Files / Photos:**")
+                for f in st.session_state[step]["uploaded_files"]:
+                    st.write(f"{f.name}")
+                    if f.type.startswith("image/"):
+                        st.image(f, width=192)
 
         # ---------------------------
         # Step-specific inputs
         # ---------------------------
 
-        # D3 inspection stage multiselect (bilingual)
         if step == "D3":
             if lang_key == "en":
                 st.session_state[step]["inspection_stage"] = st.multiselect(
