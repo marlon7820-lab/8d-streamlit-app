@@ -958,6 +958,21 @@ st.progress(progress / total_steps)
 st.write(f"Completed {progress} of {total_steps} steps")
 
 # ---------------------------
+# Safe session_state initialization for all steps
+# ---------------------------
+for step, _, _ in npqp_steps:
+    if step not in st.session_state:
+        st.session_state[step] = {}
+
+    # Initialize generic fields
+    st.session_state[step].setdefault("answer", "")
+    st.session_state[step].setdefault("extra", "")
+
+    # Initialize file uploads only for steps that need them
+    if step in ["D1", "D3", "D4", "D7"]:
+        st.session_state[step].setdefault("uploaded_files", [])
+
+# ---------------------------
 # Render Tabs with Uploads
 # ---------------------------
 tab_labels = []
@@ -969,7 +984,7 @@ for step, _, _ in npqp_steps:
     elif step == "D7":
         filled = d7_filled
     else:
-        filled = st.session_state.get(step, {}).get("answer", "").strip() != ""
+        filled = st.session_state[step]["answer"].strip() != ""
     
     tab_labels.append(
         f"🟢 {t[lang_key][step]}" if filled else f"🔴 {t[lang_key][step]}"
@@ -978,7 +993,7 @@ for step, _, _ in npqp_steps:
 tabs = st.tabs(tab_labels)
 
 # ---------------------------
-# Rest of your tab rendering code remains unchanged
+# Tab rendering loop
 # ---------------------------
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     with tabs[i]:
@@ -1055,7 +1070,7 @@ line-height:1.5;
         # Step-specific inputs
         # ---------------------------
 
-       # ✅ NEW — D3 inspection stage multiselect (bilingual)
+        # D3 inspection stage multiselect (bilingual)
         if step == "D3":
             if lang_key == "en":
                 st.session_state[step]["inspection_stage"] = st.multiselect(
@@ -1078,22 +1093,15 @@ line-height:1.5;
                     default=st.session_state[step].get("inspection_stage", [])
                 )
 
-        
+        # D4 multi-selects and text area
         if step == "D4":
-            # Ensure keys exist
             st.session_state[step].setdefault("location", [])
             st.session_state[step].setdefault("status", [])
             st.session_state[step].setdefault("answer", "")
 
-            # Options for bilingual support
-            if lang_key == "en":
-                loc_options = ["Work in progress", "Stores stock", "Warehouse stock", "Service parts"]
-                status_options = ["Pending", "In Progress", "Completed"]
-            else:
-                loc_options = ["En proceso", "Stock de almacén", "Stock de bodega", "Piezas de servicio"]
-                status_options = ["Pendiente", "En Progreso", "Completado"]
+            loc_options = ["Work in progress", "Stores stock", "Warehouse stock", "Service parts"] if lang_key == "en" else ["En proceso", "Stock de almacén", "Stock de bodega", "Piezas de servicio"]
+            status_options = ["Pending", "In Progress", "Completed"] if lang_key == "en" else ["Pendiente", "En Progreso", "Completado"]
 
-            # Multi-select dropdowns
             st.session_state[step]["location"] = st.multiselect(
                 t[lang_key]["Location"],
                 options=loc_options,
@@ -1106,7 +1114,6 @@ line-height:1.5;
                 default=st.session_state[step]["status"]
             )
 
-            #  Containment Actions / Notes
             st.session_state[step]["answer"] = st.text_area(
                 t[lang_key]["Containment_Actions"],
                 value=st.session_state[step]["answer"],
