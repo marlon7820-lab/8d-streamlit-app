@@ -962,20 +962,20 @@ with tabs[0]:
     note_text = gc["note"]
     example_text = gc["example"]
     st.markdown(f"""
-<div style="
-background-color:#b3e0ff;
-color:black;
-padding:12px;
-border-left:5px solid #1E90FF;
-border-radius:6px;
-width:100%;
-font-size:14px;
-line-height:1.5;
-">
-<b>{t[lang_key]['Training_Guidance']}:</b> {note_text}<br><br>
-💡 <b>{t[lang_key]['Example']}:</b> {example_text}
-</div>
-""", unsafe_allow_html=True)
+    <div style="
+    background-color:#b3e0ff;
+    color:black;
+    padding:12px;
+    border-left:5px solid #1E90FF;
+    border-radius:6px;
+    width:100%;
+    font-size:14px;
+    line-height:1.5;
+    ">
+    <b>{t[lang_key]['Training_Guidance']}:</b> {note_text}<br><br>
+    💡 <b>{t[lang_key]['Example']}:</b> {example_text}
+    </div>
+    """, unsafe_allow_html=True)
 
     # Step-specific guidance expander
     with st.expander(f"📘 {gc['title']}"):
