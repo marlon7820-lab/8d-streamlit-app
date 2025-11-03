@@ -27,7 +27,7 @@ st.set_page_config(
     page_title="8D Report Assistant",
     page_icon="logo.png",
     layout="wide"
-
+)
 # ---------------------------
 # App styles - updated for desktop selectbox outline + thumbnails + Root Cause textarea
 # ---------------------------
