@@ -1022,7 +1022,7 @@ if st.session_state.current_step + 1 < len(npqp_steps):
     next_step_name = npqp_steps[next_step_index][0]
     if st.button(f"Next ➡️ {next_step_name}"):
         st.session_state.current_step = next_step_index
-        st.experimental_rerun()
+        st.rerun()
                 
         # ---------------------------
         # Step-specific inputs
