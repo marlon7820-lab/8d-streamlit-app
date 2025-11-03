@@ -9,6 +9,10 @@ import os
 from PIL import Image as PILImage
 from io import BytesIO
 
+# Ensure current_step_idx exists
+if "current_step_idx" not in st.session_state:
+    st.session_state.current_step_idx = 0
+
 # ---------------------------
 # Page config
 # ---------------------------
