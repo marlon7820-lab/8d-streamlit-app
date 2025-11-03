@@ -1019,7 +1019,7 @@ for step, _, _ in npqp_steps:
         f"🟢 {t[lang_key][step]}" if filled else f"🔴 {t[lang_key][step]}"
     )
 
-tabs = st.tabs(tab_labels)
+tabs = st.tabs(tab_labels, default_index=active_tab_index)
 
 # ---------------------------
 # Render each tab
