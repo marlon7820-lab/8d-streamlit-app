@@ -923,13 +923,14 @@ st.progress(progress / total_steps)
 st.write(f"Completed {progress} of {total_steps} steps")
 
 # ---------------------------
-# Initialize current step index
+# Initialize expanded steps
 # ---------------------------
-if "current_step" not in st.session_state:
-    st.session_state.current_step = 0  # always store as integer index
+if "expanded_steps" not in st.session_state:
+    st.session_state.expanded_steps = {step: False for step, _, _ in npqp_steps}
+    st.session_state.expanded_steps["D1"] = True  # start with D1 expanded
 
 # ---------------------------
-# Tabs with progress colors
+# Render Tabs with Uploads
 # ---------------------------
 tab_labels = []
 for step, _, _ in npqp_steps:
@@ -942,78 +943,99 @@ for step, _, _ in npqp_steps:
     else:
         filled = st.session_state.get(step, {}).get("answer", "").strip() != ""
     
-    tab_labels.append(f"🟢 {t[lang_key][step]}" if filled else f"🔴 {t[lang_key][step]}")
+    tab_labels.append(
+        f"🟢 {t[lang_key][step]}" if filled else f"🔴 {t[lang_key][step]}"
+    )
 
-# Render all tabs as before
 tabs = st.tabs(tab_labels)
 
+# ---------------------------
+# Render each step in its tab
+# ---------------------------
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     with tabs[i]:
-        st.markdown(f"### {t[lang_key][step]}")
         # Guidance box
+        note_text = note_dict[lang_key]
+        example_text = example_dict[lang_key]
         st.markdown(f"""
-<div style="
-background-color:#b3e0ff;
-color:black;
-padding:12px;
-border-left:5px solid #1E90FF;
-border-radius:6px;
-width:100%;
-font-size:14px;
-line-height:1.5;
-">
-<b>{t[lang_key]['Training_Guidance']}:</b> {note_dict[lang_key]}<br><br>
-💡 <b>{t[lang_key]['Example']}:</b> {example_dict[lang_key]}
-</div>
-""", unsafe_allow_html=True)
+        <div style="
+        background-color:#b3e0ff;
+        color:black;
+        padding:12px;
+        border-left:5px solid #1E90FF;
+        border-radius:6px;
+        width:100%;
+        font-size:14px;
+        line-height:1.5;
+        ">
+        <b>{t[lang_key]['Training_Guidance']}:</b> {note_text}<br><br>
+        💡 <b>{t[lang_key]['Example']}:</b> {example_text}
+        </div>
+        """, unsafe_allow_html=True)
 
-        # Step-specific guidance
+        # Step-specific guidance expander
         gc = guidance_content[step][lang_key]
-        with st.expander(f"📘 {gc['title']}"):
+        with st.expander(f"📘 {gc['title']}", expanded=st.session_state.expanded_steps[step]):
             st.markdown(gc["tips"])
 
-        # Example: D1 input
-        if step == "D1":
-            st.session_state[step].setdefault("answer", "")
-            st.text_area("Concern Details", value=st.session_state[step]["answer"], key="d1_answer")
+            # ---------------------------
+            # Step-specific inputs
+            # ---------------------------
+            if step == "D1":
+                st.session_state[step].setdefault("answer", "")
+                st.text_area("Concern Details", value=st.session_state[step]["answer"], key="d1_answer")
 
-        # File uploads
-        if step in ["D1","D3","D4","D7"]:
-            uploaded_files = st.file_uploader(
-                f"Upload files/photos for {step}",
-                type=["png", "jpg", "jpeg", "pdf", "xlsx", "txt"],
-                accept_multiple_files=True,
-                key=f"upload_{step}"
-            )
-            if uploaded_files:
-                for file in uploaded_files:
-                    if file not in st.session_state[step]["uploaded_files"]:
-                        st.session_state[step]["uploaded_files"].append(file)
+            if step == "D3":
+                st.session_state[step].setdefault("inspection_stage", [])
+                stages_en = [
+                    "During Process / Manufacture",
+                    "After manufacture (e.g. Final Inspection)",
+                    "Prior dispatch"
+                ]
+                stages_es = [
+                    "Durante el proceso / fabricación",
+                    "Después de la fabricación (por ejemplo, inspección final)",
+                    "Antes del envío"
+                ]
+                st.session_state[step]["inspection_stage"] = st.multiselect(
+                    "Inspection Stage" if lang_key == "en" else "Etapa de Inspección",
+                    stages_en if lang_key == "en" else stages_es,
+                    default=st.session_state[step].get("inspection_stage", [])
+                )
 
-        # Display uploaded files
-        if st.session_state[step].get("uploaded_files"):
-            st.markdown("**Uploaded Files / Photos:**")
-            for f in st.session_state[step]["uploaded_files"]:
-                st.write(f"{f.name}")
-                if f.type.startswith("image/"):
-                    st.image(f, width=192)
+            # ---------------------------
+            # File uploads
+            # ---------------------------
+            if step in ["D1","D3","D4","D7"]:
+                uploaded_files = st.file_uploader(
+                    f"Upload files/photos for {step}",
+                    type=["png", "jpg", "jpeg", "pdf", "xlsx", "txt"],
+                    accept_multiple_files=True,
+                    key=f"upload_{step}"
+                )
+                if uploaded_files:
+                    for file in uploaded_files:
+                        if file not in st.session_state[step]["uploaded_files"]:
+                            st.session_state[step]["uploaded_files"].append(file)
+
+                if st.session_state[step].get("uploaded_files"):
+                    st.markdown("**Uploaded Files / Photos:**")
+                    for f in st.session_state[step]["uploaded_files"]:
+                        st.write(f"{f.name}")
+                        if f.type.startswith("image/"):
+                            st.image(f, width=192)
 
         # ---------------------------
         # Next Button
         # ---------------------------
-        step_index = i
+        step_index = [s for s, _, _ in npqp_steps].index(step)
         if step_index + 1 < len(npqp_steps):
             next_step = npqp_steps[step_index + 1][0]
             if st.button(f"Next ➡️ {next_step}", key=f"next_button_{step}"):
-                st.session_state.current_step_index = step_index + 1
+                st.session_state.expanded_steps[step] = False
+                st.session_state.expanded_steps[next_step] = True
                 st.rerun()
                 
-
-    # ---------------------------
-    # After the loop, you can automatically select the current step tab
-    # ---------------------------
-    if "current_step" not in st.session_state:
-        st.session_state.current_step = "D1"
        # ✅ NEW — D3 inspection stage multiselect (bilingual)
         if step == "D3":
             if lang_key == "en":
