@@ -996,6 +996,22 @@ line-height:1.5;
                     st.image(f, width=192)
 
         # ---------------------------
+        # NAVIGATION BUTTONS
+        # ---------------------------
+        col1, col2 = st.columns([1,1])
+        with col1:
+            if st.session_state.current_step_idx > 0:
+                if st.button("⬅️ Previous", key=f"prev_step_{i}"):
+                    st.session_state.current_step_idx -= 1
+                    st.experimental_rerun()
+
+        with col2:
+            if st.session_state.current_step_idx < len(npqp_steps) - 1:
+                if st.button("Next ➡️", key=f"next_step_{i}"):
+                    st.session_state.current_step_idx += 1
+                    st.experimental_rerun()
+
+        # ---------------------------
         # Step-specific inputs
         # ---------------------------
 
