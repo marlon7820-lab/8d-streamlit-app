@@ -948,7 +948,6 @@ tabs = st.tabs(tab_labels)
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     with tabs[i]:
         st.markdown(f"### {t[lang_key][step]}")
-        # ... (keep your existing rendering code here)
 
         # Training Guidance & Example box
         note_text = note_dict[lang_key]
@@ -969,12 +968,12 @@ line-height:1.5;
 </div>
 """, unsafe_allow_html=True)
 
-        # Step-specific guidance expander from guidance_content
+        # Step-specific guidance expander
         gc = guidance_content[step][lang_key]
         with st.expander(f"📘 {gc['title']}"):
             st.markdown(gc["tips"])
 
-        # File uploads for D1, D3, D4, D7
+        # File uploads and display (keep your existing code)
         if step in ["D1","D3","D4","D7"]:
             uploaded_files = st.file_uploader(
                 f"Upload files/photos for {step}",
@@ -987,19 +986,37 @@ line-height:1.5;
                     if file not in st.session_state[step]["uploaded_files"]:
                         st.session_state[step]["uploaded_files"].append(file)
 
-        # Display uploaded files (aligned with file upload)
-        if step in ["D1","D3","D4","D7"] and st.session_state[step].get("uploaded_files"):
-            st.markdown("**Uploaded Files / Photos:**")
-            for f in st.session_state[step]["uploaded_files"]:
-                st.write(f"{f.name}")
-                if f.type.startswith("image/"):
-                    st.image(f, width=192)
-
+            if st.session_state[step].get("uploaded_files"):
+                st.markdown("**Uploaded Files / Photos:**")
+                for f in st.session_state[step]["uploaded_files"]:
+                    st.write(f"{f.name}")
+                    if f.type.startswith("image/"):
+                        st.image(f, width=192)
                 
         # ---------------------------
         # Step-specific inputs
         # ---------------------------
 
+        if step == "D1":
+            st.session_state[step].setdefault("answer", "")
+            st.text_area("Concern Details", value=st.session_state[step]["answer"], key="d1_answer")
+
+        # ---------------------------
+        # ✅ Next Button
+        # ---------------------------
+        step_index = [s for s, _, _ in npqp_steps].index(step)
+        if step_index + 1 < len(npqp_steps):
+            next_step = npqp_steps[step_index + 1][0]
+            if st.button(f"Next ➡️ {next_step}", key=f"next_button_{step}"):
+                # Update session state to mark the next tab as active
+                st.session_state.current_step = next_step
+                st.experimental_rerun()
+
+# ---------------------------
+# After the loop, you can automatically select the current step tab
+# ---------------------------
+if "current_step" not in st.session_state:
+    st.session_state.current_step = "D1"
        # ✅ NEW — D3 inspection stage multiselect (bilingual)
         if step == "D3":
             if lang_key == "en":
