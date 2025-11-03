@@ -1012,11 +1012,11 @@ line-height:1.5;
                 st.session_state.current_step = next_step
                 st.experimental_rerun()
 
-# ---------------------------
-# After the loop, you can automatically select the current step tab
-# ---------------------------
-if "current_step" not in st.session_state:
-    st.session_state.current_step = "D1"
+    # ---------------------------
+    # After the loop, you can automatically select the current step tab
+    # ---------------------------
+    if "current_step" not in st.session_state:
+        st.session_state.current_step = "D1"
        # ✅ NEW — D3 inspection stage multiselect (bilingual)
         if step == "D3":
             if lang_key == "en":
