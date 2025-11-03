@@ -996,14 +996,18 @@ for step, _, _ in npqp_steps:
         st.session_state[step].setdefault("det_answer", "")
         st.session_state[step].setdefault("sys_answer", "")
 
-# ---------------------------
-# Determine current step
-# ---------------------------
+# ==========================================================
+# ✅ UNIVERSAL TAB + NAVIGATION SYSTEM (All Streamlit versions)
+# ==========================================================
+
+# Make sure the session index exists
+if "current_step_idx" not in st.session_state:
+    st.session_state.current_step_idx = 0
+
+# Get current step name
 current_step = npqp_steps[st.session_state.current_step_idx][0]
 
-# ---------------------------
-# Build tab labels with completion status
-# ---------------------------
+# Build tab labels (with color indicators)
 tab_labels = []
 for step, _, _ in npqp_steps:
     if step == "D5":
@@ -1014,29 +1018,20 @@ for step, _, _ in npqp_steps:
         filled = d7_filled
     else:
         filled = st.session_state.get(step, {}).get("answer", "").strip() != ""
-    
-    tab_labels.append(
-        f"🟢 {t[lang_key][step]}" if filled else f"🔴 {t[lang_key][step]}"
-    )
+    tab_labels.append(f"🟢 {t[lang_key][step]}" if filled else f"🔴 {t[lang_key][step]}")
 
-# ---------------------------
-# Create tabs and activate current one
-# ---------------------------
-active_tab_index = st.session_state.get("current_step_idx", 0)
+# Instead of true Streamlit tabs, simulate visible section per step
+st.markdown(f"## {tab_labels[st.session_state.current_step_idx]}")
 
-try:
-    tabs = st.tabs(tab_labels, default_index=active_tab_index)
-except TypeError:
-    tabs = st.tabs(tab_labels)
-# ---------------------------
-# Render each tab
-# ---------------------------
-for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
-    with tabs[i]:
-        st.markdown(f"### {t[lang_key][step]}")
+# Retrieve current step data
+step, note_dict, example_dict = npqp_steps[st.session_state.current_step_idx]
 
-        # --- Training & Example
-        st.markdown(f"""
+# ==========================================================
+# 🧠 Step content rendering (exact same as before)
+# ==========================================================
+st.markdown(f"### {t[lang_key][step]}")
+
+st.markdown(f"""
 <div style="
 background-color:#b3e0ff;
 color:black;
@@ -1052,53 +1047,47 @@ line-height:1.5;
 </div>
 """, unsafe_allow_html=True)
 
+gc = guidance_content[step][lang_key]
+with st.expander(f"📘 {gc['title']}"):
+    st.markdown(gc["tips"])
 
-        # ---------------------------
-        # Step-specific guidance expander
-        # ---------------------------
-        gc = guidance_content[step][lang_key]
-        with st.expander(f"📘 {gc['title']}"):
-            st.markdown(gc["tips"])
+# File uploads (same behavior)
+if step in ["D1","D3","D4","D7"]:
+    uploaded_files = st.file_uploader(
+        f"Upload files/photos for {step}",
+        type=["png","jpg","jpeg","pdf","xlsx","txt"],
+        accept_multiple_files=True,
+        key=f"upload_{step}"
+    )
+    if uploaded_files:
+        for f in uploaded_files:
+            if f not in st.session_state[step]["uploaded_files"]:
+                st.session_state[step]["uploaded_files"].append(f)
 
-        # --- File uploads
-        if step in ["D1","D3","D4","D7"]:
-            uploaded_files = st.file_uploader(
-                f"Upload files/photos for {step}",
-                type=["png","jpg","jpeg","pdf","xlsx","txt"],
-                accept_multiple_files=True,
-                key=f"upload_{step}"
-            )
-            if uploaded_files:
-                for f in uploaded_files:
-                    if f not in st.session_state[step]["uploaded_files"]:
-                        st.session_state[step]["uploaded_files"].append(f)
+    if st.session_state[step]["uploaded_files"]:
+        st.markdown("**Uploaded Files / Photos:**")
+        for f in st.session_state[step]["uploaded_files"]:
+            st.write(f.name)
+            if f.type.startswith("image/"):
+                st.image(f, width=192)
 
-            if st.session_state[step]["uploaded_files"]:
-                st.markdown("**Uploaded Files / Photos:**")
-                for f in st.session_state[step]["uploaded_files"]:
-                    st.write(f.name)
-                    if f.type.startswith("image/"):
-                        st.image(f, width=192)
+# ==========================================================
+# ✅ Navigation Buttons (work perfectly on all Streamlit versions)
+# ==========================================================
+st.markdown("---")
+col1, col2 = st.columns([1, 1])
 
-        # ==========================================================
-        # ✅ FIXED NAVIGATION SYSTEM
-        # ==========================================================
-        st.markdown("---")
-        col1, col2 = st.columns([1, 1])
+with col1:
+    if st.session_state.current_step_idx > 0:
+        if st.button("⬅️ Previous", key=f"prev_{step}"):
+            st.session_state.current_step_idx -= 1
+            st.rerun()
 
-        # 🟡 Previous
-        with col1:
-            if st.session_state.current_step_idx > 0:
-                if st.button("⬅️ Previous", key=f"prev_{step}"):
-                    st.session_state.current_step_idx -= 1
-                    st.rerun()
-
-        # 🟢 Next
-        with col2:
-            if st.session_state.current_step_idx < len(npqp_steps) - 1:
-                if st.button("Next ➡️", key=f"next_{step}"):
-                    st.session_state.current_step_idx += 1
-                    st.rerun()
+with col2:
+    if st.session_state.current_step_idx < len(npqp_steps) - 1:
+        if st.button("Next ➡️", key=f"next_{step}"):
+            st.session_state.current_step_idx += 1
+            st.rerun()
 
 
             # ---------------------------
