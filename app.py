@@ -916,73 +916,54 @@ for step, _, _ in npqp_steps:
         filled = d7_filled
     else:
         filled = st.session_state.get(step, {}).get("answer", "").strip() != ""
-    tab_labels.append(f"🟢 {t[lang_key][step]}" if filled else f"🔴 {t[lang_key][step]}")
+    
+    tab_labels.append(
+        f"🟢 {t[lang_key][step]}" if filled else f"🔴 {t[lang_key][step]}"
+    )
 
-# Render tabs
 tabs = st.tabs(tab_labels)
 
-# ---------------------------
-# Ensure current_step in session_state
-# ---------------------------
-if "current_step" not in st.session_state:
-    st.session_state.current_step = "D1"
-
-# ---------------------------
-# Render each tab with step-specific content
-# ---------------------------
+# Loop through each step/tab
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     with tabs[i]:
         st.markdown(f"### {t[lang_key][step]}")
 
-        # ---------------------------
-        # Training Guidance & Example Box
-        # ---------------------------
-        note_text = str(note_dict.get(lang_key, ""))
-        example_text = str(example_dict.get(lang_key, ""))
+        # Training Guidance & Example box
+        note_text = note_dict.get(lang_key, "")
+        example_text = example_dict.get(lang_key, "")
         st.markdown(f"""
-        <div style="
-        background-color:#b3e0ff;
-        color:black;
-        padding:12px;
-        border-left:5px solid #1E90FF;
-        border-radius:6px;
-        width:100%;
-        font-size:14px;
-        line-height:1.5;
-        ">
-        <b>{t[lang_key]['Training_Guidance']}:</b> {note_text}<br><br>
-        💡 <b>{t[lang_key]['Example']}:</b> {example_text}
-        </div>
-        """, unsafe_allow_html=True)
+<div style="
+background-color:#b3e0ff;
+color:black;
+padding:12px;
+border-left:5px solid #1E90FF;
+border-radius:6px;
+width:100%;
+font-size:14px;
+line-height:1.5;
+">
+<b>{t[lang_key]['Training_Guidance']}:</b> {note_text}<br><br>
+💡 <b>{t[lang_key]['Example']}:</b> {example_text}
+</div>
+""", unsafe_allow_html=True)
 
-        # ---------------------------
-        # Safe Guidance Expander
-        # ---------------------------
-        gc_raw = guidance_content.get(step, {}).get(lang_key, {})
-        if not isinstance(gc_raw, dict):
-            gc_raw = {}
-        expander_title = str(gc_raw.get("title", f"Guidance {step}"))
-        expander_tips = str(gc_raw.get("tips", ""))
+        # Step-specific guidance expander (safe)
+        gc = guidance_content.get(step, {}).get(lang_key, {})
+        expander_title = gc.get("title", "Guidance")
+        expander_tips = gc.get("tips", "")
         with st.expander(f"📘 {expander_title}", key=f"expander_{step}"):
             st.markdown(expander_tips)
 
-        # ---------------------------
-        # Step-specific inputs
-        # ---------------------------
+        # Step-specific UI
         if step == "D1":
-            st.session_state.setdefault(step, {})
-            st.session_state[step].setdefault("answer", "")
+            st.session_state.setdefault(step, {"answer": "", "uploaded_files": []})
             st.text_area("Concern Details", value=st.session_state[step]["answer"], key="d1_answer")
 
-        # ---------------------------
         # File uploads
-        # ---------------------------
         if step in ["D1","D3","D4","D7"]:
-            st.session_state.setdefault(step, {})
-            st.session_state[step].setdefault("uploaded_files", [])
             uploaded_files = st.file_uploader(
                 f"Upload files/photos for {step}",
-                type=["png", "jpg", "jpeg", "pdf", "xlsx", "txt"],
+                type=["png","jpg","jpeg","pdf","xlsx","txt"],
                 accept_multiple_files=True,
                 key=f"upload_{step}"
             )
@@ -991,6 +972,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                     if file not in st.session_state[step]["uploaded_files"]:
                         st.session_state[step]["uploaded_files"].append(file)
 
+            # Display uploaded files
             if st.session_state[step].get("uploaded_files"):
                 st.markdown("**Uploaded Files / Photos:**")
                 for f in st.session_state[step]["uploaded_files"]:
@@ -998,40 +980,31 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
                     if f.type.startswith("image/"):
                         st.image(f, width=192)
 
+        # D3 example: inspection stage multiselect
+        if step == "D3":
+            st.session_state.setdefault(step, {}).setdefault("inspection_stage", [])
+            options = (
+                ["During Process / Manufacture","After manufacture (e.g. Final Inspection)","Prior dispatch"]
+                if lang_key == "en"
+                else ["Durante el proceso / fabricación","Después de la fabricación (por ejemplo, inspección final)","Antes del envío"]
+            )
+            st.session_state[step]["inspection_stage"] = st.multiselect(
+                "Inspection Stage",
+                options,
+                default=st.session_state[step].get("inspection_stage", []),
+                key=f"multiselect_{step}"
+            )
+
         # ---------------------------
         # ✅ Next Button
         # ---------------------------
-        step_index = [s for s, _, _ in npqp_steps].index(step)
+        step_index = i
         if step_index + 1 < len(npqp_steps):
             next_step = npqp_steps[step_index + 1][0]
-            # Unique key per step to avoid Streamlit duplicate widget errors
             if st.button(f"Next ➡️ {next_step}", key=f"next_button_{step}"):
-                st.session_state.current_step = next_step
+                # Select the next tab
+                st.session_state["selected_tab"] = step_index + 1
                 st.rerun()
-                
-       # ✅ NEW — D3 inspection stage multiselect (bilingual)
-        if step == "D3":
-            if lang_key == "en":
-                st.session_state[step]["inspection_stage"] = st.multiselect(
-                    "Inspection Stage",
-                    [
-                        "During Process / Manufacture",
-                        "After manufacture (e.g. Final Inspection)",
-                        "Prior dispatch"
-                    ],
-                    default=st.session_state[step].get("inspection_stage", [])
-                )
-            else:
-                st.session_state[step]["inspection_stage"] = st.multiselect(
-                    "Etapa de Inspección",
-                    [
-                        "Durante el proceso / fabricación",
-                        "Después de la fabricación (por ejemplo, inspección final)",
-                        "Antes del envío"
-                    ],
-                    default=st.session_state[step].get("inspection_stage", [])
-                )
-
         
         if step == "D4":
             # Ensure keys exist
