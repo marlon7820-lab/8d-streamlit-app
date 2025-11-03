@@ -1014,13 +1014,19 @@ for step, _, _ in npqp_steps:
         filled = d7_filled
     else:
         filled = st.session_state.get(step, {}).get("answer", "").strip() != ""
-
+    
     tab_labels.append(
         f"🟢 {t[lang_key][step]}" if filled else f"🔴 {t[lang_key][step]}"
     )
 
-tabs = st.tabs(tab_labels, default_index=active_tab_index)
+# ✅ Always define active_tab_index before creating tabs
+active_tab_index = st.session_state.get("current_step_idx", 0)
 
+# ✅ Works on both new and old Streamlit versions
+try:
+    tabs = st.tabs(tab_labels, default_index=active_tab_index)
+except TypeError:
+    tabs = st.tabs(tab_labels)
 # ---------------------------
 # Render each tab
 # ---------------------------
