@@ -943,17 +943,25 @@ for step, _, _ in npqp_steps:
 tabs = st.tabs(tab_labels)
 
 # ---------------------------
-# Rest of your tab rendering code remains unchanged
+# Initialize current step
 # ---------------------------
-for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
-    with tabs[i]:
-        st.markdown(f"### {t[lang_key][step]}")
-        # ... (keep your existing rendering code here)
+if "current_step" not in st.session_state:
+    st.session_state.current_step = "D1"
 
-        # Training Guidance & Example box
-        note_text = note_dict[lang_key]
-        example_text = example_dict[lang_key]
-        st.markdown(f"""
+current_step = st.session_state.current_step
+
+# ---------------------------
+# Render only the current step tab
+# ---------------------------
+tabs = st.tabs([t[lang_key][current_step]])
+with tabs[0]:
+    st.markdown(f"### {t[lang_key][current_step]}")
+
+    # Guidance box
+    gc = guidance_content[current_step][lang_key]
+    note_text = gc["note"]
+    example_text = gc["example"]
+    st.markdown(f"""
 <div style="
 background-color:#b3e0ff;
 color:black;
@@ -969,32 +977,44 @@ line-height:1.5;
 </div>
 """, unsafe_allow_html=True)
 
-        # Step-specific guidance expander from guidance_content
-        gc = guidance_content[step][lang_key]
-        with st.expander(f"📘 {gc['title']}"):
-            st.markdown(gc["tips"])
+    # Step-specific guidance expander
+    with st.expander(f"📘 {gc['title']}"):
+        st.markdown(gc["tips"])
 
-        # File uploads for D1, D3, D4, D7
-        if step in ["D1","D3","D4","D7"]:
-            uploaded_files = st.file_uploader(
-                f"Upload files/photos for {step}",
-                type=["png", "jpg", "jpeg", "pdf", "xlsx", "txt"],
-                accept_multiple_files=True,
-                key=f"upload_{step}"
-            )
-            if uploaded_files:
-                for file in uploaded_files:
-                    if file not in st.session_state[step]["uploaded_files"]:
-                        st.session_state[step]["uploaded_files"].append(file)
+    # Step-specific UI
+    if current_step == "D1":
+        st.session_state[current_step].setdefault("answer", "")
+        st.text_area("Concern Details", value=st.session_state[current_step]["answer"], key="d1_answer")
 
-        # Display uploaded files (aligned with file upload)
-        if step in ["D1","D3","D4","D7"] and st.session_state[step].get("uploaded_files"):
+    # File uploads
+    if current_step in ["D1","D3","D4","D7"]:
+        uploaded_files = st.file_uploader(
+            f"Upload files/photos for {current_step}",
+            type=["png", "jpg", "jpeg", "pdf", "xlsx", "txt"],
+            accept_multiple_files=True,
+            key=f"upload_{current_step}"
+        )
+        if uploaded_files:
+            for file in uploaded_files:
+                if file not in st.session_state[current_step]["uploaded_files"]:
+                    st.session_state[current_step]["uploaded_files"].append(file)
+
+        # Display uploaded files
+        if st.session_state[current_step].get("uploaded_files"):
             st.markdown("**Uploaded Files / Photos:**")
-            for f in st.session_state[step]["uploaded_files"]:
+            for f in st.session_state[current_step]["uploaded_files"]:
                 st.write(f"{f.name}")
                 if f.type.startswith("image/"):
                     st.image(f, width=192)
 
+    # --- Next Button ---
+    step_index = [s for s, _, _ in npqp_steps].index(current_step)
+    if step_index + 1 < len(npqp_steps):
+        next_step = npqp_steps[step_index + 1][0]
+        if st.button(f"Next ➡️ {next_step}", key=f"next_button_{current_step}"):
+            st.session_state.current_step = next_step
+            st.experimental_rerun()
+                
         # ---------------------------
         # Step-specific inputs
         # ---------------------------
@@ -1461,13 +1481,6 @@ for step, _, _ in npqp_steps:
         extra = ""  # No dropdowns in D1
         data_rows.append((step, answer, extra))
 
-        # ---------------------------
-        # Next button (unique key)
-        # ---------------------------
-        next_button_key = f"next_button_{step}"
-        if st.button("Next ➡️ D2", key=next_button_key):
-            st.session_state.current_step = "D2"
-            st.rerun()
     elif step == "D2":
         # D2 text area
         answer = st.session_state[step].get("answer", "").strip()
