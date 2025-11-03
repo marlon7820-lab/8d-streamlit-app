@@ -1404,13 +1404,14 @@ line-height:1.5;
                 if st.session_state.current_step_idx > 0:
                     if st.button("⬅️ Previous", key=f"prev_step_{i}"):
                         st.session_state.current_step_idx -= 1
-                        st.experimental_rerun()
+                        st.experimental
+                        st.rerun()
 
             with col2:
                 if st.session_state.current_step_idx < len(npqp_steps) - 1:
                     if st.button("Next ➡️", key=f"next_step_{i}"):
                         st.session_state.current_step_idx += 1
-                        st.experimental_rerun()
+                        st.rerun()
 
         elif step == "D6":
             st.session_state[step].setdefault("occ_answer", st.session_state["D6"].get("occ_answer", ""))
@@ -1445,13 +1446,13 @@ line-height:1.5;
                 if st.session_state.current_step_idx > 0:
                     if st.button("⬅️ Previous", key=f"prev_step_{i}"):
                         st.session_state.current_step_idx -= 1
-                        st.experimental_rerun()
+                        st.rerun()
 
             with col2:
                 if st.session_state.current_step_idx < len(npqp_steps) - 1:
                     if st.button("Next ➡️", key=f"next_step_{i}"):
                         st.session_state.current_step_idx += 1
-                        st.experimental_rerun()
+                        st.rerun()
 
         elif step == "D7":
             st.session_state[step].setdefault("occ_answer", st.session_state["D7"].get("occ_answer", ""))
@@ -1486,13 +1487,13 @@ line-height:1.5;
                 if st.session_state.current_step_idx > 0:
                     if st.button("⬅️ Previous", key=f"prev_step_{i}"):
                         st.session_state.current_step_idx -= 1
-                        st.experimental_rerun()
+                        st.rerun()
 
             with col2:
                 if st.session_state.current_step_idx < len(npqp_steps) - 1:
                     if st.button("Next ➡️", key=f"next_step_{i}"):
                         st.session_state.current_step_idx += 1
-                        st.experimental_rerun()
+                        st.rerun()
 
 
         elif step == "D8":
@@ -1534,13 +1535,13 @@ line-height:1.5;
                 if st.session_state.current_step_idx > 0:
                     if st.button("⬅️ Previous", key=f"prev_step_{i}"):
                         st.session_state.current_step_idx -= 1
-                        st.experimental_rerun()
+                        st.rerun()
 
             with col2:
                 if st.session_state.current_step_idx < len(npqp_steps) - 1:
                     if st.button("Next ➡️", key=f"next_step_{i}"):
                         st.session_state.current_step_idx += 1
-                        st.experimental_rerun()
+                        st.rerun()
 
 
 # ---------------------------
