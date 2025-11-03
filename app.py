@@ -923,10 +923,14 @@ st.progress(progress / total_steps)
 st.write(f"Completed {progress} of {total_steps} steps")
 
 # ---------------------------
-# Step selection (replaces tabs)
+# Initialize current step index
 # ---------------------------
+if "current_step" not in st.session_state:
+    st.session_state.current_step = 0  # always store as integer index
 
-# Prepare the step labels with completion indicators
+# ---------------------------
+# Step selection (like tabs)
+# ---------------------------
 step_labels = []
 for step, _, _ in npqp_steps:
     if step == "D5":
@@ -941,16 +945,16 @@ for step, _, _ in npqp_steps:
     label = f"🟢 {t[lang_key][step]}" if filled else f"🔴 {t[lang_key][step]}"
     step_labels.append(label)
 
-# Initialize current step
-if "current_step" not in st.session_state:
-    st.session_state.current_step = 0  # index of npqp_steps
+# Make sure index is an integer
+current_index = st.session_state.current_step
 
-# Selectbox to act like tabs
 selected_step_label = st.selectbox(
     "Select Step:",
     options=step_labels,
-    index=st.session_state.current_step
+    index=current_index  # must be integer
 )
+
+# Update current step index based on selection
 st.session_state.current_step = step_labels.index(selected_step_label)
 current_step = npqp_steps[st.session_state.current_step][0]
 
