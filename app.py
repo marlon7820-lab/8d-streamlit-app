@@ -1019,10 +1019,11 @@ for step, _, _ in npqp_steps:
         f"🟢 {t[lang_key][step]}" if filled else f"🔴 {t[lang_key][step]}"
     )
 
-# ✅ Always define active_tab_index before creating tabs
+# ---------------------------
+# Create tabs and activate current one
+# ---------------------------
 active_tab_index = st.session_state.get("current_step_idx", 0)
 
-# ✅ Works on both new and old Streamlit versions
 try:
     tabs = st.tabs(tab_labels, default_index=active_tab_index)
 except TypeError:
@@ -1034,11 +1035,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     with tabs[i]:
         st.markdown(f"### {t[lang_key][step]}")
 
-        # ---------------------------
-        # Training Guidance & Example box
-        # ---------------------------
-        note_text = note_dict[lang_key]
-        example_text = example_dict[lang_key]
+        # --- Training & Example
         st.markdown(f"""
 <div style="
 background-color:#b3e0ff;
@@ -1050,25 +1047,24 @@ width:100%;
 font-size:14px;
 line-height:1.5;
 ">
-<b>{t[lang_key]['Training_Guidance']}:</b> {note_text}<br><br>
-💡 <b>{t[lang_key]['Example']}:</b> {example_text}
+<b>{t[lang_key]['Training_Guidance']}:</b> {note_dict[lang_key]}<br><br>
+💡 <b>{t[lang_key]['Example']}:</b> {example_dict[lang_key]}
 </div>
 """, unsafe_allow_html=True)
+
 
         # ---------------------------
         # Step-specific guidance expander
         # ---------------------------
-        gc = guidance_content[step][lang_key]
+         gc = guidance_content[step][lang_key]
         with st.expander(f"📘 {gc['title']}"):
             st.markdown(gc["tips"])
 
-        # ---------------------------
-        # File uploads for D1, D3, D4, D7
-        # ---------------------------
-        if step in ["D1", "D3", "D4", "D7"]:
+        # --- File uploads
+        if step in ["D1","D3","D4","D7"]:
             uploaded_files = st.file_uploader(
                 f"Upload files/photos for {step}",
-                type=["png", "jpg", "jpeg", "pdf", "xlsx", "txt"],
+                type=["png","jpg","jpeg","pdf","xlsx","txt"],
                 accept_multiple_files=True,
                 key=f"upload_{step}"
             )
@@ -1085,25 +1081,25 @@ line-height:1.5;
                         st.image(f, width=192)
 
         # ==========================================================
-        # ✅ FIXED NAVIGATION SYSTEM (VISIBLE ONLY FOR CURRENT STEP)
+        # ✅ FIXED NAVIGATION SYSTEM
         # ==========================================================
-        if step == current_step:
-            st.markdown("---")
-            col1, col2 = st.columns([1, 1])
+        st.markdown("---")
+        col1, col2 = st.columns([1, 1])
 
-            # 🟡 Previous button
-            with col1:
-                if st.session_state.current_step_idx > 0:
-                    if st.button("⬅️ Previous", key=f"prev_{step}"):
-                        st.session_state.current_step_idx -= 1
-                        st.rerun()  # ✅ replaces experimental_rerun()
+        # 🟡 Previous
+        with col1:
+            if st.session_state.current_step_idx > 0:
+                if st.button("⬅️ Previous", key=f"prev_{step}"):
+                    st.session_state.current_step_idx -= 1
+                    st.rerun()
 
-            # 🟢 Next button
-            with col2:
-                if st.session_state.current_step_idx < len(npqp_steps) - 1:
-                    if st.button("Next ➡️", key=f"next_{step}"):
-                        st.session_state.current_step_idx += 1
-                        st.rerun()  # ✅ replaces experimental_rerun()
+        # 🟢 Next
+        with col2:
+            if st.session_state.current_step_idx < len(npqp_steps) - 1:
+                if st.button("Next ➡️", key=f"next_{step}"):
+                    st.session_state.current_step_idx += 1
+                    st.rerun()
+
 
             # ---------------------------
             # Step-specific inputs
