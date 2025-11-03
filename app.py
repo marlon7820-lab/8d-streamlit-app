@@ -972,10 +972,38 @@ for step, _, _ in npqp_steps:
     if step in ["D1", "D3", "D4", "D7"]:
         st.session_state[step].setdefault("uploaded_files", [])
 
+# ---------------------------
+# Ensure all necessary session_state keys exist
+# ---------------------------
+st.session_state.setdefault("current_step_idx", 0)
+st.session_state.setdefault("d5_occ_whys", [])
+st.session_state.setdefault("d5_det_whys", [])
+st.session_state.setdefault("d5_sys_whys", [])
+
+for step, _, _ in npqp_steps:
+    st.session_state.setdefault(step, {})
+    if step in ["D1", "D3", "D4", "D7"]:
+        st.session_state[step].setdefault("uploaded_files", [])
+    # Ensure answer keys exist for all steps
+    if step not in ["D5", "D6", "D7"]:
+        st.session_state[step].setdefault("answer", "")
+    if step == "D6":
+        st.session_state[step].setdefault("occ_answer", "")
+        st.session_state[step].setdefault("det_answer", "")
+        st.session_state[step].setdefault("sys_answer", "")
+    if step == "D7":
+        st.session_state[step].setdefault("occ_answer", "")
+        st.session_state[step].setdefault("det_answer", "")
+        st.session_state[step].setdefault("sys_answer", "")
+
+# ---------------------------
 # Determine current step
+# ---------------------------
 current_step = npqp_steps[st.session_state.current_step_idx][0]
 
+# ---------------------------
 # Build tab labels with completion status
+# ---------------------------
 tab_labels = []
 for step, _, _ in npqp_steps:
     if step == "D5":
@@ -993,11 +1021,18 @@ for step, _, _ in npqp_steps:
 
 tabs = st.tabs(tab_labels)
 
+# ---------------------------
+# Render each tab
+# ---------------------------
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     with tabs[i]:
         st.markdown(f"### {t[lang_key][step]}")
 
-        # Training Guidance & Example
+        # ---------------------------
+        # Training Guidance & Example box
+        # ---------------------------
+        note_text = note_dict[lang_key]
+        example_text = example_dict[lang_key]
         st.markdown(f"""
 <div style="
 background-color:#b3e0ff;
@@ -1009,21 +1044,25 @@ width:100%;
 font-size:14px;
 line-height:1.5;
 ">
-<b>{t[lang_key]['Training_Guidance']}:</b> {note_dict[lang_key]}<br><br>
-💡 <b>{t[lang_key]['Example']}:</b> {example_dict[lang_key]}
+<b>{t[lang_key]['Training_Guidance']}:</b> {note_text}<br><br>
+💡 <b>{t[lang_key]['Example']}:</b> {example_text}
 </div>
 """, unsafe_allow_html=True)
 
-        # Step-specific guidance
+        # ---------------------------
+        # Step-specific guidance expander
+        # ---------------------------
         gc = guidance_content[step][lang_key]
         with st.expander(f"📘 {gc['title']}"):
             st.markdown(gc["tips"])
 
+        # ---------------------------
         # File uploads for D1, D3, D4, D7
-        if step in ["D1", "D3", "D4", "D7"]:
+        # ---------------------------
+        if step in ["D1","D3","D4","D7"]:
             uploaded_files = st.file_uploader(
                 f"Upload files/photos for {step}",
-                type=["png", "jpg", "jpeg", "pdf", "xlsx", "txt"],
+                type=["png","jpg","jpeg","pdf","xlsx","txt"],
                 accept_multiple_files=True,
                 key=f"upload_{step}"
             )
@@ -1032,7 +1071,6 @@ line-height:1.5;
                     if f not in st.session_state[step]["uploaded_files"]:
                         st.session_state[step]["uploaded_files"].append(f)
 
-            # Show uploaded files
             if st.session_state[step]["uploaded_files"]:
                 st.markdown("**Uploaded Files / Photos:**")
                 for f in st.session_state[step]["uploaded_files"]:
@@ -1040,7 +1078,9 @@ line-height:1.5;
                     if f.type.startswith("image/"):
                         st.image(f, width=192)
 
-        # --- ONLY RENDER STEP INPUTS AND NAV BUTTONS FOR CURRENT STEP ---
+        # ---------------------------
+        # Only render navigation buttons and step inputs for current step
+        # ---------------------------
         if step == current_step:
             col1, col2 = st.columns([1,1])
             with col1:
@@ -1054,7 +1094,9 @@ line-height:1.5;
                         st.session_state.current_step_idx += 1
                         st.experimental_rerun()
 
+            # ---------------------------
             # Step-specific inputs
+            # ---------------------------
             if step == "D3":
                 stages = (
                     ["During Process / Manufacture", "After manufacture (e.g. Final Inspection)", "Prior dispatch"]
@@ -1067,14 +1109,16 @@ line-height:1.5;
                     default=st.session_state[step].get("inspection_stage", [])
                 )
 
+        # ---------------------------
         # D4 multi-selects and text area
+        # ---------------------------
         if step == "D4":
             st.session_state[step].setdefault("location", [])
             st.session_state[step].setdefault("status", [])
             st.session_state[step].setdefault("answer", "")
 
-            loc_options = ["Work in progress", "Stores stock", "Warehouse stock", "Service parts"] if lang_key == "en" else ["En proceso", "Stock de almacén", "Stock de bodega", "Piezas de servicio"]
-            status_options = ["Pending", "In Progress", "Completed"] if lang_key == "en" else ["Pendiente", "En Progreso", "Completado"]
+            loc_options = ["Work in progress", "Stores stock", "Warehouse stock", "Service parts"] if lang_key=="en" else ["En proceso", "Stock de almacén", "Stock de bodega", "Piezas de servicio"]
+            status_options = ["Pending", "In Progress", "Completed"] if lang_key=="en" else ["Pendiente", "En Progreso", "Completado"]
 
             st.session_state[step]["location"] = st.multiselect(
                 t[lang_key]["Location"],
@@ -1104,61 +1148,28 @@ line-height:1.5;
             else:
                 st.warning("No Customer Concern defined yet in D1. Please complete D1 before proceeding with D5.")
 
-            # ---------------------------
-            # Occurrence Analysis
-            # ---------------------------
-            if lang_key == "es":
-                st.session_state.d5_occ_whys = render_whys_no_repeat_with_other(
-                    st.session_state.d5_occ_whys,
-                    occurrence_categories_es,
-                    t[lang_key]['Occurrence_Why']
-                )
-            else:
-                st.session_state.d5_occ_whys = render_whys_no_repeat_with_other(
-                    st.session_state.d5_occ_whys,
-                    occurrence_categories,
-                    t[lang_key]['Occurrence_Why']
-                )
-
-            if st.button("➕ Add another Occurrence Why", key=f"add_occ_{i}"):
+            # Occurrence
+            categories_occ = occurrence_categories_es if lang_key=="es" else occurrence_categories
+            st.session_state.d5_occ_whys = render_whys_no_repeat_with_other(
+                st.session_state.d5_occ_whys, categories_occ, t[lang_key]['Occurrence_Why']
+            )
+            if st.button("➕ Add another Occurrence Why", key=f"add_occ_{step}"):
                 st.session_state.d5_occ_whys.append("")
 
-            # ---------------------------
-            # Detection Analysis
-            # ---------------------------
-            if lang_key == "es":
-                st.session_state.d5_det_whys = render_whys_no_repeat_with_other(
-                    st.session_state.d5_det_whys,
-                    detection_categories_es,
-                    t[lang_key]['Detection_Why']
-                )
-            else:
-                st.session_state.d5_det_whys = render_whys_no_repeat_with_other(
-                    st.session_state.d5_det_whys,
-                    detection_categories,
-                    t[lang_key]['Detection_Why']
-                )
-
-            if st.button("➕ Add another Detection Why", key=f"add_det_{i}"):
+            # Detection
+            categories_det = detection_categories_es if lang_key=="es" else detection_categories
+            st.session_state.d5_det_whys = render_whys_no_repeat_with_other(
+                st.session_state.d5_det_whys, categories_det, t[lang_key]['Detection_Why']
+            )
+            if st.button("➕ Add another Detection Why", key=f"add_det_{step}"):
                 st.session_state.d5_det_whys.append("")
 
-            # ---------------------------
-            # Systemic Analysis
-            # ---------------------------
-            if lang_key == "es":
-                st.session_state.d5_sys_whys = render_whys_no_repeat_with_other(
-                    st.session_state.d5_sys_whys,
-                    systemic_categories_es,
-                    t[lang_key]['Systemic_Why']
-                )
-            else:
-                st.session_state.d5_sys_whys = render_whys_no_repeat_with_other(
-                    st.session_state.d5_sys_whys,
-                    systemic_categories,
-                    t[lang_key]['Systemic_Why']
-                )
-
-            if st.button("➕ Add another Systemic Why", key=f"add_sys_{i}"):
+            # Systemic
+            categories_sys = systemic_categories_es if lang_key=="es" else systemic_categories
+            st.session_state.d5_sys_whys = render_whys_no_repeat_with_other(
+                st.session_state.d5_sys_whys, categories_sys, t[lang_key]['Systemic_Why']
+            )
+            if st.button("➕ Add another Systemic Why", key=f"add_sys_{step}"):
                 st.session_state.d5_sys_whys.append("")
 
             
