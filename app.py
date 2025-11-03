@@ -1004,6 +1004,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
         step_index = [s for s, _, _ in npqp_steps].index(step)
         if step_index + 1 < len(npqp_steps):
             next_step = npqp_steps[step_index + 1][0]
+            # Unique key per step to avoid Streamlit duplicate widget errors
             if st.button(f"Next ➡️ {next_step}", key=f"next_button_{step}"):
                 st.session_state.current_step = next_step
                 st.rerun()
