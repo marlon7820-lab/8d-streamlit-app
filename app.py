@@ -959,8 +959,8 @@ with tabs[0]:
 
     # Guidance box
     gc = guidance_content[current_step][lang_key]
-    note_text = gc["note"]
-    example_text = gc["example"]
+    note_text = gc.get("tips", "")  # main guidance content
+    example_text = ""  # optional: leave empty if no example exists
     st.markdown(f"""
     <div style="
     background-color:#b3e0ff;
@@ -972,8 +972,7 @@ with tabs[0]:
     font-size:14px;
     line-height:1.5;
     ">
-    <b>{t[lang_key]['Training_Guidance']}:</b> {note_text}<br><br>
-    💡 <b>{t[lang_key]['Example']}:</b> {example_text}
+    <b>{t[lang_key]['Training_Guidance']}:</b> {note_text}
     </div>
     """, unsafe_allow_html=True)
 
