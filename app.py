@@ -929,9 +929,9 @@ if "current_step" not in st.session_state:
     st.session_state.current_step = 0  # always store as integer index
 
 # ---------------------------
-# Step selection (like tabs)
+# Tabs with progress colors
 # ---------------------------
-step_labels = []
+tab_labels = []
 for step, _, _ in npqp_steps:
     if step == "D5":
         filled = d5_filled
@@ -942,33 +942,16 @@ for step, _, _ in npqp_steps:
     else:
         filled = st.session_state.get(step, {}).get("answer", "").strip() != ""
     
-    label = f"🟢 {t[lang_key][step]}" if filled else f"🔴 {t[lang_key][step]}"
-    step_labels.append(label)
+    tab_labels.append(f"🟢 {t[lang_key][step]}" if filled else f"🔴 {t[lang_key][step]}")
 
-# Make sure index is an integer
-current_index = st.session_state.current_step
+# Render all tabs as before
+tabs = st.tabs(tab_labels)
 
-selected_step_label = st.selectbox(
-    "Select Step:",
-    options=step_labels,
-    index=current_index  # must be integer
-)
-
-# Update current step index based on selection
-st.session_state.current_step = step_labels.index(selected_step_label)
-current_step = npqp_steps[st.session_state.current_step][0]
-
-# ---------------------------
-# Render current step UI
-# ---------------------------
-step, note_dict, example_dict = npqp_steps[st.session_state.current_step]
-
-st.markdown(f"### {t[lang_key][step]}")
-
-# Guidance & example
-note_text = note_dict[lang_key]
-example_text = example_dict[lang_key]
-st.markdown(f"""
+for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
+    with tabs[i]:
+        st.markdown(f"### {t[lang_key][step]}")
+        # Guidance box
+        st.markdown(f"""
 <div style="
 background-color:#b3e0ff;
 color:black;
@@ -979,69 +962,52 @@ width:100%;
 font-size:14px;
 line-height:1.5;
 ">
-<b>{t[lang_key]['Training_Guidance']}:</b> {note_text}<br><br>
-💡 <b>{t[lang_key]['Example']}:</b> {example_text}
+<b>{t[lang_key]['Training_Guidance']}:</b> {note_dict[lang_key]}<br><br>
+💡 <b>{t[lang_key]['Example']}:</b> {example_dict[lang_key]}
 </div>
 """, unsafe_allow_html=True)
 
-# Step-specific guidance expander
-gc = guidance_content[step][lang_key]
-with st.expander(f"📘 {gc['title']}"):
-    st.markdown(gc["tips"])
+        # Step-specific guidance
+        gc = guidance_content[step][lang_key]
+        with st.expander(f"📘 {gc['title']}"):
+            st.markdown(gc["tips"])
 
-# Step-specific UI example for D1
-if step == "D1":
-    st.session_state[step].setdefault("answer", "")
-    st.text_area("Concern Details", value=st.session_state[step]["answer"], key="d1_answer")
-
-# File uploads
-if step in ["D1","D3","D4","D7"]:
-    uploaded_files = st.file_uploader(
-        f"Upload files/photos for {step}",
-        type=["png", "jpg", "jpeg", "pdf", "xlsx", "txt"],
-        accept_multiple_files=True,
-        key=f"upload_{step}"
-    )
-    if uploaded_files:
-        for file in uploaded_files:
-            if file not in st.session_state[step]["uploaded_files"]:
-                st.session_state[step]["uploaded_files"].append(file)
-
-    if st.session_state[step].get("uploaded_files"):
-        st.markdown("**Uploaded Files / Photos:**")
-        for f in st.session_state[step]["uploaded_files"]:
-            st.write(f"{f.name}")
-            if f.type.startswith("image/"):
-                st.image(f, width=192)
-
-# ---------------------------
-# Next button
-# ---------------------------
-if st.session_state.current_step + 1 < len(npqp_steps):
-    next_step_index = st.session_state.current_step + 1
-    next_step_name = npqp_steps[next_step_index][0]
-    if st.button(f"Next ➡️ {next_step_name}"):
-        st.session_state.current_step = next_step_index
-        st.rerun()
-                
-        # ---------------------------
-        # Step-specific inputs
-        # ---------------------------
-
+        # Example: D1 input
         if step == "D1":
             st.session_state[step].setdefault("answer", "")
             st.text_area("Concern Details", value=st.session_state[step]["answer"], key="d1_answer")
 
+        # File uploads
+        if step in ["D1","D3","D4","D7"]:
+            uploaded_files = st.file_uploader(
+                f"Upload files/photos for {step}",
+                type=["png", "jpg", "jpeg", "pdf", "xlsx", "txt"],
+                accept_multiple_files=True,
+                key=f"upload_{step}"
+            )
+            if uploaded_files:
+                for file in uploaded_files:
+                    if file not in st.session_state[step]["uploaded_files"]:
+                        st.session_state[step]["uploaded_files"].append(file)
+
+        # Display uploaded files
+        if st.session_state[step].get("uploaded_files"):
+            st.markdown("**Uploaded Files / Photos:**")
+            for f in st.session_state[step]["uploaded_files"]:
+                st.write(f"{f.name}")
+                if f.type.startswith("image/"):
+                    st.image(f, width=192)
+
         # ---------------------------
-        # ✅ Next Button
+        # Next Button
         # ---------------------------
-        step_index = [s for s, _, _ in npqp_steps].index(step)
+        step_index = i
         if step_index + 1 < len(npqp_steps):
             next_step = npqp_steps[step_index + 1][0]
             if st.button(f"Next ➡️ {next_step}", key=f"next_button_{step}"):
-                # Update session state to mark the next tab as active
-                st.session_state.current_step = next_step
+                st.session_state.current_step_index = step_index + 1
                 st.rerun()
+                
 
     # ---------------------------
     # After the loop, you can automatically select the current step tab
