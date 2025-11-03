@@ -1460,6 +1460,12 @@ for step, _, _ in npqp_steps:
         answer = st.session_state[step].get("answer", "").strip()
         extra = ""  # No dropdowns in D1
         data_rows.append((step, answer, extra))
+    # ---------------------------
+    # Next button for D1 -> D2
+    # ---------------------------
+    if st.button("Next ➡️ D2"):
+        st.session_state.current_step = "D2"
+        st.rerun()  # refresh page to show D2
     elif step == "D2":
         # D2 text area
         answer = st.session_state[step].get("answer", "").strip()
