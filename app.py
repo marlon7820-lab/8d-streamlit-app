@@ -1010,7 +1010,7 @@ line-height:1.5;
             if st.button(f"Next ➡️ {next_step}", key=f"next_button_{step}"):
                 # Update session state to mark the next tab as active
                 st.session_state.current_step = next_step
-                st.experimental_rerun()
+                st.rerun()
 
     # ---------------------------
     # After the loop, you can automatically select the current step tab
