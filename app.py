@@ -959,9 +959,10 @@ tabs = st.tabs(tab_labels)
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     with tabs[i]:
         st.markdown(f"### {t[lang_key][step]}")
-        # ... (keep your existing rendering code here)
 
+        # ---------------------------
         # Training Guidance & Example box
+        # ---------------------------
         note_text = note_dict[lang_key]
         example_text = example_dict[lang_key]
         st.markdown(f"""
@@ -980,12 +981,16 @@ line-height:1.5;
 </div>
 """, unsafe_allow_html=True)
 
-        # Step-specific guidance expander from guidance_content
+        # ---------------------------
+        # Step-specific guidance expander
+        # ---------------------------
         gc = guidance_content[step][lang_key]
         with st.expander(f"📘 {gc['title']}"):
             st.markdown(gc["tips"])
 
+        # ---------------------------
         # File uploads for D1, D3, D4, D7
+        # ---------------------------
         if step in ["D1","D3","D4","D7"]:
             uploaded_files = st.file_uploader(
                 f"Upload files/photos for {step}",
@@ -998,7 +1003,7 @@ line-height:1.5;
                     if file not in st.session_state[step]["uploaded_files"]:
                         st.session_state[step]["uploaded_files"].append(file)
 
-        # Display uploaded files (aligned with file upload)
+        # Display uploaded files
         if step in ["D1","D3","D4","D7"] and st.session_state[step].get("uploaded_files"):
             st.markdown("**Uploaded Files / Photos:**")
             for f in st.session_state[step]["uploaded_files"]:
