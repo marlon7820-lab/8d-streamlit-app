@@ -27,7 +27,6 @@ st.set_page_config(
     page_title="8D Report Assistant",
     page_icon="logo.png",
     layout="wide"
-)
 
 # ---------------------------
 # App styles - updated for desktop selectbox outline + thumbnails + Root Cause textarea
@@ -1375,6 +1374,21 @@ line-height:1.5;
             st.text_area(f"{t[lang_key]['Root_Cause_Det']}", value=det_text, height=120, disabled=True)
             st.text_area(f"{t[lang_key]['Root_Cause_Sys']}", value=sys_text, height=120, disabled=True)
 
+            # ---------------------------
+            # NAVIGATION BUTTONS
+            # ---------------------------
+            col1, col2 = st.columns([1,1])
+            with col1:
+                if st.session_state.current_step_idx > 0:
+                    if st.button("⬅️ Previous", key=f"prev_step_{i}"):
+                        st.session_state.current_step_idx -= 1
+                        st.experimental_rerun()
+
+            with col2:
+                if st.session_state.current_step_idx < len(npqp_steps) - 1:
+                    if st.button("Next ➡️", key=f"next_step_{i}"):
+                        st.session_state.current_step_idx += 1
+                        st.experimental_rerun()
 
         elif step == "D6":
             st.session_state[step].setdefault("occ_answer", st.session_state["D6"].get("occ_answer", ""))
@@ -1401,6 +1415,22 @@ line-height:1.5;
             st.session_state["D6"]["det_answer"] = st.session_state[step]["det_answer"]
             st.session_state["D6"]["sys_answer"] = st.session_state[step]["sys_answer"]
 
+            # ---------------------------
+            # NAVIGATION BUTTONS
+            # ---------------------------
+            col1, col2 = st.columns([1,1])
+            with col1:
+                if st.session_state.current_step_idx > 0:
+                    if st.button("⬅️ Previous", key=f"prev_step_{i}"):
+                        st.session_state.current_step_idx -= 1
+                        st.experimental_rerun()
+
+            with col2:
+                if st.session_state.current_step_idx < len(npqp_steps) - 1:
+                    if st.button("Next ➡️", key=f"next_step_{i}"):
+                        st.session_state.current_step_idx += 1
+                        st.experimental_rerun()
+
         elif step == "D7":
             st.session_state[step].setdefault("occ_answer", st.session_state["D7"].get("occ_answer", ""))
             st.session_state[step].setdefault("det_answer", st.session_state["D7"].get("det_answer", ""))
@@ -1425,6 +1455,23 @@ line-height:1.5;
             st.session_state["D7"]["occ_answer"] = st.session_state[step]["occ_answer"]
             st.session_state["D7"]["det_answer"] = st.session_state[step]["det_answer"]
             st.session_state["D7"]["sys_answer"] = st.session_state[step]["sys_answer"]
+
+            # ---------------------------
+            # NAVIGATION BUTTONS
+            # ---------------------------
+            col1, col2 = st.columns([1,1])
+            with col1:
+                if st.session_state.current_step_idx > 0:
+                    if st.button("⬅️ Previous", key=f"prev_step_{i}"):
+                        st.session_state.current_step_idx -= 1
+                        st.experimental_rerun()
+
+            with col2:
+                if st.session_state.current_step_idx < len(npqp_steps) - 1:
+                    if st.button("Next ➡️", key=f"next_step_{i}"):
+                        st.session_state.current_step_idx += 1
+                        st.experimental_rerun()
+
 
         elif step == "D8":
             st.session_state[step]["answer"] = st.text_area(
@@ -1457,7 +1504,22 @@ line-height:1.5;
                     value=st.session_state[step]["answer"],
                     key=f"ans_{step}"
                 )
-   
+            # ---------------------------
+            # NAVIGATION BUTTONS
+            # ---------------------------
+            col1, col2 = st.columns([1,1])
+            with col1:
+                if st.session_state.current_step_idx > 0:
+                    if st.button("⬅️ Previous", key=f"prev_step_{i}"):
+                        st.session_state.current_step_idx -= 1
+                        st.experimental_rerun()
+
+            with col2:
+                if st.session_state.current_step_idx < len(npqp_steps) - 1:
+                    if st.button("Next ➡️", key=f"next_step_{i}"):
+                        st.session_state.current_step_idx += 1
+                        st.experimental_rerun()
+
 
 # ---------------------------
 # Collect all answers for Excel export
