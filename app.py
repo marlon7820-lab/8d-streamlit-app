@@ -943,76 +943,58 @@ for step, _, _ in npqp_steps:
 tabs = st.tabs(tab_labels)
 
 # ---------------------------
-# Initialize current step
+# Rest of your tab rendering code remains unchanged
 # ---------------------------
-if "current_step" not in st.session_state:
-    st.session_state.current_step = "D1"
+for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
+    with tabs[i]:
+        st.markdown(f"### {t[lang_key][step]}")
+        # ... (keep your existing rendering code here)
 
-current_step = st.session_state.current_step
+        # Training Guidance & Example box
+        note_text = note_dict[lang_key]
+        example_text = example_dict[lang_key]
+        st.markdown(f"""
+<div style="
+background-color:#b3e0ff;
+color:black;
+padding:12px;
+border-left:5px solid #1E90FF;
+border-radius:6px;
+width:100%;
+font-size:14px;
+line-height:1.5;
+">
+<b>{t[lang_key]['Training_Guidance']}:</b> {note_text}<br><br>
+💡 <b>{t[lang_key]['Example']}:</b> {example_text}
+</div>
+""", unsafe_allow_html=True)
 
-# ---------------------------
-# Render only the current step tab
-# ---------------------------
-tabs = st.tabs([t[lang_key][current_step]])
-with tabs[0]:
-    st.markdown(f"### {t[lang_key][current_step]}")
+        # Step-specific guidance expander from guidance_content
+        gc = guidance_content[step][lang_key]
+        with st.expander(f"📘 {gc['title']}"):
+            st.markdown(gc["tips"])
 
-    # Guidance box
-    gc = guidance_content[current_step][lang_key]
-    note_text = gc.get("tips", "")  # main guidance content
-    example_text = ""  # optional: leave empty if no example exists
-    st.markdown(f"""
-    <div style="
-    background-color:#b3e0ff;
-    color:black;
-    padding:12px;
-    border-left:5px solid #1E90FF;
-    border-radius:6px;
-    width:100%;
-    font-size:14px;
-    line-height:1.5;
-    ">
-    <b>{t[lang_key]['Training_Guidance']}:</b> {note_text}
-    </div>
-    """, unsafe_allow_html=True)
+        # File uploads for D1, D3, D4, D7
+        if step in ["D1","D3","D4","D7"]:
+            uploaded_files = st.file_uploader(
+                f"Upload files/photos for {step}",
+                type=["png", "jpg", "jpeg", "pdf", "xlsx", "txt"],
+                accept_multiple_files=True,
+                key=f"upload_{step}"
+            )
+            if uploaded_files:
+                for file in uploaded_files:
+                    if file not in st.session_state[step]["uploaded_files"]:
+                        st.session_state[step]["uploaded_files"].append(file)
 
-    # Step-specific guidance expander
-    with st.expander(f"📘 {gc['title']}"):
-        st.markdown(gc["tips"])
-
-    # Step-specific UI
-    if current_step == "D1":
-        st.session_state[current_step].setdefault("answer", "")
-        st.text_area("Concern Details", value=st.session_state[current_step]["answer"], key="d1_answer")
-
-    # File uploads
-    if current_step in ["D1","D3","D4","D7"]:
-        uploaded_files = st.file_uploader(
-            f"Upload files/photos for {current_step}",
-            type=["png", "jpg", "jpeg", "pdf", "xlsx", "txt"],
-            accept_multiple_files=True,
-            key=f"upload_{current_step}"
-        )
-        if uploaded_files:
-            for file in uploaded_files:
-                if file not in st.session_state[current_step]["uploaded_files"]:
-                    st.session_state[current_step]["uploaded_files"].append(file)
-
-        # Display uploaded files
-        if st.session_state[current_step].get("uploaded_files"):
+        # Display uploaded files (aligned with file upload)
+        if step in ["D1","D3","D4","D7"] and st.session_state[step].get("uploaded_files"):
             st.markdown("**Uploaded Files / Photos:**")
-            for f in st.session_state[current_step]["uploaded_files"]:
+            for f in st.session_state[step]["uploaded_files"]:
                 st.write(f"{f.name}")
                 if f.type.startswith("image/"):
                     st.image(f, width=192)
 
-    # --- Next Button ---
-    step_index = [s for s, _, _ in npqp_steps].index(current_step)
-    if step_index + 1 < len(npqp_steps):
-        next_step = npqp_steps[step_index + 1][0]
-        if st.button(f"Next ➡️ {next_step}", key=f"next_button_{current_step}"):
-            st.session_state.current_step = next_step
-            st.experimental_rerun()
                 
         # ---------------------------
         # Step-specific inputs
