@@ -1296,7 +1296,7 @@ line-height:1.5;
                       "en": ["Perform deeper investigation", "Escalate to cross-functional review"],
                       "es": ["Realizar investigación más profunda", "Escalar a revisión interfuncional"]
                     }
-                }  # <--- This closing brace was missing or misplaced
+                }  
 
                 insights = []
                 if d1_concern:
