@@ -101,20 +101,8 @@ textarea, input[type="text"] {
     autocapitalize: on !important;
     lang: es !important; /* Support for Spanish */
 }
-
-/* Bottom navigation buttons */
-.step-nav {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 20px;
-    margin-bottom: 20px;
-}
-.step-nav button {
-    width: 120px;
-}
 </style>
 """, unsafe_allow_html=True)
-
 # ---------------------------
 # Reset Session check
 # ---------------------------
@@ -127,6 +115,27 @@ if st.session_state.get("_reset_8d_session", False):
     for k, v in preserved.items():
         st.session_state[k] = v
     st.session_state["_reset_8d_session"] = False
+
+    # ---------------------------
+    # ✅ Re-initialize 8D structure cleanly to avoid KeyErrors
+    # ---------------------------
+    default_template = {
+        "answer": "",
+        "uploaded_files": [],
+        "location": [],  # empty list for multiselect
+        "status": [],    # empty list for multiselect
+        "occ_answer": "",
+        "det_answer": "",
+        "sys_answer": ""
+    }
+
+    for step in ["D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8"]:
+        st.session_state[step] = default_template.copy()
+
+    # ✅ Recreate WHY lists for D5
+    st.session_state["d5_occ_whys"] = []
+    st.session_state["d5_det_whys"] = []
+    st.session_state["d5_sys_whys"] = []
     st.rerun()
 
 # ---------------------------
@@ -152,9 +161,241 @@ Version {version_number} | Last updated: {last_updated}
 st.sidebar.title("8D Report Assistant")
 st.sidebar.markdown("---")
 st.sidebar.header("Settings")
+
 lang = st.sidebar.selectbox("Select Language / Seleccionar Idioma", ["English", "Español"])
 lang_key = "en" if lang == "English" else "es"
+# ---------------------------
+# Dynamic spellcheck language (English ↔ Spanish)
+# ---------------------------
+if lang == "English":
+    spell_lang = "en"
+else:
+    spell_lang = "es"
 dark_mode = st.sidebar.checkbox("🌙 Dark Mode")
+if dark_mode:
+    st.markdown("""
+    <style>
+    /* Main app background & text */
+    .stApp {
+        background: linear-gradient(to right, #1e1e1e, #2c2c2c);
+        color: #f5f5f5 !important;
+
+    /* Tabs */
+    .stTabs [data-baseweb="tab"] {
+        font-weight: bold; 
+        color: #f5f5f5 !important;
+    }
+    .stTabs [data-baseweb="tab"]:hover {
+        color: #87AFC7 !important;
+    }
+
+    /* Text inputs, textareas, selectboxes */
+    div.stTextInput, div.stTextArea, div.stSelectbox {
+        border: 2px solid #87AFC7 !important;
+        border-radius: 5px !important;
+        background-color: #2c2c2c !important;
+        color: #f5f5f5 !important;
+        padding: 5px !important;
+        transition: border 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+    div.stTextInput:hover, div.stTextArea:hover, div.stSelectbox:hover {
+        border: 2px solid #1E90FF !important;
+        box-shadow: 0 0 5px #1E90FF;
+    }
+
+    /* Labels above inputs */
+    div.stTextInput label,
+    div.stTextArea label,
+    div.stSelectbox label {
+        color: #f5f5f5 !important;
+        font-weight: bold;
+    }
+
+    /* Info boxes */
+    .stInfo {
+        background-color: #3a3a3a !important; 
+        border-left: 5px solid #87AFC7 !important; 
+        color: #f5f5f5 !important;
+    }
+
+    /* Sidebar background & text (kept separate) */
+    .css-1d391kg {color: #87AFC7 !important; font-weight: bold !important;}
+    .stSidebar {
+        background-color: #1e1e1e !important;
+        color: #f5f5f5 !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+# ---------------------------
+# Sidebar buttons - consistent colors in light & dark mode
+# ---------------------------
+st.markdown("""
+<style>
+/* All sidebar buttons, including Reset 8D Session & Download XLSX */
+.stSidebar button,
+.stSidebar .stDownloadButton button {
+    background-color: #87AFC7 !important;  /* main blue */
+    color: #000000 !important;             /* black text */
+    font-weight: bold;
+    border-radius: 5px;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Hover effect */
+.stSidebar button:hover,
+.stSidebar .stDownloadButton button:hover {
+    background-color: #1E90FF !important;  /* darker blue */
+    color: #ffffff !important;             /* white text */
+}
+</style>
+""", unsafe_allow_html=True)
+# ---------------------------
+# Step-specific guidance content (bilingual)
+# ---------------------------
+guidance_content = {
+    "D1": {
+        "en": {"title": "Define the Team & Describe the Problem","tips": """ 
+- **Define the Team**:
+  - Identify all team members involved in solving the issue.
+  - Include functions like Quality, Engineering, Production, Supplier, etc.
+  - Assign clear roles and responsibilities.
+  - Example: *John (Quality) – Team Leader; Maria (Engineering) – Root Cause Analyst*.
+
+- **Describe the Problem**:
+  - Focus on **facts and measurable data** (avoid assumptions).
+  - Use 5W2H (Who, What, Where, When, Why, How, How Many).
+  - Example: *Customer reports radio does not power on after 2 hours of use in hot conditions*.
+"""
+        },
+        "es": {"title": "Definir el Equipo y Describir el Problema","tips": """
+- **Definir el Equipo**:
+  - Identifica a todos los miembros del equipo involucrados.
+  - Incluye áreas como Calidad, Ingeniería, Producción, Proveedor, etc.
+  - Asigna roles y responsabilidades claras.
+  - Ejemplo: *Juan (Calidad) – Líder del Equipo; María (Ingeniería) – Análisis de Causa Raíz*.
+
+- **Describir el Problema**:
+  - Enfócate en **hechos y datos medibles** (evita suposiciones).
+  - Usa 5W2H (Quién, Qué, Dónde, Cuándo, Por qué, Cómo, Cuántos).
+  - Ejemplo: *El cliente reporta que el radio no enciende después de 2 horas de uso en condiciones de calor*.
+"""
+        }
+    },
+    "D2": {
+        "en": {"title": "Similar Parts That Could Be Affected","tips": """
+- Identify parts, models, colors, or assemblies that could also be affected.
+- Consider variations in suppliers, batches, or production lines.
+- Example: *Front vs. rear speaker, similar model radios, alternate supplier components.*
+"""
+        },
+        "es": {"title": "Partes Similares que Podrían Verse Afectadas","tips": """
+- Identifica piezas, modelos, colores o ensamblajes que también podrían verse afectados.
+- Considera variaciones de proveedores, lotes o líneas de producción.
+- Ejemplo: *Altavoz delantero vs trasero, radios de modelo similar, componentes de proveedor alternativo.*
+"""
+        }
+    },
+    "D3": {
+        "en": {"title": "Initial Analysis","tips": """
+- Gather and review all relevant data.
+- Look for patterns, trends, or unusual occurrences.
+- Example: *Review production logs and defect reports to identify common failure points.*
+"""
+        },
+        "es": {"title": "Análisis Inicial","tips": """
+- Recolecta y revisa todos los datos relevantes.
+- Busca patrones, tendencias o sucesos inusuales.
+- Ejemplo: *Revisar registros de producción e informes de defectos para identificar puntos de falla comunes.*
+"""
+        }
+    },
+    "D4": {
+        "en": {"title": "Implement Containment","tips": """
+- Describe temporary actions to isolate defective material.
+- Example: *Quarantined 200 pcs in warehouse, stopped shipments to customer.*
+"""
+        },
+        "es": {"title": "Implementar Contención","tips": """
+- Describe las acciones temporales para aislar material defectuoso.
+- Ejemplo: *Se pusieron en cuarentena 200 piezas en almacén, se detuvieron envíos al cliente.*
+"""
+        }
+    },
+    "D5": {
+        "en": {"title": "Identify Root Cause","tips": """
+- Use tools like 5 Why’s or Fishbone Diagram.
+- Verify the root cause with evidence.
+- Example: *Incorrect torque due to missing calibration on assembly tool.*
+"""
+        },
+        "es": {"title": "Identificar la Causa Raíz","tips": """
+- Usa herramientas como 5 Porqués o Diagrama de Ishikawa.
+- Verifica la causa raíz con evidencia.
+- Ejemplo: *Par incorrecto debido a falta de calibración en herramienta de ensamble.*
+"""
+        }
+    },
+    "D6": {
+        "en": {"title": "Verify Permanent Corrective Actions","tips": """
+- Define permanent solutions to eliminate the root cause.
+- Validate with testing or simulation.
+- Example: *Implemented torque monitoring system to prevent missed calibrations.*
+"""
+        },
+        "es": {"title": "Verificar Acciones Correctivas Permanentes","tips": """
+- Define soluciones permanentes para eliminar la causa raíz.
+- Valida con pruebas o simulaciones.
+- Ejemplo: *Se implementó sistema de monitoreo de torque para evitar calibraciones omitidas.*
+"""
+        }
+    },
+    "D7": {
+        "en": {"title": "Prevent Recurrence","tips": """
+- Update documentation, training, and procedures.
+- Example: *Updated Work Instruction #WI-321 and retrained all operators.*
+"""
+        },
+        "es": {"title": "Prevenir Recurrencia","tips": """
+- Actualiza documentación, entrenamiento y procedimientos.
+- Ejemplo: *Se actualizó la Instrucción de Trabajo #WI-321 y se capacitó a todos los operadores.*
+"""
+        }
+    },
+    "D8": {
+        "en": {"title": "Follow-Up Activities (Lessons Learned / Recurrence Prevention)","tips": """
+- Document lessons learned from this 8D process.
+- Identify opportunities to prevent similar issues in other products or lines.
+- Example: *Standardized torque verification checklist applied to all new model launches.*
+- Ensure sustainability of corrective actions through regular audits or reviews.
+"""
+        },
+        "es": {"title": "Actividades de Seguimiento (Lecciones Aprendidas / Prevención de Recurrencia)","tips": """
+- Documenta las lecciones aprendidas de este proceso 8D.
+- Identifica oportunidades para prevenir problemas similares en otros productos o líneas.
+- Ejemplo: *Lista de verificación de torque estandarizada aplicada a todos los nuevos lanzamientos de modelo.*
+- Asegura la sostenibilidad de las acciones correctivas mediante auditorías o revisiones regulares.
+"""
+        }
+    }
+}
+
+# ---------------------------
+# Sidebar: App Controls
+# ---------------------------
+st.sidebar.markdown("---")
+st.sidebar.header("⚙️ App Controls")
+
+if st.sidebar.button("🔄 Reset 8D Session", type="primary"):
+    preserve_keys = ["lang", "lang_key", "current_tab", "report_date", "prepared_by"]
+    preserved = {k: st.session_state.get(k) for k in preserve_keys if k in st.session_state}
+    for key in list(st.session_state.keys()):
+        if key not in preserve_keys:
+            del st.session_state[key]
+    for k, v in preserved.items():
+        st.session_state[k] = v
+    st.session_state["_reset_8d_session"] = True
+    st.stop()
 
 # ---------------------------
 # Language dictionary
@@ -169,6 +410,22 @@ t = {
         "D6": "D6: Permanent Corrective Actions",
         "D7": "D7: Countermeasure Confirmation",
         "D8": "D8: Follow-up Activities (Lessons Learned / Recurrence Prevention)",
+        "Report_Date": "Report Date",
+        "Prepared_By": "Prepared By",
+        "Root_Cause_Occ": "Root Cause (Occurrence)",
+        "Root_Cause_Det": "Root Cause (Detection)",
+        "Root_Cause_Sys": "Root Cause (Systemic)",
+        "Occurrence_Why": "Occurrence Why",
+        "Detection_Why": "Detection Why",
+        "Systemic_Why": "Systemic Why",
+        "Save": "💾 Save 8D Report",
+        "Download": "📥 Download XLSX",
+        "Training_Guidance": "Training Guidance",
+        "Example": "Example",
+        "FMEA_Failure": "FMEA Failure Occurrence",
+        "Location": "Material Location",
+        "Status": "Activity Status",
+        "Containment_Actions": "Containment Actions"
     },
     "es": {
         "D1": "D1: Detalles de la preocupación",
@@ -179,50 +436,83 @@ t = {
         "D6": "D6: Acciones correctivas permanentes",
         "D7": "D7: Confirmación de contramedidas",
         "D8": "D8: Actividades de seguimiento (Lecciones aprendidas / Prevención de recurrencia)",
+        "Report_Date": "Fecha del informe",
+        "Prepared_By": "Preparado por",
+        "Root_Cause_Occ": "Causa raíz (Ocurrencia)",
+        "Root_Cause_Det": "Causa raíz (Detección)",
+        "Root_Cause_Sys": "Causa raíz (Sistémica)",
+        "Occurrence_Why": "Por qué Ocurrencia",
+        "Detection_Why": "Por qué Detección",
+        "Systemic_Why": "Por qué Sistémico",
+        "Save": "💾 Guardar Informe 8D",
+        "Download": "📥 Descargar XLSX",
+        "Training_Guidance": "Guía de Entrenamiento",
+        "Example": "Ejemplo",
+        "FMEA_Failure": "Ocurrencia de falla FMEA",
+        "Location": "Ubicación del material",
+        "Status": "Estado de la actividad",
+        "Containment_Actions": "Acciones de contención"
     }
 }
+# English
+t["en"].update({
+    "Concern_Details": "Concern Details",
+    "Similar_Part_Considerations": "Similar Part Considerations",
+    "Initial_Analysis": "Initial Analysis",
+    "Follow_up_Activities": "Follow-up Activities"
+})
 
+# Spanish
+t["es"].update({
+    "Concern_Details": "Detalles de la Preocupación",
+    "Similar_Part_Considerations": "Consideraciones de Piezas Similares",
+    "Initial_Analysis": "Análisis Inicial",
+    "Follow_up_Activities": "Actividades de Seguimiento"
+})
 # ---------------------------
-# NPQP 8D steps
+# NPQP 8D steps with examples
 # ---------------------------
-npqp_steps = ["D1","D2","D3","D4","D5","D6","D7","D8"]
+npqp_steps = [
+    ("D1", {"en":"Describe the customer concerns clearly.", "es":"Describa claramente las preocupaciones del cliente."}, {"en":"Customer reported static noise in amplifier during end-of-line test.", "es":"El cliente reportó ruido estático en el amplificador durante la prueba final."}),
+    ("D2", {"en":"Check for similar parts, models, generic parts, other colors, etc.", "es":"Verifique partes similares, modelos, partes genéricas, otros colores, etc."}, {"en":"Similar model radio, Front vs. rear speaker.", "es":"Radio de modelo similar, altavoz delantero vs trasero."}),
+    ("D3", {"en":"Perform an initial investigation to identify obvious issues.", "es":"Realice una investigación inicial para identificar problemas evidentes."}, {"en":"Visual inspection of solder joints, initial functional tests.", "es":"Inspección visual de soldaduras, pruebas funcionales iniciales."}),
+    ("D4", {"en":"Define temporary containment actions and material location.", "es":"Defina acciones de contención temporales y ubicación del material."}, {"en":"Post Quality Alert, Increase Inspection, Inventory Certification","es":"Implementar Ayuda Visual, Incrementar Inspeccion, Certificar Inventario"}),
+    ("D5", {"en": "Use 5-Why analysis to determine the root cause.", "es": "Use el análisis de 5 Porqués para determinar la causa raíz."}, {"en": "Final 'Why' from the Analysis will give a good indication of the True Root Cause", "es": "El último \"Por qué\" del análisis proporcionará una idea clara de la causa raíz del problema"}),
+    ("D6", {"en":"Define corrective actions that eliminate the root cause permanently.", "es":"Defina acciones correctivas que eliminen la causa raíz permanentemente."}, {"en":"Update soldering process, redesign fixture.", "es":"Actualizar proceso de soldadura, rediseñar herramienta."}),
+    ("D7", {"en":"Verify that corrective actions effectively resolve the issue.", "es":"Verifique que las acciones correctivas resuelvan efectivamente el problema."}, {"en":"Functional tests on corrected amplifiers.", "es":"Pruebas funcionales en amplificadores corregidos."}),
+    ("D8", {"en":"Document lessons learned, update standards, FMEAs.", "es":"Documente lecciones aprendidas, actualice estándares, FMEAs."}, {"en":"Update SOPs, PFMEA, work instructions.", "es":"Actualizar SOPs, PFMEA, instrucciones de trabajo."})
+]
 
 # ---------------------------
 # Initialize session state
 # ---------------------------
-if "current_step_idx" not in st.session_state:
-    st.session_state.current_step_idx = 0
-
-# Example of session storage for answers
-for step in npqp_steps:
+for step, _, _ in npqp_steps:
     if step not in st.session_state:
-        st.session_state[step] = {"answer": ""}
+        st.session_state[step] = {"answer": "", "extra": ""}
+        if step in ["D1","D3","D4","D7"]:
+            st.session_state[step]["uploaded_files"] = []
 
-# ---------------------------
-# Render current step
-# ---------------------------
-current_step_idx = st.session_state.current_step_idx
-current_step = npqp_steps[current_step_idx]
-st.header(f"{t[lang_key][current_step]}")
+st.session_state.setdefault("report_date", datetime.datetime.today().strftime("%B %d, %Y"))
+st.session_state.setdefault("prepared_by", "")
+st.session_state.setdefault("d5_occ_whys", [""]*5)
+st.session_state.setdefault("d5_det_whys", [""]*5)
+st.session_state.setdefault("d5_sys_whys", [""]*5)
+st.session_state.setdefault("d4_location", "")
+st.session_state.setdefault("d4_status", "")
+st.session_state.setdefault("d4_containment", "")
 
-# Example input area for the current step
-st.text_area("Your Answer:", key=f"{current_step}_answer", height=150)
+for sub in ["occ_answer", "det_answer", "sys_answer"]:
+    st.session_state.setdefault(("D6"), st.session_state.get("D6", {}))
+    st.session_state["D6"].setdefault(sub, "")
+    st.session_state.setdefault(("D7"), st.session_state.get("D7", {}))
+    st.session_state["D7"].setdefault(sub, "")
+    
+for step, note_dict, example_dict in npqp_steps:
+    if step not in st.session_state:
+        st.session_state[step] = {"answer": "", "extra": ""}
+        if step in ["D1","D3","D4","D7"]:
+            st.session_state[step]["uploaded_files"] = []
 
-# ---------------------------
-# Next / Previous buttons
-# ---------------------------
-st.markdown("<hr>", unsafe_allow_html=True)
-col1, col2 = st.columns([1,1])
-with col1:
-    if st.button("⬅ Previous"):
-        if st.session_state.current_step_idx > 0:
-            st.session_state.current_step_idx -= 1
-        st.experimental_rerun()
-with col2:
-    if st.button("Next ➡"):
-        if st.session_state.current_step_idx < len(npqp_steps)-1:
-            st.session_state.current_step_idx += 1
-        st.experimental_rerun()
 # ---------------------------
 # Cleaned & Standardized D5 categories
 # ---------------------------
@@ -1136,21 +1426,7 @@ line-height:1.5;
                     key=f"ans_{step}"
                 )
    
-# ---------------------------
-# Bottom navigation buttons
-# ---------------------------
-st.markdown("---")
-col1,col2 = st.columns(2)
-with col1:
-    if st.button("⬅️ Previous Step"):
-        if st.session_state.current_step_idx>0:
-            st.session_state.current_step_idx-=1
-            st.experimental_rerun()
-with col2:
-    if st.button("Next Step ➡️"):
-        if st.session_state.current_step_idx<len(npqp_steps)-1:
-            st.session_state.current_step_idx+=1
-            st.experimental_rerun()
+
 # ---------------------------
 # Collect all answers for Excel export
 # ---------------------------
