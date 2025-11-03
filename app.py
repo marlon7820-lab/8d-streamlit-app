@@ -1014,7 +1014,7 @@ for step, _, _ in npqp_steps:
         filled = d7_filled
     else:
         filled = st.session_state.get(step, {}).get("answer", "").strip() != ""
-    
+
     tab_labels.append(
         f"🟢 {t[lang_key][step]}" if filled else f"🔴 {t[lang_key][step]}"
     )
@@ -1059,10 +1059,10 @@ line-height:1.5;
         # ---------------------------
         # File uploads for D1, D3, D4, D7
         # ---------------------------
-        if step in ["D1","D3","D4","D7"]:
+        if step in ["D1", "D3", "D4", "D7"]:
             uploaded_files = st.file_uploader(
                 f"Upload files/photos for {step}",
-                type=["png","jpg","jpeg","pdf","xlsx","txt"],
+                type=["png", "jpg", "jpeg", "pdf", "xlsx", "txt"],
                 accept_multiple_files=True,
                 key=f"upload_{step}"
             )
@@ -1078,21 +1078,26 @@ line-height:1.5;
                     if f.type.startswith("image/"):
                         st.image(f, width=192)
 
-        # ---------------------------
-        # Only render navigation buttons and step inputs for current step
-        # ---------------------------
+        # ==========================================================
+        # ✅ FIXED NAVIGATION SYSTEM (VISIBLE ONLY FOR CURRENT STEP)
+        # ==========================================================
         if step == current_step:
-            col1, col2 = st.columns([1,1])
+            st.markdown("---")
+            col1, col2 = st.columns([1, 1])
+
+            # 🟡 Previous button
             with col1:
                 if st.session_state.current_step_idx > 0:
-                    if st.button("⬅️ Previous", key=f"prev_step_{step}"):
+                    if st.button("⬅️ Previous", key=f"prev_{step}"):
                         st.session_state.current_step_idx -= 1
-                        st.experimental_rerun()
+                        st.rerun()  # ✅ replaces experimental_rerun()
+
+            # 🟢 Next button
             with col2:
-                if st.session_state.current_step_idx < len(npqp_steps)-1:
-                    if st.button("Next ➡️", key=f"next_step_{step}"):
+                if st.session_state.current_step_idx < len(npqp_steps) - 1:
+                    if st.button("Next ➡️", key=f"next_{step}"):
                         st.session_state.current_step_idx += 1
-                        st.experimental_rerun()
+                        st.rerun()  # ✅ replaces experimental_rerun()
 
             # ---------------------------
             # Step-specific inputs
