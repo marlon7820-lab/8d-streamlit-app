@@ -1056,121 +1056,38 @@ line-height:1.5;
                 value=st.session_state[step]["answer"],
                 height=150
             )
-        elif step == "D5":
-            # ---------------------------
-            # 🧩 Show D1 concern safely at the top
-            # ---------------------------
-            d1_concern = st.session_state.get("D1", {}).get("answer", "").strip()
-            if d1_concern:
-                st.info(d1_concern)
-                st.caption("💡 Begin your Why analysis from this concern reported by the customer.")
-            else:
-                st.warning("No Customer Concern defined yet in D1. Please complete D1 before proceeding with D5.")
 
             # ---------------------------
-            # Occurrence Analysis
+            # Helpers (place at top of file)
             # ---------------------------
-            if lang_key == "es":
-                st.session_state.d5_occ_whys = render_whys_no_repeat_with_other(
-                    st.session_state.d5_occ_whys,
-                    occurrence_categories_es,
-                    t[lang_key]['Occurrence_Why']
-                )
-            else:
-                st.session_state.d5_occ_whys = render_whys_no_repeat_with_other(
-                    st.session_state.d5_occ_whys,
-                    occurrence_categories,
-                    t[lang_key]['Occurrence_Why']
-                )
+            def classify_4m(text, lang="en"):
+                patterns_en = {
+                    "Machine": ["equipment", "machine", "tool", "fixture", "wear", "maintenance", "calibration"],
+                    "Method": ["procedure", "process", "assembly", "sequence", "standard", "instruction", "setup"],
+                    "Material": ["component", "supplier", "batch", "raw", "contamination", "mix", "specification"],
+                    "Measurement": ["inspection", "test", "measurement", "gauge", "criteria", "frequency"]
+                }
 
-            if st.button("➕ Add another Occurrence Why", key=f"add_occ_{i}"):
-                st.session_state.d5_occ_whys.append("")
+                patterns_es = {
+                    "Maquinaria": ["equipo", "máquina", "herramienta", "utillaje", "desgaste", "mantenimiento", "calibración"],
+                    "Metodo": ["procedimiento", "proceso", "ensamblaje", "secuencia", "estándar", "instrucción", "configuración"],
+                    "Material": ["componente", "proveedor", "lote", "materia prima", "contaminación", "mezcla", "especificación"],
+                    "Mediciones": ["inspección", "prueba", "medición", "calibre", "criterio", "frecuencia"]
+                }
 
-            # ---------------------------
-            # Detection Analysis
-            # ---------------------------
-            if lang_key == "es":
-                st.session_state.d5_det_whys = render_whys_no_repeat_with_other(
-                    st.session_state.d5_det_whys,
-                    detection_categories_es,
-                    t[lang_key]['Detection_Why']
-                )
-            else:
-                st.session_state.d5_det_whys = render_whys_no_repeat_with_other(
-                    st.session_state.d5_det_whys,
-                    detection_categories,
-                    t[lang_key]['Detection_Why']
-                )
-
-            if st.button("➕ Add another Detection Why", key=f"add_det_{i}"):
-                st.session_state.d5_det_whys.append("")
-
-            # ---------------------------
-            # Systemic Analysis
-            # ---------------------------
-            if lang_key == "es":
-                st.session_state.d5_sys_whys = render_whys_no_repeat_with_other(
-                    st.session_state.d5_sys_whys,
-                    systemic_categories_es,
-                    t[lang_key]['Systemic_Why']
-                )
-            else:
-                st.session_state.d5_sys_whys = render_whys_no_repeat_with_other(
-                    st.session_state.d5_sys_whys,
-                    systemic_categories,
-                    t[lang_key]['Systemic_Why']
-                )
-
-            if st.button("➕ Add another Systemic Why", key=f"add_sys_{i}"):
-                st.session_state.d5_sys_whys.append("")
-
-            
-            # ---------------------------
-            # Root Cause Suggestions
-            # ---------------------------
-            occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
-            det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
-            sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
-
-            # ---------------------------
-            # Duplicate / Conflict Detection
-            # ---------------------------
-            all_whys = occ_whys + det_whys + sys_whys
-            duplicates = [w for w in set(all_whys) if all_whys.count(w) > 1 and w.strip()]
-            if duplicates:
-                st.warning(f"⚠️ Duplicate entries detected across Occurrence/Detection/Systemic: {', '.join(duplicates)}")
-
-
-            # --- Keywords for 4M analysis ---
-            patterns_en = {
-                "Machine": ["equipment", "machine", "tool", "fixture", "wear", "maintenance", "calibration"],
-                "Method": ["procedure", "process", "assembly", "sequence", "standard", "instruction", "setup"],
-                "Material": ["component", "supplier", "batch", "raw", "contamination", "mix", "specification"],
-                "Measurement": ["inspection", "test", "measurement", "gauge", "criteria", "frequency"]
-            }
-
-            patterns_es = {
-                "Maquinaria": ["equipo", "máquina", "herramienta", "utillaje", "desgaste", "mantenimiento", "calibración"],
-                "Metodo": ["procedimiento", "proceso", "ensamblaje", "secuencia", "estándar", "instrucción", "configuración"],
-                "Material": ["componente", "proveedor", "lote", "materia prima", "contaminación", "mezcla", "especificación"],
-                "Mediciones": ["inspección", "prueba", "medición", "calibre", "criterio", "frecuencia"]
-            }
-
-            patterns = patterns_es if lang_key == "es" else patterns_en
-
-            def classify_4m(text):
+                patterns = patterns_es if lang == "es" else patterns_en
                 text_lower = text.lower()
                 for m, kws in patterns.items():
                     if any(k in text_lower for k in kws):
                         return m
                 return "Other"
 
-            # ---------------------------
-            # Smart Root Cause Suggestion
-            # ---------------------------
+
             def smart_root_cause_suggestion(d1_concern, occ_list, det_list, sys_list, lang="en"):
                 if not any([occ_list, det_list, sys_list]):
-                    return ("⚠️ No Why analysis provided yet.", "", "") if lang == "en" else ("⚠️ No se ha proporcionado análisis de causas.", "", "")
+                    return (
+                        "⚠️ No Why analysis provided yet.", "", ""
+                    ) if lang == "en" else ("⚠️ No se ha proporcionado análisis de causas.", "", "")
 
                 suggestions = {
                     "Method": {
@@ -1298,27 +1215,20 @@ line-height:1.5;
                     }
                 }  # <--- This closing brace was missing or misplaced
 
-                insights = []
-                if d1_concern:
-                    insights.append(f"🔹 **Problem Statement:** {d1_concern}")
 
                 # --- Analyze Occurrence Whys (4M) ---
-                occ_categories_detected = set(classify_4m(w) for w in occ_list)
+                occ_categories_detected = set(classify_4m(w, lang) for w in occ_list)
 
                 occ_suggestions, det_suggestions, sys_suggestions = [], [], []
 
-                # Occurrence 4M suggestions
                 for cat in occ_categories_detected:
                     if cat in suggestions:
                         occ_suggestions.extend(suggestions[cat][lang])
                     else:
                         occ_suggestions.extend(suggestions["Other"][lang])
 
-                # Detection
                 if det_list:
                     det_suggestions.extend(suggestions["Detection"][lang])
-
-                # Systemic
                 if sys_list:
                     sys_suggestions.extend(suggestions["Systemic"][lang])
 
@@ -1335,13 +1245,54 @@ line-height:1.5;
                 return occ_result, det_result, sys_result
 
 
-            # --- Call function once and unpack ---
-            occ_text, det_text, sys_text = smart_root_cause_suggestion(d1_concern, occ_whys, det_whys, sys_whys, lang_key)
+            # ---------------------------
+            # Step logic: D5-D7
+            # ---------------------------
+            elif step == "D5":
+                # --- Get D1 concern ---
+                d1_concern = st.session_state.get("D1", {}).get("answer", "").strip()
+                if d1_concern:
+                    st.info(d1_concern)
+                    st.caption("💡 Begin your Why analysis from this concern reported by the customer.")
+                else:
+                    st.warning("No Customer Concern defined yet in D1. Please complete D1 before proceeding with D5.")
 
-            # --- Display the smart root cause text areas ---
-            st.text_area(f"{t[lang_key]['Root_Cause_Occ']}", value=occ_text, height=120, disabled=True)
-            st.text_area(f"{t[lang_key]['Root_Cause_Det']}", value=det_text, height=120, disabled=True)
-            st.text_area(f"{t[lang_key]['Root_Cause_Sys']}", value=sys_text, height=120, disabled=True)
+                # --- Render Occurrence / Detection / Systemic Whys ---
+                if lang_key == "es":
+                    st.session_state.d5_occ_whys = render_whys_no_repeat_with_other(st.session_state.d5_occ_whys, occurrence_categories_es, t[lang_key]['Occurrence_Why'])
+                    st.session_state.d5_det_whys = render_whys_no_repeat_with_other(st.session_state.d5_det_whys, detection_categories_es, t[lang_key]['Detection_Why'])
+                    st.session_state.d5_sys_whys = render_whys_no_repeat_with_other(st.session_state.d5_sys_whys, systemic_categories_es, t[lang_key]['Systemic_Why'])
+                else:
+                    st.session_state.d5_occ_whys = render_whys_no_repeat_with_other(st.session_state.d5_occ_whys, occurrence_categories, t[lang_key]['Occurrence_Why'])
+                    st.session_state.d5_det_whys = render_whys_no_repeat_with_other(st.session_state.d5_det_whys, detection_categories, t[lang_key]['Detection_Why'])
+                    st.session_state.d5_sys_whys = render_whys_no_repeat_with_other(st.session_state.d5_sys_whys, systemic_categories, t[lang_key]['Systemic_Why'])
+
+                # --- Add buttons for extra whys ---
+                if st.button("➕ Add another Occurrence Why", key=f"add_occ_{i}"):
+                    st.session_state.d5_occ_whys.append("")
+                if st.button("➕ Add another Detection Why", key=f"add_det_{i}"):
+                    st.session_state.d5_det_whys.append("")
+                if st.button("➕ Add another Systemic Why", key=f"add_sys_{i}"):
+                    st.session_state.d5_sys_whys.append("")
+
+                # --- Collect non-empty whys ---
+                occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
+                det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
+                sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
+
+                # --- Duplicate check ---
+                all_whys = occ_whys + det_whys + sys_whys
+                duplicates = [w for w in set(all_whys) if all_whys.count(w) > 1 and w.strip()]
+                if duplicates:
+                    st.warning(f"⚠️ Duplicate entries detected across Occurrence/Detection/Systemic: {', '.join(duplicates)}")
+
+                # --- Smart root cause ---
+                occ_text, det_text, sys_text = smart_root_cause_suggestion(d1_concern, occ_whys, det_whys, sys_whys, lang=lang_key)
+
+                # --- Display results ---
+                st.text_area(f"{t[lang_key]['Root_Cause_Occ']}", value=occ_text, height=120, disabled=True)
+                st.text_area(f"{t[lang_key]['Root_Cause_Det']}", value=det_text, height=120, disabled=True)
+                st.text_area(f"{t[lang_key]['Root_Cause_Sys']}", value=sys_text, height=120, disabled=True)
 
 
         elif step == "D6":
