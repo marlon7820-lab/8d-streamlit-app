@@ -1260,7 +1260,7 @@ line-height:1.5;
             # ---------------------------
             # Step logic: D5-D7
             # ---------------------------
-            elif step == "D5":
+            if step == "D5":
                 # --- Get D1 concern ---
                 d1_concern = st.session_state.get("D1", {}).get("answer", "").strip()
                 if d1_concern:
