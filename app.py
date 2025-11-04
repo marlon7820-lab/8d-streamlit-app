@@ -1213,8 +1213,7 @@ line-height:1.5;
                       "en": ["Perform deeper investigation", "Escalate to cross-functional review"],
                       "es": ["Realizar investigación más profunda", "Escalar a revisión interfuncional"]
                     }
-                }  # <--- This closing brace was missing or misplaced
-
+                } 
 
                 # --- Analyze Occurrence Whys (4M) ---
                 occ_categories_detected = set(classify_4m(w, lang) for w in occ_list)
@@ -1244,6 +1243,19 @@ line-height:1.5;
 
                 return occ_result, det_result, sys_result
 
+            # ---------------------------
+            # Persist current step
+            # ---------------------------
+            if "current_step" not in st.session_state:
+                st.session_state["current_step"] = "D1"
+
+            step = st.session_state["current_step"]
+
+            # --- Tabs ---
+            tabs = ["D1", "D2", "D3", "D4", "D5", "D6", "D7"]
+            selected_tab = st.selectbox("Select Step", tabs, index=tabs.index(step))
+            st.session_state["current_step"] = selected_tab
+            step = selected_tab
 
             # ---------------------------
             # Step logic: D5-D7
@@ -1256,6 +1268,11 @@ line-height:1.5;
                     st.caption("💡 Begin your Why analysis from this concern reported by the customer.")
                 else:
                     st.warning("No Customer Concern defined yet in D1. Please complete D1 before proceeding with D5.")
+
+                # Initialize whys lists in session_state
+                for key in ["d5_occ_whys", "d5_det_whys", "d5_sys_whys"]:
+                    if key not in st.session_state:
+                        st.session_state[key] = [""]
 
                 # --- Render Occurrence / Detection / Systemic Whys ---
                 if lang_key == "es":
