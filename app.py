@@ -1249,6 +1249,8 @@ line-height:1.5;
             tabs = st.tabs(steps)
 
             for i, step in enumerate(steps):
+                if i >= len(tabs):  # safety check
+                    continue
                 with tabs[i]:
                     st.session_state.current_tab = i
 
