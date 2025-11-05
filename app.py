@@ -1316,54 +1316,55 @@ line-height:1.5;
                         st.text_area(f"{t[lang_key]['Root_Cause_Det']}", value=det_text, height=120, disabled=True)
                         st.text_area(f"{t[lang_key]['Root_Cause_Sys']}", value=sys_text, height=120, disabled=True)
 
-                # ---------- D6 ----------
-                elif step == "D6":
-                    for sub in ["occ", "det", "sys"]:
-                        key_name = f"{sub}_answer"
+                    # ---------- D6 ----------
+                    elif step == "D6":
+                        st.session_state.setdefault("D6", {})
                         st.session_state.setdefault(step, {})
-                        st.session_state[step].setdefault(key_name, st.session_state.get("D6", {}).get(key_name, ""))
-                        st.session_state[step][key_name] = st.text_area(
-                            f"D6 - Corrective Actions for {sub.capitalize()} Root Cause",
-                            value=st.session_state[step][key_name],
-                            key=f"d6_{sub}"
-                        )
-                        st.session_state["D6"][key_name] = st.session_state[step][key_name]
-
-                # ---------- D7 ----------
-                elif step == "D7":
-                    for sub in ["occ", "det", "sys"]:
+                        for sub in ["occ", "det", "sys"]:
+                            key_name = f"{sub}_answer"
+                            st.session_state[step].setdefault(key_name, st.session_state["D6"].get(key_name, ""))
+                            st.session_state[step][key_name] = st.text_area(
+                                f"D6 - Corrective Actions for {sub.capitalize()} Root Cause",
+                                value=st.session_state[step][key_name],
+                                key=f"d6_{sub}"
+                    )
+                    # ✅ store back to main D6 state so it persists
+                    st.session_state["D6"][key_name] = st.session_state[step][key_name]
+                            
+                    # ---------- D7 ----------
+                    elif step == "D7":
+                        st.session_state.setdefault("D7", {})
+                        for sub in ["occ", "det", "sys"]:
                         key_name = f"{sub}_answer"
-                        st.session_state.setdefault(step, {})
-                        st.session_state[step].setdefault(key_name, st.session_state.get("D7", {}).get(key_name, ""))
+                        st.session_state[step].setdefault(key_name, st.session_state["D7"].get(key_name, ""))
                         st.session_state[step][key_name] = st.text_area(
                             f"D7 - {sub.capitalize()} Countermeasure Verification",
                             value=st.session_state[step][key_name],
                             key=f"d7_{sub}"
-                        )
-                        st.session_state["D7"][key_name] = st.session_state[step][key_name]
+                    )
+                    st.session_state["D7"][key_name] = st.session_state[step][key_name]
+                    elif step == "D8":
+                        st.session_state[step]["answer"] = st.text_area(
+                        t[lang_key]["Follow_up_Activities"],  # bilingual label
+                        value=st.session_state[step]["answer"],
+                        key=f"ans_{step}"
+                    )
 
-        elif step == "D8":
-            st.session_state[step]["answer"] = st.text_area(
-                t[lang_key]["Follow_up_Activities"],  # bilingual label
-                value=st.session_state[step]["answer"],
-                key=f"ans_{step}"
-            )
-
-        else:
-            if step not in ["D4", "D5", "D6", "D7", "D8"]:
-                # Bilingual labels for D1–D3
-                if lang_key == "es":
-                    label_map = {
-                        "D1": "Detalles de la Preocupación",
-                        "D2": "Consideraciones de Partes Similares",
-                        "D3": "Análisis Inicial"
-                    }
-                else:  # default English
-                    label_map = {
-                        "D1": "Concern Details",
-                        "D2": "Similar Part Considerations",
-                        "D3": "Initial Analysis"
-                    }
+                else:
+                    if step not in ["D4", "D5", "D6", "D7", "D8"]:
+                        # Bilingual labels for D1–D3
+                        if lang_key == "es":
+                            label_map = {
+                                "D1": "Detalles de la Preocupación",
+                                "D2": "Consideraciones de Partes Similares",
+                                "D3": "Análisis Inicial"
+                            }
+                        else:  # default English
+                            label_map = {
+                                "D1": "Concern Details",
+                                "D2": "Similar Part Considerations",
+                                "D3": "Initial Analysis"
+                            }
 
                 # Fallback for any others (if added later)
                 label = label_map.get(step, f"{step} – Your Answer")
