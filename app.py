@@ -881,6 +881,125 @@ def render_whys_no_repeat_with_other(why_list, categories, label_prefix, lang_ke
             why_list[idx] = selection
     return why_list
 # ---------------------------
+# Helpers (place at top of file)
+# ---------------------------
+def classify_4m(text, lang="en"):
+    patterns_en = {
+        "Machine": ["equipment", "machine", "tool", "fixture", "wear", "maintenance", "calibration"],
+        "Method": ["procedure", "process", "assembly", "sequence", "standard", "instruction", "setup"],
+        "Material": ["component", "supplier", "batch", "raw", "contamination", "mix", "specification"],
+        "Measurement": ["inspection", "test", "measurement", "gauge", "criteria", "frequency"]
+    }
+    patterns_es = {
+        "Maquinaria": ["equipo", "máquina", "herramienta", "utillaje", "desgaste", "mantenimiento", "calibración"],
+        "Metodo": ["procedimiento", "proceso", "ensamblaje", "secuencia", "estándar", "instrucción", "configuración"],
+        "Material": ["componente", "proveedor", "lote", "materia prima", "contaminación", "mezcla", "especificación"],
+        "Mediciones": ["inspección", "prueba", "medición", "calibre", "criterio", "frecuencia"]
+    }
+    patterns = patterns_es if lang == "es" else patterns_en
+    text_lower = text.lower()
+    for m, kws in patterns.items():
+        if any(k in text_lower for k in kws):
+            return m
+    return "Other"
+
+def smart_root_cause_suggestion(d1_concern, occ_list, det_list, sys_list, lang="en"):
+    if not any([occ_list, det_list, sys_list]):
+        return ("⚠️ No Why analysis provided yet.", "", "") if lang=="en" else ("⚠️ No se ha proporcionado análisis de causas.", "", "")
+    
+    # Suggestions dictionary
+    suggestions = {
+        "Method": {
+            "en": ["Inadequate or missing process control or standard","Incomplete or unclear work instructions / SOPs",
+                   "Outdated or obsolete process standards","Incorrect assembly or operation sequence","Missing or ineffective process controls",
+                   "Lack of error-proofing (Poka-Yoke)","Variability in process execution between operators or shifts",
+                   "Uncommunicated or poorly managed process changes","Process not validated or qualified"],
+            "es": ["Control o estándar de proceso inadecuado o ausente","Instrucciones de trabajo / SOP incompletas o poco claras",
+                   "Normas de proceso obsoletas o desactualizadas","Secuencia de montaje o operación incorrecta",
+                   "Controles de proceso faltantes o ineficaces","Falta de prevención de errores (Poka-Yoke)",
+                   "Variabilidad en la ejecución del proceso entre operadores o turnos","Cambios en el proceso no comunicados o mal gestionados",
+                   "Proceso no validado o calificado"]
+        },
+        "Machine": {
+            "en": ["Equipment degradation or lack of preventive maintenance","Improper machine setup or adjustment",
+                   "Tooling errors (jigs, fixtures, molds)","Calibration issues","Machine design limitations",
+                   "Automation or robotics malfunctions","Unstable process due to equipment variation"],
+            "es": ["Degradación del equipo o falta de mantenimiento preventivo","Configuración o ajuste incorrecto de la máquina",
+                   "Errores de herramientas (plantillas, fijaciones, moldes)","Problemas de calibración",
+                   "Limitaciones del diseño de la máquina","Fallas en automatización o robótica",
+                   "Proceso inestable debido a variación del equipo"]
+        },
+        "Material": {
+            "en": ["Supplier or component quality variation","Incorrect material grade or specifications",
+                   "Contaminated raw materials","Substandard or counterfeit components","Improper storage or handling",
+                   "Material deterioration over time (aging, corrosion)","Packaging or labeling errors causing wrong part usage",
+                   "Inadequate incoming inspection"],
+            "es": ["Variación de calidad de proveedor o componente","Grado o especificación de material incorrecto",
+                   "Materias primas contaminadas","Componentes defectuosos o falsificados","Almacenamiento o manipulación inadecuada",
+                   "Deterioro del material con el tiempo (envejecimiento, corrosión)","Errores de embalaje o etiquetado causando uso incorrecto",
+                   "Inspección entrante inadecuada"]
+        },
+        "Measurement": {
+            "en": ["Insufficient inspection or gauge control","Inaccurate or uncalibrated measuring devices",
+                   "Insufficient inspection frequency or sampling","Misinterpretation of measurement results",
+                   "Lack of standardization in inspection procedures","Missing or incomplete measurement data",
+                   "Undefined or poorly communicated tolerance limits","Measurement method not appropriate for detecting nonconformance"],
+            "es": ["Inspección o control de medidores insuficiente","Dispositivos de medición inexactos o no calibrados",
+                   "Frecuencia de inspección o muestreo insuficiente","Mala interpretación de los resultados de medición",
+                   "Falta de estandarización en procedimientos de inspección","Datos de medición faltantes o incompletos",
+                   "Límites de tolerancia mal definidos o comunicados","Método de medición no adecuado para detectar no conformidades"]
+        },
+        "Detection": {
+            "en": ["Detection method did not identify the nonconformance before shipment",
+                   "Inspection procedures not standardized or followed",
+                   "Inadequate inspection frequency or sampling plan",
+                   "Measurement devices not calibrated or appropriate"],
+            "es": ["El método de detección no identificó la no conformidad antes del envío",
+                   "Procedimientos de inspección no estandarizados o no seguidos",
+                   "Frecuencia de inspección o plan de muestreo inadecuado",
+                   "Dispositivos de medición no calibrados o inadecuados",
+                   "Error humano durante la detección o verificación"]
+        },
+        "Systemic": {
+            "en": ["Systemic weakness in management of change or lessons learned","Insufficient training or knowledge management",
+                   "Lack of cross-functional communication","Ineffective quality management system",
+                   "Inadequate corrective action follow-up or verification"],
+            "es": ["Debilidad sistémica en gestión de cambios o lecciones aprendidas","Capacitación o gestión de conocimiento insuficiente",
+                   "Falta de comunicación entre funciones","Sistema de gestión de calidad ineficaz",
+                   "Seguimiento o verificación de acciones correctivas inadecuado"]
+        },
+        "Other": {
+            "en": ["Perform deeper investigation","Escalate to cross-functional review"],
+            "es": ["Realizar investigación más profunda","Escalar a revisión interfuncional"]
+        }
+    }
+
+    occ_categories_detected = set(classify_4m(w, lang) for w in occ_list)
+    occ_suggestions, det_suggestions, sys_suggestions = [], [], []
+
+    for cat in occ_categories_detected:
+        if cat in suggestions:
+            occ_suggestions.extend(suggestions[cat][lang])
+        else:
+            occ_suggestions.extend(suggestions["Other"][lang])
+    if det_list:
+        det_suggestions.extend(suggestions["Detection"][lang])
+    if sys_list:
+        sys_suggestions.extend(suggestions["Systemic"][lang])
+
+    # Remove duplicates
+    occ_suggestions = list(dict.fromkeys(occ_suggestions))
+    det_suggestions = list(dict.fromkeys(det_suggestions))
+    sys_suggestions = list(dict.fromkeys(sys_suggestions))
+
+    # Format results
+    occ_result = f"💡 **Possible Occurrence Root Cause Suggestion:** {', '.join(occ_suggestions)}." if occ_suggestions else ("No Occurrence root cause detected yet." if lang=="en" else "No se detectó causa raíz de ocurrencia aún.")
+    det_result = f"💡 **Possible Detection Root Cause Suggestion:** {', '.join(det_suggestions)}." if det_suggestions else ("No Detection root cause detected yet." if lang=="en" else "No se detectó causa raíz de detección aún.")
+    sys_result = f"💡 **Possible Systemic Root Cause Suggestion:** {', '.join(sys_suggestions)}." if sys_suggestions else ("No Systemic root cause detected yet." if lang=="en" else "No se detectó causa raíz sistémica aún.")
+
+    return occ_result, det_result, sys_result
+
+# ---------------------------
 # Progress tracker (NEW)
 # ---------------------------
 st.markdown("### 🧭 8D Completion Progress")
@@ -942,13 +1061,9 @@ for step, _, _ in npqp_steps:
 
 tabs = st.tabs(tab_labels)
 
-# ---------------------------
-# Rest of your tab rendering code remains unchanged
-# ---------------------------
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     with tabs[i]:
         st.markdown(f"### {t[lang_key][step]}")
-        # ... (keep your existing rendering code here)
 
         # Training Guidance & Example box
         note_text = note_dict[lang_key]
@@ -975,7 +1090,7 @@ line-height:1.5;
             st.markdown(gc["tips"])
 
         # File uploads for D1, D3, D4, D7
-        if step in ["D1","D3","D4","D7"]:
+        if step in ["D1", "D3", "D4", "D7"]:
             uploaded_files = st.file_uploader(
                 f"Upload files/photos for {step}",
                 type=["png", "jpg", "jpeg", "pdf", "xlsx", "txt"],
@@ -987,397 +1102,187 @@ line-height:1.5;
                     if file not in st.session_state[step]["uploaded_files"]:
                         st.session_state[step]["uploaded_files"].append(file)
 
-        # Display uploaded files (aligned with file upload)
-        if step in ["D1","D3","D4","D7"] and st.session_state[step].get("uploaded_files"):
-            st.markdown("**Uploaded Files / Photos:**")
-            for f in st.session_state[step]["uploaded_files"]:
-                st.write(f"{f.name}")
-                if f.type.startswith("image/"):
-                    st.image(f, width=192)
+            if st.session_state[step].get("uploaded_files"):
+                st.markdown("**Uploaded Files / Photos:**")
+                for f in st.session_state[step]["uploaded_files"]:
+                    st.write(f"{f.name}")
+                    if f.type.startswith("image/"):
+                        st.image(f, width=192)
+
 
         # ---------------------------
         # Step-specific inputs
         # ---------------------------
+        
+        # D1: Customer Concern
+        if step == "D1":
+            st.session_state.setdefault(step, {})
+            st.session_state[step]["answer"] = st.text_input(
+                "Customer Concern (D1)", value=st.session_state[step].get("answer", "")
+            )
 
-       # ✅ NEW — D3 inspection stage multiselect (bilingual)
-        if step == "D3":
-            if lang_key == "en":
-                st.session_state[step]["inspection_stage"] = st.multiselect(
-                    "Inspection Stage",
-                    [
-                        "During Process / Manufacture",
-                        "After manufacture (e.g. Final Inspection)",
-                        "Prior dispatch"
-                    ],
-                    default=st.session_state[step].get("inspection_stage", [])
-                )
-            else:
-                st.session_state[step]["inspection_stage"] = st.multiselect(
-                    "Etapa de Inspección",
-                    [
-                        "Durante el proceso / fabricación",
-                        "Después de la fabricación (por ejemplo, inspección final)",
-                        "Antes del envío"
-                    ],
-                    default=st.session_state[step].get("inspection_stage", [])
-                )
+        elif step == "D3":
+            # D3 bilingual multiselect
+            st.session_state.setdefault(step, {"inspection_stage":[]})
+            options = (
+                ["During Process / Manufacture", "After manufacture (e.g. Final Inspection)", "Prior dispatch"]
+                if lang_key=="en"
+                else ["Durante el proceso / fabricación", "Después de la fabricación (por ejemplo, inspección final)", "Antes del envío"]
+            )
+            st.session_state[step]["inspection_stage"] = st.multiselect(
+                t[lang_key]["Inspection_Stage"] if lang_key=="en" else "Etapa de Inspección",
+                options=options,
+                default=st.session_state[step]["inspection_stage"]
+            )
 
         
-        if step == "D4":
-            # Ensure keys exist
-            st.session_state[step].setdefault("location", [])
-            st.session_state[step].setdefault("status", [])
-            st.session_state[step].setdefault("answer", "")
+            elif step == "D4":
+                # D4 Location / Status / Containment Actions
+                st.session_state[step].setdefault("location", [])
+                st.session_state[step].setdefault("status", [])
+                st.session_state[step].setdefault("answer", "")
 
-            # Options for bilingual support
-            if lang_key == "en":
-                loc_options = ["Work in progress", "Stores stock", "Warehouse stock", "Service parts"]
-                status_options = ["Pending", "In Progress", "Completed"]
-            else:
-                loc_options = ["En proceso", "Stock de almacén", "Stock de bodega", "Piezas de servicio"]
-                status_options = ["Pendiente", "En Progreso", "Completado"]
+                if lang_key == "en":
+                    loc_options = ["Work in progress", "Stores stock", "Warehouse stock", "Service parts"]
+                    status_options = ["Pending", "In Progress", "Completed"]
+                else:
+                    loc_options = ["En proceso", "Stock de almacén", "Stock de bodega", "Piezas de servicio"]
+                    status_options = ["Pendiente", "En Progreso", "Completado"]
 
-            # Multi-select dropdowns
-            st.session_state[step]["location"] = st.multiselect(
-                t[lang_key]["Location"],
-                options=loc_options,
-                default=st.session_state[step]["location"]
-            )
+                st.session_state[step]["location"] = st.multiselect(
+                     t[lang_key]["Location"], options=loc_options, default=st.session_state[step]["location"]
+                )
+                st.session_state[step]["status"] = st.multiselect(
+                    t[lang_key]["Status"], options=status_options, default=st.session_state[step]["status"]
+                )
+                st.session_state[step]["answer"] = st.text_area(
+                    t[lang_key]["Containment_Actions"], value=st.session_state[step]["answer"], height=150
+                )
 
-            st.session_state[step]["status"] = st.multiselect(
-                t[lang_key]["Status"],
-                options=status_options,
-                default=st.session_state[step]["status"]
-            )
+            
 
-            #  Containment Actions / Notes
-            st.session_state[step]["answer"] = st.text_area(
-                t[lang_key]["Containment_Actions"],
-                value=st.session_state[step]["answer"],
-                height=150
-            )
+            # ---------- D5 ----------
+            elif step == "D5":
+                d1_concern = st.session_state.get("D1_answer", "").strip()
+                if d1_concern:
+                    st.info(d1_concern)
+                    st.caption("💡 Begin your Why analysis from this concern reported by the customer.")
+                 else:
+                    st.warning("No Customer Concern defined yet in D1.")
 
-            # ---------------------------
-            # Helpers (place at top of file)
-            # ---------------------------
-            def classify_4m(text, lang="en"):
-                patterns_en = {
-                    "Machine": ["equipment", "machine", "tool", "fixture", "wear", "maintenance", "calibration"],
-                    "Method": ["procedure", "process", "assembly", "sequence", "standard", "instruction", "setup"],
-                    "Material": ["component", "supplier", "batch", "raw", "contamination", "mix", "specification"],
-                    "Measurement": ["inspection", "test", "measurement", "gauge", "criteria", "frequency"]
-                }
-
-                patterns_es = {
-                    "Maquinaria": ["equipo", "máquina", "herramienta", "utillaje", "desgaste", "mantenimiento", "calibración"],
-                    "Metodo": ["procedimiento", "proceso", "ensamblaje", "secuencia", "estándar", "instrucción", "configuración"],
-                    "Material": ["componente", "proveedor", "lote", "materia prima", "contaminación", "mezcla", "especificación"],
-                    "Mediciones": ["inspección", "prueba", "medición", "calibre", "criterio", "frecuencia"]
-                }
-
-                patterns = patterns_es if lang == "es" else patterns_en
-                text_lower = text.lower()
-                for m, kws in patterns.items():
-                    if any(k in text_lower for k in kws):
-                        return m
-                return "Other"
-
-            def smart_root_cause_suggestion(d1_concern, occ_list, det_list, sys_list, lang="en"):
-                if not any([occ_list, det_list, sys_list]):
-                    return ("⚠️ No Why analysis provided yet.", "", "") if lang=="en" else ("⚠️ No se ha proporcionado análisis de causas.", "", "")
+                # Initialize whys lists in session_state if not present
+                for key in ["d5_occ_whys", "d5_det_whys", "d5_sys_whys"]:
+                    if key not in st.session_state:
+                       st.session_state[key] = [""]
 
 
-                suggestions = {
-                    "Method": {
-                        "en": [
-                            "Inadequate or missing process control or standard",
-                            "Incomplete or unclear work instructions / SOPs",
-                            "Outdated or obsolete process standards",
-                            "Incorrect assembly or operation sequence",
-                            "Missing or ineffective process controls",
-                            "Lack of error-proofing (Poka-Yoke)",
-                            "Variability in process execution between operators or shifts",
-                            "Uncommunicated or poorly managed process changes",
-                            "Process not validated or qualified"
-                        ],
-                        "es": [
-                            "Control o estándar de proceso inadecuado o ausente",
-                            "Instrucciones de trabajo / SOP incompletas o poco claras",
-                            "Normas de proceso obsoletas o desactualizadas",
-                            "Secuencia de montaje o operación incorrecta",
-                            "Controles de proceso faltantes o ineficaces",
-                            "Falta de prevención de errores (Poka-Yoke)",
-                            "Variabilidad en la ejecución del proceso entre operadores o turnos",
-                            "Cambios en el proceso no comunicados o mal gestionados",
-                            "Proceso no validado o calificado"
-                        ]
-                     },
-                     "Machine": {
-                        "en": [
-                            "Equipment degradation or lack of preventive maintenance",
-                            "Improper machine setup or adjustment",
-                            "Tooling errors (jigs, fixtures, molds)",
-                            "Calibration issues",
-                            "Machine design limitations",
-                            "Automation or robotics malfunctions",
-                            "Unstable process due to equipment variation"
-                        ],
-                        "es": [
-                            "Degradación del equipo o falta de mantenimiento preventivo",
-                            "Configuración o ajuste incorrecto de la máquina",
-                            "Errores de herramientas (plantillas, fijaciones, moldes)",
-                            "Problemas de calibración",
-                            "Limitaciones del diseño de la máquina",
-                            "Fallas en automatización o robótica",
-                            "Proceso inestable debido a variación del equipo"
-                        ]
-                    },
-                    "Material": {
-                        "en": [
-                            "Supplier or component quality variation",
-                            "Incorrect material grade or specifications",
-                            "Contaminated raw materials",
-                            "Substandard or counterfeit components",
-                            "Improper storage or handling",
-                            "Material deterioration over time (aging, corrosion)",
-                            "Packaging or labeling errors causing wrong part usage",
-                            "Inadequate incoming inspection"
-                        ],
-                        "es": [
-                            "Variación de calidad de proveedor o componente",
-                            "Grado o especificación de material incorrecto",
-                            "Materias primas contaminadas",
-                            "Componentes defectuosos o falsificados",
-                            "Almacenamiento o manipulación inadecuada",
-                            "Deterioro del material con el tiempo (envejecimiento, corrosión)",
-                            "Errores de embalaje o etiquetado causando uso incorrecto",
-                            "Inspección entrante inadecuada"
-                        ]
-                    },
-                    "Measurement": {
-                        "en": [
-                            "Insufficient inspection or gauge control",
-                            "Inaccurate or uncalibrated measuring devices",
-                            "Insufficient inspection frequency or sampling",
-                            "Misinterpretation of measurement results",
-                            "Lack of standardization in inspection procedures",
-                            "Missing or incomplete measurement data",
-                            "Undefined or poorly communicated tolerance limits",
-                            "Measurement method not appropriate for detecting nonconformance"
-                        ],
-                        "es": [
-                            "Inspección o control de medidores insuficiente",
-                            "Dispositivos de medición inexactos o no calibrados",
-                            "Frecuencia de inspección o muestreo insuficiente",
-                            "Mala interpretación de los resultados de medición",
-                            "Falta de estandarización en procedimientos de inspección",
-                            "Datos de medición faltantes o incompletos",
-                            "Límites de tolerancia mal definidos o comunicados",
-                            "Método de medición no adecuado para detectar no conformidades"
-                        ]
-                    },
-                    "Detection": {
-                        "en": [
-                            "Detection method did not identify the nonconformance before shipment",
-                            "Inspection procedures not standardized or followed",
-                            "Inadequate inspection frequency or sampling plan",
-                            "Measurement devices not calibrated or appropriate",
-                        ],
-                        "es": [
-                            "El método de detección no identificó la no conformidad antes del envío",
-                            "Procedimientos de inspección no estandarizados o no seguidos",
-                            "Frecuencia de inspección o plan de muestreo inadecuado",
-                            "Dispositivos de medición no calibrados o inadecuados",
-                            "Error humano durante la detección o verificación"
-                        ]
-                    },
-                    "Systemic": {
-                        "en": [
-                            "Systemic weakness in management of change or lessons learned",
-                            "Insufficient training or knowledge management",
-                            "Lack of cross-functional communication",
-                            "Ineffective quality management system",
-                            "Inadequate corrective action follow-up or verification"
-                        ],
-                        "es": [
-                            "Debilidad sistémica en gestión de cambios o lecciones aprendidas",
-                            "Capacitación o gestión de conocimiento insuficiente",
-                            "Falta de comunicación entre funciones",
-                            "Sistema de gestión de calidad ineficaz",
-                            "Seguimiento o verificación de acciones correctivas inadecuado"
-                        ]
-                    },
-                    "Other": {
-                      "en": ["Perform deeper investigation", "Escalate to cross-functional review"],
-                      "es": ["Realizar investigación más profunda", "Escalar a revisión interfuncional"]
-                    }
-                } 
-
-                # --- Analyze Occurrence Whys (4M) ---
-                occ_categories_detected = set(classify_4m(w, lang) for w in occ_list)
-                occ_suggestions, det_suggestions, sys_suggestions = [], [], []
-
-                for cat in occ_categories_detected:
-                    if cat in suggestions:
-                        occ_suggestions.extend(suggestions[cat][lang])
-                    else:
-                        occ_suggestions.extend(suggestions["Other"][lang])
-                if det_list:
-                    det_suggestions.extend(suggestions["Detection"][lang])
-                if sys_list:
-                    sys_suggestions.extend(suggestions["Systemic"][lang])
-
-                # Remove duplicates
-                occ_suggestions = list(dict.fromkeys(occ_suggestions))
-                det_suggestions = list(dict.fromkeys(det_suggestions))
-                sys_suggestions = list(dict.fromkeys(sys_suggestions))
-
-                # Format results
-                occ_result = f"💡 **Possible Occurrence Root Cause Suggestion:** {', '.join(occ_suggestions)}." if occ_suggestions else ("No Occurrence root cause detected yet." if lang=="en" else "No se detectó causa raíz de ocurrencia aún.")
-                det_result = f"💡 **Possible Detection Root Cause Suggestion:** {', '.join(det_suggestions)}." if det_suggestions else ("No Detection root cause detected yet." if lang=="en" else "No se detectó causa raíz de detección aún.")
-                sys_result = f"💡 **Possible Systemic Root Cause Suggestion:** {', '.join(sys_suggestions)}." if sys_suggestions else ("No Systemic root cause detected yet." if lang=="en" else "No se detectó causa raíz sistémica aún.")
-
-                return occ_result, det_result, sys_result
-
-            # ---------------------------
-            # Tabs logic with session_state
-            # ---------------------------
-            if "current_tab" not in st.session_state:
-                st.session_state.current_tab = 0  # default to D1
-
-            steps = ["D1","D2","D3","D4","D5","D6","D7"]
-            tabs = st.tabs(steps)
-
-            for i, step in enumerate(steps):
-                with tabs[i]:
-                    st.session_state.current_tab = i
-
-                    # ---------- D1 ----------
-                    if step == "D1":
-                        st.text_input("Customer Concern (D1)", key="D1_answer")
-
-                    # ---------- D5 ----------
-                    elif step == "D5":
-                        d1_concern = st.session_state.get("D1_answer", "").strip()
-                        if d1_concern:
-                            st.info(d1_concern)
-                            st.caption("💡 Begin your Why analysis from this concern reported by the customer.")
-                        else:
-                            st.warning("No Customer Concern defined yet in D1.")
-
-                        # Initialize whys lists in session_state if not present
-                        for key in ["d5_occ_whys", "d5_det_whys", "d5_sys_whys"]:
-                            if key not in st.session_state:
-                                st.session_state[key] = [""]
+                # --- Render Occurrence / Detection / Systemic Whys ---
+                if lang_key == "es":
+                    st.session_state.d5_occ_whys = render_whys_no_repeat_with_other(
+                        st.session_state.d5_occ_whys, occurrence_categories_es, t[lang_key]['Occurrence_Why'])
+                    st.session_state.d5_det_whys = render_whys_no_repeat_with_other(
+                        st.session_state.d5_det_whys, detection_categories_es, t[lang_key]['Detection_Why'])
+                    st.session_state.d5_sys_whys = render_whys_no_repeat_with_other(
+                        st.session_state.d5_sys_whys, systemic_categories_es, t[lang_key]['Systemic_Why'])
+                else:
+                    st.session_state.d5_occ_whys = render_whys_no_repeat_with_other(
+                        st.session_state.d5_occ_whys, occurrence_categories, t[lang_key]['Occurrence_Why'])
+                    st.session_state.d5_det_whys = render_whys_no_repeat_with_other(
+                        st.session_state.d5_det_whys, detection_categories, t[lang_key]['Detection_Why'])
+                    st.session_state.d5_sys_whys = render_whys_no_repeat_with_other(
+                        st.session_state.d5_sys_whys, systemic_categories, t[lang_key]['Systemic_Why'])
 
 
-                        # --- Render Occurrence / Detection / Systemic Whys ---
-                        if lang_key == "es":
-                            st.session_state.d5_occ_whys = render_whys_no_repeat_with_other(
-                                st.session_state.d5_occ_whys, occurrence_categories_es, t[lang_key]['Occurrence_Why'])
-                            st.session_state.d5_det_whys = render_whys_no_repeat_with_other(
-                                st.session_state.d5_det_whys, detection_categories_es, t[lang_key]['Detection_Why'])
-                            st.session_state.d5_sys_whys = render_whys_no_repeat_with_other(
-                                st.session_state.d5_sys_whys, systemic_categories_es, t[lang_key]['Systemic_Why'])
-                        else:
-                            st.session_state.d5_occ_whys = render_whys_no_repeat_with_other(
-                                st.session_state.d5_occ_whys, occurrence_categories, t[lang_key]['Occurrence_Why'])
-                            st.session_state.d5_det_whys = render_whys_no_repeat_with_other(
-                                st.session_state.d5_det_whys, detection_categories, t[lang_key]['Detection_Why'])
-                            st.session_state.d5_sys_whys = render_whys_no_repeat_with_other(
-                                st.session_state.d5_sys_whys, systemic_categories, t[lang_key]['Systemic_Why'])
+                # --- Add buttons for extra whys ---
+                if st.button("➕ Add another Occurrence Why", key=f"add_occ_{i}"):
+                    st.session_state.d5_occ_whys.append("")
+                if st.button("➕ Add another Detection Why", key=f"add_det_{i}"):
+                    st.session_state.d5_det_whys.append("")
+                if st.button("➕ Add another Systemic Why", key=f"add_sys_{i}"):
+                    st.session_state.d5_sys_whys.append("")
 
+                # --- Collect non-empty whys ---
+                occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
+                det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
+                 sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
 
-                        # --- Add buttons for extra whys ---
-                        if st.button("➕ Add another Occurrence Why", key=f"add_occ_{i}"):
-                            st.session_state.d5_occ_whys.append("")
-                        if st.button("➕ Add another Detection Why", key=f"add_det_{i}"):
-                            st.session_state.d5_det_whys.append("")
-                        if st.button("➕ Add another Systemic Why", key=f"add_sys_{i}"):
-                            st.session_state.d5_sys_whys.append("")
+                 # --- Duplicate check ---
+                all_whys = occ_whys + det_whys + sys_whys
+                duplicates = [w for w in set(all_whys) if all_whys.count(w) > 1 and w.strip()]
+                if duplicates:
+                    st.warning(f"⚠️ Duplicate entries detected across Occurrence/Detection/Systemic: {', '.join(duplicates)}")
 
-                        # --- Collect non-empty whys ---
-                        occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
-                        det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
-                        sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
+                # --- Smart root cause ---
+                occ_text, det_text, sys_text = smart_root_cause_suggestion(
+                     d1_concern, occ_whys, det_whys, sys_whys, lang=lang_key
+                )
+                # --- Display results ---
+                st.text_area(f"{t[lang_key]['Root_Cause_Occ']}", value=occ_text, height=120, disabled=True)
+                st.text_area(f"{t[lang_key]['Root_Cause_Det']}", value=det_text, height=120, disabled=True)
+                st.text_area(f"{t[lang_key]['Root_Cause_Sys']}", value=sys_text, height=120, disabled=True)
 
-                        # --- Duplicate check ---
-                        all_whys = occ_whys + det_whys + sys_whys
-                        duplicates = [w for w in set(all_whys) if all_whys.count(w) > 1 and w.strip()]
-                        if duplicates:
-                            st.warning(f"⚠️ Duplicate entries detected across Occurrence/Detection/Systemic: {', '.join(duplicates)}")
-
-                        # --- Smart root cause ---
-                        occ_text, det_text, sys_text = smart_root_cause_suggestion(
-                            d1_concern, occ_whys, det_whys, sys_whys, lang=lang_key
+                # ---------- D6 ----------
+                elif step == "D6":
+                    st.session_state.setdefault("D6", {})
+                    st.session_state.setdefault(step, {})
+                    for sub in ["occ", "det", "sys"]:
+                        key_name = f"{sub}_answer"
+                        st.session_state[step].setdefault(key_name, st.session_state["D6"].get(key_name, ""))
+                        st.session_state[step][key_name] = st.text_area(
+                            f"D6 - Corrective Actions for {sub.capitalize()} Root Cause",
+                            value=st.session_state[step][key_name],
+                            key=f"d6_{sub}"
                         )
-                        # --- Display results ---
-                        st.text_area(f"{t[lang_key]['Root_Cause_Occ']}", value=occ_text, height=120, disabled=True)
-                        st.text_area(f"{t[lang_key]['Root_Cause_Det']}", value=det_text, height=120, disabled=True)
-                        st.text_area(f"{t[lang_key]['Root_Cause_Sys']}", value=sys_text, height=120, disabled=True)
-
-                    # ---------- D6 ----------
-                    elif step == "D6":
-                        st.session_state.setdefault("D6", {})
-                        st.session_state.setdefault(step, {})
-                        for sub in ["occ", "det", "sys"]:
-                            key_name = f"{sub}_answer"
-                            st.session_state[step].setdefault(key_name, st.session_state["D6"].get(key_name, ""))
-                            st.session_state[step][key_name] = st.text_area(
-                                f"D6 - Corrective Actions for {sub.capitalize()} Root Cause",
-                                value=st.session_state[step][key_name],
-                                key=f"d6_{sub}"
-                            )
-                            # ✅ store back to main D6 state so it persists
-                            st.session_state["D6"][key_name] = st.session_state[step][key_name]
+                        # ✅ store back to main D6 state so it persists
+                        st.session_state["D6"][key_name] = st.session_state[step][key_name]
                             
-                    # ---------- D7 ----------
-                    elif step == "D7":
-                        st.session_state.setdefault("D7", {})
-                        for sub in ["occ", "det", "sys"]:
-                            key_name = f"{sub}_answer"
-                            st.session_state[step].setdefault(key_name, st.session_state["D7"].get(key_name, ""))
-                            st.session_state[step][key_name] = st.text_area(
-                                f"D7 - {sub.capitalize()} Countermeasure Verification",
-                                value=st.session_state[step][key_name],
-                                key=f"d7_{sub}"
-                            )
-                            st.session_state["D7"][key_name] = st.session_state[step][key_name]
-                    # ---------- D8 ----------
-                    elif step == "D8":
+                # ---------- D7 ----------
+                elif step == "D7":
+                     st.session_state.setdefault("D7", {})
+                     for sub in ["occ", "det", "sys"]:
+                        key_name = f"{sub}_answer"
+                        st.session_state[step].setdefault(key_name, st.session_state["D7"].get(key_name, ""))
+                        st.session_state[step][key_name] = st.text_area(
+                             f"D7 - {sub.capitalize()} Countermeasure Verification",
+                             value=st.session_state[step][key_name],
+                            key=f"d7_{sub}"
+                        )
+                        st.session_state["D7"][key_name] = st.session_state[step][key_name]
+                # ---------- D8 ----------
+                elif step == "D8":
+                    st.session_state.setdefault(step, {"answer": ""})
+                    st.session_state[step]["answer"] = st.text_area(
+                        t[lang_key]["Follow_up_Activities"],  # bilingual label
+                        value=st.session_state[step]["answer"],
+                        key=f"ans_{step}"
+                     )
+
+                # ---------- D2–D4 fallback ----------
+                else:
+                    if step not in ["D5", "D6", "D7", "D8"]:
+                    # Bilingual labels for D1–D3
+                        if lang_key == "es":
+                            label_map = {
+                                "D1": "Detalles de la Preocupación",
+                                "D2": "Consideraciones de Partes Similares",
+                                "D3": "Análisis Inicial",
+                                "D4": "Acciones de Contención"
+                             }
+                        else:
+                            label_map = {
+                                "D1": "Concern Details",
+                                "D2": "Similar Part Considerations",
+                                "D3": "Initial Analysis",
+                                "D4": "Containment Actions"
+                            }
+
+                        label = label_map.get(step, f"{step} – Your Answer")
                         st.session_state.setdefault(step, {"answer": ""})
                         st.session_state[step]["answer"] = st.text_area(
-                            t[lang_key]["Follow_up_Activities"],  # bilingual label
+                            label,
                             value=st.session_state[step]["answer"],
                             key=f"ans_{step}"
                         )
-
-                    # ---------- D2–D4 fallback ----------
-                    else:
-                        if step not in ["D5", "D6", "D7", "D8"]:
-                            # Bilingual labels for D1–D3
-                            if lang_key == "es":
-                                label_map = {
-                                    "D1": "Detalles de la Preocupación",
-                                    "D2": "Consideraciones de Partes Similares",
-                                    "D3": "Análisis Inicial",
-                                    "D4": "Acciones de Contención"
-                                }
-                            else:
-                                label_map = {
-                                    "D1": "Concern Details",
-                                    "D2": "Similar Part Considerations",
-                                    "D3": "Initial Analysis",
-                                    "D4": "Containment Actions"
-                                }
-
-                            label = label_map.get(step, f"{step} – Your Answer")
-                            st.session_state.setdefault(step, {"answer": ""})
-                            st.session_state[step]["answer"] = st.text_area(
-                                label,
-                                value=st.session_state[step]["answer"],
-                                key=f"ans_{step}"
-                            )
    
 
 # ---------------------------
