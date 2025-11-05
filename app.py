@@ -1327,9 +1327,9 @@ line-height:1.5;
                                 f"D6 - Corrective Actions for {sub.capitalize()} Root Cause",
                                 value=st.session_state[step][key_name],
                                 key=f"d6_{sub}"
-                    )
-                    # ✅ store back to main D6 state so it persists
-                    st.session_state["D6"][key_name] = st.session_state[step][key_name]
+                            )
+                            # ✅ store back to main D6 state so it persists
+                            st.session_state["D6"][key_name] = st.session_state[step][key_name]
                             
                     # ---------- D7 ----------
                     elif step == "D7":
