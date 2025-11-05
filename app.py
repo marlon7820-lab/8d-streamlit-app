@@ -1335,45 +1335,49 @@ line-height:1.5;
                     elif step == "D7":
                         st.session_state.setdefault("D7", {})
                         for sub in ["occ", "det", "sys"]:
-                        key_name = f"{sub}_answer"
-                        st.session_state[step].setdefault(key_name, st.session_state["D7"].get(key_name, ""))
-                        st.session_state[step][key_name] = st.text_area(
-                            f"D7 - {sub.capitalize()} Countermeasure Verification",
-                            value=st.session_state[step][key_name],
-                            key=f"d7_{sub}"
-                    )
-                    st.session_state["D7"][key_name] = st.session_state[step][key_name]
+                            key_name = f"{sub}_answer"
+                            st.session_state[step].setdefault(key_name, st.session_state["D7"].get(key_name, ""))
+                            st.session_state[step][key_name] = st.text_area(
+                                f"D7 - {sub.capitalize()} Countermeasure Verification",
+                                value=st.session_state[step][key_name],
+                                key=f"d7_{sub}"
+                            )
+                            st.session_state["D7"][key_name] = st.session_state[step][key_name]
+                    # ---------- D8 ----------
                     elif step == "D8":
+                        st.session_state.setdefault(step, {"answer": ""})
                         st.session_state[step]["answer"] = st.text_area(
-                        t[lang_key]["Follow_up_Activities"],  # bilingual label
-                        value=st.session_state[step]["answer"],
-                        key=f"ans_{step}"
-                    )
+                            t[lang_key]["Follow_up_Activities"],  # bilingual label
+                            value=st.session_state[step]["answer"],
+                            key=f"ans_{step}"
+                        )
 
-                else:
-                    if step not in ["D4", "D5", "D6", "D7", "D8"]:
-                        # Bilingual labels for D1–D3
-                        if lang_key == "es":
-                            label_map = {
-                                "D1": "Detalles de la Preocupación",
-                                "D2": "Consideraciones de Partes Similares",
-                                "D3": "Análisis Inicial"
-                            }
-                        else:  # default English
-                            label_map = {
-                                "D1": "Concern Details",
-                                "D2": "Similar Part Considerations",
-                                "D3": "Initial Analysis"
-                            }
+                    # ---------- D2–D4 fallback ----------
+                    else:
+                        if step not in ["D5", "D6", "D7", "D8"]:
+                            # Bilingual labels for D1–D3
+                            if lang_key == "es":
+                                label_map = {
+                                    "D1": "Detalles de la Preocupación",
+                                    "D2": "Consideraciones de Partes Similares",
+                                    "D3": "Análisis Inicial",
+                                    "D4": "Acciones de Contención"
+                                }
+                            else:
+                                label_map = {
+                                    "D1": "Concern Details",
+                                    "D2": "Similar Part Considerations",
+                                    "D3": "Initial Analysis",
+                                    "D4": "Containment Actions"
+                                }
 
-                # Fallback for any others (if added later)
-                label = label_map.get(step, f"{step} – Your Answer")
-
-                st.session_state[step]["answer"] = st.text_area(
-                    label,
-                    value=st.session_state[step]["answer"],
-                    key=f"ans_{step}"
-                )
+                            label = label_map.get(step, f"{step} – Your Answer")
+                            st.session_state.setdefault(step, {"answer": ""})
+                            st.session_state[step]["answer"] = st.text_area(
+                                label,
+                                value=st.session_state[step]["answer"],
+                                key=f"ans_{step}"
+                            )
    
 
 # ---------------------------
