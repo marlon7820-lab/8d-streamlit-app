@@ -1243,7 +1243,7 @@ line-height:1.5;
             # Tabs logic with session_state
             # ---------------------------
             if "current_tab" not in st.session_state:
-            st.session_state.current_tab = 0  # default to D1
+                st.session_state.current_tab = 0  # default to D1
 
             steps = ["D1","D2","D3","D4","D5","D6","D7"]
             tabs = st.tabs(steps)
