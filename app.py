@@ -1111,9 +1111,10 @@ line-height:1.5;
         
         # D1: Customer Concern
         if step == "D1":
-            st.session_state.setdefault(step, {})
-            st.session_state[step]["answer"] = st.text_input(
-                "Customer Concern (D1)", value=st.session_state[step].get("answer", "")
+            st.session_state.setdefault(step, {"answer": ""})
+            st.session_state[step]["answer"] = st.text_area(
+                "Customer Concern (D1)",
+                value=st.session_state[step].get("answer", ""),
                 height=150
             )
 
