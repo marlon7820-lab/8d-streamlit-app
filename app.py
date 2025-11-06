@@ -1185,7 +1185,7 @@ line-height:1.5;
                 # --- Collect non-empty whys ---
                 occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
                 det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
-                 sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
+                sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
 
                  # --- Duplicate check ---
                 all_whys = occ_whys + det_whys + sys_whys
