@@ -1203,7 +1203,7 @@ line-height:1.5;
                 st.text_area(f"{t[lang_key]['Root_Cause_Sys']}", value=sys_text, height=120, disabled=True)
 
                 # ---------- D6 ----------
-                elif step == "D6":
+        elif step == "D6":
                     st.session_state.setdefault("D6", {})
                     st.session_state.setdefault(step, {})
                     for sub in ["occ", "det", "sys"]:
@@ -1218,7 +1218,7 @@ line-height:1.5;
                         st.session_state["D6"][key_name] = st.session_state[step][key_name]
                             
                 # ---------- D7 ----------
-                elif step == "D7":
+        elif step == "D7":
                      st.session_state.setdefault("D7", {})
                      for sub in ["occ", "det", "sys"]:
                         key_name = f"{sub}_answer"
@@ -1230,7 +1230,7 @@ line-height:1.5;
                         )
                         st.session_state["D7"][key_name] = st.session_state[step][key_name]
                 # ---------- D8 ----------
-                elif step == "D8":
+        elif step == "D8":
                     st.session_state.setdefault(step, {"answer": ""})
                     st.session_state[step]["answer"] = st.text_area(
                         t[lang_key]["Follow_up_Activities"],  # bilingual label
