@@ -1129,7 +1129,12 @@ line-height:1.5;
                 options=options,
                 default=st.session_state[step].get("inspection_stage", [])
             )
-
+            # ✅ Add text area for Initial Analysis
+            st.session_state[step]["answer"] = st.text_area(
+                t[lang_key].get("Initial_Analysis", "Initial Analysis"),
+                value=st.session_state[step].get("answer", ""),
+                height=150
+            )
         
         elif step == "D4":
             # D4 Location / Status / Containment Actions
