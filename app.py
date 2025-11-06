@@ -1004,42 +1004,23 @@ def smart_root_cause_suggestion(d1_concern, occ_list, det_list, sys_list, lang="
 # ---------------------------
 st.markdown("### 🧭 8D Completion Progress")
 
+steps = ["D1","D2","D3","D4","D5","D6","D7","D8"]
 progress = 0
-total_steps = len(["D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8"])
 
-# Helper function to check if D5 is filled
-d5_filled = (
-    any(w.strip() for w in st.session_state.get("d5_occ_whys", [])) or
-    any(w.strip() for w in st.session_state.get("d5_det_whys", [])) or
-    any(w.strip() for w in st.session_state.get("d5_sys_whys", []))
-)
-
-# Helper function to check if D6 is filled
-d6_filled = any(
-    st.session_state.get("D6", {}).get(k, "").strip() 
-    for k in ["occ_answer", "det_answer", "sys_answer"]
-)
-
-# Helper function to check if D7 is filled
-d7_filled = any(
-    st.session_state.get("D7", {}).get(k, "").strip() 
-    for k in ["occ_answer", "det_answer", "sys_answer"]
-)
-
-# Count completed steps
-for step in ["D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8"]:
-    if step == "D5" and d5_filled:
-        progress += 1
-    elif step == "D6" and d6_filled:
-        progress += 1
-    elif step == "D7" and d7_filled:
-        progress += 1
+d5_filled = any(w.strip() for w in st.session_state.get("d5_occ_whys", [])) \
+           or any(w.strip() for w in st.session_state.get("d5_det_whys", [])) \
+           or any(w.strip() for w in st.session_state.get("d5_sys_whys", []))
+d6_filled = any(st.session_state.get("D6", {}).get(k, "").strip() for k in ["occ_answer","det_answer","sys_answer"])
+d7_filled = any(st.session_state.get("D7", {}).get(k, "").strip() for k in ["occ_answer","det_answer","sys_answer"])
+for step in steps:
+    if step=="D5" and d5_filled: progress+=1
+    elif step=="D6" and d6_filled: progress+=1
+    elif step=="D7" and d7_filled: progress+=1
     else:
-        if st.session_state.get(step, {}).get("answer", "").strip():
-            progress += 1
+        if st.session_state.get(step, {}).get("answer", "").strip(): progress+=1
 
-st.progress(progress / total_steps)
-st.write(f"Completed {progress} of {total_steps} steps")
+st.progress(progress/len(steps))
+st.write(f"Completed {progress} of {len(steps)} steps")
 
 # ---------------------------
 # Render Tabs with Uploads
