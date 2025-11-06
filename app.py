@@ -1125,9 +1125,9 @@ line-height:1.5;
                 else ["Durante el proceso / fabricación", "Después de la fabricación (por ejemplo, inspección final)", "Antes del envío"]
             )
             st.session_state[step]["inspection_stage"] = st.multiselect(
-                t[lang_key]["Inspection_Stage"] if lang_key=="en" else "Etapa de Inspección",
+                t[lang_key].get("Inspection_Stage", "Inspection Stage") if lang_key=="en" else "Etapa de Inspección",
                 options=options,
-                default=st.session_state[step]["inspection_stage"]
+                default=st.session_state[step].get("inspection_stage", [])
             )
 
         
