@@ -1165,7 +1165,8 @@ line-height:1.5;
         elif step == "D5":
             # Ensure Why lists are initialized BEFORE any rendering
             for key in ["d5_occ_whys", "d5_det_whys", "d5_sys_whys"]:
-                st.session_state.setdefault(key, [""])  # start with 1 empty Why
+                if key not in st.session_state or not st.session_state[key]:
+                    st.session_state[key] = [""]
 
             # Fetch Customer Concern from D1
             d1_concern = st.session_state.get("D1", {}).get("answer", "").strip()
@@ -1174,6 +1175,29 @@ line-height:1.5;
                 st.caption("💡 Begin your Why analysis from this concern reported by the customer.")
             else:
                 st.warning("No Customer Concern defined yet in D1.")
+
+            # Initialize "add button clicked" flags
+            for btn in ["add_occ", "add_det", "add_sys"]:
+                st.session_state.setdefault(btn, False)
+
+            # --- Add another Why buttons ---
+            if st.button("➕ Add another Occurrence Why"):
+                st.session_state["add_occ"] = True
+            if st.button("➕ Add another Detection Why"):
+                st.session_state["add_det"] = True
+            if st.button("➕ Add another Systemic Why"):
+                st.session_state["add_sys"] = True
+
+            # Append new Why only after button click
+            if st.session_state["add_occ"]:
+                st.session_state["d5_occ_whys"].append("")
+                st.session_state["add_occ"] = False
+            if st.session_state["add_det"]:
+                st.session_state["d5_det_whys"].append("")
+                st.session_state["add_det"] = False
+            if st.session_state["add_sys"]:
+               st.session_state["d5_sys_whys"].append("")
+                st.session_state["add_sys"] = False
 
             # --- Render Occurrence / Detection / Systemic Whys ---
             st.session_state.d5_occ_whys = render_whys_no_repeat_with_other(
@@ -1191,18 +1215,6 @@ line-height:1.5;
                 systemic_categories_es if lang_key=="es" else systemic_categories,
                 t[lang_key]['Systemic_Why']
             )
-
-            # --- Add buttons to append new Why ---
-            col1, col2, col3 = st.columns(3)
-            with col1:
-                if st.button("➕ Add another Occurrence Why", key="add_occ"):
-                    st.session_state.d5_occ_whys.append("")
-            with col2:
-                if st.button("➕ Add another Detection Why", key="add_det"):
-                    st.session_state.d5_det_whys.append("")
-            with col3:
-                if st.button("➕ Add another Systemic Why", key="add_sys"):
-                    st.session_state.d5_sys_whys.append("")
 
             # --- Collect non-empty whys ---
             occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
