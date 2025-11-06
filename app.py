@@ -1196,7 +1196,7 @@ line-height:1.5;
                 st.session_state["d5_det_whys"].append("")
                 st.session_state["add_det"] = False
             if st.session_state["add_sys"]:
-               st.session_state["d5_sys_whys"].append("")
+                st.session_state["d5_sys_whys"].append("")
                 st.session_state["add_sys"] = False
 
             # --- Render Occurrence / Detection / Systemic Whys ---
