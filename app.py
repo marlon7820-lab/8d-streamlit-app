@@ -1148,7 +1148,7 @@ line-height:1.5;
                 if d1_concern:
                     st.info(d1_concern)
                     st.caption("💡 Begin your Why analysis from this concern reported by the customer.")
-                 else:
+                else:
                     st.warning("No Customer Concern defined yet in D1.")
 
                 # Initialize whys lists in session_state if not present
