@@ -1117,7 +1117,7 @@ line-height:1.5;
             )
 
         
-            elif step == "D4":
+        elif step == "D4":
                 # D4 Location / Status / Containment Actions
                 st.session_state[step].setdefault("location", [])
                 st.session_state[step].setdefault("status", [])
