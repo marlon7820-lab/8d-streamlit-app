@@ -1114,6 +1114,7 @@ line-height:1.5;
             st.session_state.setdefault(step, {})
             st.session_state[step]["answer"] = st.text_input(
                 "Customer Concern (D1)", value=st.session_state[step].get("answer", "")
+                height=150
             )
 
         elif step == "D3":
