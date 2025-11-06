@@ -1143,7 +1143,7 @@ line-height:1.5;
             
 
             # ---------- D5 ----------
-         elif step == "D5":
+        elif step == "D5":
                 d1_concern = st.session_state.get("D1_answer", "").strip()
                 if d1_concern:
                     st.info(d1_concern)
