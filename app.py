@@ -491,29 +491,41 @@ npqp_steps = [
 for step, _, _ in npqp_steps:
     if step not in st.session_state:
         st.session_state[step] = {"answer": "", "extra": ""}
-        if step in ["D1","D3","D4","D7"]:
+
+        # Initialize file upload lists for relevant steps
+        if step in ["D1", "D3", "D4", "D7"]:
             st.session_state[step]["uploaded_files"] = []
 
+        # Initialize D3 inspection stage key to avoid KeyError
+        if step == "D3":
+            st.session_state[step]["inspection_stage"] = []
+
+        # Initialize D4 location and status lists
+        if step == "D4":
+            st.session_state[step]["location"] = []
+            st.session_state[step]["status"] = []
+
+# Global defaults
 st.session_state.setdefault("report_date", datetime.datetime.today().strftime("%B %d, %Y"))
 st.session_state.setdefault("prepared_by", "")
-st.session_state.setdefault("d5_occ_whys", [""]*5)
-st.session_state.setdefault("d5_det_whys", [""]*5)
-st.session_state.setdefault("d5_sys_whys", [""]*5)
+
+# D5 why analysis lists
+st.session_state.setdefault("d5_occ_whys", [""] * 5)
+st.session_state.setdefault("d5_det_whys", [""] * 5)
+st.session_state.setdefault("d5_sys_whys", [""] * 5)
+
+# D4 containment details
 st.session_state.setdefault("d4_location", "")
 st.session_state.setdefault("d4_status", "")
 st.session_state.setdefault("d4_containment", "")
 
+# D6 & D7 corrective and verification actions
 for sub in ["occ_answer", "det_answer", "sys_answer"]:
-    st.session_state.setdefault(("D6"), st.session_state.get("D6", {}))
+    st.session_state.setdefault("D6", st.session_state.get("D6", {}))
     st.session_state["D6"].setdefault(sub, "")
-    st.session_state.setdefault(("D7"), st.session_state.get("D7", {}))
+
+    st.session_state.setdefault("D7", st.session_state.get("D7", {}))
     st.session_state["D7"].setdefault(sub, "")
-    
-for step, note_dict, example_dict in npqp_steps:
-    if step not in st.session_state:
-        st.session_state[step] = {"answer": "", "extra": ""}
-        if step in ["D1","D3","D4","D7"]:
-            st.session_state[step]["uploaded_files"] = []
 
 # ---------------------------
 # Cleaned & Standardized D5 categories
