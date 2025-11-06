@@ -402,6 +402,7 @@ if st.sidebar.button("🔄 Reset 8D Session", type="primary"):
 # ---------------------------
 t = {
     "en": {
+        "Inspection_Stage": "Inspection Stage",
         "D1": "D1: Concern Details",
         "D2": "D2: Similar Part Considerations",
         "D3": "D3: Initial Analysis",
@@ -428,6 +429,7 @@ t = {
         "Containment_Actions": "Containment Actions"
     },
     "es": {
+        "Inspection_Stage": "Etapa de Inspección",
         "D1": "D1: Detalles de la preocupación",
         "D2": "D2: Consideraciones de partes similares",
         "D3": "D3: Análisis inicial",
