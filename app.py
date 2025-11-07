@@ -1125,26 +1125,33 @@ line-height:1.5;
             )
 
         elif step == "D3":
-            # Multiselect options
+            # ✅ Ensure D3 state always exists
+            st.session_state.setdefault("D3", {"inspection_stage": [], "answer": ""})
+
+            # ✅ Safe label fetch to avoid KeyError
+            inspection_label = t.get(lang_key, {}).get("Inspection_Stage", "Inspection Stage")
+            analysis_label = t.get(lang_key, {}).get("Initial_Analysis", "Initial Analysis")
+
+            # ✅ Bilingual options
             options = (
                 ["During Process / Manufacture", "After manufacture (e.g. Final Inspection)", "Prior dispatch"]
                 if lang_key == "en"
                 else ["Durante el proceso / fabricación", "Después de la fabricación (por ejemplo, inspección final)", "Antes del envío"]
             )
 
-            # Multiselect for Inspection Stage
+            # ✅ Multiselect with unique key to prevent tab reset
             st.session_state["D3"]["inspection_stage"] = st.multiselect(
-                t[lang_key].get("Inspection_Stage", "Inspection Stage"),
+                inspection_label,
                 options=options,
-                default=st.session_state["D3"]["inspection_stage"],
-                key="d3_multiselect"  # unique key prevents Streamlit from resetting
+                default=st.session_state["D3"].get("inspection_stage", []),
+                key="d3_multiselect"
             )
 
-            # Text area for Initial Analysis
+            # ✅ Text area for Initial Analysis with safe access
             st.session_state["D3"]["answer"] = st.text_area(
-                t[lang_key].get("Initial_Analysis", "Initial Analysis"),
-                value=st.session_state["D3"]["answer"],
-                key="d3_initial_analysis",  # unique key ensures stability
+                analysis_label,
+                value=st.session_state["D3"].get("answer", ""),
+                key="d3_initial_analysis",
                 height=150
             )
         
