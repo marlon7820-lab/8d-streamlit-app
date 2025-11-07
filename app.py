@@ -1050,19 +1050,19 @@ for step, _, _ in npqp_steps:
     else:
         filled = st.session_state.get(step, {}).get("answer", "").strip() != ""
     
-    tab_labels.append(
-        f"🟢 {t[lang_key][step]}" if filled else f"🔴 {t[lang_key][step]}"
-    )
+    tab_labels.append(f"🟢 {t[lang_key][step]}" if filled else f"🔴 {t[lang_key][step]}")
 
-if "current_tab" not in st.session_state:
-    st.session_state.current_tab = 0
-    
+# ✅ Remember last active tab (persist even after rerun)
+if "active_tab_index" not in st.session_state:
+    st.session_state.active_tab_index = 0
+
+# Render tabs and capture current selection
 tabs = st.tabs(tab_labels)
 
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     with tabs[i]:
-        if st.session_state.current_tab != i:
-            st.session_state.current_tab = i
+        # ✅ Update active tab index so app remembers where user is
+        st.session_state.active_tab_index = i
 
         st.markdown(f"### {t[lang_key][step]}")
 
@@ -1085,7 +1085,7 @@ line-height:1.5;
 </div>
 """, unsafe_allow_html=True)
 
-        # Step-specific guidance expander from guidance_content
+        # Step-specific guidance expander
         gc = guidance_content[step][lang_key]
         with st.expander(f"📘 {gc['title']}"):
             st.markdown(gc["tips"])
@@ -1108,8 +1108,7 @@ line-height:1.5;
                 for f in st.session_state[step]["uploaded_files"]:
                     st.write(f"{f.name}")
                     if f.type.startswith("image/"):
-                        st.image(f, width=192)
-
+                        st.image(f, width=192))
 
         # ---------------------------
         # Step-specific inputs
