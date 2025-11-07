@@ -1211,7 +1211,7 @@ line-height:1.5;
             st.session_state.setdefault("add_det", False)
             st.session_state.setdefault("add_sys", False)
 
-            # Helper function to render each Why section
+            # --- Helper function to render each Why section ---
             def render_why_section(label, session_key, categories, add_flag_key):
                 st.subheader(label)
 
@@ -1226,12 +1226,19 @@ line-height:1.5;
                     st.session_state[session_key].append("")
                     st.session_state[add_flag_key] = False
 
-                # Only render dropdowns that exist in the list
-                st.session_state[session_key] = render_whys_no_repeat_with_other(
-                    st.session_state[session_key],
-                    categories,
-                    label,
-                )
+                # Render each Why with a stable key
+                rendered_whys = []
+                for idx, val in enumerate(st.session_state[session_key]):
+                    widget_key = f"{session_key}_{idx}"  # stable key per position
+                    choice = st.selectbox(
+                        label if idx == 0 else f"{label} {idx+1}",
+                        [""] + categories,
+                        index=categories.index(val) + 1 if val in categories else 0,
+                        key=widget_key
+                    )
+                    rendered_whys.append(choice)
+
+                st.session_state[session_key] = rendered_whys
 
             # --- Render Occurrence / Detection / Systemic Whys ---
             if lang_key == "es":
