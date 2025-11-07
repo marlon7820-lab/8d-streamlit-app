@@ -1180,12 +1180,10 @@ line-height:1.5;
 
         # ---------- D5 ----------
         elif step == "D5":
-            # Ensure Why lists are initialized BEFORE any rendering
+            # Initialize lists
             for key in ["d5_occ_whys", "d5_det_whys", "d5_sys_whys"]:
-                if key not in st.session_state or not st.session_state[key]:
-                    st.session_state[key] = [""]
+                st.session_state.setdefault(key, [""])
 
-            # Fetch Customer Concern from D1
             d1_concern = st.session_state.get("D1", {}).get("answer", "").strip()
             if d1_concern:
                 st.info(d1_concern)
@@ -1193,24 +1191,21 @@ line-height:1.5;
             else:
                 st.warning("No Customer Concern defined yet in D1.")
 
-            # Initialize "add button clicked" flags
-            for btn in ["add_occ", "add_det", "add_sys"]:
-                st.session_state.setdefault(btn, False)
-
-            # Helper function to render each Why section
+            # Helper to render each Why section
             def render_why_section(title, why_key, categories):
                 st.subheader(title)
-                # Add button above the section
-                if st.button(f"➕ Add another {title}", key=f"btn_{why_key}"):
+                # Render each dropdown with unique keys
+                for idx, why_value in enumerate(st.session_state[why_key]):
+                    st.session_state[why_key][idx] = st.selectbox(
+                        f"{title} #{idx+1}",
+                        [""] + categories,
+                        index=categories.index(why_value) + 1 if why_value in categories else 0,
+                        key=f"{why_key}_{idx}"
+                    )
+                # Button to add another Why
+                if st.button(f"➕ Add another {title}", key=f"btn_{why_key}_{len(st.session_state[why_key])}"):
                     st.session_state[why_key].append("")
-                # Render dropdowns
-                st.session_state[why_key] = render_whys_no_repeat_with_other(
-                    st.session_state[why_key],
-                    categories,
-                    title
-                )
 
-            # Render Occurrence / Detection / Systemic sections
             if lang_key == "es":
                 render_why_section("Occurrence Why", "d5_occ_whys", occurrence_categories_es)
                 render_why_section("Detection Why", "d5_det_whys", detection_categories_es)
@@ -1220,23 +1215,22 @@ line-height:1.5;
                 render_why_section("Detection Why", "d5_det_whys", detection_categories)
                 render_why_section("Systemic Why", "d5_sys_whys", systemic_categories)
 
-            # --- Collect non-empty whys ---
+            # Collect non-empty whys
             occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
             det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
             sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
 
-            # --- Duplicate check ---
+            # Duplicate check
             all_whys = occ_whys + det_whys + sys_whys
             duplicates = [w for w in set(all_whys) if all_whys.count(w) > 1 and w.strip()]
             if duplicates:
                 st.warning(f"⚠️ Duplicate entries detected across Occurrence/Detection/Systemic: {', '.join(duplicates)}")
 
-            # --- Smart root cause suggestion ---
+            # Smart root cause suggestion
             occ_text, det_text, sys_text = smart_root_cause_suggestion(
                 d1_concern, occ_whys, det_whys, sys_whys, lang=lang_key
             )
 
-            # --- Display suggestions ---
             st.text_area(f"{t[lang_key]['Root_Cause_Occ']}", value=occ_text, height=120, disabled=True)
             st.text_area(f"{t[lang_key]['Root_Cause_Det']}", value=det_text, height=120, disabled=True)
             st.text_area(f"{t[lang_key]['Root_Cause_Sys']}", value=sys_text, height=120, disabled=True)
