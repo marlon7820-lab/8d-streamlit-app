@@ -1200,15 +1200,18 @@ line-height:1.5;
                 if st.button(f"➕ Add another {t[lang_key][label_key]}", key=f"add_{session_key}"):
                     st.session_state[session_key].append("")
 
-                # Use your custom dropdown logic (keeps bilingual + “Other” behavior)
+                # ✅ Pass full set of args your helper needs
                 st.session_state[session_key] = render_whys_no_repeat_with_other(
-                    st.session_state[session_key],
-                    categories,
-                    t[lang_key][label_key],
-                    key_prefix=session_key  # important: unique prefix for stable keys
-               )
+                    session_key=session_key,
+                    whys_list=st.session_state[session_key],
+                    categories=categories,
+                    label=t[lang_key][label_key],
+                    lang=lang_key,
+                    t=t,
+                    key_prefix=session_key  # ensures stability
+                )
 
-            # Language-sensitive rendering
+            # Render the three Why sections (language-sensitive)
             if lang_key == "es":
                 render_why_section("Occurrence Why", "d5_occ_whys", occurrence_categories_es, "Occurrence_Why")
                 render_why_section("Detection Why", "d5_det_whys", detection_categories_es, "Detection_Why")
