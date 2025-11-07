@@ -499,7 +499,7 @@ for step, _, _ in npqp_steps:
         # Initialize D3 inspection stage key to avoid KeyError
         if step == "D3":
             st.session_state[step]["inspection_stage"] = []
-
+            st.session_state[step]["answer"] = ""
         # Initialize D4 location and status lists
         if step == "D4":
             st.session_state[step]["location"] = []
@@ -1119,11 +1119,6 @@ line-height:1.5;
             )
 
         elif step == "D3":
-            # Initialize session state for D3 if not already present
-            st.session_state.setdefault("D3", {})
-            st.session_state["D3"].setdefault("inspection_stage", [])
-            st.session_state["D3"].setdefault("answer", "")
-
             # Multiselect options
             options = (
                 ["During Process / Manufacture", "After manufacture (e.g. Final Inspection)", "Prior dispatch"]
