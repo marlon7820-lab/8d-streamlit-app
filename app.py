@@ -1182,8 +1182,7 @@ line-height:1.5;
         elif step == "D5":
             # Ensure Why lists are initialized BEFORE any rendering
             for key in ["d5_occ_whys", "d5_det_whys", "d5_sys_whys"]:
-                if key not in st.session_state or not st.session_state[key]:
-                    st.session_state[key] = [""]
+                st.session_state.setdefault(key, [""])
 
             # Fetch Customer Concern from D1
             d1_concern = st.session_state.get("D1", {}).get("answer", "").strip()
@@ -1193,50 +1192,49 @@ line-height:1.5;
             else:
                 st.warning("No Customer Concern defined yet in D1.")
 
-            # Helper function to render each Why section
-            def render_why_section(title, why_key, categories):
-                st.subheader(title)
-                categories = categories or []  # ensure iterable
-                # Add button at the top for this section
-                if st.button(f"➕ Add another {title}", key=f"btn_{why_key}_{len(st.session_state[why_key])}"):
-                    st.session_state[why_key].append("")
+            # Helper: render Why section (with bilingual dropdown + stable keys)
+            def render_why_section(section_label, session_key, categories, label_key):
+                st.markdown(f"### {t[lang_key][label_key]}")
 
-                # Render dropdowns for each Why entry
-                for idx, why_value in enumerate(st.session_state[why_key]):
-                    st.session_state[why_key][idx] = st.selectbox(
-                        f"{title} #{idx + 1}",
-                        [""] + list(categories),
-                        index=list(categories).index(why_value) + 1 if why_value in categories else 0,
-                        key=f"{why_key}_{idx}"
-                    )
+                # Add button ABOVE section
+                if st.button(f"➕ Add another {t[lang_key][label_key]}", key=f"add_{session_key}"):
+                    st.session_state[session_key].append("")
 
-            # Render all Why sections
+                # Use your custom dropdown logic (keeps bilingual + “Other” behavior)
+                st.session_state[session_key] = render_whys_no_repeat_with_other(
+                    st.session_state[session_key],
+                    categories,
+                    t[lang_key][label_key],
+                    key_prefix=session_key  # important: unique prefix for stable keys
+               )
+
+            # Language-sensitive rendering
             if lang_key == "es":
-                render_why_section("Occurrence Why", "d5_occ_whys", occurrence_categories_es)
-                render_why_section("Detection Why", "d5_det_whys", detection_categories_es)
-                render_why_section("Systemic Why", "d5_sys_whys", systemic_categories_es)
+                render_why_section("Occurrence Why", "d5_occ_whys", occurrence_categories_es, "Occurrence_Why")
+                render_why_section("Detection Why", "d5_det_whys", detection_categories_es, "Detection_Why")
+                render_why_section("Systemic Why", "d5_sys_whys", systemic_categories_es, "Systemic_Why")
             else:
-                render_why_section("Occurrence Why", "d5_occ_whys", occurrence_categories)
-                render_why_section("Detection Why", "d5_det_whys", detection_categories)
-                render_why_section("Systemic Why", "d5_sys_whys", systemic_categories)
+                render_why_section("Occurrence Why", "d5_occ_whys", occurrence_categories, "Occurrence_Why")
+                render_why_section("Detection Why", "d5_det_whys", detection_categories, "Detection_Why")
+                render_why_section("Systemic Why", "d5_sys_whys", systemic_categories, "Systemic_Why")
 
-            # Collect non-empty whys
+            # --- Collect non-empty whys ---
             occ_whys = [w for w in st.session_state["d5_occ_whys"] if w.strip()]
             det_whys = [w for w in st.session_state["d5_det_whys"] if w.strip()]
             sys_whys = [w for w in st.session_state["d5_sys_whys"] if w.strip()]
 
-            # Duplicate check
+            # --- Duplicate check ---
             all_whys = occ_whys + det_whys + sys_whys
             duplicates = [w for w in set(all_whys) if all_whys.count(w) > 1 and w.strip()]
             if duplicates:
                 st.warning(f"⚠️ Duplicate entries detected across Occurrence/Detection/Systemic: {', '.join(duplicates)}")
 
-            # Smart Root Cause suggestion
+            # --- Smart root cause suggestion ---
             occ_text, det_text, sys_text = smart_root_cause_suggestion(
                 d1_concern, occ_whys, det_whys, sys_whys, lang=lang_key
             )
 
-            # Display suggestions
+            # --- Display suggestions ---
             st.text_area(f"{t[lang_key]['Root_Cause_Occ']}", value=occ_text, height=120, disabled=True)
             st.text_area(f"{t[lang_key]['Root_Cause_Det']}", value=det_text, height=120, disabled=True)
             st.text_area(f"{t[lang_key]['Root_Cause_Sys']}", value=sys_text, height=120, disabled=True)
