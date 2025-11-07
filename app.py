@@ -1193,7 +1193,7 @@ line-height:1.5;
 
         # ---------- D5 ----------
         elif step == "D5":
-            # Ensure Why lists are initialized BEFORE any rendering
+            # Ensure Why lists exist
             for key in ["d5_occ_whys", "d5_det_whys", "d5_sys_whys"]:
                 st.session_state.setdefault(key, [""])
 
@@ -1205,37 +1205,32 @@ line-height:1.5;
             else:
                 st.warning("No Customer Concern defined yet in D1.")
 
-            # Capture current tab index to prevent jump
-            st.session_state.setdefault("_pre_click_tab", st.session_state.get("current_tab", 0))
-
-            # Helper function to render each Why section
-            def render_why_section(label_key, session_key, categories):
+            # --- Helper function for each Why section ---
+            def render_why_section(section_label, session_key, categories, label_key):
                 st.subheader(t[lang_key][label_key])
 
-                # Add button ABOVE section
+                # Add button above the section
                 if st.button(f"➕ Add another {t[lang_key][label_key]}", key=f"add_{session_key}"):
                     st.session_state[session_key].append("")
-                    # Lock tab to current D5
-                    st.session_state["current_tab"] = st.session_state["_pre_click_tab"]
-                    st.experimental_rerun()
+                    # Force D5 tab to stay active after rerun
+                    st.session_state["force_tab"] = [i for i, (s, _, _) in enumerate(npqp_steps) if s == "D5"][0]
 
-                # Render dropdowns using your stable helper
+                # Render the whys dropdowns
                 st.session_state[session_key] = render_whys_no_repeat_with_other(
                     st.session_state[session_key],
                     categories,
-                    t[lang_key][label_key],
-                    key_prefix=session_key  # ensures unique keys
+                    t[lang_key][label_key]
                 )
 
-            # Language-specific categories
-            occ_categories = occurrence_categories_es if lang_key == "es" else occurrence_categories
-            det_categories = detection_categories_es if lang_key == "es" else detection_categories
-            sys_categories = systemic_categories_es if lang_key == "es" else systemic_categories
-
-            # Render the three Why sections
-            render_why_section("Occurrence_Why", "d5_occ_whys", occ_categories)
-            render_why_section("Detection_Why", "d5_det_whys", det_categories)
-            render_why_section("Systemic_Why", "d5_sys_whys", sys_categories)
+            # Render each section depending on language
+            if lang_key == "es":
+                render_why_section("Occurrence Why", "d5_occ_whys", occurrence_categories_es, "Occurrence_Why")
+                render_why_section("Detection Why", "d5_det_whys", detection_categories_es, "Detection_Why")
+                render_why_section("Systemic Why", "d5_sys_whys", systemic_categories_es, "Systemic_Why")
+            else:
+                render_why_section("Occurrence Why", "d5_occ_whys", occurrence_categories, "Occurrence_Why")
+                render_why_section("Detection Why", "d5_det_whys", detection_categories, "Detection_Why")
+                render_why_section("Systemic Why", "d5_sys_whys", systemic_categories, "Systemic_Why")
 
             # --- Collect non-empty whys ---
             occ_whys = [w for w in st.session_state["d5_occ_whys"] if w.strip()]
