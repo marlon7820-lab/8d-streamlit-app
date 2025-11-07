@@ -1057,27 +1057,30 @@ for step, _, _ in npqp_steps:
         filled = st.session_state.get(step, {}).get("answer", "").strip() != ""
     tab_labels.append(f"🟢 {t[lang_key][step]}" if filled else f"🔴 {t[lang_key][step]}")
 
-# --- Force D5 tab to stay active on rerun after Add button ---
-if "force_tab" in st.session_state and st.session_state["force_tab"]:
-    st.session_state.current_tab = st.session_state["force_tab"]
+# --- Track current tab persistently ---
+if "current_tab_index" not in st.session_state:
+    st.session_state.current_tab_index = 0
+
+# --- Force D5 tab to stay active when triggered ---
+if "force_tab" in st.session_state and st.session_state["force_tab"] is not None:
+    st.session_state.current_tab_index = st.session_state["force_tab"]
     st.session_state["force_tab"] = None
 
-# Create tabs
+# --- Create tabs with stable index tracking ---
 tabs = st.tabs(tab_labels)
-
-# Render each tab
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     with tabs[i]:
-        # ✅ Persist and protect current tab even after reruns
-        if "current_tab" not in st.session_state:
-            st.session_state.current_tab = i
-        elif st.session_state.current_tab != i:
-            st.session_state.current_tab = i
+        # Update the active tab only when it’s actually clicked
+        if st.session_state.get("active_tab_index") != i:
+            st.session_state["active_tab_index"] = i
 
-        # Lock tab position (prevents jump to D1)
-        st.session_state["_last_tab"] = st.session_state.current_tab
-        
+        # 🔒 Stay on same tab after rerun
+        if st.session_state.current_tab_index != st.session_state.get("active_tab_index"):
+            st.session_state.current_tab_index = st.session_state.get("active_tab_index", 0)
+
+        # --- Render step content ---
         st.markdown(f"### {t[lang_key][step]}")
+        # (your existing logic for each step continues below)
 
         # Training Guidance & Example box
         note_text = note_dict[lang_key]
