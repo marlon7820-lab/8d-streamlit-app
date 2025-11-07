@@ -1063,10 +1063,15 @@ tabs = st.tabs(tab_labels)
 # Render each tab
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     with tabs[i]:
-        # Persist current tab
-        if i != st.session_state.current_tab:
+        # ✅ Persist and protect current tab even after reruns
+        if "current_tab" not in st.session_state:
+            st.session_state.current_tab = i
+        elif st.session_state.current_tab != i:
             st.session_state.current_tab = i
 
+        # Lock tab position (prevents jump to D1)
+        st.session_state["_last_tab"] = st.session_state.current_tab
+        
         st.markdown(f"### {t[lang_key][step]}")
 
         # Training Guidance & Example box
