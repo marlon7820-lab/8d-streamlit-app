@@ -1108,7 +1108,7 @@ line-height:1.5;
                 for f in st.session_state[step]["uploaded_files"]:
                     st.write(f"{f.name}")
                     if f.type.startswith("image/"):
-                        st.image(f, width=192))
+                        st.image(f, width=192)
 
         # ---------------------------
         # Step-specific inputs
