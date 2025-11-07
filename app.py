@@ -894,6 +894,7 @@ def render_whys_no_repeat_with_other(why_list, categories, label_prefix, lang_ke
         else:
             why_list[idx] = selection
     return why_list
+    
 # ---------------------------
 # Helpers (place at top of file)
 # ---------------------------
@@ -1039,6 +1040,11 @@ st.write(f"Completed {progress} of {len(steps)} steps")
 # ---------------------------
 # Render Tabs with Uploads
 # ---------------------------
+# Initialize current_tab in session_state
+if "current_tab" not in st.session_state:
+    st.session_state.current_tab = 0
+
+# Build tab labels
 tab_labels = []
 for step, _, _ in npqp_steps:
     if step == "D5":
@@ -1049,20 +1055,17 @@ for step, _, _ in npqp_steps:
         filled = d7_filled
     else:
         filled = st.session_state.get(step, {}).get("answer", "").strip() != ""
-    
     tab_labels.append(f"🟢 {t[lang_key][step]}" if filled else f"🔴 {t[lang_key][step]}")
 
-# ✅ Remember last active tab (persist even after rerun)
-if "active_tab_index" not in st.session_state:
-    st.session_state.active_tab_index = 0
-
-# Render tabs and capture current selection
+# Create tabs
 tabs = st.tabs(tab_labels)
 
+# Render each tab
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     with tabs[i]:
-        # ✅ Update active tab index so app remembers where user is
-        st.session_state.active_tab_index = i
+        # Persist current tab
+        if i != st.session_state.current_tab:
+            st.session_state.current_tab = i
 
         st.markdown(f"### {t[lang_key][step]}")
 
@@ -1100,8 +1103,8 @@ line-height:1.5;
             )
             if uploaded_files:
                 for file in uploaded_files:
-                    if file not in st.session_state[step]["uploaded_files"]:
-                        st.session_state[step]["uploaded_files"].append(file)
+                    if file not in st.session_state[step].get("uploaded_files", []):
+                        st.session_state[step].setdefault("uploaded_files", []).append(file)
 
             if st.session_state[step].get("uploaded_files"):
                 st.markdown("**Uploaded Files / Photos:**")
@@ -1113,7 +1116,6 @@ line-height:1.5;
         # ---------------------------
         # Step-specific inputs
         # ---------------------------
-        
         # D1: Customer Concern
         if step == "D1":
             st.session_state.setdefault(step, {"answer": ""})
@@ -1123,34 +1125,28 @@ line-height:1.5;
                 height=150
             )
 
+        # D3: Inspection Stage + Initial Analysis
         elif step == "D3":
-            # ✅ Ensure D3 state always exists
             st.session_state.setdefault("D3", {"inspection_stage": [], "answer": ""})
 
-            # ✅ Safe label fetch to avoid KeyError
-            inspection_label = t.get(lang_key, {}).get("Inspection_Stage", "Inspection Stage")
-            analysis_label = t.get(lang_key, {}).get("Initial_Analysis", "Initial Analysis")
-
-            # ✅ Bilingual options
+            # Multiselect options
             options = (
                 ["During Process / Manufacture", "After manufacture (e.g. Final Inspection)", "Prior dispatch"]
                 if lang_key == "en"
                 else ["Durante el proceso / fabricación", "Después de la fabricación (por ejemplo, inspección final)", "Antes del envío"]
             )
 
-            # ✅ Multiselect with unique key to prevent tab reset
             st.session_state["D3"]["inspection_stage"] = st.multiselect(
-                inspection_label,
+                t[lang_key].get("Inspection_Stage", "Inspection Stage"),
                 options=options,
-                default=st.session_state["D3"].get("inspection_stage", []),
-                key="d3_multiselect"
+                default=st.session_state["D3"]["inspection_stage"],
+                key="d3_multiselect"  # unique key prevents reset
             )
 
-            # ✅ Text area for Initial Analysis with safe access
             st.session_state["D3"]["answer"] = st.text_area(
-                analysis_label,
-                value=st.session_state["D3"].get("answer", ""),
-                key="d3_initial_analysis",
+                t[lang_key].get("Initial_Analysis", "Initial Analysis"),
+                value=st.session_state["D3"]["answer"],
+                key="d3_initial_analysis",  # unique key ensures stability
                 height=150
             )
         
