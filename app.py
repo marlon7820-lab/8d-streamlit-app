@@ -1213,12 +1213,13 @@ line-height:1.5;
 
             # --- Helper function to render each Why section ---
             def render_why_section(label, session_key, categories, add_flag_key):
+                categories = categories or []  # ensure it's always a list
                 st.subheader(label)
-
+                
                 # +Add button above section
                 if st.button(f"➕ Add another {label}", key=f"add_{session_key}"):
                     st.session_state[add_flag_key] = True
-                    # Force D5 tab to stay active after rerun
+                    # Force D5 tab to remain active after rerun
                     st.session_state["force_tab"] = [i for i, (s, _, _) in enumerate(npqp_steps) if s == "D5"][0]
 
                 # Append new Why only if Add clicked
@@ -1229,13 +1230,13 @@ line-height:1.5;
                 # Render each Why with a stable key
                 rendered_whys = []
                 for idx, val in enumerate(st.session_state[session_key]):
-                    widget_key = f"{session_key}_{idx}"  # stable key per position
+                    widget_key = f"{session_key}_{idx}"  # stable key
                     choice = st.selectbox(
                         label if idx == 0 else f"{label} {idx+1}",
-                        [""] + categories,
-                        index=categories.index(val) + 1 if val in categories else 0,
+                        [""] + list(categories),  # safe concatenation
+                        index=list(categories).index(val) + 1 if val in categories else 0,
                         key=widget_key
-                    )
+                   )
                     rendered_whys.append(choice)
 
                 st.session_state[session_key] = rendered_whys
