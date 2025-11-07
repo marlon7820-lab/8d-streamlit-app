@@ -1181,9 +1181,9 @@ line-height:1.5;
         # ---------- D5 ----------
         elif step == "D5":
             # Ensure Why lists are initialized BEFORE any rendering
-    for key in ["d5_occ_whys", "d5_det_whys", "d5_sys_whys"]:
-        if key not in st.session_state or not st.session_state[key]:
-            st.session_state[key] = [""]
+            for key in ["d5_occ_whys", "d5_det_whys", "d5_sys_whys"]:
+                if key not in st.session_state or not st.session_state[key]:
+                    st.session_state[key] = [""]
 
             # Fetch Customer Concern from D1
             d1_concern = st.session_state.get("D1", {}).get("answer", "").strip()
