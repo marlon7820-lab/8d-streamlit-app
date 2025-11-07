@@ -1189,6 +1189,12 @@ line-height:1.5;
 
         # ---------- D5 ----------
         elif step == "D5":
+            # Ensure Why lists are initialized BEFORE any rendering
+            for key in ["d5_occ_whys", "d5_det_whys", "d5_sys_whys"]:
+                if key not in st.session_state or not st.session_state[key]:
+                    st.session_state[key] = [""]
+
+            # Fetch Customer Concern from D1
             d1_concern = st.session_state.get("D1", {}).get("answer", "").strip()
             if d1_concern:
                 st.info(d1_concern)
@@ -1196,71 +1202,67 @@ line-height:1.5;
             else:
                 st.warning("No Customer Concern defined yet in D1.")
 
-            # Initialize Why lists in session_state
-            st.session_state.setdefault("d5_occ_whys", [])
-            st.session_state.setdefault("d5_det_whys", [])
-            st.session_state.setdefault("d5_sys_whys", [])
+            # Initialize "add button clicked" flags
+            for btn in ["add_occ", "add_det", "add_sys"]:
+                st.session_state.setdefault(btn, False)
 
-            # Choose correct categories for language
-            if lang_key == "es":
-                categories_dict = {
-                    "Occurrence": occurrence_categories_es,
-                    "Detection": detection_categories_es,
-                    "Systemic": systemic_categories_es
-                }
-            else:
-                categories_dict = {
-                    "Occurrence": occurrence_categories,
-                    "Detection": detection_categories,
-                    "Systemic": systemic_categories
-                }
+            # --- Add another Why buttons ---
+            if st.button("➕ Add another Occurrence Why"):
+                st.session_state["add_occ"] = True
+            if st.button("➕ Add another Detection Why"):
+                st.session_state["add_det"] = True
+            if st.button("➕ Add another Systemic Why"):
+                st.session_state["add_sys"] = True
 
-            # Helper function to render a Why section
-            def render_why_section(label, session_key):
-                st.subheader(label)
+            # Append new Why only after button click
+            if st.session_state["add_occ"]:
+                st.session_state["d5_occ_whys"].append("")
+                st.session_state["add_occ"] = False
+            if st.session_state["add_det"]:
+                st.session_state["d5_det_whys"].append("")
+                st.session_state["add_det"] = False
+            if st.session_state["add_sys"]:
+                st.session_state["d5_sys_whys"].append("")
+                st.session_state["add_sys"] = False
 
-                # Add button
-                if st.button(f"➕ Add another {label}", key=f"btn_{session_key}"):
-                    st.session_state[session_key].append("")
-                    # Force D5 tab to remain active
-                    st.session_state["force_tab"] = [i for i, (s, _, _) in enumerate(npqp_steps) if s=="D5"][0]
+            # --- Render Occurrence / Detection / Systemic Whys ---
+            st.session_state.d5_occ_whys = render_whys_no_repeat_with_other(
+                st.session_state.d5_occ_whys,
+                occurrence_categories_es if lang_key=="es" else occurrence_categories,
+                t[lang_key]['Occurrence_Why']
+            )
+            st.session_state.d5_det_whys = render_whys_no_repeat_with_other(
+                st.session_state.d5_det_whys,
+                detection_categories_es if lang_key=="es" else detection_categories,
+                t[lang_key]['Detection_Why']
+            )
+            st.session_state.d5_sys_whys = render_whys_no_repeat_with_other(
+                st.session_state.d5_sys_whys,
+                systemic_categories_es if lang_key=="es" else systemic_categories,
+                t[lang_key]['Systemic_Why']
+            )
 
-                new_list = []
-                for idx, val in enumerate(st.session_state[session_key]):
-                    key = f"{session_key}_{idx}"
-                    choice = st.selectbox(
-                        label if idx==0 else f"{label} {idx+1}",
-                        [""] + list(categories_dict[label]),
-                        index=list(categories_dict[label]).index(val)+1 if val in categories_dict[label] else 0,
-                        key=key
-                    )
-                    new_list.append(choice)
-                st.session_state[session_key][:] = new_list  # update session state in place
+            # --- Collect non-empty whys ---
+            occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
+            det_whys = [w for w in st.session_state.d5_det_whys if w.strip()]
+            sys_whys = [w for w in st.session_state.d5_sys_whys if w.strip()]
 
-            # Render all three sections
-            render_why_section("Occurrence", "d5_occ_whys")
-            render_why_section("Detection", "d5_det_whys")
-            render_why_section("Systemic", "d5_sys_whys")
-
-            # Collect non-empty whys
-            occ_whys = [w for w in st.session_state["d5_occ_whys"] if w.strip()]
-            det_whys = [w for w in st.session_state["d5_det_whys"] if w.strip()]
-            sys_whys = [w for w in st.session_state["d5_sys_whys"] if w.strip()]
-
-            # Duplicate check
+            # --- Duplicate check ---
             all_whys = occ_whys + det_whys + sys_whys
             duplicates = [w for w in set(all_whys) if all_whys.count(w) > 1 and w.strip()]
             if duplicates:
                 st.warning(f"⚠️ Duplicate entries detected across Occurrence/Detection/Systemic: {', '.join(duplicates)}")
 
-            # Smart root cause suggestion
+            # --- Smart root cause suggestion ---
             occ_text, det_text, sys_text = smart_root_cause_suggestion(
                 d1_concern, occ_whys, det_whys, sys_whys, lang=lang_key
             )
 
+            # --- Display suggestions ---
             st.text_area(f"{t[lang_key]['Root_Cause_Occ']}", value=occ_text, height=120, disabled=True)
             st.text_area(f"{t[lang_key]['Root_Cause_Det']}", value=det_text, height=120, disabled=True)
             st.text_area(f"{t[lang_key]['Root_Cause_Sys']}", value=sys_text, height=120, disabled=True)
+
     
         # ---------- D6 ----------
         elif step == "D6":
