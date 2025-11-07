@@ -1200,14 +1200,11 @@ line-height:1.5;
                 if st.button(f"➕ Add another {t[lang_key][label_key]}", key=f"add_{session_key}"):
                     st.session_state[session_key].append("")
 
-                # ✅ call helper with positional arguments only
+                # ✅ Same 3-argument structure as before (no extra params)
                 st.session_state[session_key] = render_whys_no_repeat_with_other(
                     st.session_state[session_key],
                     categories,
-                    t[lang_key][label_key],
-                    lang_key,
-                    t,
-                    session_key  # unique key_prefix for Streamlit stability
+                    t[lang_key][label_key]
                 )
 
             # Render the three Why sections (language-sensitive)
