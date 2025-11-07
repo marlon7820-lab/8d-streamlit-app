@@ -1057,6 +1057,11 @@ for step, _, _ in npqp_steps:
         filled = st.session_state.get(step, {}).get("answer", "").strip() != ""
     tab_labels.append(f"🟢 {t[lang_key][step]}" if filled else f"🔴 {t[lang_key][step]}")
 
+# --- Force D5 tab to stay active on rerun after Add button ---
+if "force_tab" in st.session_state and st.session_state["force_tab"]:
+    st.session_state.current_tab = st.session_state["force_tab"]
+    st.session_state["force_tab"] = None
+
 # Create tabs
 tabs = st.tabs(tab_labels)
 
@@ -1201,11 +1206,12 @@ line-height:1.5;
             def render_why_section(section_label, session_key, categories, label_key):
                 st.markdown(f"### {t[lang_key][label_key]}")
 
-                # Add button ABOVE section
-                if st.button(f"➕ Add another {t[lang_key][label_key]}", key=f"add_{session_key}"):
-                    st.session_state[session_key].append("")
+                # Add button ABOVE section — dynamic text and variable
+                if st.button(f"➕ Add another {section_label} Why"):
+                    st.session_state[add_flag] = True
+                    st.session_state["force_tab"] = [i for i, (s, _, _) in enumerate(npqp_steps) if s == "D5"][0]
 
-                # ✅ Same 3-argument structure as before (no extra params)
+                # ✅ Stable call structure
                 st.session_state[session_key] = render_whys_no_repeat_with_other(
                     st.session_state[session_key],
                     categories,
