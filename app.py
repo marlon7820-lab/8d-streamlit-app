@@ -1127,7 +1127,12 @@ line-height:1.5;
 
         # D3: Inspection Stage + Initial Analysis
         elif step == "D3":
-            st.session_state.setdefault("D3", {"inspection_stage": [], "answer": ""})
+            # Ensure D3 exists and has the right keys
+            if "D3" not in st.session_state:
+                st.session_state["D3"] = {"inspection_stage": [], "answer": ""}
+
+            st.session_state["D3"].setdefault("inspection_stage", [])
+            st.session_state["D3"].setdefault("answer", "")
 
             # Multiselect options
             options = (
@@ -1139,14 +1144,14 @@ line-height:1.5;
             st.session_state["D3"]["inspection_stage"] = st.multiselect(
                 t[lang_key].get("Inspection_Stage", "Inspection Stage"),
                 options=options,
-                default=st.session_state["D3"]["inspection_stage"],
-                key="d3_multiselect"  # unique key prevents reset
+                default=st.session_state["D3"].get("inspection_stage", []),  # safe .get()
+                key="d3_multiselect"
             )
 
             st.session_state["D3"]["answer"] = st.text_area(
                 t[lang_key].get("Initial_Analysis", "Initial Analysis"),
-                value=st.session_state["D3"]["answer"],
-                key="d3_initial_analysis",  # unique key ensures stability
+                value=st.session_state["D3"].get("answer", ""),  # safe .get()
+                key="d3_initial_analysis",
                 height=150
             )
         
