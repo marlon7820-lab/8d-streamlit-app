@@ -1038,11 +1038,11 @@ st.progress(progress/len(steps))
 st.write(f"Completed {progress} of {len(steps)} steps")
 
 # ---------------------------
-# Render Tabs with Uploads
+# Force tab persistence BEFORE creating tabs
 # ---------------------------
-# Initialize current_tab in session_state
-if "current_tab" not in st.session_state:
-    st.session_state.current_tab = 0
+if "force_tab" in st.session_state and st.session_state["force_tab"] is not None:
+    st.session_state.current_tab = st.session_state["force_tab"]
+    st.session_state["force_tab"] = None
 
 # Build tab labels
 tab_labels = []
@@ -1061,26 +1061,22 @@ for step, _, _ in npqp_steps:
 if "current_tab_index" not in st.session_state:
     st.session_state.current_tab_index = 0
 
-# --- Force D5 tab to stay active when triggered ---
-if "force_tab" in st.session_state and st.session_state["force_tab"] is not None:
-    st.session_state.current_tab_index = st.session_state["force_tab"]
-    st.session_state["force_tab"] = None
-
 # --- Create tabs with stable index tracking ---
 tabs = st.tabs(tab_labels)
+
+# --- Render each tab ---
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     with tabs[i]:
-        # Update the active tab only when it’s actually clicked
+        # Set the session active tab index only if this tab is clicked
         if st.session_state.get("active_tab_index") != i:
             st.session_state["active_tab_index"] = i
 
-        # 🔒 Stay on same tab after rerun
-        if st.session_state.current_tab_index != st.session_state.get("active_tab_index"):
-            st.session_state.current_tab_index = st.session_state.get("active_tab_index", 0)
+        # 🔒 Keep the tab active after rerun
+        if st.session_state.get("current_tab_index") != st.session_state["active_tab_index"]:
+            st.session_state["current_tab_index"] = st.session_state["active_tab_index"]
 
-        # --- Render step content ---
+        # --- Step header ---
         st.markdown(f"### {t[lang_key][step]}")
-        # (your existing logic for each step continues below)
 
         # Training Guidance & Example box
         note_text = note_dict[lang_key]
@@ -1204,8 +1200,6 @@ line-height:1.5;
             st.session_state.setdefault("d5_occ_whys", [])
             st.session_state.setdefault("d5_det_whys", [])
             st.session_state.setdefault("d5_sys_whys", [])
-
-            # Initialize add button flags
             st.session_state.setdefault("add_occ", False)
             st.session_state.setdefault("add_det", False)
             st.session_state.setdefault("add_sys", False)
@@ -1213,24 +1207,18 @@ line-height:1.5;
             # --- Helper to render a section ---
             def render_why_section(label, session_key, add_flag_key, categories):
                 st.subheader(label)
-
-                # Add button
                 if st.button(f"➕ Add another {label}", key=f"btn_{session_key}"):
                     st.session_state[add_flag_key] = True
-                    # force D5 tab to remain active
-                    st.session_state["force_tab"] = [i for i, (s, _, _) in enumerate(npqp_steps) if s == "D5"][0]
-
-                # Only append new Why if Add clicked
+                    st.session_state["force_tab"] = [i for i, (s, _, _) in enumerate(npqp_steps) if s=="D5"][0]
                 if st.session_state[add_flag_key]:
                     st.session_state[session_key].append("")
                     st.session_state[add_flag_key] = False
 
-                # Render existing Whys
                 new_list = []
                 for idx, val in enumerate(st.session_state[session_key]):
-                    key = f"{session_key}_{idx}"  # stable key
+                    key = f"{session_key}_{idx}"
                     choice = st.selectbox(
-                        label if idx == 0 else f"{label} {idx+1}",
+                        label if idx==0 else f"{label} {idx+1}",
                         [""] + list(categories),
                         index=list(categories).index(val)+1 if val in categories else 0,
                         key=key
@@ -1238,8 +1226,8 @@ line-height:1.5;
                     new_list.append(choice)
                 st.session_state[session_key] = new_list
 
-            # Render sections
-            if lang_key == "es":
+            # Render all D5 sections
+            if lang_key=="es":
                 render_why_section(t[lang_key]["Occurrence_Why"], "d5_occ_whys", "add_occ", occurrence_categories_es)
                 render_why_section(t[lang_key]["Detection_Why"], "d5_det_whys", "add_det", detection_categories_es)
                 render_why_section(t[lang_key]["Systemic_Why"], "d5_sys_whys", "add_sys", systemic_categories_es)
@@ -1248,23 +1236,20 @@ line-height:1.5;
                 render_why_section(t[lang_key]["Detection_Why"], "d5_det_whys", "add_det", detection_categories)
                 render_why_section(t[lang_key]["Systemic_Why"], "d5_sys_whys", "add_sys", systemic_categories)
 
-            # Collect non-empty Whys
+            # Collect non-empty whys
             occ_whys = [w for w in st.session_state["d5_occ_whys"] if w.strip()]
             det_whys = [w for w in st.session_state["d5_det_whys"] if w.strip()]
             sys_whys = [w for w in st.session_state["d5_sys_whys"] if w.strip()]
 
             # Duplicate check
             all_whys = occ_whys + det_whys + sys_whys
-            duplicates = [w for w in set(all_whys) if all_whys.count(w) > 1 and w.strip()]
+            duplicates = [w for w in set(all_whys) if all_whys.count(w)>1 and w.strip()]
             if duplicates:
                 st.warning(f"⚠️ Duplicate entries detected across Occurrence/Detection/Systemic: {', '.join(duplicates)}")
 
             # Smart root cause
-            occ_text, det_text, sys_text = smart_root_cause_suggestion(
-                d1_concern, occ_whys, det_whys, sys_whys, lang=lang_key
-            )
+            occ_text, det_text, sys_text = smart_root_cause_suggestion(d1_concern, occ_whys, det_whys, sys_whys, lang=lang_key)
 
-            # Display
             st.text_area(f"{t[lang_key]['Root_Cause_Occ']}", value=occ_text, height=120, disabled=True)
             st.text_area(f"{t[lang_key]['Root_Cause_Det']}", value=det_text, height=120, disabled=True)
             st.text_area(f"{t[lang_key]['Root_Cause_Sys']}", value=sys_text, height=120, disabled=True)
