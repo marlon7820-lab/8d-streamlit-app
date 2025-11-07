@@ -1197,50 +1197,28 @@ line-height:1.5;
             for btn in ["add_occ", "add_det", "add_sys"]:
                 st.session_state.setdefault(btn, False)
 
-            # --- Occurrence Section ---
-            st.subheader("Occurrence Why")
-            if st.button("➕ Add another Occurrence Why"):
-                st.session_state["add_occ"] = True
+            # Helper function to render each Why section
+            def render_why_section(title, why_key, categories):
+                st.subheader(title)
+                # Add button above the section
+                if st.button(f"➕ Add another {title}", key=f"btn_{why_key}"):
+                    st.session_state[why_key].append("")
+                # Render dropdowns
+                st.session_state[why_key] = render_whys_no_repeat_with_other(
+                    st.session_state[why_key],
+                    categories,
+                    title
+                )
 
-            if st.session_state["add_occ"]:
-                st.session_state["d5_occ_whys"].append("")
-                st.session_state["add_occ"] = False
-
-            st.session_state.d5_occ_whys = render_whys_no_repeat_with_other(
-                st.session_state.d5_occ_whys,
-                occurrence_categories_es if lang_key=="es" else occurrence_categories,
-                t[lang_key]['Occurrence_Why']
-            )
-
-            # --- Detection Section ---
-            st.subheader("Detection Why")
-            if st.button("➕ Add another Detection Why"):
-                st.session_state["add_det"] = True
-
-            if st.session_state["add_det"]:
-                st.session_state["d5_det_whys"].append("")
-                st.session_state["add_det"] = False
-
-            st.session_state.d5_det_whys = render_whys_no_repeat_with_other(
-                st.session_state.d5_det_whys,
-                detection_categories_es if lang_key=="es" else detection_categories,
-                t[lang_key]['Detection_Why']
-            )
-
-            # --- Systemic Section ---
-            st.subheader("Systemic Why")
-            if st.button("➕ Add another Systemic Why"):
-                st.session_state["add_sys"] = True
-
-            if st.session_state["add_sys"]:
-                st.session_state["d5_sys_whys"].append("")
-                st.session_state["add_sys"] = False
-
-            st.session_state.d5_sys_whys = render_whys_no_repeat_with_other(
-                st.session_state.d5_sys_whys,
-                systemic_categories_es if lang_key=="es" else systemic_categories,
-                t[lang_key]['Systemic_Why']
-            )
+            # Render Occurrence / Detection / Systemic sections
+            if lang_key == "es":
+                render_why_section("Occurrence Why", "d5_occ_whys", occurrence_categories_es)
+                render_why_section("Detection Why", "d5_det_whys", detection_categories_es)
+                render_why_section("Systemic Why", "d5_sys_whys", systemic_categories_es)
+            else:
+                render_why_section("Occurrence Why", "d5_occ_whys", occurrence_categories)
+                render_why_section("Detection Why", "d5_det_whys", detection_categories)
+                render_why_section("Systemic Why", "d5_sys_whys", systemic_categories)
 
             # --- Collect non-empty whys ---
             occ_whys = [w for w in st.session_state.d5_occ_whys if w.strip()]
