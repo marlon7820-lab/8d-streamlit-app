@@ -1054,10 +1054,16 @@ for step, _, _ in npqp_steps:
         f"🟢 {t[lang_key][step]}" if filled else f"🔴 {t[lang_key][step]}"
     )
 
+if "current_tab" not in st.session_state:
+    st.session_state.current_tab = 0
+    
 tabs = st.tabs(tab_labels)
 
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     with tabs[i]:
+        if st.session_state.current_tab != i:
+            st.session_state.current_tab = i
+
         st.markdown(f"### {t[lang_key][step]}")
 
         # Training Guidance & Example box
