@@ -1200,18 +1200,19 @@ line-height:1.5;
             for key in ["d5_occ_whys", "d5_det_whys", "d5_sys_whys"]:
                 st.session_state.setdefault(key, [""])
 
-            # Helper function to render each Why section
+            # Helper function to render each Why section with button at the end
             def render_why_section(why_key, categories, label):
                 st.markdown(f"### {label}")
 
                 # Render dropdowns first
                 st.session_state[why_key] = render_whys_no_repeat_with_other(
-                    st.session_state[why_key],
-                    categories,
-                    label
+                    st.session_state[why_key], categories, label
                 )
 
-                # Add button for this section (moved to end)
+                # Add a small gap and divider
+                st.markdown("<div style='margin-top:10px; margin-bottom:5px; border-bottom:1px solid #ddd'></div>", unsafe_allow_html=True)
+
+                # Add button at the end
                 if st.button(f"➕ Add another {label}", key=f"add_{why_key}"):
                     st.session_state[why_key].append("")
 
