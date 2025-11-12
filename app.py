@@ -1203,13 +1203,17 @@ line-height:1.5;
             # Helper function to render each Why section
             def render_why_section(why_key, categories, label):
                 st.markdown(f"### {label}")
-                # Add button for this section
+
+                # Render dropdowns first
+                st.session_state[why_key] = render_whys_no_repeat_with_other(
+                    st.session_state[why_key],
+                    categories,
+                    label
+                )
+
+                # Add button for this section (moved to end)
                 if st.button(f"➕ Add another {label}", key=f"add_{why_key}"):
                     st.session_state[why_key].append("")
-                # Render dropdowns
-                st.session_state[why_key] = render_whys_no_repeat_with_other(
-                    st.session_state[why_key], categories, label
-                )
 
             if lang_key == "es":
                 render_why_section("d5_occ_whys", occurrence_categories_es, t[lang_key]['Occurrence_Why'])
