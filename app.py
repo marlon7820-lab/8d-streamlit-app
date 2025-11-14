@@ -1227,27 +1227,25 @@ line-height:1.5;
             # ---------------------------
             # Helper to render a Why section with button at the end
             # ---------------------------
-            def render_why_section(why_key, categories, label):
+            def render_why_section(why_key, categories, label, lang_key):
                 st.markdown(f"### {label}")
 
-                # Render existing Whys dropdowns
-                for i, why in enumerate(st.session_state[why_key]):
-                    index = categories.index(why) if why in categories else 0
-                    st.session_state[why_key][i] = st.selectbox(
-                        f"{label} {i+1}",
-                        options=categories,
-                        index=index,
-                        key=f"{why_key}_{i}"
-                    )
+                # Render existing Whys using your robust function
+                st.session_state[why_key] = render_whys_no_repeat_with_other(
+                    st.session_state[why_key], categories, label, lang_key
+                )
 
                 # Divider
-                st.markdown("<div style='margin-top:10px; margin-bottom:5px; border-bottom:1px solid #ddd'></div>", unsafe_allow_html=True)
+                st.markdown(
+                    "<div style='margin-top:10px; margin-bottom:5px; border-bottom:1px solid #ddd'></div>",
+                    unsafe_allow_html=True
+                )
 
-                # Add button (only adds when clicked)
+                # Only add a new Why when the button is clicked
                 if st.button(f"➕ Add another {label}", key=f"add_{why_key}"):
                     st.session_state[why_key].append("")
-                    st.session_state["force_tab"] = True  # Keep D5 active after adding
-
+                    st.session_state["force_tab"] = True  # Keep D5 active
+                    
             # Render the three Why sections
             if lang_key == "es":
                 render_why_section("d5_occ_whys", occurrence_categories_es, t[lang_key]['Occurrence_Why'])
