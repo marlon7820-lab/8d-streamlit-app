@@ -1261,7 +1261,7 @@ line-height:1.5;
             for key in ["d5_occ_whys", "d5_det_whys", "d5_sys_whys"]:
                 st.session_state.setdefault(key, [""] * 5)
                 st.session_state.setdefault(f"{key}_other", [""] * 5)
-                
+        
             # Persist D5 tab if flagged
             d5_index = [i for i, (s, _, _) in enumerate(npqp_steps) if s == "D5"][0]
             if st.session_state.get("_force_d5_tab", False):
@@ -1308,10 +1308,11 @@ line-height:1.5;
                         other_list[idx] = other_val
                     else:
                         why_list[idx] = selection
-                        other_list[idx] = "" 
+                        other_list[idx] = ""
 
                 st.session_state[why_key] = why_list
                 st.session_state[other_key] = other_list
+
 
             # --- Render WHY section + +Add button ---
             def render_why_section(why_key, other_key, categories, label, lang_key):
