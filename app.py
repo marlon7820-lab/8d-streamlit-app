@@ -1332,13 +1332,13 @@ line-height:1.5;
 
             # --- Render all three WHY sections ---
             if lang_key == "es":
-                render_why_section("d5_occ_whys", "d5_occ_whys_other", occurrence_categories_es, t[lang_key]['Occurrence_Why'], lang_key)
-                render_why_section("d5_det_whys", "d5_det_whys_other", detection_categories_es, t[lang_key]['Detection_Why'], lang_key)
-                render_why_section("d5_sys_whys", "d5_sys_whys_other", systemic_categories_es, t[lang_key]['Systemic_Why'], lang_key)
+                render_why_section("d5_occ_whys", occurrence_categories_es, t[lang_key]['Occurrence_Why'], lang_key)
+                render_why_section("d5_det_whys", detection_categories_es, t[lang_key]['Detection_Why'], lang_key)
+                render_why_section("d5_sys_whys", systemic_categories_es, t[lang_key]['Systemic_Why'], lang_key)
             else:
-                render_why_section("d5_occ_whys", "d5_occ_whys_other", occurrence_categories, t[lang_key]['Occurrence_Why'], lang_key)
-                render_why_section("d5_det_whys", "d5_det_whys_other", detection_categories, t[lang_key]['Detection_Why'], lang_key)
-                render_why_section("d5_sys_whys", "d5_sys_whys_other", systemic_categories, t[lang_key]['Systemic_Why'], lang_key)
+                render_why_section("d5_occ_whys", occurrence_categories, t[lang_key]['Occurrence_Why'], lang_key)
+                render_why_section("d5_det_whys", detection_categories, t[lang_key]['Detection_Why'], lang_key)
+                render_why_section("d5_sys_whys", systemic_categories, t[lang_key]['Systemic_Why'], lang_key)
 
             # --- Duplicate check ---
             all_whys = []
