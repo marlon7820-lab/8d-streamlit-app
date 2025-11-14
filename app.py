@@ -1040,9 +1040,10 @@ st.write(f"Completed {progress} of {len(steps)} steps")
 # ---------------------------
 # Force tab persistence BEFORE creating tabs
 # ---------------------------
-if "force_tab" in st.session_state and st.session_state["force_tab"] is not None:
-    st.session_state.current_tab = st.session_state["force_tab"]
+if "force_tab" not in st.session_state:
     st.session_state["force_tab"] = None
+if "current_tab_index" not in st.session_state:
+    st.session_state["current_tab_index"] = 0
 
 # Build tab labels
 tab_labels = []
@@ -1189,6 +1190,7 @@ line-height:1.5;
 
         # ---------- D5 ----------
         elif step == "D5":
+            # Get D1 concern
             d1_concern = st.session_state.get("D1", {}).get("answer", "").strip()
             if d1_concern:
                 st.info(d1_concern)
@@ -1200,22 +1202,38 @@ line-height:1.5;
             for key in ["d5_occ_whys", "d5_det_whys", "d5_sys_whys"]:
                 st.session_state.setdefault(key, [""])
 
-            # Helper function to render each Why section with button at the end
+            # ---------------------------
+            # Force D5 tab to stay active until user clicks another tab
+            # ---------------------------
+            d5_index = [i for i, (s, _, _) in enumerate(npqp_steps) if s == "D5"][0]
+            if "force_d5_tab" not in st.session_state:
+                st.session_state["force_d5_tab"] = True
+
+            # If force flag is True, keep D5 active
+            if st.session_state.get("force_d5_tab"):
+                st.session_state["current_tab_index"] = d5_index
+                st.session_state["active_tab_index"] = d5_index
+
+            # ---------------------------
+            # Helper to render a Why section with button at the end
+            # ---------------------------
             def render_why_section(why_key, categories, label):
                 st.markdown(f"### {label}")
 
-                # Render dropdowns first
+                # Render dropdowns
                 st.session_state[why_key] = render_whys_no_repeat_with_other(
                     st.session_state[why_key], categories, label
                 )
 
-                # Add a small gap and divider
+                # Small gap and divider
                 st.markdown("<div style='margin-top:10px; margin-bottom:5px; border-bottom:1px solid #ddd'></div>", unsafe_allow_html=True)
 
                 # Add button at the end
                 if st.button(f"➕ Add another {label}", key=f"add_{why_key}"):
                     st.session_state[why_key].append("")
+                    st.session_state["force_d5_tab"] = True  # Keep D5 active until user clicks another tab
 
+            # Render the three Why sections
             if lang_key == "es":
                 render_why_section("d5_occ_whys", occurrence_categories_es, t[lang_key]['Occurrence_Why'])
                 render_why_section("d5_det_whys", detection_categories_es, t[lang_key]['Detection_Why'])
@@ -1240,6 +1258,7 @@ line-height:1.5;
                 lang=lang_key
             )
 
+            # Display Smart Root Causes
             st.text_area(f"{t[lang_key]['Root_Cause_Occ']}", value=occ_text, height=120, disabled=True)
             st.text_area(f"{t[lang_key]['Root_Cause_Det']}", value=det_text, height=120, disabled=True)
             st.text_area(f"{t[lang_key]['Root_Cause_Sys']}", value=sys_text, height=120, disabled=True)
