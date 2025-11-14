@@ -1241,22 +1241,27 @@ line-height:1.5;
                     unsafe_allow_html=True
                 )
                 
-                # Only add a new Why when the button is clicked
                 add_button_key = f"add_{why_key}_btn"
+
+                # Streamlit-safe button with session_state assignment
                 if add_button_key not in st.session_state:
                     st.session_state[add_button_key] = False
 
-                # Detect click
-                if st.button(f"➕ Add another {label}", key=add_button_key):
-                    st.session_state[why_key].append("")  # Add one new dropdown
-                    st.session_state["force_tab"] = True  # Keep D5 active
+                # Use st.button with a callback-safe pattern
+                clicked = st.button(f"➕ Add another {label}", key=add_button_key)
+                if clicked:
+                    # Append safely
+                    st.session_state[why_key].append("")
+                    # Set a separate flag to force tab persistence
+                    st.session_state["_force_d5_tab"] = True
 
-                # Persist tab across reruns
-                if st.session_state.get("force_tab"):
-                    d5_index = [i for i, (s, _, _) in enumerate(npqp_steps) if s == "D5"][0]
-                    st.session_state["current_tab_index"] = d5_index
-                    st.session_state["active_tab_index"] = d5_index
-                    # Do NOT reset force_tab yet; wait until next button click
+            # Then, at the **start of your D5 code**, persist tab if flag exists:
+            if st.session_state.get("_force_d5_tab"):
+                d5_index = [i for i, (s, _, _) in enumerate(npqp_steps) if s == "D5"][0]
+                st.session_state["current_tab_index"] = d5_index
+                st.session_state["active_tab_index"] = d5_index
+                # Clear the flag **after applying**
+                st.session_state["_force_d5_tab"] = False
                     
             # Render the three Why sections
             if lang_key == "es":
