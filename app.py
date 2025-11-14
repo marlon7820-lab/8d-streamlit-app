@@ -1269,18 +1269,18 @@ line-height:1.5;
                 st.session_state["_force_d5_tab"] = False
 
             # --- Helper: render WHY slots ---
-            def render_whys_fixed_5(why_key, categories_dict, label_prefix, lang_key):
+            def render_whys_fixed_5(why_key, other_key, categories_dict, label_prefix, lang_key):
                 why_list = st.session_state[why_key]
-                other_list = st.session_state[f"{why_key}_other"]
+                other_list = st.session_state[other_key]
                 n_defaults = 5
                 total_slots = max(n_defaults, len(why_list))
 
-                for idx in range(total_slots):
-                    if idx >= len(why_list):
-                        why_list.append("")
-                        other_list.append("")
+                # Ensure other_list is same length
+                while len(other_list) < total_slots:
+                    other_list.append("")
 
-                    # Exclude other selections for uniqueness
+                for idx in range(total_slots):
+                    # Do not append here; only render existing items
                     selected_so_far = [w for i, w in enumerate(why_list) if w.strip() and i != idx and w != "Other"]
                     options = [""] + [
                         f"{cat}: {item}"
@@ -1300,11 +1300,10 @@ line-height:1.5;
                     )
 
                     if selection == "Other":
-                        other_key = f"{why_key}_other_{idx}_{lang_key}"
                         other_val = st.text_input(
                             f"Please specify {label_prefix} {idx+1}",
                             value=other_list[idx],
-                            key=other_key
+                            key=f"{other_key}_input_{idx}_{lang_key}"
                         )
                         why_list[idx] = "Other"
                         other_list[idx] = other_val
@@ -1313,30 +1312,31 @@ line-height:1.5;
                         other_list[idx] = ""  # clear previous Other if changed
 
                 st.session_state[why_key] = why_list
-                st.session_state[f"{why_key}_other"] = other_list
+                st.session_state[other_key] = other_list
 
             # --- Render WHY section + +Add button ---
-            def render_why_section(why_key, categories, label, lang_key):
+            def render_why_section(why_key, other_key, categories, label, lang_key):
                 st.markdown(f"### {label}")
-                render_whys_fixed_5(why_key, categories, label, lang_key)
+                render_whys_fixed_5(why_key, other_key, categories, label, lang_key)
                 st.markdown(
                     "<div style='margin-top:10px; margin-bottom:5px; border-bottom:1px solid #ddd'></div>",
                     unsafe_allow_html=True
                 )
                 add_clicked = st.button(f"➕ Add another {label}", key=f"add_{why_key}_btn")
                 if add_clicked:
-                    st.session_state[f"_request_add_{why_key}"] = True
-                    st.session_state["_force_d5_tab"] = True  # keep tab active
+                    st.session_state[why_key].append("")
+                    st.session_state[other_key].append("")
+                    st.session_state["_force_d5_tab"] = True  # keep D5 tab active
 
             # --- Render all three WHY sections ---
             if lang_key == "es":
-                render_why_section("d5_occ_whys", occurrence_categories_es, t[lang_key]['Occurrence_Why'], lang_key)
-                render_why_section("d5_det_whys", detection_categories_es, t[lang_key]['Detection_Why'], lang_key)
-                render_why_section("d5_sys_whys", systemic_categories_es, t[lang_key]['Systemic_Why'], lang_key)
+                render_why_section("d5_occ_whys", "d5_occ_whys_other", occurrence_categories_es, t[lang_key]['Occurrence_Why'], lang_key)
+                render_why_section("d5_det_whys", "d5_det_whys_other", detection_categories_es, t[lang_key]['Detection_Why'], lang_key)
+                render_why_section("d5_sys_whys", "d5_sys_whys_other", systemic_categories_es, t[lang_key]['Systemic_Why'], lang_key)
             else:
-                render_why_section("d5_occ_whys", occurrence_categories, t[lang_key]['Occurrence_Why'], lang_key)
-                render_why_section("d5_det_whys", detection_categories, t[lang_key]['Detection_Why'], lang_key)
-                render_why_section("d5_sys_whys", systemic_categories, t[lang_key]['Systemic_Why'], lang_key)
+                render_why_section("d5_occ_whys", "d5_occ_whys_other", occurrence_categories, t[lang_key]['Occurrence_Why'], lang_key)
+                render_why_section("d5_det_whys", "d5_det_whys_other", detection_categories, t[lang_key]['Detection_Why'], lang_key)
+                render_why_section("d5_sys_whys", "d5_sys_whys_other", systemic_categories, t[lang_key]['Systemic_Why'], lang_key)
 
             # --- Duplicate check ---
             all_whys = []
