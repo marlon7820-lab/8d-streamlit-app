@@ -1238,12 +1238,10 @@ line-height:1.5;
                 
                 # Safe +Add button
                 add_button_key = f"add_{why_key}_btn"
-                if add_button_key not in st.session_state:
-                    st.session_state[add_button_key] = False
-
+                # Do NOT initialize the key here — just call st.button
                 clicked = st.button(f"➕ Add another {label}", key=add_button_key)
                 if clicked:
-                    # Append new Why safely
+                    # Append safely
                     st.session_state[why_key].append("")
                     # Flag to force tab persistence
                     st.session_state["_force_d5_tab"] = True
