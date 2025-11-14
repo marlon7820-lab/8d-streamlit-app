@@ -1209,7 +1209,8 @@ line-height:1.5;
 
             # Initialize Whys lists with 5 defaults if empty
             for key in ["d5_occ_whys", "d5_det_whys", "d5_sys_whys"]:
-                st.session_state.setdefault(key, [""] * 5)
+                if key not in st.session_state:
+                    st.session_state[key] = [""] * 5  # show 5 by default
 
             # ---------------------------
             # Persist D5 tab if flagged
@@ -1236,14 +1237,13 @@ line-height:1.5;
                     unsafe_allow_html=True
                 )
                 
-                # Safe +Add button
+                # Only append on +Add click
                 add_button_key = f"add_{why_key}_btn"
-                # Do NOT initialize the key here — just call st.button
                 clicked = st.button(f"➕ Add another {label}", key=add_button_key)
                 if clicked:
-                    # Append safely
+                    # Append exactly one empty dropdown
                     st.session_state[why_key].append("")
-                    # Flag to force tab persistence
+                    # Set tab force flag
                     st.session_state["_force_d5_tab"] = True
                     
             # Render the three Why sections
