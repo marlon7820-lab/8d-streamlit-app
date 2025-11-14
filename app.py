@@ -1214,19 +1214,19 @@ line-height:1.5;
             # ---------------------------
             # Persist D5 tab if flagged
             # ---------------------------
-            if st.session_state.get("_force_d5_tab"):
-                d5_index = [i for i, (s, _, _) in enumerate(npqp_steps) if s == "D5"][0]
+            d5_index = [i for i, (s, _, _) in enumerate(npqp_steps) if s == "D5"][0]
+            if st.session_state.get("_force_d5_tab", False):
                 st.session_state["current_tab_index"] = d5_index
                 st.session_state["active_tab_index"] = d5_index
                 st.session_state["_force_d5_tab"] = False
                 
             # ---------------------------
-            # Helper to render a Why section with button at the end
+            # Helper to render a Why section with +Add button
             # ---------------------------
             def render_why_section(why_key, categories, label, lang_key):
                 st.markdown(f"### {label}")
 
-                # Render existing Whys using your robust function
+                # Render all existing whys
                 st.session_state[why_key] = render_whys_no_repeat_with_other(
                     st.session_state[why_key], categories, label, lang_key
                 )
@@ -1237,15 +1237,11 @@ line-height:1.5;
                     unsafe_allow_html=True
                 )
                 
-                # +Add button
+                # +Add button — NO session_state writes using this key
                 add_button_key = f"add_{why_key}_btn"
-                if add_button_key not in st.session_state:
-                    st.session_state[add_button_key] = False
 
-                clicked = st.button(f"➕ Add another {label}", key=add_button_key)
-                if clicked:
+                if st.button(f"➕ Add another {label}", key=add_button_key):
                     st.session_state[why_key].append("")
-                    # Flag to force D5 tab to stay active
                     st.session_state["_force_d5_tab"] = True
 
                     
