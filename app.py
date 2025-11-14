@@ -870,39 +870,69 @@ def suggest_root_cause(whys, lang_key="en"):
         return rc_texts[lang_key]["triple"].format(top_cats[0], top_cats[1])
 
 def render_whys_no_repeat_with_other(why_list, categories, label_prefix, lang_key="en"):
-    # Make a copy to avoid modifying the list during iteration
-    updated_list = why_list.copy()
+    updated_list = list(why_list)  # safe copy
 
     for idx in range(len(updated_list)):
-        # Build options for this selectbox, excluding already selected values
-        selected_so_far = [w for i, w in enumerate(updated_list) if w.strip() and i != idx]
+
+        # -----------------------------
+        # Build stable keys
+        # -----------------------------
+        base_key = f"D5_{label_prefix.replace(' ', '_')}_{lang_key}_{idx}"
+        select_key = f"{base_key}_select"
+        other_key = f"{base_key}_other"
+
+        # -----------------------------
+        # Build no-duplicate options
+        # -----------------------------
+        selected_others = [
+            w for i, w in enumerate(updated_list)
+            if w.strip() and i != idx and not w.startswith("OTHER:")
+        ]
+
         options = [""] + [
-            f"{cat}: {item}" 
-            for cat, items in categories.items() 
-            for item in items 
-            if f"{cat}: {item}" not in selected_so_far
+            f"{cat}: {item}"
+            for cat, items in categories.items()
+            for item in items
+            if f"{cat}: {item}" not in selected_others
         ] + ["Other"]
 
-        current_val = updated_list[idx] if updated_list[idx] in options else ""
+        # -----------------------------
+        # Determine displayed value
+        # -----------------------------
+        original_value = updated_list[idx]
+
+        if original_value.startswith("OTHER:"):
+            current_select_value = "Other"
+            current_other_text = original_value.replace("OTHER:", "")
+        else:
+            current_select_value = original_value if original_value in options else ""
+            current_other_text = ""
+
+        # -----------------------------
+        # Render dropdown
+        # -----------------------------
         selection = st.selectbox(
             f"{label_prefix} {idx+1}",
             options,
-            index=options.index(current_val) if current_val in options else 0,
-            key=f"{label_prefix}_{idx}_{lang_key}"  # stable key
+            index=options.index(current_select_value) if current_select_value in options else 0,
+            key=select_key,
         )
 
-        # If "Other" is selected, show a free text box
+        # -----------------------------
+        # Handle "Other" field
+        # -----------------------------
         if selection == "Other":
             other_val = st.text_input(
                 f"Please specify {label_prefix} {idx+1}",
-                value=updated_list[idx] if updated_list[idx] not in options else "",
-                key=f"{label_prefix}_{idx}_other_{lang_key}"
+                value=current_other_text,
+                key=other_key
             )
-            updated_list[idx] = other_val
+            updated_list[idx] = f"OTHER:{other_val}"
         else:
             updated_list[idx] = selection
 
     return updated_list
+
     
 # ---------------------------
 # Helpers (place at top of file)
