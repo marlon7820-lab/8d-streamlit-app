@@ -1257,12 +1257,11 @@ line-height:1.5;
             else:
                 st.warning("No Customer Concern defined yet in D1.")
 
-            # Ensure lists exist
+            # Ensure lists exist (including _other for "Other" text inputs)
             for key in ["d5_occ_whys", "d5_det_whys", "d5_sys_whys"]:
                 st.session_state.setdefault(key, [""] * 5)
-            for key in ["d5_occ_whys_other", "d5_det_whys_other", "d5_sys_whys_other"]:
-                st.session_state.setdefault(key, [""] * 5)  # separate storage for Other text
-
+                st.session_state.setdefault(f"{key}_other", [""] * 5)
+                
             # Persist D5 tab if flagged
             d5_index = [i for i, (s, _, _) in enumerate(npqp_steps) if s == "D5"][0]
             if st.session_state.get("_force_d5_tab", False):
