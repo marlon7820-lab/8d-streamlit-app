@@ -1207,26 +1207,27 @@ line-height:1.5;
             else:
                 st.warning("No Customer Concern defined yet in D1.")
 
-            # Initialize Whys lists with 5 defaults if empty
+            # Initialize Whys lists with 5 defaults if empty (preserves Why1..Why5)
             for key in ["d5_occ_whys", "d5_det_whys", "d5_sys_whys"]:
                 st.session_state.setdefault(key, [""] * 5)
-        
+
             # ---------------------------
-            # Persist D5 tab if flagged
+            # Persist D5 tab if flagged (this must run BEFORE tabs are created in the outer code)
             # ---------------------------
             d5_index = [i for i, (s, _, _) in enumerate(npqp_steps) if s == "D5"][0]
             if st.session_state.get("_force_d5_tab", False):
                 st.session_state["current_tab_index"] = d5_index
                 st.session_state["active_tab_index"] = d5_index
                 st.session_state["_force_d5_tab"] = False
-                
+
             # ---------------------------
-            # Helper to render a Why section with +Add button
+            # Helper: render the Why section (render only)
+            # The button will set a request flag; actual append will be processed after rendering.
             # ---------------------------
             def render_why_section(why_key, categories, label, lang_key):
                 st.markdown(f"### {label}")
 
-                # Render all existing whys
+                # Render existing whys using your robust function (no appending here)
                 st.session_state[why_key] = render_whys_no_repeat_with_other(
                     st.session_state[why_key], categories, label, lang_key
                 )
@@ -1236,16 +1237,18 @@ line-height:1.5;
                     "<div style='margin-top:10px; margin-bottom:5px; border-bottom:1px solid #ddd'></div>",
                     unsafe_allow_html=True
                 )
-                
-                # +Add button — NO session_state writes using this key
+
+                # +Add button: DO NOT write to session_state using this button key.
+                # If clicked, set a separate request flag (safe).
                 add_button_key = f"add_{why_key}_btn"
+                clicked = st.button(f"➕ Add another {label}", key=add_button_key)
+                if clicked:
+                    # Set a request flag; do NOT append here
+                    st.session_state[f"_request_add_{why_key}"] = True
 
-                if st.button(f"➕ Add another {label}", key=add_button_key):
-                    st.session_state[why_key].append("")
-                    st.session_state["_force_d5_tab"] = True
-
-                    
-            # Render the three Why sections
+            # ---------------------------
+            # Render the three Why sections (unchanged UI / labels)
+            # ---------------------------
             if lang_key == "es":
                 render_why_section("d5_occ_whys", occurrence_categories_es, t[lang_key]['Occurrence_Why'], lang_key)
                 render_why_section("d5_det_whys", detection_categories_es, t[lang_key]['Detection_Why'], lang_key)
@@ -1255,7 +1258,22 @@ line-height:1.5;
                 render_why_section("d5_det_whys", detection_categories, t[lang_key]['Detection_Why'], lang_key)
                 render_why_section("d5_sys_whys", systemic_categories, t[lang_key]['Systemic_Why'], lang_key)
 
+            # ---------------------------
+            # Process any pending +Add requests AFTER rendering widgets
+            # This is the crucial change: appends happen here (not during widget creation),
+            # which prevents auto-adding when selecting a dropdown and avoids Streamlit policy errors.
+            # ---------------------------
+            for why_key in ["d5_occ_whys", "d5_det_whys", "d5_sys_whys"]:
+                req_key = f"_request_add_{why_key}"
+                if st.session_state.pop(req_key, False):
+                    # Append exactly one empty entry (safe, after widgets)
+                    st.session_state[why_key].append("")
+                    # Force D5 tab to persist on next rerun
+                    st.session_state["_force_d5_tab"] = True
+
+            # ---------------------------
             # Duplicate check
+            # ---------------------------
             all_whys = [w.strip() for w in st.session_state['d5_occ_whys'] +
                         st.session_state['d5_det_whys'] +
                         st.session_state['d5_sys_whys'] if w.strip()]
@@ -1263,7 +1281,9 @@ line-height:1.5;
             if duplicates:
                 st.warning(f"⚠️ Duplicate entries detected: {', '.join(duplicates)}")
 
+            # ---------------------------
             # Smart Root Cause
+            # ---------------------------
             occ_text, det_text, sys_text = smart_root_cause_suggestion(
                 d1_concern,
                 [w for w in st.session_state['d5_occ_whys'] if w.strip()],
