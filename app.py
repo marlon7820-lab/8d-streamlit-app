@@ -1083,42 +1083,57 @@ if "force_tab" not in st.session_state:
     st.session_state["force_tab"] = None
 if "current_tab_index" not in st.session_state:
     st.session_state["current_tab_index"] = 0
+# Ensure D5 lists exist and have at least 5 slots
+for key in ["d5_occ_whys", "d5_det_whys", "d5_sys_whys"]:
+    st.session_state.setdefault(key, [""] * 5)
 
+# --- Process pending D5 +Add requests BEFORE creating tabs ---
+d5_index = [i for i, (s, _, _) in enumerate(npqp_steps) if s == "D5"][0]
+for why_key in ["d5_occ_whys", "d5_det_whys", "d5_sys_whys"]:
+    req_key = f"_request_add_{why_key}"
+    if st.session_state.pop(req_key, False):
+        # Append exactly one empty slot
+        st.session_state[why_key].append("")
+        # Ensure D5 becomes the active tab for the next render
+        st.session_state["current_tab_index"] = d5_index
+        st.session_state["active_tab_index"] = d5_index
+        # Force tab persistence
+        st.session_state["_force_d5_tab"] = True
+
+
+# ---------------------------
 # Build tab labels
+# ---------------------------
 tab_labels = []
 for step, _, _ in npqp_steps:
     if step == "D5":
-        filled = d5_filled
+        filled = any(w.strip() for w in st.session_state["d5_occ_whys"] +
+                     st.session_state["d5_det_whys"] +
+                     st.session_state["d5_sys_whys"])
     elif step == "D6":
-        filled = d6_filled
+        filled = any(st.session_state.get("D6", {}).get(k, "").strip() for k in ["occ_answer","det_answer","sys_answer"])
     elif step == "D7":
-        filled = d7_filled
+        filled = any(st.session_state.get("D7", {}).get(k, "").strip() for k in ["occ_answer","det_answer","sys_answer"])
     else:
         filled = st.session_state.get(step, {}).get("answer", "").strip() != ""
     tab_labels.append(f"🟢 {t[lang_key][step]}" if filled else f"🔴 {t[lang_key][step]}")
 
-# --- Track current tab persistently ---
-if "current_tab_index" not in st.session_state:
-    st.session_state.current_tab_index = 0
-
-# --- Create tabs with stable index tracking ---
+# --- Render each tab ---
 tabs = st.tabs(tab_labels)
 
-# --- Render each tab ---
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     with tabs[i]:
-        # Set the session active tab index only if this tab is clicked
+        # Track active tab click
         if st.session_state.get("active_tab_index") != i:
             st.session_state["active_tab_index"] = i
-
-        # 🔒 Keep the tab active after rerun
+        # Keep tab active after rerun
         if st.session_state.get("current_tab_index") != st.session_state["active_tab_index"]:
             st.session_state["current_tab_index"] = st.session_state["active_tab_index"]
 
         # --- Step header ---
         st.markdown(f"### {t[lang_key][step]}")
 
-        # Training Guidance & Example box
+        # Training Guidance & Example
         note_text = note_dict[lang_key]
         example_text = example_dict[lang_key]
         st.markdown(f"""
@@ -1229,7 +1244,6 @@ line-height:1.5;
 
         # ---------- D5 ----------
         elif step == "D5":
-            # --- D1 concern display ---
             d1_concern = st.session_state.get("D1", {}).get("answer", "").strip()
             if d1_concern:
                 st.info(d1_concern)
@@ -1237,61 +1251,40 @@ line-height:1.5;
             else:
                 st.warning("No Customer Concern defined yet in D1.")
 
-            # --- ensure lists exist and have at least 5 slots ---
+            # Ensure lists exist
             for key in ["d5_occ_whys", "d5_det_whys", "d5_sys_whys"]:
                 st.session_state.setdefault(key, [""] * 5)
 
-            # --- Persist D5 tab if flagged (this must run BEFORE tabs are created outside) ---
+            # Persist D5 tab if flagged
             d5_index = [i for i, (s, _, _) in enumerate(npqp_steps) if s == "D5"][0]
             if st.session_state.get("_force_d5_tab", False):
                 st.session_state["current_tab_index"] = d5_index
                 st.session_state["active_tab_index"] = d5_index
                 st.session_state["_force_d5_tab"] = False
 
-            # --- Helper: render WHY slots safely, forcing first 5 to always show --- 
-            # Note: doesn't change your render_whys_no_repeat_with_other(); renders per-index to ensure stability.
+            # --- Helper: render WHY slots ---
             def render_whys_fixed_5(why_key, categories_dict, label_prefix, lang_key):
-                """
-                Renders selectboxes for all current entries in st.session_state[why_key],
-                but always shows at least the first 5 slots (Why1..Why5). Additional slots
-                (if appended) are shown after the first 5.
-                - categories_dict: your dict-of-lists categories (same shape you use)
-                - label_prefix: localized label text (e.g. t[lang_key]['Occurrence_Why'])
-                """
-                # local alias
                 why_list = st.session_state[why_key]
-
-                # ensure length >= 5 locally (session_state already defaulted above)
                 n_defaults = 5
                 total_slots = max(n_defaults, len(why_list))
-
-                # render each slot by index (stable keys based on why_key + idx)
                 for idx in range(total_slots):
-                    # ensure underlying session list has this index (safe to expand here)
                     if idx >= len(why_list):
                         why_list.append("")
-
-                    # build options excluding selected values on other indices
                     selected_so_far = [w for i, w in enumerate(why_list) if w.strip() and i != idx]
-
                     options = [""] + [
                         f"{cat}: {item}"
                         for cat, items in categories_dict.items()
                         for item in items
                         if f"{cat}: {item}" not in selected_so_far
                     ] + ["Other"]
-
                     current_val = why_list[idx] if why_list[idx] in options else ""
                     sel_key = f"{why_key}_sel_{idx}_{lang_key}"
-
                     selection = st.selectbox(
                         f"{label_prefix} {idx+1}",
                         options,
                         index=options.index(current_val) if current_val in options else 0,
                         key=sel_key
                     )
-
-                    # If "Other", render a text input with stable key
                     if selection == "Other":
                         other_key = f"{why_key}_other_{idx}_{lang_key}"
                         other_val = st.text_input(
@@ -1302,30 +1295,23 @@ line-height:1.5;
                         why_list[idx] = other_val
                     else:
                         why_list[idx] = selection
-
-                # store updated list back (writes are fine here)
                 st.session_state[why_key] = why_list
 
-            # --- Helper: section wrapper that renders the slots and the +Add button safely ---
+            # --- Render WHY section + +Add button ---
             def render_why_section(why_key, categories, label, lang_key):
                 st.markdown(f"### {label}")
-
-                # Render the actual selectboxes (keeps first 5 visible)
                 render_whys_fixed_5(why_key, categories, label, lang_key)
-
-                # small divider
                 st.markdown(
                     "<div style='margin-top:10px; margin-bottom:5px; border-bottom:1px solid #ddd'></div>",
                     unsafe_allow_html=True
                 )
-
-                # +Add button: do NOT write to a button-key session_state; set request flag only
                 add_clicked = st.button(f"➕ Add another {label}", key=f"add_{why_key}_btn")
                 if add_clicked:
-                    # set a request; we will process requests AFTER rendering to avoid policy issues
                     st.session_state[f"_request_add_{why_key}"] = True
+                    # Keep D5 tab active
+                    st.session_state["_force_d5_tab"] = True
 
-            # --- Render each of the 3 WHY sections (preserve multilingual labels) ---
+            # --- Render all three WHY sections ---
             if lang_key == "es":
                 render_why_section("d5_occ_whys", occurrence_categories_es, t[lang_key]['Occurrence_Why'], lang_key)
                 render_why_section("d5_det_whys", detection_categories_es, t[lang_key]['Detection_Why'], lang_key)
@@ -1335,19 +1321,7 @@ line-height:1.5;
                 render_why_section("d5_det_whys", detection_categories, t[lang_key]['Detection_Why'], lang_key)
                 render_why_section("d5_sys_whys", systemic_categories, t[lang_key]['Systemic_Why'], lang_key)
 
-            # ---------------------------
-            # AFTER rendering: process pending +Add requests (append exactly one empty slot per request)
-            # This append happens AFTER widget rendering so it won't trigger auto-add loops or policy errors.
-            # ---------------------------
-            for why_key in ["d5_occ_whys", "d5_det_whys", "d5_sys_whys"]:
-                req_key = f"_request_add_{why_key}"
-                if st.session_state.pop(req_key, False):
-                    st.session_state[why_key].append("")          # append exactly one empty slot
-                    st.session_state["_force_d5_tab"] = True      # ensure D5 remains active on next rerun
-
-            # ---------------------------
-            # Duplicate check (unchanged)
-            # ---------------------------
+            # --- Duplicate check ---
             all_whys = [
                 w.strip()
                 for w in (
@@ -1361,9 +1335,7 @@ line-height:1.5;
             if duplicates:
                 st.warning(f"⚠️ Duplicate entries detected: {', '.join(duplicates)}")
 
-            # ---------------------------
-            # Smart Root Cause (unchanged)
-            # ---------------------------
+            # --- Smart Root Cause ---
             occ_text, det_text, sys_text = smart_root_cause_suggestion(
                 d1_concern,
                 [w for w in st.session_state['d5_occ_whys'] if w.strip()],
@@ -1372,7 +1344,6 @@ line-height:1.5;
                 lang=lang_key
             )
 
-            # Display Smart Root Causes
             st.text_area(f"{t[lang_key]['Root_Cause_Occ']}", value=occ_text, height=120, disabled=True)
             st.text_area(f"{t[lang_key]['Root_Cause_Det']}", value=det_text, height=120, disabled=True)
             st.text_area(f"{t[lang_key]['Root_Cause_Sys']}", value=sys_text, height=120, disabled=True)
