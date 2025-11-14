@@ -1207,9 +1207,10 @@ line-height:1.5;
             else:
                 st.warning("No Customer Concern defined yet in D1.")
 
-            # Initialize whys lists
+            # Initialize Whys lists with 5 defaults if empty
             for key in ["d5_occ_whys", "d5_det_whys", "d5_sys_whys"]:
-                st.session_state.setdefault(key, [""])
+                if key not in st.session_state:
+                    st.session_state[key] = [""] * 5
 
             # ---------------------------
             # Force D5 tab to stay active until user clicks another tab
@@ -1218,11 +1219,9 @@ line-height:1.5;
             if "force_tab" not in st.session_state:
                 st.session_state["force_tab"] = False
 
-            # Whenever a dropdown or button changes, keep D5 active
             if st.session_state.get("force_tab"):
                 st.session_state["current_tab_index"] = d5_index
                 st.session_state["active_tab_index"] = d5_index
-                # Only reset force_tab after rerun
                 st.session_state["force_tab"] = False
 
             # ---------------------------
@@ -1231,15 +1230,20 @@ line-height:1.5;
             def render_why_section(why_key, categories, label):
                 st.markdown(f"### {label}")
 
-                # Render existing Whys dropdowns first
-                st.session_state[why_key] = render_whys_no_repeat_with_other(
-                    st.session_state[why_key], categories, label
-                )
+                # Render existing Whys dropdowns
+                for i, why in enumerate(st.session_state[why_key]):
+                    index = categories.index(why) if why in categories else 0
+                    st.session_state[why_key][i] = st.selectbox(
+                        f"{label} {i+1}",
+                        options=categories,
+                        index=index,
+                        key=f"{why_key}_{i}"
+                    )
 
-                # Small gap and divider
+                # Divider
                 st.markdown("<div style='margin-top:10px; margin-bottom:5px; border-bottom:1px solid #ddd'></div>", unsafe_allow_html=True)
 
-                # Add button at the end
+                # Add button (only adds when clicked)
                 if st.button(f"➕ Add another {label}", key=f"add_{why_key}"):
                     st.session_state[why_key].append("")
                     st.session_state["force_tab"] = True  # Keep D5 active after adding
@@ -1255,8 +1259,8 @@ line-height:1.5;
                 render_why_section("d5_sys_whys", systemic_categories, t[lang_key]['Systemic_Why'])
 
             # Duplicate check
-            all_whys = [w.strip() for w in st.session_state['d5_occ_whys'] + 
-                        st.session_state['d5_det_whys'] + 
+            all_whys = [w.strip() for w in st.session_state['d5_occ_whys'] +
+                        st.session_state['d5_det_whys'] +
                         st.session_state['d5_sys_whys'] if w.strip()]
             duplicates = [w for w in set(all_whys) if all_whys.count(w) > 1]
             if duplicates:
