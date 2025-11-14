@@ -1276,12 +1276,10 @@ line-height:1.5;
                 n_defaults = 5
                 total_slots = max(n_defaults, len(why_list))
 
-                # Ensure other_list is same length
                 while len(other_list) < total_slots:
                     other_list.append("")
 
                 for idx in range(total_slots):
-                    # Do not append here; only render existing items
                     selected_so_far = [w for i, w in enumerate(why_list) if w.strip() and i != idx and w != "Other"]
                     options = [""] + [
                         f"{cat}: {item}"
@@ -1310,7 +1308,7 @@ line-height:1.5;
                         other_list[idx] = other_val
                     else:
                         why_list[idx] = selection
-                        other_list[idx] = ""  # clear previous Other if changed
+                        other_list[idx] = "" 
 
                 st.session_state[why_key] = why_list
                 st.session_state[other_key] = other_list
@@ -1323,11 +1321,10 @@ line-height:1.5;
                     "<div style='margin-top:10px; margin-bottom:5px; border-bottom:1px solid #ddd'></div>",
                     unsafe_allow_html=True
                 )
-                add_clicked = st.button(f"➕ Add another {label}", key=f"add_{why_key}_btn")
-                if add_clicked:
+                if st.button(f"➕ Add another {label}", key=f"add_{why_key}_btn"):
                     st.session_state[why_key].append("")
                     st.session_state[other_key].append("")
-                    st.session_state["_force_d5_tab"] = True  # keep D5 tab active
+                    st.session_state["_force_d5_tab"] = True  # keep D5 active
 
             # --- Render all three WHY sections ---
             if lang_key == "es":
