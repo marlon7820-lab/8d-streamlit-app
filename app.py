@@ -1241,19 +1241,22 @@ line-height:1.5;
                     unsafe_allow_html=True
                 )
                 
-                # Track whether the +Add button was clicked
-                add_key = f"add_clicked_{why_key}"
-                if add_key not in st.session_state:
-                    st.session_state[add_key] = False
+                # Only add a new Why when the button is clicked
+                add_button_key = f"add_{why_key}_btn"
+                if add_button_key not in st.session_state:
+                    st.session_state[add_button_key] = False
 
-                if st.button(f"➕ Add another {label}", key=f"add_{why_key}"):
-                    st.session_state[why_key].append("")  # Add new dropdown
-                    st.session_state[add_key] = True
-                    st.session_state["current_tab_index"] = [i for i, (s, _, _) in enumerate(npqp_steps) if s == "D5"][0]
+                # Detect click
+                if st.button(f"➕ Add another {label}", key=add_button_key):
+                    st.session_state[why_key].append("")  # Add one new dropdown
+                    st.session_state["force_tab"] = True  # Keep D5 active
 
-                # Only reset add_clicked flag **after rerun**
-                if st.session_state[add_key]:
-                    st.session_state[add_key] = False
+                # Persist tab across reruns
+                if st.session_state.get("force_tab"):
+                    d5_index = [i for i, (s, _, _) in enumerate(npqp_steps) if s == "D5"][0]
+                    st.session_state["current_tab_index"] = d5_index
+                    st.session_state["active_tab_index"] = d5_index
+                    # Do NOT reset force_tab yet; wait until next button click
                     
             # Render the three Why sections
             if lang_key == "es":
