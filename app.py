@@ -1264,22 +1264,19 @@ line-height:1.5;
 
             d5_index = [i for i, (s, _, _) in enumerate(npqp_steps) if s == "D5"][0]
             
-            # Only force D5 tab if triggered by Add button
+            # Persist D5 tab ONLY if triggered by Add button
             if st.session_state.get("_force_d5_tab", False):
                 st.session_state["current_tab_index"] = d5_index
                 st.session_state["active_tab_index"] = d5_index
                 st.session_state["_force_d5_tab"] = False
 
-            # --- Render WHY slots helper ---
+            # --- Helper: render WHY slots ---
             def render_whys(why_key, other_key, categories_dict, label_prefix, lang_key):
                 why_list = st.session_state[why_key]
                 other_list = st.session_state[other_key]
 
-                total_slots = max(5, len(why_list))
-
-                # Ensure both lists are long enough
-                while len(why_list) < total_slots:
-                    why_list.append("")
+                # Render existing slots only
+                total_slots = len(why_list)
                 while len(other_list) < total_slots:
                     other_list.append("")
 
@@ -1294,7 +1291,12 @@ line-height:1.5;
 
                     sel_key = f"{why_key}_sel_{idx}_{lang_key}"
                     current_val = why_list[idx] if why_list[idx] in options else ""
-                    selection = st.selectbox(f"{label_prefix} {idx+1}", options, index=options.index(current_val) if current_val in options else 0, key=sel_key)
+                    selection = st.selectbox(
+                        f"{label_prefix} {idx+1}",
+                        options,
+                        index=options.index(current_val) if current_val in options else 0,
+                        key=sel_key
+                    )
 
                     if selection == "Other":
                         other_val = st.text_input(
@@ -1311,7 +1313,7 @@ line-height:1.5;
                 st.session_state[why_key] = why_list
                 st.session_state[other_key] = other_list
 
-            # --- Render section with Add button ---
+            # --- Helper: render section + Add button ---
             def render_why_section(why_key, other_key, categories, label, lang_key):
                 st.markdown(f"### {label}")
                 render_whys(why_key, other_key, categories, label, lang_key)
