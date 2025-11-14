@@ -1240,11 +1240,20 @@ line-height:1.5;
                     "<div style='margin-top:10px; margin-bottom:5px; border-bottom:1px solid #ddd'></div>",
                     unsafe_allow_html=True
                 )
+                
+                # Track whether the +Add button was clicked
+                add_key = f"add_clicked_{why_key}"
+                if add_key not in st.session_state:
+                    st.session_state[add_key] = False
 
-                # Only add a new Why when the button is clicked
                 if st.button(f"➕ Add another {label}", key=f"add_{why_key}"):
-                    st.session_state[why_key].append("")
-                    st.session_state["force_tab"] = True  # Keep D5 active
+                    st.session_state[why_key].append("")  # Add new dropdown
+                    st.session_state[add_key] = True
+                    st.session_state["current_tab_index"] = [i for i, (s, _, _) in enumerate(npqp_steps) if s == "D5"][0]
+
+                # Only reset add_clicked flag **after rerun**
+                if st.session_state[add_key]:
+                    st.session_state[add_key] = False
                     
             # Render the three Why sections
             if lang_key == "es":
