@@ -1262,21 +1262,22 @@ line-height:1.5;
                 st.session_state.setdefault(key, [""] * 5)
                 st.session_state.setdefault(f"{key}_other", [""] * 5)
 
-            # Persist D5 tab if flagged
             d5_index = [i for i, (s, _, _) in enumerate(npqp_steps) if s == "D5"][0]
+            
+            # Only force D5 tab if triggered by Add button
             if st.session_state.get("_force_d5_tab", False):
                 st.session_state["current_tab_index"] = d5_index
                 st.session_state["active_tab_index"] = d5_index
                 st.session_state["_force_d5_tab"] = False
 
-            # --- Helper: render WHY slots ---
-            def render_whys_fixed_5(why_key, other_key, categories_dict, label_prefix, lang_key):
+            # --- Render WHY slots helper ---
+            def render_whys(why_key, other_key, categories_dict, label_prefix, lang_key):
                 why_list = st.session_state[why_key]
                 other_list = st.session_state[other_key]
-                n_defaults = 5
-                total_slots = max(n_defaults, len(why_list))
 
-                # Ensure lists are same length BEFORE rendering
+                total_slots = max(5, len(why_list))
+
+                # Ensure both lists are long enough
                 while len(why_list) < total_slots:
                     why_list.append("")
                 while len(other_list) < total_slots:
@@ -1291,15 +1292,9 @@ line-height:1.5;
                         if f"{cat}: {item}" not in selected_so_far
                     ] + ["Other"]
 
-                    current_val = why_list[idx] if idx < len(why_list) and why_list[idx] in options else ""
                     sel_key = f"{why_key}_sel_{idx}_{lang_key}"
-
-                    selection = st.selectbox(
-                        f"{label_prefix} {idx+1}",
-                        options,
-                        index=options.index(current_val) if current_val in options else 0,
-                        key=sel_key
-                    )
+                    current_val = why_list[idx] if why_list[idx] in options else ""
+                    selection = st.selectbox(f"{label_prefix} {idx+1}", options, index=options.index(current_val) if current_val in options else 0, key=sel_key)
 
                     if selection == "Other":
                         other_val = st.text_input(
@@ -1316,16 +1311,14 @@ line-height:1.5;
                 st.session_state[why_key] = why_list
                 st.session_state[other_key] = other_list
 
-            # --- Render WHY section + Add button ---
+            # --- Render section with Add button ---
             def render_why_section(why_key, other_key, categories, label, lang_key):
                 st.markdown(f"### {label}")
-                render_whys_fixed_5(why_key, other_key, categories, label, lang_key)
-                st.markdown(
-                    "<div style='margin-top:10px; margin-bottom:5px; border-bottom:1px solid #ddd'></div>",
-                    unsafe_allow_html=True
-                )
-                add_clicked = st.button(f"➕ Add another {label}", key=f"add_{why_key}_btn")
-                if add_clicked:
+                render_whys(why_key, other_key, categories, label, lang_key)
+                st.markdown("<div style='margin-top:10px; margin-bottom:5px; border-bottom:1px solid #ddd'></div>", unsafe_allow_html=True)
+
+                # Only append when Add button clicked
+                if st.button(f"➕ Add another {label}", key=f"add_{why_key}_btn"):
                     st.session_state[why_key].append("")
                     st.session_state[other_key].append("")
                     st.session_state["_force_d5_tab"] = True  # keep D5 tab active
