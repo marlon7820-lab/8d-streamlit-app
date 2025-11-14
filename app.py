@@ -1083,9 +1083,12 @@ if "force_tab" not in st.session_state:
     st.session_state["force_tab"] = None
 if "current_tab_index" not in st.session_state:
     st.session_state["current_tab_index"] = 0
+
 # Ensure D5 lists exist and have at least 5 slots
 for key in ["d5_occ_whys", "d5_det_whys", "d5_sys_whys"]:
     st.session_state.setdefault(key, [""] * 5)
+for key in ["d5_occ_whys_other", "d5_det_whys_other", "d5_sys_whys_other"]:
+    st.session_state.setdefault(key, [""] * 5)  # store "Other" text separately
 
 # --- Process pending D5 +Add requests BEFORE creating tabs ---
 d5_index = [i for i, (s, _, _) in enumerate(npqp_steps) if s == "D5"][0]
@@ -1094,6 +1097,7 @@ for why_key in ["d5_occ_whys", "d5_det_whys", "d5_sys_whys"]:
     if st.session_state.pop(req_key, False):
         # Append exactly one empty slot
         st.session_state[why_key].append("")
+        st.session_state[f"{why_key}_other"].append("")  # keep Other list in sync
         # Ensure D5 becomes the active tab for the next render
         st.session_state["current_tab_index"] = d5_index
         st.session_state["active_tab_index"] = d5_index
