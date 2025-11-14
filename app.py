@@ -1209,21 +1209,16 @@ line-height:1.5;
 
             # Initialize Whys lists with 5 defaults if empty
             for key in ["d5_occ_whys", "d5_det_whys", "d5_sys_whys"]:
-                if key not in st.session_state:
-                    st.session_state[key] = [""] * 5
+                st.session_state.setdefault(key, [""] * 5)
 
             # ---------------------------
-            # Force D5 tab to stay active until user clicks another tab
+            # Persist D5 tab if flagged
             # ---------------------------
-            d5_index = [i for i, (s, _, _) in enumerate(npqp_steps) if s == "D5"][0]
-            if "force_tab" not in st.session_state:
-                st.session_state["force_tab"] = False
-
-            if st.session_state.get("force_tab"):
+            if st.session_state.get("_force_d5_tab"):
+                d5_index = [i for i, (s, _, _) in enumerate(npqp_steps) if s == "D5"][0]
                 st.session_state["current_tab_index"] = d5_index
                 st.session_state["active_tab_index"] = d5_index
-                st.session_state["force_tab"] = False
-
+                st.session_state["_force_d5_tab"] = False
             # ---------------------------
             # Helper to render a Why section with button at the end
             # ---------------------------
@@ -1241,27 +1236,17 @@ line-height:1.5;
                     unsafe_allow_html=True
                 )
                 
+                # Safe +Add button
                 add_button_key = f"add_{why_key}_btn"
-
-                # Streamlit-safe button with session_state assignment
                 if add_button_key not in st.session_state:
                     st.session_state[add_button_key] = False
 
-                # Use st.button with a callback-safe pattern
                 clicked = st.button(f"➕ Add another {label}", key=add_button_key)
                 if clicked:
-                    # Append safely
+                    # Append new Why safely
                     st.session_state[why_key].append("")
-                    # Set a separate flag to force tab persistence
+                    # Flag to force tab persistence
                     st.session_state["_force_d5_tab"] = True
-
-            # Then, at the **start of your D5 code**, persist tab if flag exists:
-            if st.session_state.get("_force_d5_tab"):
-                d5_index = [i for i, (s, _, _) in enumerate(npqp_steps) if s == "D5"][0]
-                st.session_state["current_tab_index"] = d5_index
-                st.session_state["active_tab_index"] = d5_index
-                # Clear the flag **after applying**
-                st.session_state["_force_d5_tab"] = False
                     
             # Render the three Why sections
             if lang_key == "es":
