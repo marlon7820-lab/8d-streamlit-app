@@ -1249,7 +1249,8 @@ line-height:1.5;
             )
 
         # ---------- D5 ----------
-        d1_concern = st.session_state.get("D1", {}).get("answer", "").strip()
+        elif step == "D5":
+            d1_concern = st.session_state.get("D1", {}).get("answer", "").strip()
             if d1_concern:
                 st.info(d1_concern)
                 st.caption("💡 Begin your Why analysis from this concern reported by the customer.")
