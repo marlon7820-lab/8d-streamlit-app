@@ -870,9 +870,12 @@ def suggest_root_cause(whys, lang_key="en"):
         return rc_texts[lang_key]["triple"].format(top_cats[0], top_cats[1])
 
 def render_whys_no_repeat_with_other(why_list, categories, label_prefix, lang_key="en"):
-    for idx in range(len(why_list)):
-        # Build options for this selectbox
-        selected_so_far = [w for i, w in enumerate(why_list) if w.strip() and i != idx]
+    # Make a copy to avoid modifying the list during iteration
+    updated_list = why_list.copy()
+
+    for idx in range(len(updated_list)):
+        # Build options for this selectbox, excluding already selected values
+        selected_so_far = [w for i, w in enumerate(updated_list) if w.strip() and i != idx]
         options = [""] + [
             f"{cat}: {item}" 
             for cat, items in categories.items() 
@@ -880,20 +883,26 @@ def render_whys_no_repeat_with_other(why_list, categories, label_prefix, lang_ke
             if f"{cat}: {item}" not in selected_so_far
         ] + ["Other"]
 
-        current_val = why_list[idx] if why_list[idx] in options else ""
+        current_val = updated_list[idx] if updated_list[idx] in options else ""
         selection = st.selectbox(
             f"{label_prefix} {idx+1}",
             options,
             index=options.index(current_val) if current_val in options else 0,
-            key=f"{label_prefix}_{idx}_{lang_key}"
+            key=f"{label_prefix}_{idx}_{lang_key}"  # stable key
         )
 
         # If "Other" is selected, show a free text box
         if selection == "Other":
-            why_list[idx] = st.text_input(f"Please specify {label_prefix} {idx+1}", key=f"{label_prefix}_{idx}_other_{lang_key}")
+            other_val = st.text_input(
+                f"Please specify {label_prefix} {idx+1}",
+                value=updated_list[idx] if updated_list[idx] not in options else "",
+                key=f"{label_prefix}_{idx}_other_{lang_key}"
+            )
+            updated_list[idx] = other_val
         else:
-            why_list[idx] = selection
-    return why_list
+            updated_list[idx] = selection
+
+    return updated_list
     
 # ---------------------------
 # Helpers (place at top of file)
@@ -1206,13 +1215,15 @@ line-height:1.5;
             # Force D5 tab to stay active until user clicks another tab
             # ---------------------------
             d5_index = [i for i, (s, _, _) in enumerate(npqp_steps) if s == "D5"][0]
-            if "force_d5_tab" not in st.session_state:
-                st.session_state["force_d5_tab"] = True
+            if "force_tab" not in st.session_state:
+                st.session_state["force_tab"] = False
 
-            # If force flag is True, keep D5 active
-            if st.session_state.get("force_d5_tab"):
+            # Whenever a dropdown or button changes, keep D5 active
+            if st.session_state.get("force_tab"):
                 st.session_state["current_tab_index"] = d5_index
                 st.session_state["active_tab_index"] = d5_index
+                # Only reset force_tab after rerun
+                st.session_state["force_tab"] = False
 
             # ---------------------------
             # Helper to render a Why section with button at the end
@@ -1220,7 +1231,7 @@ line-height:1.5;
             def render_why_section(why_key, categories, label):
                 st.markdown(f"### {label}")
 
-                # Render dropdowns
+                # Render existing Whys dropdowns first
                 st.session_state[why_key] = render_whys_no_repeat_with_other(
                     st.session_state[why_key], categories, label
                 )
@@ -1231,7 +1242,7 @@ line-height:1.5;
                 # Add button at the end
                 if st.button(f"➕ Add another {label}", key=f"add_{why_key}"):
                     st.session_state[why_key].append("")
-                    st.session_state["force_d5_tab"] = True  # Keep D5 active until user clicks another tab
+                    st.session_state["force_tab"] = True  # Keep D5 active after adding
 
             # Render the three Why sections
             if lang_key == "es":
@@ -1244,7 +1255,9 @@ line-height:1.5;
                 render_why_section("d5_sys_whys", systemic_categories, t[lang_key]['Systemic_Why'])
 
             # Duplicate check
-            all_whys = [w.strip() for w in st.session_state['d5_occ_whys'] + st.session_state['d5_det_whys'] + st.session_state['d5_sys_whys'] if w.strip()]
+            all_whys = [w.strip() for w in st.session_state['d5_occ_whys'] + 
+                        st.session_state['d5_det_whys'] + 
+                        st.session_state['d5_sys_whys'] if w.strip()]
             duplicates = [w for w in set(all_whys) if all_whys.count(w) > 1]
             if duplicates:
                 st.warning(f"⚠️ Duplicate entries detected: {', '.join(duplicates)}")
