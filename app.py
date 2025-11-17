@@ -1313,17 +1313,20 @@ line-height:1.5;
                 st.session_state[why_key] = why_list
                 st.session_state[other_key] = other_list
 
-            # --- Helper: render section + Add button ---
+             # --- WHY section wrapper ---
             def render_why_section(why_key, other_key, categories, label, lang_key):
                 st.markdown(f"### {label}")
                 render_whys(why_key, other_key, categories, label, lang_key)
-                st.markdown("<div style='margin-top:10px; margin-bottom:5px; border-bottom:1px solid #ddd'></div>", unsafe_allow_html=True)
 
-              # Add-button: ONLY place that appends. Fixed now.
-              if st.button(f"➕ Add another {label}", key=f"add_{why_key}_btn"):
-                  st.session_state[why_key].append("")
-                  st.session_state[other_key].append("")
-                  st.session_state["_force_d5_tab"] = True
+                st.markdown(
+                    "<div style='margin-top:10px; margin-bottom:5px; border-bottom:1px solid #ddd'></div>",
+                    unsafe_allow_html=True,
+                )
+                # Add-button: ONLY place that appends. Fixed now.
+                if st.button(f"➕ Add another {label}", key=f"add_{why_key}_btn"):
+                    st.session_state[why_key].append("")
+                    st.session_state[other_key].append("")
+                    st.session_state["_force_d5_tab"] = True
 
             # --- Render all three WHY sections ---
             if lang_key == "es":
