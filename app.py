@@ -109,12 +109,21 @@ textarea, input[type="text"] {
 if st.session_state.get("_reset_8d_session", False):
     preserve_keys = ["lang", "lang_key", "current_tab"]
     preserved = {k: st.session_state[k] for k in preserve_keys if k in st.session_state}
+
+    # wipe everything else
     for key in list(st.session_state.keys()):
-        if key not in preserve_keys and key != "_reset_8d_session":
+        if key not in preserve_keys:
             del st.session_state[key]
+
+    # restore preserved
     for k, v in preserved.items():
         st.session_state[k] = v
+
     st.session_state["_reset_8d_session"] = False
+
+    # IMPORTANT: do not rerun immediately
+    st.experimental_set_query_params(reset="done")
+    st.stop()
 
     # ---------------------------
     # ✅ Re-initialize 8D structure cleanly to avoid KeyErrors
@@ -133,9 +142,12 @@ if st.session_state.get("_reset_8d_session", False):
         st.session_state[step] = default_template.copy()
 
     # ✅ Recreate WHY lists for D5
-    st.session_state["d5_occ_whys"] = []
-    st.session_state["d5_det_whys"] = []
-    st.session_state["d5_sys_whys"] = []
+    if "d5_occ_whys" not in st.session_state:
+        st.session_state["d5_occ_whys"] = []
+    if "d5_det_whys" not in st.session_state:
+        st.session_state["d5_det_whys"] = []
+    if "d5_sys_whys" not in st.session_state:
+        st.session_state["d5_sys_whys"] = []
     st.rerun()
 
 # ---------------------------
