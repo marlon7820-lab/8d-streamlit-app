@@ -107,8 +107,8 @@ textarea, input[type="text"] {
 # Reset Session check
 # ---------------------------
 if st.session_state.get("_reset_8d_session", False):
-    preserve_keys = ["lang", "lang_key", "current_tab"]
-    preserved = {k: st.session_state[k] for k in preserve_keys if k in st.session_state}
+    preserve_keys = ["lang", "lang_key", "current_tab", "report_date", "prepared_by"]
+    preserved = {k: st.session_state.get(k) for k in preserve_keys if k in st.session_state}
 
     # wipe everything else
     for key in list(st.session_state.keys()):
@@ -120,10 +120,6 @@ if st.session_state.get("_reset_8d_session", False):
         st.session_state[k] = v
 
     st.session_state["_reset_8d_session"] = False
-
-    # IMPORTANT: do not rerun immediately
-    st.experimental_set_query_params(reset="done")
-    st.stop()
 
     # ---------------------------
     # ✅ Re-initialize 8D structure cleanly to avoid KeyErrors
@@ -141,14 +137,18 @@ if st.session_state.get("_reset_8d_session", False):
     for step in ["D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8"]:
         st.session_state[step] = default_template.copy()
 
-    # ✅ Recreate WHY lists for D5
-    if "d5_occ_whys" not in st.session_state:
-        st.session_state["d5_occ_whys"] = []
-    if "d5_det_whys" not in st.session_state:
-        st.session_state["d5_det_whys"] = []
-    if "d5_sys_whys" not in st.session_state:
-        st.session_state["d5_sys_whys"] = []
-    st.rerun()
+    # Recreate WHY lists for D5
+    st.session_state.setdefault("d5_occ_whys", [""] * 5)
+    st.session_state.setdefault("d5_det_whys", [""] * 5)
+    st.session_state.setdefault("d5_sys_whys", [""] * 5)
+
+    # Separate storage for "Other" text
+    st.session_state.setdefault("d5_occ_whys_other", [""] * 5)
+    st.session_state.setdefault("d5_det_whys_other", [""] * 5)
+    st.session_state.setdefault("d5_sys_whys_other", [""] * 5)
+
+    st.experimental_set_query_params(reset="done")
+    st.stop()
 
 # ---------------------------
 # Main title
@@ -176,13 +176,8 @@ st.sidebar.header("Settings")
 
 lang = st.sidebar.selectbox("Select Language / Seleccionar Idioma", ["English", "Español"])
 lang_key = "en" if lang == "English" else "es"
-# ---------------------------
-# Dynamic spellcheck language (English ↔ Spanish)
-# ---------------------------
-if lang == "English":
-    spell_lang = "en"
-else:
-    spell_lang = "es"
+spell_lang = "en" if lang == "English" else "es"
+
 dark_mode = st.sidebar.checkbox("🌙 Dark Mode")
 if dark_mode:
     st.markdown("""
@@ -522,9 +517,10 @@ st.session_state.setdefault("report_date", datetime.datetime.today().strftime("%
 st.session_state.setdefault("prepared_by", "")
 
 # D5 why analysis lists
-st.session_state.setdefault("d5_occ_whys", [""] * 5)
-st.session_state.setdefault("d5_det_whys", [""] * 5)
-st.session_state.setdefault("d5_sys_whys", [""] * 5)
+for key in ["d5_occ_whys", "d5_det_whys", "d5_sys_whys"]:
+    st.session_state.setdefault(key, [""] * 5)
+for key in ["d5_occ_whys_other", "d5_det_whys_other", "d5_sys_whys_other"]:
+    st.session_state.setdefault(key, [""] * 5)
 
 # D4 containment details
 st.session_state.setdefault("d4_location", "")
@@ -1106,14 +1102,11 @@ for key in ["d5_occ_whys_other", "d5_det_whys_other", "d5_sys_whys_other"]:
 # Process pending D5 +Add requests BEFORE creating tabs
 # ---------------------------
 d5_index = [i for i, (s, _, _) in enumerate(npqp_steps) if s == "D5"][0]
-
 for why_key in ["d5_occ_whys", "d5_det_whys", "d5_sys_whys"]:
     req_key = f"_request_add_{why_key}"
     if st.session_state.pop(req_key, False):
-        # Append exactly one empty slot to both main list and _other list
         st.session_state[why_key].append("")
         st.session_state[f"{why_key}_other"].append("")
-        # Keep D5 tab active
         st.session_state["_force_d5_tab"] = True
         st.session_state["current_tab_index"] = d5_index
         st.session_state["active_tab_index"] = d5_index
