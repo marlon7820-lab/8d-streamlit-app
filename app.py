@@ -1319,11 +1319,11 @@ line-height:1.5;
                 render_whys(why_key, other_key, categories, label, lang_key)
                 st.markdown("<div style='margin-top:10px; margin-bottom:5px; border-bottom:1px solid #ddd'></div>", unsafe_allow_html=True)
 
-                # Only append when Add button clicked
-                if st.button(f"➕ Add another {label}", key=f"add_{why_key}_btn"):
-                    st.session_state[why_key].append("")
-                    st.session_state[other_key].append("")
-                    st.session_state["_force_d5_tab"] = True  # keep D5 tab active
+              # Add-button: ONLY place that appends. Fixed now.
+              if st.button(f"➕ Add another {label}", key=f"add_{why_key}_btn"):
+                  st.session_state[why_key].append("")
+                  st.session_state[other_key].append("")
+                  st.session_state["_force_d5_tab"] = True
 
             # --- Render all three WHY sections ---
             if lang_key == "es":
