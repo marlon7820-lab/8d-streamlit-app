@@ -1133,7 +1133,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
         if st.session_state.get("active_tab_index") != i:
             st.session_state["active_tab_index"] = i
         # Keep tab active after rerun
-        if st.session_state.get("current_tab_index") != st.session_state["active_tab_index"]:
+        if not st.session_state.get("_force_d5_tab", False):
             st.session_state["current_tab_index"] = st.session_state["active_tab_index"]
 
         # --- Step header ---
@@ -1257,31 +1257,39 @@ line-height:1.5;
             else:
                 st.warning("No Customer Concern defined yet in D1.")
 
-            # Ensure lists exist (including _other for "Other" text inputs)
+            # --- Ensure lists exist ---
             for key in ["d5_occ_whys", "d5_det_whys", "d5_sys_whys"]:
                 st.session_state.setdefault(key, [""] * 5)
                 st.session_state.setdefault(f"{key}_other", [""] * 5)
 
+            # Get index of D5 tab
             d5_index = [i for i, (s, _, _) in enumerate(npqp_steps) if s == "D5"][0]
-            
-            # Persist D5 tab ONLY if triggered by Add button
-            if st.session_state.get("_force_d5_tab", False):
-                st.session_state["current_tab_index"] = d5_index
-                st.session_state["active_tab_index"] = d5_index
-                st.session_state["_force_d5_tab"] = False
 
-            # --- Helper: render WHY slots ---
+            # If Add button was clicked earlier, force D5 to stay active
+            if st.session_state.get("_force_d5_tab", False):
+                st.session_state["active_tab_index"] = d5_index
+                st.session_state["current_tab_index"] = d5_index
+                st.session_state["_force_d5_tab"] = False   # reset after forcing
+
+            # --- WHY rendering ---
             def render_whys(why_key, other_key, categories_dict, label_prefix, lang_key):
                 why_list = st.session_state[why_key]
                 other_list = st.session_state[other_key]
 
-                # Render existing slots only
-                total_slots = len(why_list)
+                total_slots = max(5, len(why_list))
+
+                # Ensure lengths
+                while len(why_list) < total_slots:
+                    why_list.append("")
                 while len(other_list) < total_slots:
                     other_list.append("")
 
                 for idx in range(total_slots):
-                    selected_so_far = [w for i, w in enumerate(why_list) if w.strip() and i != idx and w != "Other"]
+                    selected_so_far = [
+                        w for i, w in enumerate(why_list)
+                        if w.strip() and i != idx and w != "Other"
+                    ]
+
                     options = [""] + [
                         f"{cat}: {item}"
                         for cat, items in categories_dict.items()
@@ -1291,6 +1299,7 @@ line-height:1.5;
 
                     sel_key = f"{why_key}_sel_{idx}_{lang_key}"
                     current_val = why_list[idx] if why_list[idx] in options else ""
+
                     selection = st.selectbox(
                         f"{label_prefix} {idx+1}",
                         options,
@@ -1306,26 +1315,31 @@ line-height:1.5;
                         )
                         why_list[idx] = "Other"
                         other_list[idx] = other_val
+
                     else:
                         why_list[idx] = selection
-                        other_list[idx] = ""  # clear previous Other if changed
+                        other_list[idx] = ""
 
                 st.session_state[why_key] = why_list
                 st.session_state[other_key] = other_list
 
-            # --- Helper: render section + Add button ---
+            # --- WHY section wrapper ---
             def render_why_section(why_key, other_key, categories, label, lang_key):
                 st.markdown(f"### {label}")
                 render_whys(why_key, other_key, categories, label, lang_key)
-                st.markdown("<div style='margin-top:10px; margin-bottom:5px; border-bottom:1px solid #ddd'></div>", unsafe_allow_html=True)
 
-                # Only append when Add button clicked
+                st.markdown(
+                    "<div style='margin-top:10px; margin-bottom:5px; border-bottom:1px solid #ddd'></div>",
+                    unsafe_allow_html=True,
+                )
+
+                # Add-button: ONLY place that appends. Fixed now.
                 if st.button(f"➕ Add another {label}", key=f"add_{why_key}_btn"):
                     st.session_state[why_key].append("")
                     st.session_state[other_key].append("")
-                    st.session_state["_force_d5_tab"] = True  # keep D5 tab active
+                    st.session_state["_force_d5_tab"] = True
 
-            # --- Render all three WHY sections ---
+            # Render sections
             if lang_key == "es":
                 render_why_section("d5_occ_whys", "d5_occ_whys_other", occurrence_categories_es, t[lang_key]['Occurrence_Why'], lang_key)
                 render_why_section("d5_det_whys", "d5_det_whys_other", detection_categories_es, t[lang_key]['Detection_Why'], lang_key)
@@ -1335,7 +1349,7 @@ line-height:1.5;
                 render_why_section("d5_det_whys", "d5_det_whys_other", detection_categories, t[lang_key]['Detection_Why'], lang_key)
                 render_why_section("d5_sys_whys", "d5_sys_whys_other", systemic_categories, t[lang_key]['Systemic_Why'], lang_key)
 
-            # --- Duplicate check ---
+            # Duplicate check
             all_whys = []
             for key in ["d5_occ_whys", "d5_det_whys", "d5_sys_whys"]:
                 for val, other_val in zip(st.session_state[key], st.session_state[f"{key}_other"]):
@@ -1348,7 +1362,7 @@ line-height:1.5;
             if duplicates:
                 st.warning(f"⚠️ Duplicate entries detected: {', '.join(duplicates)}")
 
-            # --- Smart Root Cause ---
+            # AI Root-cause suggestions
             occ_text, det_text, sys_text = smart_root_cause_suggestion(
                 d1_concern,
                 [val if val != "Other" else other for val, other in zip(st.session_state['d5_occ_whys'], st.session_state['d5_occ_whys_other']) if (val.strip() or other.strip())],
