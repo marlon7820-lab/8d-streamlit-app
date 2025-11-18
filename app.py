@@ -1157,7 +1157,7 @@ st.session_state["active_tab_index"] = st.session_state["main_tabs_container"]
 
 
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
-    with tabs[i]: # Fixed line 1166
+    with tabs[i]:
         # --- Step header ---
         st.markdown(f"### {t[lang_key][step]}")
         # ... (rest of the tab loop content follows) ...
