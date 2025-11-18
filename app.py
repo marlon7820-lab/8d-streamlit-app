@@ -1155,17 +1155,12 @@ tabs = st.tabs(
 st.session_state["current_tab_index"] = st.session_state["main_tabs_container"]
 st.session_state["active_tab_index"] = st.session_state["main_tabs_container"]
 
-# The tab-click logic inside the loop is now redundant and removed:
-# if st.session_state.get("active_tab_index") != i:
-#     st.session_state["active_tab_index"] = i
-# if st.session_state.get("current_tab_index") != st.session_state["active_tab_index"]:
-#     st.session_state["current_tab_index"] = st.session_state["active_tab_index"]
-
 
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
-    with tabs[i]:
+    with tabs[i]: # <--- This line must be indented only by 4 spaces!
         # --- Step header ---
         st.markdown(f"### {t[lang_key][step]}")
+# ... (rest of the tab loop content follows) ...
 
         # Training Guidance & Example (retained)
         note_text = note_dict[lang_key]
