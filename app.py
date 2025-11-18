@@ -1089,13 +1089,13 @@ st.write(f"Completed {progress} of {len(steps)} steps")
 ## 🛠️ FIX 1: Tab Persistence Setup (Removed "force_tab" and cleaned init)
 # --------------------------------------------------------------------------
 if "current_tab_index" not in st.session_state:
-    st.session_state["current_tab_index"] = 0
+    st.session_state["current_tab_index"] = 0
 
 # Ensure D5 lists exist and have at least 5 slots
 for key in ["d5_occ_whys", "d5_det_whys", "d5_sys_whys"]:
-    st.session_state.setdefault(key, [""] * 5)
+    st.session_state.setdefault(key, [""] * 5)
 for key in ["d5_occ_whys_other", "d5_det_whys_other", "d5_sys_whys_other"]:
-    st.session_state.setdefault(key, [""] * 5)  # store "Other" text separately
+    st.session_state.setdefault(key, [""] * 5)  # store "Other" text separately
 
 # --------------------------------------------------------------------------
 ## 🛠️ FIX 2: Removed conflicting D5 +Add request processing (Handled by callback now)
