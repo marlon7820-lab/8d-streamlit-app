@@ -1271,12 +1271,6 @@ line-height:1.5;
                 height=150
             )
 
-# ---------------------------
-# Update current_tab_index after rendering
-# ---------------------------
-st.session_state["current_tab_index"] = current_index
-
-        # ---------- D5 (MODIFIED) ----------
         elif step == "D5":
             d1_concern = st.session_state.get("D1", {}).get("answer", "").strip()
             if d1_concern:
