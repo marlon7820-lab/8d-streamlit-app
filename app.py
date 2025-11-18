@@ -1516,6 +1516,15 @@ def generate_excel():
             ws.add_image(img, "A1")
         except Exception: # Good practice to catch specific errors, but pass is fine here
             pass
+    # Bilingual main title
+    main_title = "📋 Asistente de Informe 8D" if lang_key == "es" else "📋 8D Report Assistant"
+    ws.merge_cells(start_row=3, start_column=1, end_row=3, end_column=3)
+    ws.cell(row=3, column=1, value=main_title).font = Font(bold=True, size=14)
+
+    # Bilingual header info
+    ws.append([t[lang_key]['Report_Date'], st.session_state.report_date])
+    ws.append([t[lang_key]['Prepared_By'], st.session_state.prepared_by])
+    ws.append([])
 
     # Header row
     header_row = ws.max_row + 1
