@@ -1143,33 +1143,31 @@ for step, _, _ in npqp_steps:
     tab_labels.append(f"🟢 {t[lang_key][step]}" if filled else f"🔴 {t[lang_key][step]}")
 
 # ---------------------------
-# Safety check
+# Safety check: ensure tab_labels is valid
 # ---------------------------
 if not tab_labels or not all(isinstance(l, str) for l in tab_labels):
     st.error("⚠️ tab_labels is invalid! It must be a non-empty list of strings.")
     st.stop()
 
 # ---------------------------
-# Ensure current_tab_index is valid
+# Ensure current_tab_index exists
 # ---------------------------
 if "current_tab_index" not in st.session_state:
     st.session_state["current_tab_index"] = 0
 
-current_index = st.session_state.get("current_tab_index", 0)
-if current_index >= len(tab_labels):
-    current_index = 0
-    st.session_state["current_tab_index"] = 0
-
 # ---------------------------
-# Render Tabs
+# Render Tabs (no index argument)
 # ---------------------------
-tabs = st.tabs(tab_labels, key="main_tabs_container", index=current_index)
+tabs = st.tabs(tab_labels, key="main_tabs_container")
 
 # ---------------------------
 # Loop through steps
 # ---------------------------
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     with tabs[i]:
+        # Remember which tab the user is currently on
+        st.session_state["current_tab_index"] = i
+
         # --- Step header ---
         st.markdown(f"### {t[lang_key][step]}")
 
@@ -1206,11 +1204,13 @@ line-height:1.5;
                 key=f"upload_{step}"
             )
 
+            # Save uploaded files to session state
             if uploaded_files:
                 for file in uploaded_files:
                     if file not in st.session_state[step].get("uploaded_files", []):
                         st.session_state[step].setdefault("uploaded_files", []).append(file)
 
+            # Display uploaded files
             if st.session_state[step].get("uploaded_files"):
                 st.markdown("**Uploaded Files / Photos:**")
                 for f in st.session_state[step]["uploaded_files"]:
@@ -1221,7 +1221,9 @@ line-height:1.5;
                         except:
                             pass
 
-        # --- Step-specific inputs ---
+        # ---------------------------
+        # Step-specific inputs
+        # ---------------------------
         if step == "D1":
             st.session_state.setdefault(step, {"answer": ""})
             st.session_state[step]["answer"] = st.text_area(
@@ -1270,7 +1272,6 @@ line-height:1.5;
                 value=st.session_state["D4"]["answer"],
                 height=150
             )
-
         elif step == "D5":
             d1_concern = st.session_state.get("D1", {}).get("answer", "").strip()
             if d1_concern:
