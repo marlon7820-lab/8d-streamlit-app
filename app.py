@@ -1147,20 +1147,18 @@ for step, _, _ in npqp_steps:
 # --------------------------------------------------------------------------
 tabs = st.tabs(
     tab_labels,
-    key="main_tabs_container", # Unique key for the st.tabs widget
-    index=st.session_state.get("current_tab_index", 0) # Use the stored index to set the active tab
+    key="main_tabs_container",
+    index=st.session_state.get("current_tab_index", 0)
 )
 
-# After rendering, update the state from the widget's current value
+# After rendering, update the state
 st.session_state["current_tab_index"] = st.session_state["main_tabs_container"]
 st.session_state["active_tab_index"] = st.session_state["main_tabs_container"]
-
 
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     with tabs[i]:
         # --- Step header ---
         st.markdown(f"### {t[lang_key][step]}")
-        # ... (rest of the tab loop content follows) ...
 
         # Training Guidance & Example (retained)
         note_text = note_dict[lang_key]
@@ -1181,12 +1179,12 @@ line-height:1.5;
 </div>
 """, unsafe_allow_html=True)
 
-        # Step-specific guidance expander (retained)
+        # Step-specific guidance expander
         gc = guidance_content[step][lang_key]
         with st.expander(f"📘 {gc['title']}"):
             st.markdown(gc["tips"])
 
-        # File uploads for D1, D3, D4, D7 (retained)
+        # File uploads for D1, D3, D4, D7
         if step in ["D1", "D3", "D4", "D7"]:
             uploaded_files = st.file_uploader(
                 f"Upload files/photos for {step}",
@@ -1194,6 +1192,7 @@ line-height:1.5;
                 accept_multiple_files=True,
                 key=f"upload_{step}"
             )
+
             if uploaded_files:
                 for file in uploaded_files:
                     if file not in st.session_state[step].get("uploaded_files", []):
@@ -1203,14 +1202,11 @@ line-height:1.5;
                 st.markdown("**Uploaded Files / Photos:**")
                 for f in st.session_state[step]["uploaded_files"]:
                     st.write(f"{f.name}")
-                    # Simplified image display logic (optional check if it works)
                     if f.type.startswith("image/"):
                         try:
                             st.image(f, width=192)
                         except:
                             pass
-
-
         # ---------------------------
         # Step-specific inputs
         # ---------------------------
