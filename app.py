@@ -1142,36 +1142,34 @@ for step, _, _ in npqp_steps:
         filled = st.session_state.get(step, {}).get("answer", "").strip() != ""
     tab_labels.append(f"🟢 {t[lang_key][step]}" if filled else f"🔴 {t[lang_key][step]}")
 
-# --------------------------------------------------------------------------
-## 🛠️ FIX 4: Render Tabs (Use explicit key and index)
-# --------------------------------------------------------------------------
-tabs = st.tabs(
-    tab_labels,
-    key="main_tabs_container",
-    index=st.session_state.get("current_tab_index", 0)
-)
-
-# After rendering, update the state with the current active tab index
+# ---------------------------
+# Ensure current_tab_index is valid
+# ---------------------------
 if "current_tab_index" not in st.session_state:
     st.session_state["current_tab_index"] = 0
 
-# Optional: store active tab separately if needed
-st.session_state["active_tab_index"] = st.session_state["current_tab_index"]
+current_index = st.session_state.get("current_tab_index", 0)
+if current_index >= len(tab_labels):
+    current_index = 0
+    st.session_state["current_tab_index"] = 0
 
+# ---------------------------
+# Render Tabs
+# ---------------------------
+tabs = st.tabs(tab_labels, key="main_tabs_container", index=current_index)
+
+# ---------------------------
+# Loop through steps
+# ---------------------------
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     with tabs[i]:
         # --- Step header ---
         st.markdown(f"### {t[lang_key][step]}")
 
-        # Training Guidance & Example (retained)
+        # --- Training Guidance & Example ---
         note_text = note_dict[lang_key]
         example_text = example_dict[lang_key]
-        st.markdown(f"""
-        **Guidance:** {note_text}
-
-        **Example:** {example_text}
-        """)
-st.markdown(f"""      
+        st.markdown(f"""      
 <div style="
 background-color:#b3e0ff;
 color:black;
@@ -1187,36 +1185,36 @@ line-height:1.5;
 </div>
 """, unsafe_allow_html=True)
 
-# Step-specific guidance expander
-gc = guidance_content[step][lang_key]
-with st.expander(f"📘 {gc['title']}"):
-    st.markdown(gc["tips"])
+        # --- Step-specific guidance expander ---
+        gc = guidance_content[step][lang_key]
+        with st.expander(f"📘 {gc['title']}"):
+            st.markdown(gc["tips"])
 
-# File uploads for D1, D3, D4, D7
-if step in ["D1", "D3", "D4", "D7"]:
-    uploaded_files = st.file_uploader(
-        f"Upload files/photos for {step}",
-        type=["png", "jpg", "jpeg", "pdf", "xlsx", "txt"],
-        accept_multiple_files=True,
-        key=f"upload_{step}"
-    )
+        # --- File uploads for D1, D3, D4, D7 ---
+        if step in ["D1", "D3", "D4", "D7"]:
+            uploaded_files = st.file_uploader(
+                f"Upload files/photos for {step}",
+                type=["png", "jpg", "jpeg", "pdf", "xlsx", "txt"],
+                accept_multiple_files=True,
+                key=f"upload_{step}"
+            )
 
-    # Save uploaded files to session state
-    if uploaded_files:
-        for file in uploaded_files:
-            if file not in st.session_state[step].get("uploaded_files", []):
-                st.session_state[step].setdefault("uploaded_files", []).append(file)
+            # Save uploaded files to session state
+            if uploaded_files:
+                for file in uploaded_files:
+                    if file not in st.session_state[step].get("uploaded_files", []):
+                        st.session_state[step].setdefault("uploaded_files", []).append(file)
 
-    # Display uploaded files
-    if st.session_state[step].get("uploaded_files"):
-        st.markdown("**Uploaded Files / Photos:**")
-        for f in st.session_state[step]["uploaded_files"]:
-            st.write(f"{f.name}")
-            if f.type.startswith("image/"):
-                try:
-                    st.image(f, width=192)
-                except:
-                    pass
+            # Display uploaded files
+            if st.session_state[step].get("uploaded_files"):
+                st.markdown("**Uploaded Files / Photos:**")
+                for f in st.session_state[step]["uploaded_files"]:
+                    st.write(f"{f.name}")
+                    if f.type.startswith("image/"):
+                        try:
+                            st.image(f, width=192)
+                        except:
+                            pass
         # ---------------------------
         # Step-specific inputs
         # ---------------------------
