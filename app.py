@@ -1163,14 +1163,14 @@ st.session_state["active_tab_index"] = st.session_state["main_tabs_container"]
 
 
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
-    with tabs[i]:
-        # --- Step header ---
-        st.markdown(f"### {t[lang_key][step]}")
+    with tabs[i]:
+        # --- Step header ---
+        st.markdown(f"### {t[lang_key][step]}")
 
-        # Training Guidance & Example (retained)
-        note_text = note_dict[lang_key]
-        example_text = example_dict[lang_key]
-        st.markdown(f"""
+        # Training Guidance & Example (retained)
+        note_text = note_dict[lang_key]
+        example_text = example_dict[lang_key]
+        st.markdown(f"""
 <div style="
 background-color:#b3e0ff;
 color:black;
@@ -1186,39 +1186,40 @@ line-height:1.5;
 </div>
 """, unsafe_allow_html=True)
 
-        # Step-specific guidance expander (retained)
-        gc = guidance_content[step][lang_key]
-        with st.expander(f"📘 {gc['title']}"):
-            st.markdown(gc["tips"])
+        # Step-specific guidance expander (retained)
+        gc = guidance_content[step][lang_key]
+        with st.expander(f"📘 {gc['title']}"):
+            st.markdown(gc["tips"])
 
-        # File uploads for D1, D3, D4, D7 (retained)
-        if step in ["D1", "D3", "D4", "D7"]:
-            uploaded_files = st.file_uploader(
-                f"Upload files/photos for {step}",
-                type=["png", "jpg", "jpeg", "pdf", "xlsx", "txt"],
-                accept_multiple_files=True,
-                key=f"upload_{step}"
-            )
-            if uploaded_files:
-                for file in uploaded_files:
-                    if file not in st.session_state[step].get("uploaded_files", []):
-                        st.session_state[step].setdefault("uploaded_files", []).append(file)
+        # File uploads for D1, D3, D4, D7 (retained)
+        if step in ["D1", "D3", "D4", "D7"]:
+            uploaded_files = st.file_uploader(
+                f"Upload files/photos for {step}",
+                type=["png", "jpg", "jpeg", "pdf", "xlsx", "txt"],
+                accept_multiple_files=True,
+                key=f"upload_{step}"
+            )
+            if uploaded_files:
+                for file in uploaded_files:
+                    if file not in st.session_state[step].get("uploaded_files", []):
+                        st.session_state[step].setdefault("uploaded_files", []).append(file)
 
-            if st.session_state[step].get("uploaded_files"):
-                st.markdown("**Uploaded Files / Photos:**")
-                for f in st.session_state[step]["uploaded_files"]:
-                    st.write(f"{f.name}")
-                    # Simplified image display logic (optional check if it works)
-                    if f.type.startswith("image/"):
-                        try:
-                            st.image(f, width=192)
-                        except:
-                            pass
+            if st.session_state[step].get("uploaded_files"):
+                st.markdown("**Uploaded Files / Photos:**")
+                for f in st.session_state[step]["uploaded_files"]:
+                    st.write(f"{f.name}")
+                    # Simplified image display logic (optional check if it works)
+                    if f.type.startswith("image/"):
+                        try:
+                            st.image(f, width=192)
+                        except:
+                            pass
+
 
         # ---------------------------
         # Step-specific inputs
         # ---------------------------
-        # D1: Customer Concern
+        # D1: Customer Concern (retained)
         if step == "D1":
             st.session_state.setdefault(step, {"answer": ""})
             st.session_state[step]["answer"] = st.text_area(
@@ -1227,7 +1228,7 @@ line-height:1.5;
                 height=150
             )
 
-        # D3: Inspection Stage + Initial Analysis
+        # D3: Inspection Stage + Initial Analysis (retained)
         elif step == "D3":
             # Ensure D3 exists and has the right keys
             if "D3" not in st.session_state:
@@ -1257,6 +1258,7 @@ line-height:1.5;
                 height=150
             )
         
+        # D4: Containment (retained)
         elif step == "D4":
             # D4 Location / Status / Containment Actions
             st.session_state[step].setdefault("location", [])
@@ -1280,137 +1282,129 @@ line-height:1.5;
                 t[lang_key]["Containment_Actions"], value=st.session_state[step]["answer"], height=150
             )
 
-        # ---------- D5 ----------
+        # ---------- D5 (MODIFIED) ----------
         elif step == "D5":
-            d1_concern = st.session_state.get("D1", {}).get("answer", "").strip()
-            if d1_concern:
-                st.info(d1_concern)
-                st.caption("💡 Begin your Why analysis from this concern reported by the customer.")
-            else:
-                st.warning("No Customer Concern defined yet in D1.")
+            d1_concern = st.session_state.get("D1", {}).get("answer", "").strip()
+            if d1_concern:
+                st.info(d1_concern)
+                st.caption("💡 Begin your Why analysis from this concern reported by the customer.")
+            else:
+                st.warning("No Customer Concern defined yet in D1.")
 
-            # Ensure lists exist (including _other for "Other" text inputs)
-            for key in ["d5_occ_whys", "d5_det_whys", "d5_sys_whys"]:
-                st.session_state.setdefault(key, [""] * 5)
-                st.session_state.setdefault(f"{key}_other", [""] * 5)
+            # Ensure lists exist (including _other for "Other" text inputs)
+            for key in ["d5_occ_whys", "d5_det_whys", "d5_sys_whys"]:
+                st.session_state.setdefault(key, [""] * 5)
+                st.session_state.setdefault(f"{key}_other", [""] * 5)
 
-            # NOTE: Removed the entire "_force_d5_tab" block here as it's handled by the tab index update.
-            # d5_index = [i for i, (s, _, _) in enumerate(npqp_steps) if s == "D5"][0]
-            
-            # if st.session_state.get("_force_d5_tab", False):
-            #     st.session_state["current_tab_index"] = d5_index
-            #     st.session_state["active_tab_index"] = d5_index
-            #     st.session_state["_force_d5_tab"] = False
-            
-            # --- Helper: render WHY slots (retained, only button call changes) ---
-            def render_whys(why_key, other_key, categories_dict, label_prefix, lang_key):
-                why_list = st.session_state[why_key]
-                other_list = st.session_state[other_key]
+            
+            # --- Helper: render WHY slots (retained, only button call changes) ---
+            def render_whys(why_key, other_key, categories_dict, label_prefix, lang_key):
+                why_list = st.session_state[why_key]
+                other_list = st.session_state[other_key]
 
-                # Render existing slots only
-                total_slots = len(why_list)
-                while len(other_list) < total_slots:
-                    other_list.append("")
+                # Render existing slots only
+                total_slots = len(why_list)
+                while len(other_list) < total_slots:
+                    other_list.append("")
 
-                for idx in range(total_slots):
-                    selected_so_far = [w for i, w in enumerate(why_list) if w.strip() and i != idx and w != "Other"]
-                    options = [""] + [
-                        f"{cat}: {item}"
-                        for cat, items in categories_dict.items()
-                        for item in items
-                        if f"{cat}: {item}" not in selected_so_far
-                    ] + ["Other"]
+                for idx in range(total_slots):
+                    selected_so_far = [w for i, w in enumerate(why_list) if w.strip() and i != idx and w != "Other"]
+                    options = [""] + [
+                        f"{cat}: {item}"
+                        for cat, items in categories_dict.items()
+                        for item in items
+                        if f"{cat}: {item}" not in selected_so_far
+                    ] + ["Other"]
 
-                    sel_key = f"{why_key}_sel_{idx}_{lang_key}"
-                    current_val = why_list[idx] if why_list[idx] in options else ""
-                    selection = st.selectbox(
-                        f"{label_prefix} {idx+1}",
-                        options,
-                        index=options.index(current_val) if current_val in options else 0,
-                        key=sel_key
-                    )
+                    sel_key = f"{why_key}_sel_{idx}_{lang_key}"
+                    current_val = why_list[idx] if why_list[idx] in options else ""
+                    selection = st.selectbox(
+                        f"{label_prefix} {idx+1}",
+                        options,
+                        index=options.index(current_val) if current_val in options else 0,
+                        key=sel_key
+                    )
 
-                    if selection == "Other":
-                        other_val = st.text_input(
-                            f"Please specify {label_prefix} {idx+1}",
-                            value=other_list[idx],
-                            key=f"{other_key}_input_{idx}_{lang_key}"
-                        )
-                        why_list[idx] = "Other"
-                        other_list[idx] = other_val
-                    else:
-                        why_list[idx] = selection
-                        other_list[idx] = ""  # clear previous Other if changed
+                    if selection == "Other":
+                        other_val = st.text_input(
+                            f"Please specify {label_prefix} {idx+1}",
+                            value=other_list[idx],
+                            key=f"{other_key}_input_{idx}_{lang_key}"
+                        )
+                        why_list[idx] = "Other"
+                        other_list[idx] = other_val
+                    else:
+                        why_list[idx] = selection
+                        other_list[idx] = ""  # clear previous Other if changed
 
-                st.session_state[why_key] = why_list
-                st.session_state[other_key] = other_list
+                st.session_state[why_key] = why_list
+                st.session_state[other_key] = other_list
 
-             # --- WHY section wrapper (MODIFIED for callback) ---
-            def render_why_section(why_key, other_key, categories, label, lang_key):
-                st.markdown(f"### {label}")
-                render_whys(why_key, other_key, categories, label, lang_key)
+            # --- WHY section wrapper (MODIFIED for callback) ---
+            def render_why_section(why_key, other_key, categories, label, lang_key):
+                st.markdown(f"### {label}")
+                render_whys(why_key, other_key, categories, label, lang_key)
 
-                st.markdown(
-                    "<div style='margin-top:10px; margin-bottom:5px; border-bottom:1px solid #ddd'></div>",
-                    unsafe_allow_html=True,
-                )
-                # Add-button: NOW USES THE CALLBACK 
-                st.button(
-                    f"➕ Add another {label}", 
-                    key=f"add_{why_key}_btn",
-                    on_click=add_why_slot,
-                    args=(why_key, other_key) # Pass the keys needed by the callback
-                )
+                st.markdown(
+                    "<div style='margin-top:10px; margin-bottom:5px; border-bottom:1px solid #ddd'></div>",
+                    unsafe_allow_html=True,
+                )
+                # Add-button: NOW USES THE CALLBACK 
+                st.button(
+                    f"➕ Add another {label}", 
+                    key=f"add_{why_key}_btn",
+                    on_click=add_why_slot,
+                    args=(why_key, other_key) # Pass the keys needed by the callback
+                )
 
-            # --- Render all three WHY sections (retained) ---
-            if lang_key == "es":
-                # Assuming systemic_categories_es is defined in the full script
-                try:
-                    render_why_section("d5_occ_whys", "d5_occ_whys_other", occurrence_categories_es, t[lang_key]['Occurrence_Why'], lang_key)
-                    render_why_section("d5_det_whys", "d5_det_whys_other", detection_categories_es, t[lang_key]['Detection_Why'], lang_key)
-                    render_why_section("d5_sys_whys", "d5_sys_whys_other", systemic_categories_es, t[lang_key]['Systemic_Why'], lang_key)
-                except NameError:
-                    st.error("Error: Spanish systemic categories dictionary is missing. Defaulting to English categories.")
-                    render_why_section("d5_occ_whys", "d5_occ_whys_other", occurrence_categories, t[lang_key]['Occurrence_Why'], lang_key)
-                    render_why_section("d5_det_whys", "d5_det_whys_other", detection_categories, t[lang_key]['Detection_Why'], lang_key)
-                    render_why_section("d5_sys_whys", "d5_sys_whys_other", systemic_categories, t[lang_key]['Systemic_Why'], lang_key)
-            else:
-                render_why_section("d5_occ_whys", "d5_occ_whys_other", occurrence_categories, t[lang_key]['Occurrence_Why'], lang_key)
-                render_why_section("d5_det_whys", "d5_det_whys_other", detection_categories, t[lang_key]['Detection_Why'], lang_key)
-                render_why_section("d5_sys_whys", "d5_sys_whys_other", systemic_categories, t[lang_key]['Systemic_Why'], lang_key)
+            # --- Render all three WHY sections (retained) ---
+            if lang_key == "es":
+                # Assuming systemic_categories_es is defined in the full script
+                try:
+                    render_why_section("d5_occ_whys", "d5_occ_whys_other", occurrence_categories_es, t[lang_key]['Occurrence_Why'], lang_key)
+                    render_why_section("d5_det_whys", "d5_det_whys_other", detection_categories_es, t[lang_key]['Detection_Why'], lang_key)
+                    render_why_section("d5_sys_whys", "d5_sys_whys_other", systemic_categories_es, t[lang_key]['Systemic_Why'], lang_key)
+                except NameError:
+                    st.error("Error: Spanish systemic categories dictionary is missing. Defaulting to English categories.")
+                    render_why_section("d5_occ_whys", "d5_occ_whys_other", occurrence_categories, t[lang_key]['Occurrence_Why'], lang_key)
+                    render_why_section("d5_det_whys", "d5_det_whys_other", detection_categories, t[lang_key]['Detection_Why'], lang_key)
+                    render_why_section("d5_sys_whys", "d5_sys_whys_other", systemic_categories, t[lang_key]['Systemic_Why'], lang_key)
+            else:
+                render_why_section("d5_occ_whys", "d5_occ_whys_other", occurrence_categories, t[lang_key]['Occurrence_Why'], lang_key)
+                render_why_section("d5_det_whys", "d5_det_whys_other", detection_categories, t[lang_key]['Detection_Why'], lang_key)
+                render_why_section("d5_sys_whys", "d5_sys_whys_other", systemic_categories, t[lang_key]['Systemic_Why'], lang_key)
 
-            # --- Duplicate check (retained) ---
-            all_whys = []
-            for key in ["d5_occ_whys", "d5_det_whys", "d5_sys_whys"]:
-                for val, other_val in zip(st.session_state[key], st.session_state[f"{key}_other"]):
-                    if val == "Other" and other_val.strip():
-                        all_whys.append(other_val.strip())
-                    elif val.strip() and val != "Other":
-                        all_whys.append(val.strip())
+            # --- Duplicate check (retained) ---
+            all_whys = []
+            for key in ["d5_occ_whys", "d5_det_whys", "d5_sys_whys"]:
+                for val, other_val in zip(st.session_state[key], st.session_state[f"{key}_other"]):
+                    if val == "Other" and other_val.strip():
+                        all_whys.append(other_val.strip())
+                    elif val.strip() and val != "Other":
+                        all_whys.append(val.strip())
 
-            duplicates = [w for w in set(all_whys) if all_whys.count(w) > 1]
-            if duplicates:
-                st.warning(f"⚠️ Duplicate entries detected: {', '.join(duplicates)}")
+            duplicates = [w for w in set(all_whys) if all_whys.count(w) > 1]
+            if duplicates:
+                st.warning(f"⚠️ Duplicate entries detected: {', '.join(duplicates)}")
 
-            # --- Smart Root Cause (retained) ---
-            # NOTE: smart_root_cause_suggestion function is not provided, assuming it exists externally
-            try:
-                occ_text, det_text, sys_text = smart_root_cause_suggestion(
-                    d1_concern,
-                    [val if val != "Other" else other for val, other in zip(st.session_state['d5_occ_whys'], st.session_state['d5_occ_whys_other']) if (val.strip() or other.strip())],
-                    [val if val != "Other" else other for val, other in zip(st.session_state['d5_det_whys'], st.session_state['d5_det_whys_other']) if (val.strip() or other.strip())],
-                    [val if val != "Other" else other for val, other in zip(st.session_state['d5_sys_whys'], st.session_state['d5_sys_whys_other']) if (val.strip() or other.strip())],
-                    lang=lang_key
-                )
-            except NameError:
-                # Fallback if function is missing
-                occ_text, det_text, sys_text = "Function 'smart_root_cause_suggestion' not found.", "", ""
+            # --- Smart Root Cause (retained) ---
+            # NOTE: smart_root_cause_suggestion function is not provided, assuming it exists externally
+            try:
+                occ_text, det_text, sys_text = smart_root_cause_suggestion(
+                    d1_concern,
+                    [val if val != "Other" else other for val, other in zip(st.session_state['d5_occ_whys'], st.session_state['d5_occ_whys_other']) if (val.strip() or other.strip())],
+                    [val if val != "Other" else other for val, other in zip(st.session_state['d5_det_whys'], st.session_state['d5_det_whys_other']) if (val.strip() or other.strip())],
+                    [val if val != "Other" else other for val, other in zip(st.session_state['d5_sys_whys'], st.session_state['d5_sys_whys_other']) if (val.strip() or other.strip())],
+                    lang=lang_key
+                )
+            except NameError:
+                # Fallback if function is missing
+                occ_text, det_text, sys_text = "Function 'smart_root_cause_suggestion' not found.", "", ""
 
 
-            st.text_area(f"{t[lang_key]['Root_Cause_Occ']}", value=occ_text, height=120, disabled=True)
-            st.text_area(f"{t[lang_key]['Root_Cause_Det']}", value=det_text, height=120, disabled=True)
-            st.text_area(f"{t[lang_key]['Root_Cause_Sys']}", value=sys_text, height=120, disabled=True)
-
+            st.text_area(f"{t[lang_key]['Root_Cause_Occ']}", value=occ_text, height=120, disabled=True)
+            st.text_area(f"{t[lang_key]['Root_Cause_Det']}", value=det_text, height=120, disabled=True)
+            st.text_area(f"{t[lang_key]['Root_Cause_Sys']}", value=sys_text, height=120, disabled=True)
     
         # ---------- D6 ----------
         elif step == "D6":
