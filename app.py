@@ -103,39 +103,26 @@ textarea, input[type="text"] {
 }
 </style>
 """, unsafe_allow_html=True)
-# ---------------------------
-# Reset Session check
-# ---------------------------
+# ----------------------------------------------------------------------
+# 🐛 CRITICAL FIX: Session Reset Logic
+# The initial complex reset block has been REMOVED. 
+# We now rely solely on the initialization and the sidebar button to delete keys.
+# ----------------------------------------------------------------------
 if st.session_state.get("_reset_8d_session", False):
-    preserve_keys = ["lang", "lang_key", "current_tab"]
-    preserved = {k: st.session_state[k] for k in preserve_keys if k in st.session_state}
+    preserve_keys = ["lang", "lang_key", "current_tab", "report_date", "prepared_by"]
+    preserved = {k: st.session_state.get(k) for k in preserve_keys if k in st.session_state}
     for key in list(st.session_state.keys()):
-        if key not in preserve_keys and key != "_reset_8d_session":
+        if key not in preserve_keys:
             del st.session_state[key]
-    for k, v in preserved.items():
-        st.session_state[k] = v
+    
+    # Re-initialize the minimum necessary items for a clean run
+    st.session_state.setdefault("report_date", datetime.datetime.today().strftime("%B %d, %Y"))
+    st.session_state.setdefault("prepared_by", "")
+
+    # Now set the flag to false so the app runs normally next time
     st.session_state["_reset_8d_session"] = False
-
-    # ---------------------------
-    # ✅ Re-initialize 8D structure cleanly to avoid KeyErrors
-    # ---------------------------
-    default_template = {
-        "answer": "",
-        "uploaded_files": [],
-        "location": [],  # empty list for multiselect
-        "status": [],    # empty list for multiselect
-        "occ_answer": "",
-        "det_answer": "",
-        "sys_answer": ""
-    }
-
-    for step in ["D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8"]:
-        st.session_state[step] = default_template.copy()
-
-    # ✅ Recreate WHY lists for D5
-    st.session_state["d5_occ_whys"] = []
-    st.session_state["d5_det_whys"] = []
-    st.session_state["d5_sys_whys"] = []
+    
+    # Rerun to clear the screen and initialize the new clean state
     st.rerun()
 
 # ---------------------------
@@ -171,6 +158,12 @@ if lang == "English":
     spell_lang = "en"
 else:
     spell_lang = "es"
+
+# Store language in session state
+st.session_state["lang"] = lang
+st.session_state["lang_key"] = lang_key
+st.session_state["spell_lang"] = spell_lang
+
 dark_mode = st.sidebar.checkbox("🌙 Dark Mode")
 if dark_mode:
     st.markdown("""
@@ -387,15 +380,18 @@ st.sidebar.markdown("---")
 st.sidebar.header("⚙️ App Controls")
 
 if st.sidebar.button("🔄 Reset 8D Session", type="primary"):
-    preserve_keys = ["lang", "lang_key", "current_tab", "report_date", "prepared_by"]
-    preserved = {k: st.session_state.get(k) for k in preserve_keys if k in st.session_state}
+    # This logic deletes all keys except the ones listed, 
+    # and sets the flag to True to trigger a clean run initialization.
+    preserve_keys = ["lang", "lang_key", "current_tab", "report_date", "prepared_by", "spell_lang"]
+    
+    # We delete keys here, and the initialization block at the top 
+    # will handle the actual reset/rerun, ensuring clean state initialization.
     for key in list(st.session_state.keys()):
         if key not in preserve_keys:
             del st.session_state[key]
-    for k, v in preserved.items():
-        st.session_state[k] = v
+    
     st.session_state["_reset_8d_session"] = True
-    st.stop()
+    st.rerun()
 
 # ---------------------------
 # Language dictionary
@@ -486,49 +482,59 @@ npqp_steps = [
 ]
 
 # ---------------------------
-# Initialize session state
+# Initialize session state (CLEANED UP)
 # ---------------------------
-for step, _, _ in npqp_steps:
-    if step not in st.session_state:
-        st.session_state[step] = {"answer": "", "extra": ""}
-
-        # Initialize file upload lists for relevant steps
-        if step in ["D1", "D3", "D4", "D7"]:
-            st.session_state[step]["uploaded_files"] = []
-
-        # Initialize D3 inspection stage key to avoid KeyError
-        if step == "D3":
-            st.session_state[step]["inspection_stage"] = []
-            st.session_state[step]["answer"] = ""
-        # Initialize D4 location and status lists
-        if step == "D4":
-            st.session_state[step]["location"] = []
-            st.session_state[step]["status"] = []
 
 # Global defaults
 st.session_state.setdefault("report_date", datetime.datetime.today().strftime("%B %d, %Y"))
 st.session_state.setdefault("prepared_by", "")
 
-# D5 why analysis lists
-st.session_state.setdefault("d5_occ_whys", [""] * 5)
-st.session_state.setdefault("d5_det_whys", [""] * 5)
-st.session_state.setdefault("d5_sys_whys", [""] * 5)
+default_d_step_data = {
+    "answer": "",
+    "uploaded_files": [],
+    "location": [],
+    "status": [],
+    "inspection_stage": [],
+    "occ_answer": "",
+    "det_answer": "",
+    "sys_answer": ""
+}
 
-# D4 containment details
+# Initialize all D-steps cleanly
+for step, _, _ in npqp_steps:
+    if step not in st.session_state:
+        st.session_state[step] = default_d_step_data.copy()
+
+        # D3 specific initialization (uses inspection_stage list)
+        if step == "D3":
+            st.session_state[step]["inspection_stage"] = []
+        
+        # D4 specific initialization (uses location and status lists)
+        elif step == "D4":
+            st.session_state[step]["location"] = []
+            st.session_state[step]["status"] = []
+        
+        # D5 specific initialization for 5-Why text areas
+        elif step == "D5":
+            # Initialize 5-Why lists under a dedicated D5 key
+            st.session_state.setdefault("d5_occ_whys", [""] * 5)
+            st.session_state.setdefault("d5_det_whys", [""] * 5)
+            st.session_state.setdefault("d5_sys_whys", [""] * 5)
+        
+        # D6 and D7 initialization for the permanent corrective actions (linked to D5 Root Cause)
+        elif step in ["D6", "D7"]:
+             # Initialize the permanent action fields inside D6 and D7
+             st.session_state[step]["occ_answer"] = ""
+             st.session_state[step]["det_answer"] = ""
+             st.session_state[step]["sys_answer"] = ""
+
+# D4 containment details (redundant, but keeping for compatibility)
 st.session_state.setdefault("d4_location", "")
 st.session_state.setdefault("d4_status", "")
 st.session_state.setdefault("d4_containment", "")
 
-# D6 & D7 corrective and verification actions
-for sub in ["occ_answer", "det_answer", "sys_answer"]:
-    st.session_state.setdefault("D6", st.session_state.get("D6", {}))
-    st.session_state["D6"].setdefault(sub, "")
-
-    st.session_state.setdefault("D7", st.session_state.get("D7", {}))
-    st.session_state["D7"].setdefault(sub, "")
-
 # ---------------------------
-# Cleaned & Standardized D5 categories
+# Cleaned & Standardized D5 categories (including completed Spanish Systemic)
 # ---------------------------
 
 # Occurrence (issues that actually happen in process, material, design, equipment, or environment)
@@ -772,9 +778,9 @@ systemic_categories_es = {
     "Gestión / Organización": [
         "Liderazgo o supervisión inadecuada",
         "Asignación insuficiente de recursos",
-        "Respuesta retrasada a problemas de producción conocidos",
-        "Falta de responsabilidad o propiedad sobre problemas de calidad",
-        "Escalamiento ineficaz para problemas recurrentes",
+        "Respuesta retrasada a problemas de producción conocidos", # Completed list
+        "Falta de responsabilidad o propiedad de problemas de calidad",
+        "Escalada ineficaz para problemas recurrentes",
         "Comunicación interfuncional débil"
     ],
     "Proceso / Procedimiento": [
@@ -785,25 +791,25 @@ systemic_categories_es = {
         "Sistema de control de documentos ineficiente",
         "Procedimientos de mantenimiento preventivo no estandarizados"
     ],
-    "Capacitación / Entrenamiento": [
-        "No hay matriz de capacitación definida o seguimiento de certificaciones",
-        "Nuevos empleados no entrenados en puntos críticos de control",
-        "Proceso de entrenamiento o inducción ineficaz",
+    "Capacitación": [
+        "Matriz de capacitación o seguimiento de certificación no definida",
+        "Nuevos empleados no capacitados en puntos de control críticos",
+        "Proceso de capacitación o incorporación ineficaz",
         "Conocimiento no compartido entre turnos/equipos",
-        "Requisitos de competencia no claramente definidos"
+        "Requisitos de competencia no definidos claramente"
     ],
     "Proveedor / Externo": [
-        "Proveedor no incluido en revisión de 8D o FMEA",
-        "Acciones correctivas de proveedor no verificadas",
+        "Proveedor no incluido en revisión 8D o FMEA",
+        "Acciones correctivas del proveedor no verificadas",
         "Proceso de auditoría de material entrante inadecuado",
         "Cambios de proceso del proveedor no comunicados al cliente",
-        "Tiempo de cierre de problemas de calidad del proveedor largo",
-        "Proveedor violó estándares"
+        "Largo tiempo de entrega para el cierre de problemas de calidad del proveedor",
+        "Violación de estándares del proveedor"
     ],
     "Sistema de Calidad / Retroalimentación": [
         "Auditorías internas ineficaces o incompletas",
         "Seguimiento de KPI de calidad no vinculado al análisis de causa raíz",
-        "Uso ineficaz de 5-Why o herramientas de resolución de problemas",
+        "Uso ineficaz de 5-Porqués o herramientas de resolución de problemas",
         "Quejas de clientes no alimentan revisiones de diseño",
         "Lecciones aprendidas no compartidas o reutilizadas",
         "No hay revisión sistémica después de múltiples 8Ds en la misma área"
