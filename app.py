@@ -1157,10 +1157,10 @@ st.session_state["active_tab_index"] = st.session_state["main_tabs_container"]
 
 
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
-    with tabs[i]: # <--- This line must be indented only by 4 spaces!
+    with tabs[i]: # <--- FIXED: Now using 4 standard spaces
         # --- Step header ---
         st.markdown(f"### {t[lang_key][step]}")
-# ... (rest of the tab loop content follows) ...
+        # ... (rest of the tab loop content follows) ...
 
         # Training Guidance & Example (retained)
         note_text = note_dict[lang_key]
