@@ -1131,9 +1131,9 @@ def add_why_slot(why_key, other_key):
 tab_labels = []
 for step, _, _ in npqp_steps:
     if step == "D5":
-        filled = any(w.strip() for w in st.session_state["d5_occ_whys"] +
-                     st.session_state["d5_det_whys"] +
-                     st.session_state["d5_sys_whys"])
+        filled = any(w.strip() for w in st.session_state.get("d5_occ_whys", []) +
+                     st.session_state.get("d5_det_whys", []) +
+                     st.session_state.get("d5_sys_whys", []))
     elif step == "D6":
         filled = any(st.session_state.get("D6", {}).get(k, "").strip() for k in ["occ_answer","det_answer","sys_answer"])
     elif step == "D7":
@@ -1141,6 +1141,13 @@ for step, _, _ in npqp_steps:
     else:
         filled = st.session_state.get(step, {}).get("answer", "").strip() != ""
     tab_labels.append(f"🟢 {t[lang_key][step]}" if filled else f"🔴 {t[lang_key][step]}")
+
+# ---------------------------
+# Safety check: ensure tab_labels is valid
+# ---------------------------
+if not tab_labels or not all(isinstance(l, str) for l in tab_labels):
+    st.error("⚠️ tab_labels is invalid! It must be a non-empty list of strings.")
+    st.stop()
 
 # ---------------------------
 # Ensure current_tab_index is valid
@@ -1215,6 +1222,12 @@ line-height:1.5;
                             st.image(f, width=192)
                         except:
                             pass
+
+# ---------------------------
+# Update current_tab_index after rendering
+# ---------------------------
+# This remembers the last active tab on rerun
+st.session_state["current_tab_index"] = current_index
         # ---------------------------
         # Step-specific inputs
         # ---------------------------
