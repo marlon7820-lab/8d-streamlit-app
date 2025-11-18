@@ -870,69 +870,30 @@ def suggest_root_cause(whys, lang_key="en"):
         return rc_texts[lang_key]["triple"].format(top_cats[0], top_cats[1])
 
 def render_whys_no_repeat_with_other(why_list, categories, label_prefix, lang_key="en"):
-    updated_list = list(why_list)  # safe copy
-
-    for idx in range(len(updated_list)):
-
-        # -----------------------------
-        # Build stable keys
-        # -----------------------------
-        base_key = f"D5_{label_prefix.replace(' ', '_')}_{lang_key}_{idx}"
-        select_key = f"{base_key}_select"
-        other_key = f"{base_key}_other"
-
-        # -----------------------------
-        # Build no-duplicate options
-        # -----------------------------
-        selected_others = [
-            w for i, w in enumerate(updated_list)
-            if w.strip() and i != idx and not w.startswith("OTHER:")
-        ]
-
+    for idx in range(len(why_list)):
+        # Build options for this selectbox
+        selected_so_far = [w for i, w in enumerate(why_list) if w.strip() and i != idx]
         options = [""] + [
-            f"{cat}: {item}"
-            for cat, items in categories.items()
-            for item in items
-            if f"{cat}: {item}" not in selected_others
+            f"{cat}: {item}" 
+            for cat, items in categories.items() 
+            for item in items 
+            if f"{cat}: {item}" not in selected_so_far
         ] + ["Other"]
 
-        # -----------------------------
-        # Determine displayed value
-        # -----------------------------
-        original_value = updated_list[idx]
-
-        if original_value.startswith("OTHER:"):
-            current_select_value = "Other"
-            current_other_text = original_value.replace("OTHER:", "")
-        else:
-            current_select_value = original_value if original_value in options else ""
-            current_other_text = ""
-
-        # -----------------------------
-        # Render dropdown
-        # -----------------------------
+        current_val = why_list[idx] if why_list[idx] in options else ""
         selection = st.selectbox(
             f"{label_prefix} {idx+1}",
             options,
-            index=options.index(current_select_value) if current_select_value in options else 0,
-            key=select_key,
+            index=options.index(current_val) if current_val in options else 0,
+            key=f"{label_prefix}_{idx}_{lang_key}"
         )
 
-        # -----------------------------
-        # Handle "Other" field
-        # -----------------------------
+        # If "Other" is selected, show a free text box
         if selection == "Other":
-            other_val = st.text_input(
-                f"Please specify {label_prefix} {idx+1}",
-                value=current_other_text,
-                key=other_key
-            )
-            updated_list[idx] = f"OTHER:{other_val}"
+            why_list[idx] = st.text_input(f"Please specify {label_prefix} {idx+1}", key=f"{label_prefix}_{idx}_other_{lang_key}")
         else:
-            updated_list[idx] = selection
-
-    return updated_list
-
+            why_list[idx] = selection
+    return why_list
     
 # ---------------------------
 # Helpers (place at top of file)
@@ -1079,67 +1040,45 @@ st.write(f"Completed {progress} of {len(steps)} steps")
 # ---------------------------
 # Force tab persistence BEFORE creating tabs
 # ---------------------------
-if "force_tab" not in st.session_state:
+if "force_tab" in st.session_state and st.session_state["force_tab"] is not None:
+    st.session_state.current_tab = st.session_state["force_tab"]
     st.session_state["force_tab"] = None
-if "current_tab_index" not in st.session_state:
-    st.session_state["current_tab_index"] = 0
 
-# Ensure D5 lists exist and have at least 5 slots
-for key in ["d5_occ_whys", "d5_det_whys", "d5_sys_whys"]:
-    st.session_state.setdefault(key, [""] * 5)
-for key in ["d5_occ_whys_other", "d5_det_whys_other", "d5_sys_whys_other"]:
-    st.session_state.setdefault(key, [""] * 5)  # store "Other" text separately
-
-# ---------------------------
-# Process pending D5 +Add requests BEFORE creating tabs
-# ---------------------------
-d5_index = [i for i, (s, _, _) in enumerate(npqp_steps) if s == "D5"][0]
-
-for why_key in ["d5_occ_whys", "d5_det_whys", "d5_sys_whys"]:
-    req_key = f"_request_add_{why_key}"
-    if st.session_state.pop(req_key, False):
-        # Append exactly one empty slot to both main list and _other list
-        st.session_state[why_key].append("")
-        st.session_state[f"{why_key}_other"].append("")
-        # Keep D5 tab active
-        st.session_state["_force_d5_tab"] = True
-        st.session_state["current_tab_index"] = d5_index
-        st.session_state["active_tab_index"] = d5_index
-
-
-# ---------------------------
 # Build tab labels
-# ---------------------------
 tab_labels = []
 for step, _, _ in npqp_steps:
     if step == "D5":
-        filled = any(w.strip() for w in st.session_state["d5_occ_whys"] +
-                     st.session_state["d5_det_whys"] +
-                     st.session_state["d5_sys_whys"])
+        filled = d5_filled
     elif step == "D6":
-        filled = any(st.session_state.get("D6", {}).get(k, "").strip() for k in ["occ_answer","det_answer","sys_answer"])
+        filled = d6_filled
     elif step == "D7":
-        filled = any(st.session_state.get("D7", {}).get(k, "").strip() for k in ["occ_answer","det_answer","sys_answer"])
+        filled = d7_filled
     else:
         filled = st.session_state.get(step, {}).get("answer", "").strip() != ""
     tab_labels.append(f"🟢 {t[lang_key][step]}" if filled else f"🔴 {t[lang_key][step]}")
 
-# --- Render each tab ---
+# --- Track current tab persistently ---
+if "current_tab_index" not in st.session_state:
+    st.session_state.current_tab_index = 0
+
+# --- Create tabs with stable index tracking ---
 tabs = st.tabs(tab_labels)
 
+# --- Render each tab ---
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     with tabs[i]:
-        # Track active tab click
+        # Set the session active tab index only if this tab is clicked
         if st.session_state.get("active_tab_index") != i:
             st.session_state["active_tab_index"] = i
-        # Keep tab active after rerun
+
+        # 🔒 Keep the tab active after rerun
         if st.session_state.get("current_tab_index") != st.session_state["active_tab_index"]:
             st.session_state["current_tab_index"] = st.session_state["active_tab_index"]
 
         # --- Step header ---
         st.markdown(f"### {t[lang_key][step]}")
 
-        # Training Guidance & Example
+        # Training Guidance & Example box
         note_text = note_dict[lang_key]
         example_text = example_dict[lang_key]
         st.markdown(f"""
@@ -1257,106 +1196,47 @@ line-height:1.5;
             else:
                 st.warning("No Customer Concern defined yet in D1.")
 
-            # Ensure lists exist (including _other for "Other" text inputs)
+            # Initialize whys lists
             for key in ["d5_occ_whys", "d5_det_whys", "d5_sys_whys"]:
-                st.session_state.setdefault(key, [""] * 5)
-                st.session_state.setdefault(f"{key}_other", [""] * 5)
+                st.session_state.setdefault(key, [""])
 
-            d5_index = [i for i, (s, _, _) in enumerate(npqp_steps) if s == "D5"][0]
-            
-            # Persist D5 tab ONLY if triggered by Add button
-            if st.session_state.get("_force_d5_tab", False):
-                st.session_state["current_tab_index"] = d5_index
-                st.session_state["active_tab_index"] = d5_index
-                st.session_state["_force_d5_tab"] = False
-
-            # --- Helper: render WHY slots ---
-            def render_whys(why_key, other_key, categories_dict, label_prefix, lang_key):
-                why_list = st.session_state[why_key]
-                other_list = st.session_state[other_key]
-
-                # Render existing slots only
-                total_slots = len(why_list)
-                while len(other_list) < total_slots:
-                    other_list.append("")
-
-                for idx in range(total_slots):
-                    selected_so_far = [w for i, w in enumerate(why_list) if w.strip() and i != idx and w != "Other"]
-                    options = [""] + [
-                        f"{cat}: {item}"
-                        for cat, items in categories_dict.items()
-                        for item in items
-                        if f"{cat}: {item}" not in selected_so_far
-                    ] + ["Other"]
-
-                    sel_key = f"{why_key}_sel_{idx}_{lang_key}"
-                    current_val = why_list[idx] if why_list[idx] in options else ""
-                    selection = st.selectbox(
-                        f"{label_prefix} {idx+1}",
-                        options,
-                        index=options.index(current_val) if current_val in options else 0,
-                        key=sel_key
-                    )
-
-                    if selection == "Other":
-                        other_val = st.text_input(
-                            f"Please specify {label_prefix} {idx+1}",
-                            value=other_list[idx],
-                            key=f"{other_key}_input_{idx}_{lang_key}"
-                        )
-                        why_list[idx] = "Other"
-                        other_list[idx] = other_val
-                    else:
-                        why_list[idx] = selection
-                        other_list[idx] = ""  # clear previous Other if changed
-
-                st.session_state[why_key] = why_list
-                st.session_state[other_key] = other_list
-
-             # --- WHY section wrapper ---
-            def render_why_section(why_key, other_key, categories, label, lang_key):
+            # Helper function to render each Why section with button at the end
+            def render_why_section(why_key, categories, label):
                 st.markdown(f"### {label}")
-                render_whys(why_key, other_key, categories, label, lang_key)
 
-                st.markdown(
-                    "<div style='margin-top:10px; margin-bottom:5px; border-bottom:1px solid #ddd'></div>",
-                    unsafe_allow_html=True,
+                # Render dropdowns first
+                st.session_state[why_key] = render_whys_no_repeat_with_other(
+                    st.session_state[why_key], categories, label
                 )
-                # Add-button: ONLY place that appends. Fixed now.
-                if st.button(f"➕ Add another {label}", key=f"add_{why_key}_btn"):
+
+                # Add a small gap and divider
+                st.markdown("<div style='margin-top:10px; margin-bottom:5px; border-bottom:1px solid #ddd'></div>", unsafe_allow_html=True)
+
+                # Add button at the end
+                if st.button(f"➕ Add another {label}", key=f"add_{why_key}"):
                     st.session_state[why_key].append("")
-                    st.session_state[other_key].append("")
-                    st.session_state["_force_d5_tab"] = True
 
-            # --- Render all three WHY sections ---
             if lang_key == "es":
-                render_why_section("d5_occ_whys", "d5_occ_whys_other", occurrence_categories_es, t[lang_key]['Occurrence_Why'], lang_key)
-                render_why_section("d5_det_whys", "d5_det_whys_other", detection_categories_es, t[lang_key]['Detection_Why'], lang_key)
-                render_why_section("d5_sys_whys", "d5_sys_whys_other", systemic_categories_es, t[lang_key]['Systemic_Why'], lang_key)
+                render_why_section("d5_occ_whys", occurrence_categories_es, t[lang_key]['Occurrence_Why'])
+                render_why_section("d5_det_whys", detection_categories_es, t[lang_key]['Detection_Why'])
+                render_why_section("d5_sys_whys", systemic_categories_es, t[lang_key]['Systemic_Why'])
             else:
-                render_why_section("d5_occ_whys", "d5_occ_whys_other", occurrence_categories, t[lang_key]['Occurrence_Why'], lang_key)
-                render_why_section("d5_det_whys", "d5_det_whys_other", detection_categories, t[lang_key]['Detection_Why'], lang_key)
-                render_why_section("d5_sys_whys", "d5_sys_whys_other", systemic_categories, t[lang_key]['Systemic_Why'], lang_key)
+                render_why_section("d5_occ_whys", occurrence_categories, t[lang_key]['Occurrence_Why'])
+                render_why_section("d5_det_whys", detection_categories, t[lang_key]['Detection_Why'])
+                render_why_section("d5_sys_whys", systemic_categories, t[lang_key]['Systemic_Why'])
 
-            # --- Duplicate check ---
-            all_whys = []
-            for key in ["d5_occ_whys", "d5_det_whys", "d5_sys_whys"]:
-                for val, other_val in zip(st.session_state[key], st.session_state[f"{key}_other"]):
-                    if val == "Other" and other_val.strip():
-                        all_whys.append(other_val.strip())
-                    elif val.strip() and val != "Other":
-                        all_whys.append(val.strip())
-
+            # Duplicate check
+            all_whys = [w.strip() for w in st.session_state['d5_occ_whys'] + st.session_state['d5_det_whys'] + st.session_state['d5_sys_whys'] if w.strip()]
             duplicates = [w for w in set(all_whys) if all_whys.count(w) > 1]
             if duplicates:
                 st.warning(f"⚠️ Duplicate entries detected: {', '.join(duplicates)}")
 
-            # --- Smart Root Cause ---
+            # Smart Root Cause
             occ_text, det_text, sys_text = smart_root_cause_suggestion(
                 d1_concern,
-                [val if val != "Other" else other for val, other in zip(st.session_state['d5_occ_whys'], st.session_state['d5_occ_whys_other']) if (val.strip() or other.strip())],
-                [val if val != "Other" else other for val, other in zip(st.session_state['d5_det_whys'], st.session_state['d5_det_whys_other']) if (val.strip() or other.strip())],
-                [val if val != "Other" else other for val, other in zip(st.session_state['d5_sys_whys'], st.session_state['d5_sys_whys_other']) if (val.strip() or other.strip())],
+                [w for w in st.session_state['d5_occ_whys'] if w.strip()],
+                [w for w in st.session_state['d5_det_whys'] if w.strip()],
+                [w for w in st.session_state['d5_sys_whys'] if w.strip()],
                 lang=lang_key
             )
 
