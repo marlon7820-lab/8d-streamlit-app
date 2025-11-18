@@ -1076,11 +1076,11 @@ d5_filled = any(w.strip() for w in st.session_state.get("d5_occ_whys", [])) \
 d6_filled = any(st.session_state.get("D6", {}).get(k, "").strip() for k in ["occ_answer","det_answer","sys_answer"])
 d7_filled = any(st.session_state.get("D7", {}).get(k, "").strip() for k in ["occ_answer","det_answer","sys_answer"])
 for step in steps:
-    if step=="D5" and d5_filled: progress+=1
-    elif step=="D6" and d6_filled: progress+=1
-    elif step=="D7" and d7_filled: progress+=1
-    else:
-        if st.session_state.get(step, {}).get("answer", "").strip(): progress+=1
+    if step=="D5" and d5_filled: progress+=1
+    elif step=="D6" and d6_filled: progress+=1
+    elif step=="D7" and d7_filled: progress+=1
+    else:
+        if st.session_state.get(step, {}).get("answer", "").strip(): progress+=1
 
 st.progress(progress/len(steps))
 st.write(f"Completed {progress} of {len(steps)} steps")
