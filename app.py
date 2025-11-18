@@ -1151,9 +1151,12 @@ tabs = st.tabs(
     index=st.session_state.get("current_tab_index", 0)
 )
 
-# After rendering, update the state
-st.session_state["current_tab_index"] = st.session_state["main_tabs_container"]
-st.session_state["active_tab_index"] = st.session_state["main_tabs_container"]
+# After rendering, update the state with the current active tab index
+if "current_tab_index" not in st.session_state:
+    st.session_state["current_tab_index"] = 0
+
+# Optional: store active tab separately if needed
+st.session_state["active_tab_index"] = st.session_state["current_tab_index"]
 
 for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     with tabs[i]:
@@ -1164,6 +1167,10 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
         note_text = note_dict[lang_key]
         example_text = example_dict[lang_key]
         st.markdown(f"""
+        **Guidance:** {note_text}
+
+        **Example:** {example_text}
+        """)
 <div style="
 background-color:#b3e0ff;
 color:black;
