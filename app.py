@@ -107,7 +107,7 @@ textarea, input[type="text"] {
 # 🐛 CRITICAL FIX: Session Reset Logic (retained as per original code)
 # ----------------------------------------------------------------------
 if st.session_state.get("_reset_8d_session", False):
-    preserve_keys = ["lang", "lang_key", "current_tab", "report_date", "prepared_by"]
+    preserve_keys = ["lang", "lang_key", "current_tab", "report_date", "prepared_by"]
     preserved = {k: st.session_state.get(k) for k in preserve_keys if k in st.session_state}
     for key in list(st.session_state.keys()):
         if key not in preserve_keys:
