@@ -1071,8 +1071,8 @@ steps = ["D1","D2","D3","D4","D5","D6","D7","D8"]
 progress = 0
 
 d5_filled = any(w.strip() for w in st.session_state.get("d5_occ_whys", [])) \
-           or any(w.strip() for w in st.session_state.get("d5_det_whys", [])) \
-           or any(w.strip() for w in st.session_state.get("d5_sys_whys", []))
+          or any(w.strip() for w in st.session_state.get("d5_det_whys", [])) \
+          or any(w.strip() for w in st.session_state.get("d5_sys_whys", []))
 d6_filled = any(st.session_state.get("D6", {}).get(k, "").strip() for k in ["occ_answer","det_answer","sys_answer"])
 d7_filled = any(st.session_state.get("D7", {}).get(k, "").strip() for k in ["occ_answer","det_answer","sys_answer"])
 for step in steps:
