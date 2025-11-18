@@ -1517,7 +1517,52 @@ def generate_excel():
         except Exception: # Good practice to catch specific errors, but pass is fine here
             pass
 
-    # ... [Keep your Header and Row Logic exactly as it is] ...
+    # Header row
+    header_row = ws.max_row + 1
+    if lang_key == "es":
+        headers = ["Etapa", "Respuesta", "Notas / Comentarios"]
+    else:
+        headers = ["Step", "Answer", "Extra / Notes"]
+
+    fill = PatternFill(start_color="1E90FF", end_color="1E90FF", fill_type="solid")
+    for c_idx, h in enumerate(headers, start=1):
+        cell = ws.cell(row=header_row, column=c_idx, value=h)
+        cell.fill = fill
+        cell.font = Font(bold=True, color="FFFFFF")
+        cell.alignment = Alignment(horizontal="center", vertical="center")
+        cell.border = border
+
+    # Color fills for specific root cause categories
+    occ_fill = PatternFill(start_color="FFA500", end_color="FFA500", fill_type="solid")  # orange
+    det_fill = PatternFill(start_color="32CD32", end_color="32CD32", fill_type="solid")  # green
+    sys_fill = PatternFill(start_color="D3D3D3", end_color="D3D3D3", fill_type="solid")  # gray
+
+    # Bilingual keywords for color logic
+    occ_keywords = ["Occurrence", "Ocurrencia"]
+    det_keywords = ["Detection", "Detección"]
+    sys_keywords = ["Systemic", "Sistémica"]
+
+    # Append step answers with bilingual color formatting
+    for step_label, answer_text, extra_text in data_rows:
+        ws.append([step_label, answer_text, extra_text])
+        r = ws.max_row
+        for c in range(1, 4):
+            cell = ws.cell(row=r, column=c)
+            cell.alignment = Alignment(wrap_text=True, vertical="top")
+            cell.border = border
+            if c == 2:
+                cell.font = Font(bold=True)
+                # Apply bilingual color formatting
+                if any(k in step_label for k in occ_keywords):
+                    cell.fill = occ_fill
+                elif any(k in step_label for k in det_keywords):
+                    cell.fill = det_fill
+                elif any(k in step_label for k in sys_keywords):
+                    cell.fill = sys_fill
+
+    # Insert uploaded images below table
+    from PIL import Image as PILImage
+    from io import BytesIO
 
     # --- IMAGE HANDLING FIX ---
     last_row = ws.max_row + 2
