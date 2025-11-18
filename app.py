@@ -1171,7 +1171,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
 
         **Example:** {example_text}
         """)
-st.markdown("""      
+st.markdown(f"""      
 <div style="
 background-color:#b3e0ff;
 color:black;
@@ -1187,20 +1187,19 @@ line-height:1.5;
 </div>
 """, unsafe_allow_html=True)
 
-        # Step-specific guidance expander
-        gc = guidance_content[step][lang_key]
-        with st.expander(f"📘 {gc['title']}"):
-            st.markdown(gc["tips"])
+# Step-specific guidance expander
+gc = guidance_content[step][lang_key]
+with st.expander(f"📘 {gc['title']}"):
+    st.markdown(gc["tips"])
 
-        # File uploads for D1, D3, D4, D7
-        if step in ["D1", "D3", "D4", "D7"]:
-            uploaded_files = st.file_uploader(
-                f"Upload files/photos for {step}",
-                type=["png", "jpg", "jpeg", "pdf", "xlsx", "txt"],
-                accept_multiple_files=True,
-                key=f"upload_{step}"
-            )
-
+# File uploads for D1, D3, D4, D7
+if step in ["D1", "D3", "D4", "D7"]:
+    uploaded_files = st.file_uploader(
+        f"Upload files/photos for {step}",
+        type=["png", "jpg", "jpeg", "pdf", "xlsx", "txt"],
+        accept_multiple_files=True,
+        key=f"upload_{step}"
+    )
             if uploaded_files:
                 for file in uploaded_files:
                     if file not in st.session_state[step].get("uploaded_files", []):
