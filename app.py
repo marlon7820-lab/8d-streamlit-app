@@ -1155,35 +1155,35 @@ tabs = st.tabs(
 st.session_state["current_tab_index"] = st.session_state["main_tabs_container"]
 st.session_state["active_tab_index"] = st.session_state["main_tabs_container"]
 
-for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
+    for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
     with tabs[i]:
         # --- Step header ---
         st.markdown(f"### {t[lang_key][step]}")
-
+    
         # Training Guidance & Example (retained)
         note_text = note_dict[lang_key]
         example_text = example_dict[lang_key]
         st.markdown(f"""
-<div style="
-background-color:#b3e0ff;
-color:black;
-padding:12px;
-border-left:5px solid #1E90FF;
-border-radius:6px;
-width:100%;
-font-size:14px;
-line-height:1.5;
-">
-<b>{t[lang_key]['Training_Guidance']}:</b> {note_text}<br><br>
-💡 <b>{t[lang_key]['Example']}:</b> {example_text}
-</div>
-""", unsafe_allow_html=True)
-
+    <div style="
+    background-color:#b3e0ff;
+    color:black;
+    padding:12px;
+    border-left:5px solid #1E90FF;
+    border-radius:6px;
+    width:100%;
+    font-size:14px;
+    line-height:1.5;
+    ">
+    <b>{t[lang_key]['Training_Guidance']}:</b> {note_text}<br><br>
+    💡 <b>{t[lang_key]['Example']}:</b> {example_text}
+    </div>
+    """, unsafe_allow_html=True)
+    
         # Step-specific guidance expander
         gc = guidance_content[step][lang_key]
         with st.expander(f"📘 {gc['title']}"):
             st.markdown(gc["tips"])
-
+    
         # File uploads for D1, D3, D4, D7
         if step in ["D1", "D3", "D4", "D7"]:
             uploaded_files = st.file_uploader(
@@ -1192,12 +1192,12 @@ line-height:1.5;
                 accept_multiple_files=True,
                 key=f"upload_{step}"
             )
-
+    
             if uploaded_files:
                 for file in uploaded_files:
                     if file not in st.session_state[step].get("uploaded_files", []):
                         st.session_state[step].setdefault("uploaded_files", []).append(file)
-
+    
             if st.session_state[step].get("uploaded_files"):
                 st.markdown("**Uploaded Files / Photos:**")
                 for f in st.session_state[step]["uploaded_files"]:
