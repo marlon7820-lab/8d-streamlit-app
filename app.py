@@ -1143,7 +1143,7 @@ for step, _, _ in npqp_steps:
     tab_labels.append(f"🟢 {t[lang_key][step]}" if filled else f"🔴 {t[lang_key][step]}")
 
 # ---------------------------
-# Safety check: ensure tab_labels is valid
+# Safety check
 # ---------------------------
 if not tab_labels or not all(isinstance(l, str) for l in tab_labels):
     st.error("⚠️ tab_labels is invalid! It must be a non-empty list of strings.")
@@ -1206,13 +1206,11 @@ line-height:1.5;
                 key=f"upload_{step}"
             )
 
-            # Save uploaded files to session state
             if uploaded_files:
                 for file in uploaded_files:
                     if file not in st.session_state[step].get("uploaded_files", []):
                         st.session_state[step].setdefault("uploaded_files", []).append(file)
 
-            # Display uploaded files
             if st.session_state[step].get("uploaded_files"):
                 st.markdown("**Uploaded Files / Photos:**")
                 for f in st.session_state[step]["uploaded_files"]:
@@ -1223,15 +1221,7 @@ line-height:1.5;
                         except:
                             pass
 
-# ---------------------------
-# Update current_tab_index after rendering
-# ---------------------------
-# This remembers the last active tab on rerun
-st.session_state["current_tab_index"] = current_index
-        # ---------------------------
-        # Step-specific inputs
-        # ---------------------------
-        # D1: Customer Concern (retained)
+        # --- Step-specific inputs ---
         if step == "D1":
             st.session_state.setdefault(step, {"answer": ""})
             st.session_state[step]["answer"] = st.text_area(
@@ -1240,59 +1230,51 @@ st.session_state["current_tab_index"] = current_index
                 height=150
             )
 
-        # D3: Inspection Stage + Initial Analysis (retained)
         elif step == "D3":
-            # Ensure D3 exists and has the right keys
-            if "D3" not in st.session_state:
-                st.session_state["D3"] = {"inspection_stage": [], "answer": ""}
-
-            st.session_state["D3"].setdefault("inspection_stage", [])
-            st.session_state["D3"].setdefault("answer", "")
-
-            # Multiselect options
+            st.session_state.setdefault("D3", {"inspection_stage": [], "answer": ""})
             options = (
                 ["During Process / Manufacture", "After manufacture (e.g. Final Inspection)", "Prior dispatch"]
                 if lang_key == "en"
                 else ["Durante el proceso / fabricación", "Después de la fabricación (por ejemplo, inspección final)", "Antes del envío"]
             )
-
             st.session_state["D3"]["inspection_stage"] = st.multiselect(
                 t[lang_key].get("Inspection_Stage", "Inspection Stage"),
                 options=options,
-                default=st.session_state["D3"].get("inspection_stage", []),  # safe .get()
+                default=st.session_state["D3"].get("inspection_stage", []),
                 key="d3_multiselect"
             )
-
             st.session_state["D3"]["answer"] = st.text_area(
                 t[lang_key].get("Initial_Analysis", "Initial Analysis"),
-                value=st.session_state["D3"].get("answer", ""),  # safe .get()
+                value=st.session_state["D3"].get("answer", ""),
                 key="d3_initial_analysis",
                 height=150
             )
-        
-        # D4: Containment (retained)
+
         elif step == "D4":
-            # D4 Location / Status / Containment Actions
-            st.session_state[step].setdefault("location", [])
-            st.session_state[step].setdefault("status", [])
-            st.session_state[step].setdefault("answer", "")
+            st.session_state.setdefault("D4", {"location": [], "status": [], "answer": ""})
+            loc_options = ["Work in progress", "Stores stock", "Warehouse stock", "Service parts"] if lang_key == "en" else ["En proceso", "Stock de almacén", "Stock de bodega", "Piezas de servicio"]
+            status_options = ["Pending", "In Progress", "Completed"] if lang_key == "en" else ["Pendiente", "En Progreso", "Completado"]
 
-            if lang_key == "en":
-                loc_options = ["Work in progress", "Stores stock", "Warehouse stock", "Service parts"]
-                status_options = ["Pending", "In Progress", "Completed"]
-            else:
-                loc_options = ["En proceso", "Stock de almacén", "Stock de bodega", "Piezas de servicio"]
-                status_options = ["Pendiente", "En Progreso", "Completado"]
+            st.session_state["D4"]["location"] = st.multiselect(
+                t[lang_key]["Location"],
+                options=loc_options,
+                default=st.session_state["D4"]["location"]
+            )
+            st.session_state["D4"]["status"] = st.multiselect(
+                t[lang_key]["Status"],
+                options=status_options,
+                default=st.session_state["D4"]["status"]
+            )
+            st.session_state["D4"]["answer"] = st.text_area(
+                t[lang_key]["Containment_Actions"],
+                value=st.session_state["D4"]["answer"],
+                height=150
+            )
 
-            st.session_state[step]["location"] = st.multiselect(
-                t[lang_key]["Location"], options=loc_options, default=st.session_state[step]["location"]
-            )
-            st.session_state[step]["status"] = st.multiselect(
-                t[lang_key]["Status"], options=status_options, default=st.session_state[step]["status"]
-            )
-            st.session_state[step]["answer"] = st.text_area(
-                t[lang_key]["Containment_Actions"], value=st.session_state[step]["answer"], height=150
-            )
+# ---------------------------
+# Update current_tab_index after rendering
+# ---------------------------
+st.session_state["current_tab_index"] = current_index
 
         # ---------- D5 (MODIFIED) ----------
         elif step == "D5":
