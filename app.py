@@ -1495,6 +1495,8 @@ for step, _, _ in npqp_steps:
 # ---------------------------
 # Excel generation function (bilingual title + color formatting)
 # ---------------------------
+import tempfile # Add this to your top-level imports
+
 def generate_excel():
     wb = Workbook()
     ws = wb.active
@@ -1512,89 +1514,51 @@ def generate_excel():
             img.width = 140
             img.height = 40
             ws.add_image(img, "A1")
-        except:
+        except Exception: # Good practice to catch specific errors, but pass is fine here
             pass
 
-    # Bilingual main title
-    main_title = "📋 Asistente de Informe 8D" if lang_key == "es" else "📋 8D Report Assistant"
-    ws.merge_cells(start_row=3, start_column=1, end_row=3, end_column=3)
-    ws.cell(row=3, column=1, value=main_title).font = Font(bold=True, size=14)
+    # ... [Keep your Header and Row Logic exactly as it is] ...
 
-    # Bilingual header info
-    ws.append([t[lang_key]['Report_Date'], st.session_state.report_date])
-    ws.append([t[lang_key]['Prepared_By'], st.session_state.prepared_by])
-    ws.append([])
-
-    # Header row
-    header_row = ws.max_row + 1
-    if lang_key == "es":
-        headers = ["Etapa", "Respuesta", "Notas / Comentarios"]
-    else:
-        headers = ["Step", "Answer", "Extra / Notes"]
-
-    fill = PatternFill(start_color="1E90FF", end_color="1E90FF", fill_type="solid")
-    for c_idx, h in enumerate(headers, start=1):
-        cell = ws.cell(row=header_row, column=c_idx, value=h)
-        cell.fill = fill
-        cell.font = Font(bold=True, color="FFFFFF")
-        cell.alignment = Alignment(horizontal="center", vertical="center")
-        cell.border = border
-
-    # Color fills for specific root cause categories
-    occ_fill = PatternFill(start_color="FFA500", end_color="FFA500", fill_type="solid")  # orange
-    det_fill = PatternFill(start_color="32CD32", end_color="32CD32", fill_type="solid")  # green
-    sys_fill = PatternFill(start_color="D3D3D3", end_color="D3D3D3", fill_type="solid")  # gray
-
-    # Bilingual keywords for color logic
-    occ_keywords = ["Occurrence", "Ocurrencia"]
-    det_keywords = ["Detection", "Detección"]
-    sys_keywords = ["Systemic", "Sistémica"]
-
-    # Append step answers with bilingual color formatting
-    for step_label, answer_text, extra_text in data_rows:
-        ws.append([step_label, answer_text, extra_text])
-        r = ws.max_row
-        for c in range(1, 4):
-            cell = ws.cell(row=r, column=c)
-            cell.alignment = Alignment(wrap_text=True, vertical="top")
-            cell.border = border
-            if c == 2:
-                cell.font = Font(bold=True)
-                # Apply bilingual color formatting
-                if any(k in step_label for k in occ_keywords):
-                    cell.fill = occ_fill
-                elif any(k in step_label for k in det_keywords):
-                    cell.fill = det_fill
-                elif any(k in step_label for k in sys_keywords):
-                    cell.fill = sys_fill
-
-    # Insert uploaded images below table
-    from PIL import Image as PILImage
-    from io import BytesIO
-
+    # --- IMAGE HANDLING FIX ---
     last_row = ws.max_row + 2
     for step in ["D1", "D3", "D4", "D7"]:
         uploaded_files = st.session_state[step].get("uploaded_files", [])
         if uploaded_files:
             title = f"{step} Archivos / Fotos Adjuntas" if lang_key == "es" else f"{step} Uploaded Files / Photos"
-            ws.cell(row=last_row, column=1, value=title).font = Font(bold=True)
+            cell = ws.cell(row=last_row, column=1, value=title)
+            cell.font = Font(bold=True)
             last_row += 1
+            
             for f in uploaded_files:
                 if f.type.startswith("image/"):
                     try:
+                        # Open image from memory
                         img = PILImage.open(BytesIO(f.getvalue()))
+                        
+                        # Resize logic
                         max_width = 300
                         ratio = max_width / img.width
                         img = img.resize((int(img.width * ratio), int(img.height * ratio)))
-                        temp_path = f"/tmp/{f.name}"
-                        img.save(temp_path)
-                        excel_img = XLImage(temp_path)
+
+                        # SECURE TEMP FILE HANDLING
+                        # delete=False is required so we can close the file 
+                        # allowing OpenPyXL to read it, then we delete it later if needed
+                        with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as tmp:
+                            img.save(tmp.name)
+                            tmp_path = tmp.name
+                        
+                        excel_img = XLImage(tmp_path)
                         ws.add_image(excel_img, f"A{last_row}")
+                        
+                        # Adjust row height roughly
                         last_row += int(img.height / 15) + 2
+                        
                     except Exception as e:
-                        ws.cell(row=last_row, column=1, value=f"No se pudo agregar la imagen {f.name}: {e}" if lang_key == "es" else f"Could not add image {f.name}: {e}")
+                        err_msg = f"No se pudo agregar la imagen {f.name}: {e}" if lang_key == "es" else f"Could not add image {f.name}: {e}"
+                        ws.cell(row=last_row, column=1, value=err_msg)
                         last_row += 1
                 else:
+                    # Non-image files
                     ws.cell(row=last_row, column=1, value=f.name)
                     last_row += 1
 
@@ -1602,10 +1566,10 @@ def generate_excel():
     for col in range(1, 4):
         ws.column_dimensions[get_column_letter(col)].width = 60
 
-    # ✅ Return as bytes
     output = io.BytesIO()
     wb.save(output)
     return output.getvalue()
+
 
 # Move download button to sidebar
 with st.sidebar:
