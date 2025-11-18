@@ -1171,6 +1171,7 @@ for i, (step, note_dict, example_dict) in enumerate(npqp_steps):
 
         **Example:** {example_text}
         """)
+st.markdown("""      
 <div style="
 background-color:#b3e0ff;
 color:black;
