@@ -1200,20 +1200,23 @@ if step in ["D1", "D3", "D4", "D7"]:
         accept_multiple_files=True,
         key=f"upload_{step}"
     )
-            if uploaded_files:
-                for file in uploaded_files:
-                    if file not in st.session_state[step].get("uploaded_files", []):
-                        st.session_state[step].setdefault("uploaded_files", []).append(file)
 
-            if st.session_state[step].get("uploaded_files"):
-                st.markdown("**Uploaded Files / Photos:**")
-                for f in st.session_state[step]["uploaded_files"]:
-                    st.write(f"{f.name}")
-                    if f.type.startswith("image/"):
-                        try:
-                            st.image(f, width=192)
-                        except:
-                            pass
+    # Save uploaded files to session state
+    if uploaded_files:
+        for file in uploaded_files:
+            if file not in st.session_state[step].get("uploaded_files", []):
+                st.session_state[step].setdefault("uploaded_files", []).append(file)
+
+    # Display uploaded files
+    if st.session_state[step].get("uploaded_files"):
+        st.markdown("**Uploaded Files / Photos:**")
+        for f in st.session_state[step]["uploaded_files"]:
+            st.write(f"{f.name}")
+            if f.type.startswith("image/"):
+                try:
+                    st.image(f, width=192)
+                except:
+                    pass
         # ---------------------------
         # Step-specific inputs
         # ---------------------------
